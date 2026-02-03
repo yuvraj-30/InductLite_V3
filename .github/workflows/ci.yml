@@ -67,7 +67,7 @@ jobs:
         run: npm ci
 
       - name: Prisma generate
-        run: npm run db:generate
+        run: npm run -w apps/web db:generate
 
       - name: Prisma validate
         run: npm run -w apps/web prisma:validate
@@ -76,7 +76,7 @@ jobs:
         run: npm run -w apps/web prisma:format:check
 
       - name: Migrate DB
-        run: npm run db:migrate
+        run: npm run -w apps/web db:migrate
 
       - name: Lint (workspace via turbo)
         run: npm run lint
