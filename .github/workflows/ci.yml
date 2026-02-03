@@ -216,6 +216,7 @@ jobs:
       - name: Build (workspace via turbo)
         env:
           NODE_ENV: production
+          ALLOW_TEST_RUNNER: "1"
         run: npm run build
 
       - name: Start server
