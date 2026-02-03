@@ -575,10 +575,10 @@ export const test = base.extend<MyFixtures>({
         const missing: string[] = [];
 
         for (const [table, cols] of Object.entries(required)) {
-          // Table existence check (case-insensitive in information_schema, normalize to lower)
-          const tbl = table.toLowerCase();
+          // Table existence check - Prisma uses PascalCase quoted table names (e.g., "Company")
+          // PostgreSQL stores them literally when quoted, so we query for exact case.
           const tblRes: any = await diagClient.$queryRawUnsafe(
-            `SELECT COUNT(*)::int AS c FROM information_schema.tables WHERE table_schema = '${schema}' AND table_name = '${tbl}'`,
+            `SELECT COUNT(*)::int AS c FROM information_schema.tables WHERE table_schema = '${schema}' AND table_name = '${table}'`,
           );
           const tblCount =
             Array.isArray(tblRes) && tblRes[0]
@@ -591,7 +591,7 @@ export const test = base.extend<MyFixtures>({
 
           // Columns existence
           const colRes: any = await diagClient.$queryRawUnsafe(
-            `SELECT column_name FROM information_schema.columns WHERE table_schema = '${schema}' AND table_name = '${tbl}'`,
+            `SELECT column_name FROM information_schema.columns WHERE table_schema = '${schema}' AND table_name = '${table}'`,
           );
           const presentCols = new Set(
             (Array.isArray(colRes) ? colRes : []).map((r: any) =>
