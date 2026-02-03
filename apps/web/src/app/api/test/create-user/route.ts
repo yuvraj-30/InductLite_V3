@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { hashPassword } from "@/lib/auth/password";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -83,7 +84,10 @@ export async function POST(req: Request) {
       });
     }
 
-    // Create user with a dummy password hash (tests use create-session or UI flows)
+    // Hash the password properly for UI login tests
+    const passwordHash = await hashPassword(password);
+
+    // Create user with properly hashed password
     const safeEmail = String(email);
     const safeName = (safeEmail.split("@")[0] ?? safeEmail) as string;
     // Use a runtime-bound Prisma client so we write to the same DB the server process sees
@@ -108,7 +112,7 @@ export async function POST(req: Request) {
           data: {
             company_id: company.id,
             email: safeEmail,
-            password_hash: "$argon2id$v=19$m=65536,t=3,p=4$placeholder",
+            password_hash: passwordHash,
             name: safeName,
             role: roleValue,
             is_active: true,
@@ -121,7 +125,7 @@ export async function POST(req: Request) {
           data: {
             company_id: company.id,
             email: safeEmail,
-            password_hash: "$argon2id$v=19$m=65536,t=3,p=4$placeholder",
+            password_hash: passwordHash,
             name: safeName,
             role: roleValue,
             is_active: true,
@@ -137,7 +141,7 @@ export async function POST(req: Request) {
         data: {
           company_id: company.id,
           email: safeEmail,
-          password_hash: "$argon2id$v=19$m=65536,t=3,p=4$placeholder",
+          password_hash: passwordHash,
           name: safeName,
           role: roleValue,
           is_active: true,
