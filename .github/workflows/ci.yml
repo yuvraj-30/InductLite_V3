@@ -227,6 +227,8 @@ jobs:
         env:
           PORT: "3000"
           NODE_ENV: production
+          ALLOW_TEST_RUNNER: "1"
+          DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Wait for app
         run: |
@@ -245,6 +247,9 @@ jobs:
         run: npm run -w apps/web test:e2e:smoke
         env:
           E2E_USE_SHARED_SERVER: "1"
+          ALLOW_TEST_RUNNER: "1"
+          BASE_URL: http://localhost:3000
+          DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Stop server
         if: always()
