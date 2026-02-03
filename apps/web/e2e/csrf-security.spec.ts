@@ -12,7 +12,11 @@ import { test, expect } from "./test-fixtures";
 test.describe("CSRF Protection", () => {
   const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
 
-  test("should allow same-origin POST requests", async ({ page, loginAs, workerUser }) => {
+  test("should allow same-origin POST requests", async ({
+    page,
+    loginAs,
+    workerUser,
+  }) => {
     // Programmatic login for stability and speed (use dynamically created worker user)
     await loginAs(workerUser.email);
 

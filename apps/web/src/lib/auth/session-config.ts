@@ -43,7 +43,6 @@ export interface SessionData {
 // Helper to get runtime env to avoid Next.js build-time inlining
 function getRuntimeEnv(): Record<string, string | undefined> {
   try {
-    // eslint-disable-next-line no-eval
     return eval("process").env ?? {};
   } catch {
     return process.env;

@@ -13,7 +13,6 @@ export async function GET(req: Request) {
   // Use runtime env access to avoid build-time snapshotting
   const getEnv = () => {
     try {
-       
       return eval("process").env ?? {};
     } catch {
       return {};
@@ -61,7 +60,7 @@ export async function GET(req: Request) {
     // Runtime diagnostics to help debug worker schema visibility issues
     try {
       // read runtime env
-       
+
       const env = (function getEnv() {
         try {
           return eval("process").env ?? {};
@@ -109,7 +108,6 @@ export async function GET(req: Request) {
     // Use a runtime-bound Prisma client for consistent visibility with request-time DATABASE_URL
     let user: any = null;
     try {
-       
       const env = (function getEnv() {
         try {
           return eval("process").env ?? {};
@@ -149,7 +147,6 @@ export async function GET(req: Request) {
     if (!user) {
       // Diagnostic: report counts and schema for current runtime DB to help debug visibility
       try {
-         
         const env = (function getEnv() {
           try {
             return eval("process").env ?? {};
@@ -212,7 +209,7 @@ export async function GET(req: Request) {
     // Serialize cookie via iron-session helper
     const { sealData } = await import("iron-session");
     const { getSessionOptions } = await import("@/lib/auth/session-config");
-    
+
     // Use getSessionOptions() for runtime evaluation of secure flag
     const sessionOptions = getSessionOptions();
 
