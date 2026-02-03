@@ -50,7 +50,10 @@ export const sessionOptions: SessionOptions = {
     // HttpOnly: Cookie cannot be accessed via JavaScript (XSS protection)
     httpOnly: true,
     // Secure: Only send cookie over HTTPS in production
-    secure: process.env.NODE_ENV === "production",
+    // Disable secure in E2E tests (ALLOW_TEST_RUNNER=1) since tests run over HTTP
+    secure:
+      process.env.NODE_ENV === "production" &&
+      process.env.ALLOW_TEST_RUNNER !== "1",
     // SameSite: CSRF protection
     // 'lax' allows cookies on top-level GET navigations but blocks on cross-origin POST
     sameSite: "lax" as const,

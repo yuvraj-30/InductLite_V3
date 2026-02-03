@@ -51,6 +51,8 @@ export async function programmaticLogin(
       value: json.cookieValue,
       url: process.env.BASE_URL || "http://localhost:3000",
       httpOnly: true,
+      // Explicitly set secure: false for E2E tests running over HTTP
+      secure: false,
     },
   ]);
 
