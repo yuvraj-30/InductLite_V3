@@ -174,7 +174,6 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/inductlite_e2e?schema=public
       BASE_URL: http://localhost:3000
-      PLAYWRIGHT_BROWSERS_PATH: "0"
 
     steps:
       - name: Checkout
@@ -212,7 +211,7 @@ jobs:
         run: npm run -w apps/web db:seed
 
       - name: Install Playwright browsers
-        run: npm run -w apps/web playwright:install --if-present || (cd apps/web && npx playwright install --with-deps chromium)
+        run: cd apps/web && npx playwright install --with-deps chromium
 
       - name: Build (workspace via turbo)
         env:
