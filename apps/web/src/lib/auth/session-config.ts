@@ -40,30 +40,75 @@ export interface SessionData {
   lastActivity?: number;
 }
 
-/**
- * Session configuration
- */
-export const sessionOptions: SessionOptions = {
+// Helper to get runtime env to avoid Next.js build-time inlining
+function getRuntimeEnv(): Record<string, string | undefined> {
+  try {
+    // eslint-disable-next-line no-eval
+    return eval("process").env ?? {};
+  } catch {
+    return process.env;
+  }
+}
+
+// Helper to determine if we should use secure cookies at runtime
+// In production, use secure cookies unless:
+// - ALLOW_TEST_RUNNER is set (E2E testing over HTTP)
+// - BASE_URL indicates localhost (development/testing)
+function shouldUseSecureCookies(): boolean {
+  const env = getRuntimeEnv();
+  if (env.NODE_ENV !== "production") {
+    return false;
+  }
+  if (env.ALLOW_TEST_RUNNER === "1") {
+    return false;
+  }
+  // Check if BASE_URL is localhost (E2E testing)
+  const baseUrl = env.BASE_URL || "";
+  if (baseUrl.includes("localhost") || baseUrl.includes("127.0.0.1")) {
+    return false;
+  }
+  return true;
+}
+
+// Base session options (without secure flag which is computed at runtime)
+const baseSessionOptions = {
   password: process.env.SESSION_SECRET!,
   cookieName: "inductlite_session",
   cookieOptions: {
-    // HttpOnly: Cookie cannot be accessed via JavaScript (XSS protection)
     httpOnly: true,
-    // Secure: Only send cookie over HTTPS in production
-    // Disable secure in E2E tests (ALLOW_TEST_RUNNER=1) since tests run over HTTP
-    secure:
-      process.env.NODE_ENV === "production" &&
-      process.env.ALLOW_TEST_RUNNER !== "1",
-    // SameSite: CSRF protection
-    // 'lax' allows cookies on top-level GET navigations but blocks on cross-origin POST
     sameSite: "lax" as const,
-    // Max age: 8 hours
     maxAge: 60 * 60 * 8,
-    // Path: Cookie available for entire site
     path: "/",
   },
-  // TTL in seconds (must match or exceed maxAge)
   ttl: 60 * 60 * 8,
+};
+
+/**
+ * Get session options with runtime-evaluated secure flag
+ * This allows the secure flag to be determined at runtime based on environment
+ */
+export function getSessionOptions(): SessionOptions {
+  return {
+    ...baseSessionOptions,
+    cookieOptions: {
+      ...baseSessionOptions.cookieOptions,
+      secure: shouldUseSecureCookies(),
+    },
+  };
+}
+
+/**
+ * Session configuration (for backward compatibility)
+ * Note: The 'secure' flag is evaluated at module load time.
+ * For runtime evaluation, use getSessionOptions() instead.
+ */
+export const sessionOptions: SessionOptions = {
+  ...baseSessionOptions,
+  cookieOptions: {
+    ...baseSessionOptions.cookieOptions,
+    // For the static export, evaluate secure at module load time
+    secure: shouldUseSecureCookies(),
+  },
 };
 
 /**

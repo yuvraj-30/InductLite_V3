@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     // Runtime diagnostics: log masked DB URL and current schema + table count
     try {
       // Read runtime env safely
-       
+
       const env = (function getEnv() {
         try {
           return eval("process").env ?? {};
@@ -93,7 +93,6 @@ export async function POST(req: Request) {
     // Use a runtime-bound Prisma client so we write to the same DB the server process sees
     let created: any = null;
     try {
-       
       const env = (function getEnv() {
         try {
           return eval("process").env ?? {};
@@ -154,7 +153,6 @@ export async function POST(req: Request) {
 
     // Confirm visibility of created user from the same runtime DB URL (diagnostic)
     try {
-       
       const env = (function getEnv() {
         try {
           return eval("process").env ?? {};

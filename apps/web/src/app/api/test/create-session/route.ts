@@ -211,7 +211,10 @@ export async function GET(req: Request) {
 
     // Serialize cookie via iron-session helper
     const { sealData } = await import("iron-session");
-    const { sessionOptions } = await import("@/lib/auth/session-config");
+    const { getSessionOptions } = await import("@/lib/auth/session-config");
+    
+    // Use getSessionOptions() for runtime evaluation of secure flag
+    const sessionOptions = getSessionOptions();
 
     const ttl =
       sessionOptions.ttl ?? sessionOptions.cookieOptions?.maxAge ?? 60 * 60 * 8;
