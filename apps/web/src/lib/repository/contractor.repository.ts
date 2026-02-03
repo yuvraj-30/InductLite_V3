@@ -1,0 +1,536 @@
+/**
+ * Contractor Repository
+ *
+ * Handles all Contractor-related database operations with mandatory tenant scoping.
+ */
+
+import { scopedDb } from "@/lib/db/scoped-db";
+import type {
+  Contractor,
+  ContractorDocument,
+  DocumentType,
+  Prisma,
+} from "@prisma/client";
+import {
+  requireCompanyId,
+  handlePrismaError,
+  normalizePagination,
+  paginatedResult,
+  type PaginationParams,
+  type PaginatedResult,
+  RepositoryError,
+} from "./base";
+import { parsePhoneNumberFromString } from "libphonenumber-js";
+
+/**
+ * Contractor with documents
+ */
+export interface ContractorWithDocuments extends Contractor {
+  documents: ContractorDocument[];
+}
+
+/**
+ * Contractor filter options
+ */
+export interface ContractorFilter {
+  name?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  trade?: string;
+  isActive?: boolean;
+}
+
+/**
+ * Contractor creation input
+ */
+export interface CreateContractorInput {
+  name: string;
+  contact_name?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  trade?: string;
+  notes?: string;
+  is_active?: boolean;
+}
+
+/**
+ * Contractor update input
+ */
+export interface UpdateContractorInput {
+  name?: string;
+  contact_name?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  trade?: string;
+  notes?: string;
+  is_active?: boolean;
+}
+
+/**
+ * Document creation input
+ */
+export interface CreateDocumentInput {
+  document_type: DocumentType;
+  file_name: string;
+  file_path: string;
+  file_size: number;
+  mime_type: string;
+  expires_at?: Date;
+  notes?: string;
+}
+
+/**
+ * Find contractor by ID within a company
+ */
+export async function findContractorById(
+  companyId: string,
+  contractorId: string,
+): Promise<Contractor | null> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+    const contractor = await db.contractor.findFirst({
+      where: { id: contractorId, company_id: companyId },
+    });
+    return contractor;
+  } catch (error) {
+    handlePrismaError(error, "Contractor");
+  }
+}
+
+/**
+ * Find contractor by ID with documents
+ */
+export async function findContractorByIdWithDocuments(
+  companyId: string,
+  contractorId: string,
+): Promise<ContractorWithDocuments | null> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+    return await db.contractor.findFirst({
+      where: { id: contractorId, company_id: companyId },
+      include: {
+        documents: {
+          orderBy: { uploaded_at: "desc" },
+        },
+      },
+    });
+  } catch (error) {
+    handlePrismaError(error, "Contractor");
+  }
+}
+
+/**
+ * Find contractor by email within a company
+ */
+export async function findContractorByEmail(
+  companyId: string,
+  email: string,
+): Promise<Contractor | null> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+    const contractor = await db.contractor.findFirst({
+      where: { contact_email: email.toLowerCase(), company_id: companyId },
+    });
+    return contractor;
+  } catch (error) {
+    handlePrismaError(error, "Contractor");
+  }
+}
+
+/**
+ * List contractors for a company with pagination and filtering
+ */
+export async function listContractors(
+  companyId: string,
+  filter?: ContractorFilter,
+  pagination?: PaginationParams,
+): Promise<PaginatedResult<Contractor>> {
+  requireCompanyId(companyId);
+
+  const { skip, take, page, pageSize } = normalizePagination(pagination ?? {});
+
+  const where: Prisma.ContractorWhereInput = {
+    company_id: companyId,
+    ...(filter?.name && {
+      name: { contains: filter.name, mode: "insensitive" },
+    }),
+    ...(filter?.contactEmail && {
+      contact_email: { contains: filter.contactEmail, mode: "insensitive" },
+    }),
+    ...(filter?.contactPhone && {
+      contact_phone: { contains: filter.contactPhone },
+    }),
+    ...(filter?.trade && {
+      trade: { contains: filter.trade, mode: "insensitive" },
+    }),
+    ...(filter?.isActive !== undefined && { is_active: filter.isActive }),
+  };
+
+  try {
+    const db = scopedDb(companyId);
+
+    const [contractors, total] = await Promise.all([
+      db.contractor.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { name: "asc" },
+      }),
+      db.contractor.count({ where }),
+    ]);
+
+    return paginatedResult(contractors, total, page, pageSize);
+  } catch (error) {
+    handlePrismaError(error, "Contractor");
+  }
+}
+
+/**
+ * List contractors with documents
+ */
+export async function listContractorsWithDocuments(
+  companyId: string,
+  filter?: ContractorFilter,
+  pagination?: PaginationParams,
+): Promise<PaginatedResult<ContractorWithDocuments>> {
+  requireCompanyId(companyId);
+
+  const { skip, take, page, pageSize } = normalizePagination(pagination ?? {});
+
+  const where: Prisma.ContractorWhereInput = {
+    company_id: companyId,
+    ...(filter?.name && {
+      name: { contains: filter.name, mode: "insensitive" },
+    }),
+    ...(filter?.contactEmail && {
+      contact_email: { contains: filter.contactEmail, mode: "insensitive" },
+    }),
+    ...(filter?.isActive !== undefined && { is_active: filter.isActive }),
+  };
+
+  try {
+    const db = scopedDb(companyId);
+
+    const [contractors, total] = await Promise.all([
+      db.contractor.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { name: "asc" },
+        include: {
+          documents: {
+            orderBy: { uploaded_at: "desc" },
+          },
+        },
+      }),
+      db.contractor.count({ where }),
+    ]);
+
+    return paginatedResult(contractors, total, page, pageSize);
+  } catch (error) {
+    handlePrismaError(error, "Contractor");
+  }
+}
+
+/**
+ * Create a new contractor
+ */
+export async function createContractor(
+  companyId: string,
+  input: CreateContractorInput,
+): Promise<Contractor> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+
+    // Normalize and validate phone to E.164 for consistent storage
+    let formattedPhone: string | undefined = undefined;
+    if (input.contact_phone) {
+      try {
+        const pn = parsePhoneNumberFromString(
+          input.contact_phone as string,
+          "NZ",
+        );
+        if (!pn || !pn.isValid()) {
+          throw new RepositoryError("Invalid phone number", "VALIDATION");
+        }
+        formattedPhone = pn.number; // E.164
+      } catch {
+        throw new RepositoryError("Invalid phone number", "VALIDATION");
+      }
+    }
+
+    return await db.contractor.create({
+      data: {
+        company_id: companyId,
+        name: input.name,
+        contact_name: input.contact_name,
+        contact_email: input.contact_email?.toLowerCase(),
+        contact_phone: formattedPhone,
+        trade: input.trade,
+        notes: input.notes,
+        is_active: input.is_active ?? true,
+      },
+    });
+  } catch (error) {
+    handlePrismaError(error, "Contractor");
+  }
+}
+
+/**
+ * Update a contractor
+ */
+export async function updateContractor(
+  companyId: string,
+  contractorId: string,
+  input: UpdateContractorInput,
+): Promise<Contractor> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+
+    // First verify the contractor belongs to this company
+    const existing = await db.contractor.findFirst({
+      where: { id: contractorId, company_id: companyId },
+    });
+
+    if (!existing) {
+      throw new Error("Contractor not found");
+    }
+
+    await db.contractor.updateMany({
+      where: { id: contractorId, company_id: companyId },
+      data: {
+        ...(input.name && { name: input.name }),
+        ...(input.contact_name !== undefined && {
+          contact_name: input.contact_name,
+        }),
+        ...(input.contact_email !== undefined && {
+          contact_email: input.contact_email?.toLowerCase(),
+        }),
+        ...(input.contact_phone !== undefined && {
+          // Validate & normalize phone if provided
+          contact_phone: ((): string | undefined => {
+            if (input.contact_phone === undefined) return undefined;
+            // Validate & normalize phone using libphonenumber-js
+            try {
+              const pn = parsePhoneNumberFromString(
+                input.contact_phone as string,
+                "NZ",
+              );
+              if (!pn || !pn.isValid()) {
+                throw new RepositoryError("Invalid phone number", "VALIDATION");
+              }
+              return pn.number;
+            } catch {
+              throw new RepositoryError("Invalid phone number", "VALIDATION");
+            }
+          })(),
+        }),
+        ...(input.trade !== undefined && { trade: input.trade }),
+        ...(input.notes !== undefined && { notes: input.notes }),
+        ...(input.is_active !== undefined && { is_active: input.is_active }),
+      },
+    });
+
+    const updated = await db.contractor.findFirst({
+      where: { id: contractorId, company_id: companyId },
+    });
+    return updated as Contractor;
+  } catch (error) {
+    handlePrismaError(error, "Contractor");
+  }
+}
+
+/**
+ * Deactivate a contractor (soft delete)
+ */
+export async function deactivateContractor(
+  companyId: string,
+  contractorId: string,
+): Promise<Contractor> {
+  return updateContractor(companyId, contractorId, { is_active: false });
+}
+
+/**
+ * Add document to contractor
+ */
+export async function addContractorDocument(
+  companyId: string,
+  contractorId: string,
+  input: CreateDocumentInput,
+): Promise<ContractorDocument> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+    // First verify the contractor belongs to this company
+    const contractor = await db.contractor.findFirst({
+      where: { id: contractorId, company_id: companyId },
+    });
+
+    if (!contractor) {
+      throw new Error("Contractor not found");
+    }
+
+    return await db.contractorDocument.create({
+      data: {
+        contractor_id: contractorId,
+        document_type: input.document_type,
+        file_name: input.file_name,
+        file_path: input.file_path,
+        file_size: input.file_size,
+        mime_type: input.mime_type,
+        expires_at: input.expires_at,
+        notes: input.notes,
+      },
+    });
+  } catch (error) {
+    handlePrismaError(error, "ContractorDocument");
+  }
+}
+
+/**
+ * Delete contractor document
+ */
+export async function deleteContractorDocument(
+  companyId: string,
+  contractorId: string,
+  documentId: string,
+): Promise<void> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+    // First verify the contractor belongs to this company
+    const contractor = await db.contractor.findFirst({
+      where: { id: contractorId, company_id: companyId },
+    });
+
+    if (!contractor) {
+      throw new Error("Contractor not found");
+    }
+
+    // eslint-disable-next-line security-guardrails/require-company-id -- Verified ownership above; deleting child document scoped by nested contractor relation
+    await db.contractorDocument.deleteMany({
+      where: {
+        id: documentId,
+        contractor: {
+          is: { id: contractorId, company_id: companyId },
+        },
+      },
+    });
+  } catch (error) {
+    handlePrismaError(error, "ContractorDocument");
+  }
+}
+
+/**
+ * Find contractors with expiring documents
+ */
+export async function findContractorsWithExpiringDocuments(
+  companyId: string,
+  expiresWithinDays: number = 30,
+): Promise<ContractorWithDocuments[]> {
+  requireCompanyId(companyId);
+
+  const expirationDate = new Date();
+  expirationDate.setDate(expirationDate.getDate() + expiresWithinDays);
+
+  try {
+    const db = scopedDb(companyId);
+    return await db.contractor.findMany({
+      where: {
+        company_id: companyId,
+        is_active: true,
+        documents: {
+          some: {
+            expires_at: {
+              lte: expirationDate,
+              gte: new Date(), // Not already expired
+            },
+          },
+        },
+      },
+      include: {
+        documents: {
+          where: {
+            expires_at: {
+              lte: expirationDate,
+              gte: new Date(),
+            },
+          },
+          orderBy: { expires_at: "asc" },
+        },
+      },
+      orderBy: { name: "asc" },
+    });
+  } catch (error) {
+    handlePrismaError(error, "Contractor");
+  }
+}
+
+/**
+ * Find contractors with expired documents
+ */
+export async function findContractorsWithExpiredDocuments(
+  companyId: string,
+): Promise<ContractorWithDocuments[]> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+    return await db.contractor.findMany({
+      where: {
+        company_id: companyId,
+        is_active: true,
+        documents: {
+          some: {
+            expires_at: {
+              lt: new Date(),
+            },
+          },
+        },
+      },
+      include: {
+        documents: {
+          where: {
+            expires_at: {
+              lt: new Date(),
+            },
+          },
+          orderBy: { expires_at: "asc" },
+        },
+      },
+      orderBy: { name: "asc" },
+    });
+  } catch (error) {
+    handlePrismaError(error, "Contractor");
+  }
+}
+
+/**
+ * Count active contractors in a company
+ */
+export async function countActiveContractors(
+  companyId: string,
+): Promise<number> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+    return await db.contractor.count({
+      where: { company_id: companyId, is_active: true },
+    });
+  } catch (error) {
+    handlePrismaError(error, "Contractor");
+  }
+}

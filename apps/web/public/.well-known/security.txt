@@ -1,0 +1,10 @@
+# InductLite Security Policy
+# See https://securitytxt.org/
+
+Contact: mailto:security@yourdomain.com
+Expires: 2027-02-03T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://yourdomain.com/.well-known/security.txt
+
+# Please report security vulnerabilities responsibly.
+# We aim to respond to valid reports within 72 hours.

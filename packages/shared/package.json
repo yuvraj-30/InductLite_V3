@@ -1,0 +1,25 @@
+{
+  "name": "@inductlite/shared",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepare": "npm run build",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --max-warnings=0"
+  },
+  "dependencies": {
+    "libphonenumber-js": "^1.12.35",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "eslint": "^9.0.0",
+    "@eslint/js": "^9.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "eslint-config-next": "16.1.6"
+  }
+}

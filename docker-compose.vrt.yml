@@ -1,0 +1,68 @@
+version: "3.8"
+
+# Minimal Docker Compose for VisualRegressionTracker (quick local start)
+# - Data will be stored under ./vrt-db and ./imageUploads in the repo root
+# - Adjust envs or create an .env.vrt file and pass it with --env-file as needed
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: vrt
+      POSTGRES_PASSWORD: vrt
+      POSTGRES_DB: vrt
+    volumes:
+      - ./vrt-db:/var/lib/postgresql/data
+    # Host port 5432 may be in use on developer machines; map to 5433 by default to avoid conflicts
+    ports:
+      - "5433:5432"
+    # Healthcheck used to gate the migration container
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  migration:
+    image: visualregressiontracker/migration:${VRT_MIGRATION_VERSION}
+    environment:
+      DATABASE_URL: postgresql://vrt:vrt@postgres:5432/vrt
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+
+  api:
+    image: visualregressiontracker/api:5.1.1
+    environment:
+      DATABASE_URL: postgresql://vrt:vrt@postgres:5432/vrt
+      JWT_SECRET: dev-secret
+      JWT_LIFE_TIME: 1d
+      APP_FRONTEND_URL: http://localhost:8080
+      # Optional: increase limits for large uploads
+      BODY_PARSER_JSON_LIMIT: 10mb
+    # Host port changed to 3005 to avoid collisions with local app on 3000
+    ports:
+      - "3005:3000"
+    depends_on:
+      - postgres
+    volumes:
+      - ./imageUploads:/imageUploads
+
+  ui:
+    image: visualregressiontracker/ui:5.1.1
+    environment:
+      REACT_APP_API_URL: http://localhost:3005
+      PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - api
+    volumes:
+      - ./imageUploads:/usr/share/nginx/html/static/imageUploads
+
+# Usage:
+#   docker compose -f docker-compose.vrt.yml up -d
+#   Visit http://localhost:8080 and create a project + API key
+#   Set VRT_ENABLED=1, VRT_API_URL=http://localhost:8080, VRT_API_KEY=<key> locally or in CI
+#   Stop with: docker compose -f docker-compose.vrt.yml down --volumes

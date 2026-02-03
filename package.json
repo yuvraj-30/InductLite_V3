@@ -1,0 +1,41 @@
+{
+  "name": "inductlite",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "db:generate": "turbo run db:generate",
+    "db:migrate": "turbo run db:migrate",
+    "db:push": "turbo run db:push",
+    "db:seed": "turbo run db:seed",
+    "db:studio": "turbo run db:studio",
+    "vrt:up": "docker compose -f ./docker-compose.vrt.yml up -d",
+    "vrt:down": "docker compose -f ./docker-compose.vrt.yml down --volumes",
+    "vrt:logs": "docker compose -f ./docker-compose.vrt.yml logs -f"
+  },
+  "devDependencies": {
+    "@testcontainers/postgresql": "^11.11.0",
+    "@types/deep-eql": "^4.0.2",
+    "@types/docker-modem": "^3.0.6",
+    "@types/readdir-glob": "^1.1.5",
+    "@types/ssh2-streams": "^0.1.13",
+    "testcontainers": "^11.11.0",
+    "turbo": "^2.3.0",
+    "typescript": "^5.3.3"
+  },
+  "packageManager": "npm@10.2.4",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "overrides": {
+    "undici": ">=6.23.0"
+  }
+}

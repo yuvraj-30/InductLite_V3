@@ -1,0 +1,15 @@
+/* Hide dynamic parts that frequently change between runs (timestamps, flash messages, tooltips) */
+time,
+.timestamp,
+.uptime,
+.flash,
+.dynamic,
+.tooltip {
+  visibility: hidden !important;
+}
+/* Hide animated elements */
+.animated,
+.spinner,
+.loader {
+  visibility: hidden !important;
+}

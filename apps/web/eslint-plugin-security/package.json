@@ -1,0 +1,15 @@
+{
+  "name": "eslint-plugin-security-guardrails",
+  "version": "1.0.0",
+  "description": "ESLint security guardrails for InductLite",
+  "main": "index.js",
+  "keywords": [
+    "eslint",
+    "eslintplugin",
+    "security"
+  ],
+  "private": true,
+  "scripts": {
+    "test": "node ./test/rules.test.js"
+  }
+}

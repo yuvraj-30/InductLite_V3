@@ -1,0 +1,354 @@
+// Prisma schema for InductLite multi-tenant SaaS
+// All tenant-owned entities include company_id for scoping
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// CORE ENTITIES
+// ============================================================================
+
+model Company {
+  id             String   @id @default(cuid())
+  name           String
+  slug           String   @unique
+  retention_days Int      @default(365) // Data retention policy
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  // Relations
+  users               User[]
+  sites               Site[]
+  induction_templates InductionTemplate[]
+  contractors         Contractor[]
+  sign_in_records     SignInRecord[]
+  export_jobs         ExportJob[]
+  audit_logs          AuditLog[]
+
+  @@index([slug])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  company_id    String
+  email         String    @unique
+  password_hash String
+  name          String
+  role          UserRole  @default(VIEWER)
+  is_active     Boolean   @default(true)
+  failed_logins Int       @default(0)
+  locked_until  DateTime?
+  last_login_at DateTime?
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  // Relations
+  company    Company        @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  audit_logs AuditLog[]     @relation("user_audit_logs")
+  sign_outs  SignInRecord[] @relation("signed_out_by")
+
+  @@unique([company_id, email])
+  @@index([company_id])
+  @@index([email])
+}
+
+enum UserRole {
+  ADMIN
+  VIEWER
+}
+
+// ============================================================================
+// SITES & PUBLIC LINKS
+// ============================================================================
+
+model Site {
+  id          String   @id @default(cuid())
+  company_id  String
+  name        String
+  address     String?
+  description String?
+  is_active   Boolean  @default(true)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relations
+  company         Company             @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  templates       InductionTemplate[] @relation("template_site")
+  public_links    SitePublicLink[]
+  sign_in_records SignInRecord[]
+
+  @@unique([company_id, name])
+  @@index([company_id])
+  @@index([company_id, is_active])
+}
+
+model SitePublicLink {
+  id         String    @id @default(cuid())
+  site_id    String
+  slug       String    @unique // Public URL slug for QR code
+  is_active  Boolean   @default(true)
+  created_at DateTime  @default(now())
+  rotated_at DateTime  @default(now()) // Last time slug was rotated
+  expires_at DateTime? // Optional expiry
+
+  // Relations
+  site Site @relation(fields: [site_id], references: [id], onDelete: Cascade)
+
+  @@index([slug])
+  @@index([site_id])
+}
+
+// ============================================================================
+// INDUCTION TEMPLATES & QUESTIONS
+// ============================================================================
+
+model InductionTemplate {
+  id           String    @id @default(cuid())
+  company_id   String
+  site_id      String? // null = company-wide default template
+  name         String
+  description  String?
+  version      Int       @default(1)
+  is_published Boolean   @default(false)
+  is_default   Boolean   @default(false) // Company-wide default (only when site_id is null)
+  is_archived  Boolean   @default(false) // Immutable once archived (old versions)
+  published_at DateTime?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  // Relations
+  company   Company             @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  site      Site?               @relation("template_site", fields: [site_id], references: [id], onDelete: Cascade)
+  questions InductionQuestion[]
+  responses InductionResponse[]
+
+  // Business rules enforced via repository layer:
+  // - At most one is_published=true template per site (where site_id is not null)
+  // - At most one is_published=true AND is_default=true per company (where site_id is null)
+  @@unique([company_id, name, version])
+  @@index([company_id])
+  @@index([company_id, site_id])
+  @@index([company_id, is_default, is_published])
+  @@index([site_id, is_published])
+}
+
+model InductionQuestion {
+  id             String       @id @default(cuid())
+  template_id    String
+  question_text  String
+  question_type  QuestionType
+  options        Json? // For MULTIPLE_CHOICE, CHECKBOX types
+  is_required    Boolean      @default(true)
+  display_order  Int
+  correct_answer Json? // For validation (if applicable)
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+
+  // Relations
+  template InductionTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
+
+  @@index([template_id])
+  @@index([template_id, display_order])
+}
+
+enum QuestionType {
+  TEXT
+  MULTIPLE_CHOICE
+  CHECKBOX
+  YES_NO
+  ACKNOWLEDGMENT
+}
+
+// ============================================================================
+// SIGN-IN RECORDS & INDUCTION RESPONSES
+// ============================================================================
+
+model SignInRecord {
+  id                 String      @id @default(cuid())
+  company_id         String
+  site_id            String
+  visitor_name       String
+  visitor_phone      String
+  visitor_email      String?
+  employer_name      String? // For contractor matching
+  visitor_type       VisitorType @default(CONTRACTOR)
+  sign_in_ts         DateTime    @default(now())
+  sign_out_ts        DateTime? // null = currently on site
+  signed_out_by      String? // User ID who signed out the visitor (null = self-signout)
+  sign_out_token     String? // Hashed token for self sign-out
+  sign_out_token_exp DateTime? // Token expiry
+  notes              String?
+  created_at         DateTime    @default(now())
+
+  // Relations
+  company            Company            @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  site               Site               @relation(fields: [site_id], references: [id], onDelete: Cascade)
+  signed_out_user    User?              @relation("signed_out_by", fields: [signed_out_by], references: [id], onDelete: SetNull)
+  induction_response InductionResponse?
+
+  @@index([company_id])
+  @@index([company_id, site_id])
+  @@index([company_id, sign_in_ts])
+  @@index([company_id, sign_out_ts])
+  @@index([site_id, sign_in_ts])
+  @@index([sign_out_token])
+}
+
+enum VisitorType {
+  CONTRACTOR
+  VISITOR
+  EMPLOYEE
+  DELIVERY
+}
+
+model InductionResponse {
+  id                String   @id @default(cuid())
+  sign_in_record_id String   @unique
+  template_id       String
+  template_version  Int // Snapshot of version at time of completion
+  answers           Json // Array of { question_id, answer }
+  completed_at      DateTime @default(now())
+  passed            Boolean  @default(true)
+
+  // Relations
+  sign_in_record SignInRecord      @relation(fields: [sign_in_record_id], references: [id], onDelete: Cascade)
+  template       InductionTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
+
+  @@index([template_id])
+  @@index([sign_in_record_id])
+}
+
+// ============================================================================
+// CONTRACTORS & DOCUMENTS
+// ============================================================================
+
+model Contractor {
+  id            String   @id @default(cuid())
+  company_id    String
+  name          String // Company/individual name
+  contact_name  String?
+  contact_email String?
+  contact_phone String?
+  trade         String? // e.g., Electrician, Plumber
+  notes         String?
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  // Relations
+  company   Company              @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  documents ContractorDocument[]
+
+  @@unique([company_id, name])
+  @@index([company_id])
+  @@index([company_id, is_active])
+}
+
+model ContractorDocument {
+  id            String       @id @default(cuid())
+  contractor_id String
+  document_type DocumentType
+  file_name     String
+  file_path     String // Storage path (S3 key or local path)
+  file_size     Int // bytes
+  mime_type     String
+  expires_at    DateTime? // null = no expiry
+  uploaded_at   DateTime     @default(now())
+  notes         String?
+
+  // Relations
+  contractor Contractor @relation(fields: [contractor_id], references: [id], onDelete: Cascade)
+
+  @@index([contractor_id])
+  @@index([contractor_id, expires_at])
+  @@index([expires_at])
+}
+
+enum DocumentType {
+  INSURANCE
+  CERTIFICATION
+  LICENSE
+  TRAINING
+  HEALTH_SAFETY
+  OTHER
+}
+
+// ============================================================================
+// EXPORT JOBS
+// ============================================================================
+
+model ExportJob {
+  id            String       @id @default(cuid())
+  company_id    String
+  export_type   ExportType
+  status        ExportStatus @default(QUEUED)
+  parameters    Json // Export configuration (date range, site, etc.)
+  file_path     String? // Storage path when complete
+  file_name     String?
+  file_size     Int?
+  error_message String?
+  queued_at     DateTime     @default(now())
+  started_at    DateTime?
+  completed_at  DateTime?
+  expires_at    DateTime? // When download link expires
+  requested_by  String // User ID who requested
+
+  // Relations
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+
+  @@index([company_id])
+  @@index([company_id, status])
+  @@index([status])
+  @@index([expires_at])
+}
+
+enum ExportType {
+  SIGN_IN_CSV
+  INDUCTION_CSV
+  SITE_PACK_PDF
+  COMPLIANCE_ZIP
+}
+
+enum ExportStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+// ============================================================================
+// AUDIT LOG
+// ============================================================================
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  company_id  String
+  user_id     String? // null for system/anonymous actions
+  action      String // e.g., "user.login", "site.create", "export.download"
+  entity_type String? // e.g., "Site", "Contractor"
+  entity_id   String?
+  details     Json? // Additional context
+  ip_address  String?
+  user_agent  String?
+  request_id  String?
+  created_at  DateTime @default(now())
+
+  // Relations
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  user    User?   @relation("user_audit_logs", fields: [user_id], references: [id], onDelete: SetNull)
+
+  // Append-only: no update/delete operations allowed at application level
+  @@index([company_id])
+  @@index([company_id, created_at])
+  @@index([company_id, action])
+  @@index([user_id])
+  @@index([entity_type, entity_id])
+  @@index([request_id])
+}

@@ -1,0 +1,150 @@
+name: Nightly Full Validation
+
+on:
+  schedule:
+    - cron: "0 16 * * *" # ~04:00 Pacific/Auckland (UTC+12), adjust if needed
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_ENV: test
+  NEXT_TELEMETRY_DISABLED: "1"
+  SESSION_SECRET: ci-test-secret-at-least-32-characters-long
+  SIGN_OUT_TOKEN_SECRET: ci-test-signout-secret-at-least-32-characters
+  NEXT_PUBLIC_APP_URL: http://localhost:3000
+  TRUST_PROXY: "0"
+  ALLOW_TEST_RUNNER: "1"
+
+jobs:
+  full:
+    name: Full (lint • typecheck • unit • integration • e2e • visual)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: inductlite_nightly
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/inductlite_nightly?schema=public
+      BASE_URL: http://localhost:3000
+      PLAYWRIGHT_BROWSERS_PATH: "0"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Cache Next and Playwright artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/web/.next/cache
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-nightly-cache-${{ hashFiles('package-lock.json', 'apps/web/next.config.*', 'apps/web/playwright.config.ts', 'apps/web/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nightly-cache-
+
+      - name: Install deps (workspace)
+        run: npm ci
+
+      - name: Prisma generate
+        run: npm run db:generate
+
+      - name: Prisma validate
+        run: npm run -w apps/web prisma:validate
+
+      - name: Prisma format check
+        run: npm run -w apps/web prisma:format:check
+
+      - name: Migrate DB
+        run: npm run -w apps/web db:migrate
+
+      - name: Seed DB
+        run: npm run -w apps/web db:seed
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Integration tests
+        run: npm run -w apps/web test:integration
+
+      - name: Install Playwright browsers
+        run: (cd apps/web && npx playwright install --with-deps chromium firefox webkit)
+
+      - name: Build
+        env:
+          NODE_ENV: production
+        run: npm run build
+
+      - name: Start standalone server
+        run: |
+          set -euo pipefail
+          cd apps/web
+          export PORT=3000
+          export NODE_ENV=production
+          node ./.next/standalone/server.js &
+          echo $! > /tmp/web.pid
+
+      - name: Wait for app
+        run: |
+          set -euo pipefail
+          for i in {1..60}; do
+            if curl -fsS http://localhost:3000/health >/dev/null 2>&1; then
+              echo "App is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "App did not become ready in time"
+          exit 1
+
+      - name: E2E full (desktop browsers)
+        env:
+          BASE_URL: http://localhost:3000
+          TRUST_PROXY: "1"
+          ALLOW_TEST_RUNNER: "1"
+        run: npm run -w apps/web test:e2e:full
+
+      - name: Visual regression (local snapshots)
+        run: npm run -w apps/web test:visual
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f /tmp/web.pid ]; then
+            kill $(cat /tmp/web.pid) || true
+          fi
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 14

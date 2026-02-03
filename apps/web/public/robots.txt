@@ -1,0 +1,14 @@
+# Disallow indexing of admin and API routes
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+Disallow: /auth/
+Disallow: /sign-out/
+Disallow: /_next/
+Disallow: /health
+
+# Allow public sign-in pages
+Allow: /s/
+
+# Sitemap (if you have one)
+# Sitemap: https://yourdomain.com/sitemap.xml

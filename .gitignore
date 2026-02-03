@@ -1,0 +1,69 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+.next/
+out/
+dist/
+build/
+
+# Testing
+coverage/
+apps/web/playwright-report/
+apps/web/test-results/
+
+# Prisma
+*.db
+*.db-journal
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+# VRT env file (copy `.env.vrt.example` to `.env.vrt` and DO NOT commit)
+.env.vrt
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pino-pretty*
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Turbo
+.turbo/
+
+# Local storage (dev)
+.storage/
+
+# Docker volumes
+postgres_data/
+
+# Local DB runtime directories
+apps/web/inductlite-db/
+vrt-db/
+
+# Temp/debug files
+tmp*
+tmp/
+apps/web/eslint-plugin-security/test/run-one.js
+
+# TypeScript
+*.tsbuildinfo
+
+# Misc
+*.pem

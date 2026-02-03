@@ -1,0 +1,37 @@
+{
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/packages/cspell-types/cspell.schema.json",
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "inductlite",
+    "networkidle",
+    "behaviour",
+    "monkeypatch",
+    "TOCTOU",
+    "IDOR",
+    "signin",
+    "signout",
+    "upsert",
+    "prisma",
+    "turbo",
+    "turborepo",
+    "upstash",
+    "buildright",
+    "argon",
+    "pino",
+    "prerendered",
+    "revalidate",
+    "revalidated",
+    "testcontainers",
+    "vitest"
+  ],
+  "ignorePaths": [
+    "node_modules",
+    ".next",
+    "dist",
+    "coverage",
+    "playwright-report",
+    "*.lock",
+    "*.log"
+  ]
+}

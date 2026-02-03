@@ -1,0 +1,265 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # CI-safe defaults (override in repo/environment secrets if needed)
+  NODE_ENV: test
+  NEXT_TELEMETRY_DISABLED: "1"
+  SESSION_SECRET: ci-test-secret-at-least-32-characters-long
+  SIGN_OUT_TOKEN_SECRET: ci-test-signout-secret-at-least-32-characters
+  NEXT_PUBLIC_APP_URL: http://localhost:3000
+  TRUST_PROXY: "0"
+  ALLOW_TEST_RUNNER: "1"
+
+jobs:
+  quality:
+    name: Lint • Typecheck • Unit
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: inductlite
+          POSTGRES_PASSWORD: inductlite_dev_password
+          POSTGRES_DB: inductlite
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U inductlite"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql://inductlite:inductlite_dev_password@localhost:5432/inductlite?schema=public
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Cache Next build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/web/.next/cache
+          key: ${{ runner.os }}-nextcache-${{ hashFiles('package-lock.json', 'apps/web/next.config.*', 'apps/web/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nextcache-
+
+      - name: Install deps (workspace)
+        run: npm ci
+
+      - name: Prisma generate
+        run: npm run db:generate
+
+      - name: Prisma validate
+        run: npm run -w apps/web prisma:validate
+
+      - name: Prisma format check
+        run: npm run -w apps/web prisma:format:check
+
+      - name: Migrate DB
+        run: npm run db:migrate
+
+      - name: Lint (workspace via turbo)
+        run: npm run lint
+
+      - name: Typecheck (workspace via turbo)
+        run: npm run typecheck
+
+      - name: Unit tests (workspace via turbo)
+        run: npm run test
+
+      - name: Coverage (apps/web)
+        run: npm run -w apps/web test:coverage
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: apps/web/coverage/
+          retention-days: 7
+
+  integration:
+    name: Integration tests (apps/web)
+    runs-on: ubuntu-latest
+    needs: [quality]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: inductlite_integration
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/inductlite_integration?schema=public
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Cache Next build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/web/.next/cache
+          key: ${{ runner.os }}-nextcache-${{ hashFiles('package-lock.json', 'apps/web/next.config.*', 'apps/web/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nextcache-
+
+      - name: Install deps (workspace)
+        run: npm ci
+
+      - name: Prisma generate
+        run: npm run db:generate
+
+      - name: Prisma validate
+        run: npm run -w apps/web prisma:validate
+
+      - name: Migrate DB
+        run: npm run -w apps/web db:migrate
+
+      - name: Integration tests
+        run: npm run -w apps/web test:integration
+
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    needs: [quality]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: inductlite_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/inductlite_e2e?schema=public
+      BASE_URL: http://localhost:3000
+      PLAYWRIGHT_BROWSERS_PATH: "0"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Cache Next and Playwright artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            apps/web/.next/cache
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-e2e-cache-${{ hashFiles('package-lock.json', 'apps/web/next.config.*', 'apps/web/playwright.config.ts', 'apps/web/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-e2e-cache-
+
+      - name: Install deps (workspace)
+        run: npm ci
+
+      - name: Prisma generate
+        run: npm run db:generate
+
+      - name: Prisma validate
+        run: npm run -w apps/web prisma:validate
+
+      - name: Migrate DB
+        run: npm run -w apps/web db:migrate
+
+      - name: Seed DB
+        run: npm run -w apps/web db:seed
+
+      - name: Install Playwright browsers
+        run: npm run -w apps/web playwright:install --if-present || (cd apps/web && npx playwright install --with-deps chromium)
+
+      - name: Build (workspace via turbo)
+        env:
+          NODE_ENV: production
+        run: npm run build
+
+      - name: Start standalone server
+        run: |
+          set -euo pipefail
+          cd apps/web
+          export PORT=3000
+          export NODE_ENV=production
+          echo "Starting standalone server..."
+          node ./.next/standalone/server.js &
+          echo $! > /tmp/web.pid
+
+      - name: Wait for app
+        run: |
+          set -euo pipefail
+          for i in {1..60}; do
+            if curl -fsS http://localhost:3000/health >/dev/null 2>&1; then
+              echo "App is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "App did not become ready in time"
+          exit 1
+
+      - name: Run E2E smoke
+        run: npm run -w apps/web test:e2e:smoke
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f /tmp/web.pid ]; then
+            kill $(cat /tmp/web.pid) || true
+          fi
+        env:
+          BASE_URL: http://localhost:3000
+          TRUST_PROXY: "1"
+          ALLOW_TEST_RUNNER: "1"
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7

@@ -1,0 +1,86 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/inductlite?schema=public
+      - SESSION_SECRET=${SESSION_SECRET:-production-secret-change-me-min-32-chars}
+      - STORAGE_MODE=${STORAGE_MODE:-local}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      - TRUST_PROXY=1
+      # Feature flags
+      - FEATURE_EXPORTS_ENABLED=${FEATURE_EXPORTS_ENABLED:-true}
+      - FEATURE_UPLOADS_ENABLED=${FEATURE_UPLOADS_ENABLED:-true}
+      - FEATURE_PUBLIC_SIGNIN_ENABLED=${FEATURE_PUBLIC_SIGNIN_ENABLED:-true}
+      # Guardrails
+      - MAX_EXPORT_ROWS=${MAX_EXPORT_ROWS:-50000}
+      - MAX_UPLOAD_MB=${MAX_UPLOAD_MB:-5}
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+    volumes:
+      - storage_data:/app/.storage
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/api/ready",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=inductlite
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d inductlite"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  # Migration runner (one-time job)
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/inductlite?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    command:
+      [
+        "npx",
+        "prisma",
+        "migrate",
+        "deploy",
+        "--schema=./apps/web/prisma/schema.prisma",
+      ]
+    restart: "no"
+
+volumes:
+  postgres_data:
+  storage_data:

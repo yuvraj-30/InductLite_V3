@@ -1,0 +1,108 @@
+name: Autogenerate Prisma Migration (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Branch to check and optionally commit migration"
+        required: true
+        default: "main"
+      confirm_push:
+        description: "Set true to commit & push generated migration files"
+        required: true
+        default: "false"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: prisma-migration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate-migration:
+    name: Generate (create-only) Prisma migration
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: inductlite_mig
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout target branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+
+      - name: Cache npm and Prisma
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            apps/web/node_modules/.prisma
+          key: ${{ runner.os }}-prisma-${{ hashFiles('package-lock.json', 'apps/web/prisma/schema.prisma') }}
+          restore-keys: |
+            ${{ runner.os }}-prisma-
+
+      - name: Install deps (workspace)
+        run: npm ci
+
+      - name: Prisma generate
+        run: npm run db:generate
+
+      - name: Create migration (create-only)
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/inductlite_mig?schema=public
+        run: |
+          set -euo pipefail
+          cd apps/web
+
+          # Generate a create-only migration if schema changed.
+          # This is safe: it writes migration files, but does not apply to production.
+          npx prisma migrate dev --create-only --name "auto-generated" --schema=prisma/schema.prisma || true
+
+          echo "---- git status (after create-only) ----"
+          git status --porcelain || true
+
+      - name: Commit & push migration (only if confirm_push=true)
+        if: ${{ github.event.inputs.confirm_push == 'true' }}
+        run: |
+          set -euo pipefail
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          if git status --porcelain | grep -q 'apps/web/prisma/migrations'; then
+            git add apps/web/prisma/migrations
+            git commit -m "chore(prisma): add migration (auto-generated)" || true
+            git push origin HEAD:${{ github.event.inputs.branch }}
+            echo "Pushed migration changes to ${{ github.event.inputs.branch }}"
+          else
+            echo "No migration changes detected; nothing to push."
+          fi
+
+      - name: Upload migrations as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prisma-migrations
+          path: apps/web/prisma/migrations
+          retention-days: 7
