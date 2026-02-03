@@ -243,6 +243,8 @@ jobs:
 
       - name: Run E2E smoke
         run: npm run -w apps/web test:e2e:smoke
+        env:
+          E2E_USE_SHARED_SERVER: "1"
 
       - name: Stop server
         if: always()
