@@ -219,15 +219,15 @@ jobs:
           NODE_ENV: production
         run: npm run build
 
-      - name: Start standalone server
+      - name: Start server
         run: |
           set -euo pipefail
           cd apps/web
-          export PORT=3000
-          export NODE_ENV=production
-          echo "Starting standalone server..."
-          node ./.next/standalone/server.js &
+          npm start &
           echo $! > /tmp/web.pid
+        env:
+          PORT: "3000"
+          NODE_ENV: production
 
       - name: Wait for app
         run: |
