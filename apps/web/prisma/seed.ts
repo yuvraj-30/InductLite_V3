@@ -675,7 +675,7 @@ async function main() {
   console.log("\n✅ Seed completed successfully!");
   console.log("─".repeat(50));
   console.log("📧 Admin login: admin@buildright.co.nz");
-  console.log(`🔑 Password: ${adminPassword}`);
+  console.log("🔑 Password: (set via ADMIN_PASSWORD env)");
   console.log("─".repeat(50));
   console.log(`🏢 Company: ${company.name}`);
   console.log(`🏗️  Sites: 2`);
