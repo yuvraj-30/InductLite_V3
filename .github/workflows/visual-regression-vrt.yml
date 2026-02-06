@@ -3,8 +3,6 @@ name: Visual Regression (VRT)
 on:
   workflow_dispatch:
     inputs:
-
-    inputs:
       start_vrt:
         description: "If true, start docker-compose.vrt.yml on the runner before tests (default: false)"
         required: false
