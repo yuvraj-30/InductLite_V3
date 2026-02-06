@@ -44,7 +44,7 @@ const ENV_CONFIG: EnvConfig[] = [
   // Cron
   {
     name: "CRON_SECRET",
-    required: true,
+    required: false,
     production: true,
     minLength: 16,
     description: "Shared secret for cron API routes",
