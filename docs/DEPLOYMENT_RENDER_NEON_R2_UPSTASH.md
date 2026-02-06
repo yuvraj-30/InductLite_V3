@@ -2,16 +2,12 @@
 
 ## Services
 
-- Web (Next.js)
-- Worker (exports scheduler)
-- Maintenance (daily retention)
+- Web (Next.js + cron API routes)
 
 ## Build/Start Commands (Render)
 
 - Build: `npm install && npx turbo run build --filter=@inductlite/web`
-- Start (web): `cd apps/web && npm run start`
-- Start (worker): `cd apps/web && npm run run:export-scheduler`
-- Start (maintenance): `cd apps/web && npm run run:maintenance`
+- Start: `cd apps/web && npm run start`
 
 ## Environment Variables
 
@@ -21,6 +17,7 @@
 - SESSION_SECRET
 - NEXT_PUBLIC_APP_URL
 - TRUST_PROXY=1
+- CRON_SECRET
 
 ### Storage (R2/S3)
 
@@ -43,4 +40,35 @@
 
 - Enable Neon PITR for production.
 - Keep R2 buckets private; use signed URLs only.
-- Use separate Render services for web and worker.
+- Single Render service keeps free-tier hours under control.
+- GitHub Actions cron triggers export + maintenance via API routes.
+
+## Keep-Alive + Cron (Free Tier)
+
+Render free-tier services can sleep when idle. A periodic health check reduces cold starts.
+
+**Recommended (best for this repo): GitHub Actions cron**
+
+- Free for public repos.
+- Simple to maintain and lives in the same repo.
+- Uses cron API routes to replace the worker + maintenance services.
+
+Workflow included: `.github/workflows/render-keep-alive.yml`
+
+Required GitHub secrets:
+
+- `RENDER_APP_URL` (example: `https://your-domain.onrender.com`)
+- `CRON_SECRET` (must match Render env)
+
+Example values:
+
+- `RENDER_APP_URL`: `https://inductlite.onrender.com`
+- `CRON_SECRET`: `change-this-32+chars`
+
+Rotation: update `CRON_SECRET` in both Render env vars and GitHub Secrets at the same time.
+Avoid reusing `CRON_SECRET` across environments (dev/staging/prod).
+
+**Alternative (also free): UptimeRobot**
+
+- 5-minute checks on the free plan.
+- Good if you want an external monitor without CI usage.

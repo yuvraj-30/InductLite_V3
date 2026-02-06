@@ -41,6 +41,15 @@ const ENV_CONFIG: EnvConfig[] = [
     description: "Public-facing app URL",
   },
 
+  // Cron
+  {
+    name: "CRON_SECRET",
+    required: true,
+    production: true,
+    minLength: 16,
+    description: "Shared secret for cron API routes",
+  },
+
   // S3 storage (required for production)
   {
     name: "S3_BUCKET",

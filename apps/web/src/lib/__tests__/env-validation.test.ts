@@ -77,6 +77,7 @@ describe("validateEnv", () => {
     beforeEach(() => {
       (process.env as Record<string, string | undefined>).NODE_ENV =
         "production";
+      process.env.CRON_SECRET = "cron-secret-at-least-16";
     });
 
     it("should warn about local storage mode", () => {
