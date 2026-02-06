@@ -29,6 +29,8 @@ model Company {
   sites               Site[]
   induction_templates InductionTemplate[]
   contractors         Contractor[]
+  site_manager_assignments SiteManagerAssignment[]
+  magic_link_tokens   MagicLinkToken[]
   sign_in_records     SignInRecord[]
   export_jobs         ExportJob[]
   audit_logs          AuditLog[]
@@ -41,6 +43,7 @@ model User {
   company_id    String
   email         String    @unique
   password_hash String
+  totp_secret   String?
   name          String
   role          UserRole  @default(VIEWER)
   is_active     Boolean   @default(true)
@@ -51,9 +54,10 @@ model User {
   updated_at    DateTime  @updatedAt
 
   // Relations
-  company    Company        @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  audit_logs AuditLog[]     @relation("user_audit_logs")
-  sign_outs  SignInRecord[] @relation("signed_out_by")
+  company        Company                 @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  audit_logs     AuditLog[]              @relation("user_audit_logs")
+  sign_outs      SignInRecord[]          @relation("signed_out_by")
+  sites_managed  SiteManagerAssignment[] @relation("site_manager_user")
 
   @@unique([company_id, email])
   @@index([company_id])
@@ -62,6 +66,7 @@ model User {
 
 enum UserRole {
   ADMIN
+  SITE_MANAGER
   VIEWER
 }
 
@@ -80,10 +85,11 @@ model Site {
   updated_at  DateTime @updatedAt
 
   // Relations
-  company         Company             @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  templates       InductionTemplate[] @relation("template_site")
+  company         Company                 @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  templates       InductionTemplate[]     @relation("template_site")
   public_links    SitePublicLink[]
   sign_in_records SignInRecord[]
+  site_managers   SiteManagerAssignment[] @relation("site_manager_site")
 
   @@unique([company_id, name])
   @@index([company_id])
@@ -244,12 +250,47 @@ model Contractor {
   updated_at    DateTime @updatedAt
 
   // Relations
-  company   Company              @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  documents ContractorDocument[]
+  company            Company           @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  documents          ContractorDocument[]
+  magic_link_tokens  MagicLinkToken[]
 
   @@unique([company_id, name])
   @@index([company_id])
   @@index([company_id, is_active])
+}
+
+model SiteManagerAssignment {
+  id         String   @id @default(cuid())
+  company_id String
+  site_id    String
+  user_id    String
+  created_at DateTime @default(now())
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  site    Site    @relation("site_manager_site", fields: [site_id], references: [id], onDelete: Cascade)
+  user    User    @relation("site_manager_user", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([company_id, site_id, user_id])
+  @@index([company_id])
+  @@index([company_id, user_id])
+  @@index([company_id, site_id])
+}
+
+model MagicLinkToken {
+  id             String   @id @default(cuid())
+  company_id     String
+  contractor_id  String
+  token_hash     String   @unique
+  expires_at     DateTime
+  used_at        DateTime?
+  created_at     DateTime @default(now())
+
+  company    Company    @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  contractor Contractor @relation(fields: [contractor_id], references: [id], onDelete: Cascade)
+
+  @@index([company_id])
+  @@index([company_id, contractor_id])
+  @@index([expires_at])
 }
 
 model ContractorDocument {

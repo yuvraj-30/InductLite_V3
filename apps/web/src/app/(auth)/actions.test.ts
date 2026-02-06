@@ -80,4 +80,29 @@ describe("loginAction", () => {
     expect(limiterOptions).toBeDefined();
     expect(typeof limiterOptions.requestId).toBe("string");
   });
+
+  it("returns MFA required when sessionLogin requests it", async () => {
+    (checkLoginRateLimit as unknown as Mock).mockResolvedValue({
+      success: true,
+      remaining: 4,
+      limit: 5,
+      reset: Date.now() + 10000,
+    });
+
+    (sessionLogin as unknown as Mock).mockResolvedValue({
+      success: false,
+      error: "MFA code required",
+      requiresMfa: true,
+    });
+
+    const formData = {
+      get: (key: string) =>
+        key === "email" ? "mfa@example.com" : "password123",
+    } as unknown as FormData;
+
+    const result = await loginAction(null, formData);
+
+    expect(result.success).toBe(false);
+    expect((result as any).requiresMfa).toBe(true);
+  });
 });

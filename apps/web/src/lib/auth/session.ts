@@ -17,6 +17,7 @@ import {
 import { publicDb } from "@/lib/db/public-db";
 import { scopedDb } from "@/lib/db/scoped-db";
 import { verifyPassword, hashPassword, needsRehash } from "./password";
+import { decryptTotpSecret, verifyTotpCode } from "./mfa";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId, generateCsrfToken } from "./csrf";
 
@@ -90,6 +91,7 @@ export interface LoginResult {
   error?: string;
   user?: SessionUser;
   requiresPasswordChange?: boolean;
+  requiresMfa?: boolean;
 }
 
 /**
@@ -106,6 +108,7 @@ export async function login(
   password: string,
   ipAddress?: string,
   userAgent?: string,
+  totpCode?: string,
 ): Promise<LoginResult> {
   const requestId = generateRequestId();
   const logger = createRequestLogger(requestId, {
@@ -195,6 +198,58 @@ export async function login(
     return { success: false, error: "Invalid email or password" };
   }
 
+  const db = scopedDb(user.company_id);
+
+  if (user.totp_secret) {
+    const secret = decryptTotpSecret(user.totp_secret);
+    if (!secret) {
+      logger.error({ userId: user.id }, "Failed to decrypt MFA secret");
+      return { success: false, error: "MFA configuration error" };
+    }
+
+    if (!totpCode) {
+      return { success: false, error: "MFA code required", requiresMfa: true };
+    }
+
+    const valid = verifyTotpCode(secret, totpCode);
+    if (!valid) {
+      const newFailedLogins = user.failed_logins + 1;
+      const shouldLock = newFailedLogins >= MAX_FAILED_ATTEMPTS;
+
+      await db.user.updateMany({
+        where: { id: user.id, company_id: user.company_id },
+        data: {
+          failed_logins: newFailedLogins,
+          locked_until: shouldLock
+            ? new Date(Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000)
+            : null,
+        },
+      });
+
+      await db.auditLog.create({
+        data: {
+          user_id: user.id,
+          action: "auth.login_failed",
+          details: {
+            reason: "invalid_totp",
+            failedAttempts: newFailedLogins,
+            locked: shouldLock,
+          } as object,
+          ip_address: ipAddress,
+          user_agent: userAgent,
+        },
+      });
+
+      return {
+        success: false,
+        error: shouldLock
+          ? `Too many failed attempts. Account locked for ${LOCKOUT_DURATION_MINUTES} minutes.`
+          : "Invalid MFA code",
+        requiresMfa: true,
+      };
+    }
+  }
+
   // Successful login - reset failed attempts and update last login
   const updateData: {
     failed_logins: number;
@@ -212,7 +267,6 @@ export async function login(
     updateData.password_hash = await hashPassword(password);
   }
 
-  const db = scopedDb(user.company_id);
   await db.user.updateMany({
     where: { id: user.id, company_id: user.company_id },
     data: updateData,

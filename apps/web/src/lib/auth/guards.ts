@@ -37,6 +37,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "settings:manage",
     "audit:read",
   ],
+  SITE_MANAGER: ["site:manage"],
   VIEWER: [
     // Viewers can only read, no write permissions
     // They can view data via normal page access
@@ -123,6 +124,49 @@ export async function checkPermission(
       error: `Permission denied: ${permission}`,
       code: "FORBIDDEN",
     };
+  }
+
+  return authResult;
+}
+
+/**
+ * Check if user has a permission for a specific site
+ * Enforces site assignment for SITE_MANAGER role.
+ */
+export async function checkSitePermission(
+  permission: Permission,
+  siteId: string,
+): Promise<GuardResult> {
+  const authResult = await checkAuth();
+  if (!authResult.success) {
+    return authResult;
+  }
+
+  const { user } = authResult;
+  if (!hasPermission(user.role, permission)) {
+    return {
+      success: false,
+      error: `Permission denied: ${permission}`,
+      code: "FORBIDDEN",
+    };
+  }
+
+  if (user.role === "SITE_MANAGER") {
+    const { isUserSiteManagerForSite } = await import(
+      "@/lib/repository/site-manager.repository"
+    );
+    const allowed = await isUserSiteManagerForSite(
+      user.companyId,
+      user.id,
+      siteId,
+    );
+    if (!allowed) {
+      return {
+        success: false,
+        error: "Permission denied: site access",
+        code: "FORBIDDEN",
+      };
+    }
   }
 
   return authResult;
@@ -240,6 +284,48 @@ export async function checkPermissionReadOnly(
       code: "FORBIDDEN",
     };
   }
+  return authResult;
+}
+
+/**
+ * Check if user has a permission for a specific site (read-only)
+ */
+export async function checkSitePermissionReadOnly(
+  permission: Permission,
+  siteId: string,
+): Promise<GuardResult> {
+  const authResult = await checkAuthReadOnly();
+  if (!authResult.success) {
+    return authResult;
+  }
+
+  const { user } = authResult;
+  if (!hasPermission(user.role, permission)) {
+    return {
+      success: false,
+      error: `Permission denied: ${permission}`,
+      code: "FORBIDDEN",
+    };
+  }
+
+  if (user.role === "SITE_MANAGER") {
+    const { isUserSiteManagerForSite } = await import(
+      "@/lib/repository/site-manager.repository"
+    );
+    const allowed = await isUserSiteManagerForSite(
+      user.companyId,
+      user.id,
+      siteId,
+    );
+    if (!allowed) {
+      return {
+        success: false,
+        error: "Permission denied: site access",
+        code: "FORBIDDEN",
+      };
+    }
+  }
+
   return authResult;
 }
 

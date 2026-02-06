@@ -39,6 +39,7 @@ export {
   checkAuth,
   checkAdmin,
   checkPermission,
+  checkSitePermission,
   requireAuthPage,
   requireAdminPage,
   requirePermissionPage,
@@ -49,6 +50,7 @@ export {
   requireAdminPageReadOnly,
   checkAuthReadOnly,
   checkPermissionReadOnly,
+  checkSitePermissionReadOnly,
 } from "./guards";
 
 export type { Permission, GuardResult } from "./guards";

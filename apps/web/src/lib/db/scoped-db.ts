@@ -9,6 +9,8 @@ const TENANT_MODELS = [
   "signInRecord",
   "contractor",
   "contractorDocument",
+  "siteManagerAssignment",
+  "magicLinkToken",
   "exportJob",
   "auditLog",
 ] as const;
@@ -233,6 +235,22 @@ export function scopedDb(
       deleteMany: (args?: any) => Promise<any>;
     };
     contractorDocument: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    siteManagerAssignment: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    magicLinkToken: {
       findFirst: (args?: any) => Promise<any>;
       findMany: (args?: any) => Promise<any[]>;
       count: (args?: any) => Promise<number>;

@@ -7,7 +7,8 @@
 import Link from "next/link";
 import { checkAuthReadOnly, checkPermissionReadOnly } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
-import { findAllSites } from "@/lib/repository";
+import { findAllSites, findSitesByIds } from "@/lib/repository";
+import { listManagedSiteIds } from "@/lib/repository/site-manager.repository";
 import { listActivePublicLinksForSites } from "@/lib/repository/site.repository";
 import { DeactivateSiteButton, ReactivateSiteButton } from "./site-buttons";
 
@@ -31,8 +32,17 @@ export default async function SitesPage() {
   // Get tenant context
   const context = await requireAuthenticatedContextReadOnly();
 
-  // Fetch all sites for this company
-  const sites = await findAllSites(context.companyId);
+  // Fetch sites for this company (site managers only see assigned sites)
+  let sites = [] as Awaited<ReturnType<typeof findAllSites>>;
+  if (guard.user.role === "SITE_MANAGER") {
+    const managedIds = await listManagedSiteIds(
+      context.companyId,
+      guard.user.id,
+    );
+    sites = await findSitesByIds(context.companyId, managedIds);
+  } else {
+    sites = await findAllSites(context.companyId);
+  }
 
   // Get active public links for each site
   const sitePublicLinks = await listActivePublicLinksForSites(

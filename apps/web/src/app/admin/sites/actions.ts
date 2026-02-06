@@ -9,7 +9,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { checkAdmin, checkPermission, assertOrigin } from "@/lib/auth";
+import { checkAdmin, checkSitePermission, assertOrigin } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import {
   createSite,
@@ -99,7 +99,7 @@ export async function createSiteAction(
   }
 
   // Check permission
-  const guard = await checkPermission("site:manage");
+  const guard = await checkAdmin();
   if (!guard.success) {
     return { success: false, error: guard.error };
   }
@@ -195,7 +195,7 @@ export async function updateSiteAction(
   }
 
   // Check permission
-  const guard = await checkPermission("site:manage");
+  const guard = await checkSitePermission("site:manage", siteId);
   if (!guard.success) {
     return { success: false, error: guard.error };
   }
@@ -405,7 +405,7 @@ export async function rotatePublicLinkAction(
   }
 
   // Check permission
-  const guard = await checkPermission("site:manage");
+  const guard = await checkSitePermission("site:manage", siteId);
   if (!guard.success) {
     return { success: false, error: guard.error };
   }

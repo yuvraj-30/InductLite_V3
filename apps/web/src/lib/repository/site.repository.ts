@@ -479,3 +479,24 @@ export async function findAllSites(companyId: string): Promise<Site[]> {
     handlePrismaError(error, "Site");
   }
 }
+
+/**
+ * Find a set of sites by ID for a company
+ */
+export async function findSitesByIds(
+  companyId: string,
+  siteIds: string[],
+): Promise<Site[]> {
+  requireCompanyId(companyId);
+  if (siteIds.length === 0) return [];
+
+  try {
+    const db = scopedDb(companyId);
+    return await db.site.findMany({
+      where: { company_id: companyId, id: { in: siteIds } },
+      orderBy: [{ is_active: "desc" }, { name: "asc" }],
+    });
+  } catch (error) {
+    handlePrismaError(error, "Site");
+  }
+}

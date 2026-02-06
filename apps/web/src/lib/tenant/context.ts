@@ -14,6 +14,7 @@ import { redirect } from "next/navigation";
 import { getSessionUserReadOnly } from "@/lib/auth";
 import { findSiteByPublicSlug } from "@/lib/repository";
 import { RepositoryError } from "@/lib/repository/base";
+import type { UserRole } from "@prisma/client";
 
 /**
  * Tenant context for authenticated requests
@@ -25,7 +26,7 @@ export interface AuthenticatedTenantContext {
   userId: string;
   userEmail: string;
   userName: string;
-  role: "ADMIN" | "VIEWER";
+  role: UserRole;
 }
 
 /**

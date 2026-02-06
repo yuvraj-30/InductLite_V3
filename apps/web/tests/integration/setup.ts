@@ -96,6 +96,7 @@ export async function cleanDatabase(prisma: PrismaClient): Promise<void> {
   await prisma.$transaction([
     prisma.auditLog.deleteMany(),
     prisma.exportJob.deleteMany(),
+    prisma.magicLinkToken.deleteMany(),
     prisma.contractorDocument.deleteMany(),
     prisma.contractor.deleteMany(),
     prisma.inductionResponse.deleteMany(),
@@ -103,6 +104,7 @@ export async function cleanDatabase(prisma: PrismaClient): Promise<void> {
     prisma.inductionQuestion.deleteMany(),
     prisma.inductionTemplate.deleteMany(),
     prisma.sitePublicLink.deleteMany(),
+    prisma.siteManagerAssignment.deleteMany(),
     prisma.site.deleteMany(),
     prisma.user.deleteMany(),
     prisma.company.deleteMany(),
@@ -151,7 +153,10 @@ export async function createTestSite(
 export async function createTestUser(
   prisma: PrismaClient,
   companyId: string,
-  overrides: { email?: string; role?: "ADMIN" | "VIEWER" } = {},
+  overrides: {
+    email?: string;
+    role?: "ADMIN" | "VIEWER" | "SITE_MANAGER";
+  } = {},
 ): Promise<{ id: string; email: string }> {
   const suffix = Math.random().toString(36).substring(2, 8);
   const user = await prisma.user.create({

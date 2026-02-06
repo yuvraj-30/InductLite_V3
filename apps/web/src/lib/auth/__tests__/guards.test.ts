@@ -54,6 +54,12 @@ describe("RBAC Guards", () => {
         expect(hasPermission("VIEWER", permission)).toBe(false);
       }
     });
+
+    it("should grant site manage to SITE_MANAGER only", () => {
+      expect(hasPermission("SITE_MANAGER", "site:manage")).toBe(true);
+      expect(hasPermission("SITE_MANAGER", "template:manage")).toBe(false);
+      expect(hasPermission("SITE_MANAGER", "audit:read")).toBe(false);
+    });
   });
 
   describe("getRolePermissions", () => {
@@ -70,6 +76,12 @@ describe("RBAC Guards", () => {
       const permissions = getRolePermissions("VIEWER");
 
       expect(permissions).toEqual([]);
+    });
+
+    it("should return site:manage for SITE_MANAGER", () => {
+      const permissions = getRolePermissions("SITE_MANAGER");
+
+      expect(permissions).toEqual(["site:manage"]);
     });
   });
 

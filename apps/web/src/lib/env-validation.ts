@@ -43,6 +43,18 @@ const ENV_CONFIG: EnvConfig[] = [
     production: false,
     description: "Comma-separated previous session secrets for rotation",
   },
+  {
+    name: "MFA_ENCRYPTION_KEY",
+    required: false,
+    production: false,
+    description: "Base64 32-byte key for MFA secret encryption",
+  },
+  {
+    name: "MAGIC_LINK_SECRET",
+    required: false,
+    production: true,
+    description: "HMAC secret for contractor magic link sessions",
+  },
 
   // App URL
   {
@@ -78,6 +90,18 @@ const ENV_CONFIG: EnvConfig[] = [
     required: false,
     production: false,
     description: "Allow private IP ranges for cron endpoints",
+  },
+  {
+    name: "RESEND_API_KEY",
+    required: false,
+    production: true,
+    description: "Resend API key for transactional email",
+  },
+  {
+    name: "RESEND_FROM",
+    required: false,
+    production: true,
+    description: "Resend from address (verified sender)",
   },
 
   // S3 storage (required for production)

@@ -15,7 +15,7 @@ import { SessionOptions } from "iron-session";
 /**
  * User role enum matching Prisma schema
  */
-export type UserRole = "ADMIN" | "VIEWER";
+export type UserRole = "ADMIN" | "SITE_MANAGER" | "VIEWER";
 
 /**
  * Session user data stored in the encrypted cookie

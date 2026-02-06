@@ -130,6 +130,8 @@ module.exports = {
           "signInRecord",
           "user",
           "contractor",
+          "siteManagerAssignment",
+          "magicLinkToken",
           "exportJob",
           "auditLog",
           "notification",

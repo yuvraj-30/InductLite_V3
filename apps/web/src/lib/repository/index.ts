@@ -53,6 +53,7 @@ export {
   findSiteByIdWithCounts,
   findSiteByPublicSlug,
   findAllSites,
+  findSitesByIds,
   listSites,
   listSitesWithCounts,
   createSite,
@@ -94,6 +95,21 @@ export type {
   UpdateContractorInput,
   CreateDocumentInput,
 } from "./contractor.repository";
+
+// Site manager repository
+export {
+  listManagedSiteIds,
+  isUserSiteManagerForSite,
+  assignSiteManager,
+  removeSiteManager,
+} from "./site-manager.repository";
+
+// Magic link repository
+export {
+  createMagicLinkToken,
+  findMagicLinkTokenById,
+  consumeMagicLinkToken,
+} from "./magic-link.repository";
 
 // Audit repository
 export {

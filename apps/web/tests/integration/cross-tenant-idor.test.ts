@@ -29,6 +29,10 @@ type SigninRepo = typeof import("../../src/lib/repository/signin.repository");
 type ContractorRepo =
   typeof import("../../src/lib/repository/contractor.repository");
 type ExportRepo = typeof import("../../src/lib/repository/export.repository");
+type SiteManagerRepo =
+  typeof import("../../src/lib/repository/site-manager.repository");
+type MagicLinkRepo =
+  typeof import("../../src/lib/repository/magic-link.repository");
 
 describe("Cross-Tenant IDOR Prevention", () => {
   let prisma: PrismaClient;
@@ -37,6 +41,8 @@ describe("Cross-Tenant IDOR Prevention", () => {
   let signinRepo: SigninRepo;
   let contractorRepo: ContractorRepo;
   let exportRepo: ExportRepo;
+  let siteManagerRepo: SiteManagerRepo;
+  let magicLinkRepo: MagicLinkRepo;
 
   // Two separate tenants
   let companyA: { id: string; slug: string; name: string };
@@ -56,6 +62,12 @@ describe("Cross-Tenant IDOR Prevention", () => {
   let contractorDocB: { id: string };
   let exportJobA: { id: string };
   let exportJobB: { id: string };
+  let magicLinkTokenA: { id: string };
+  let magicLinkTokenB: { id: string };
+  let siteManagerA: { id: string; email: string };
+  let siteManagerB: { id: string; email: string };
+  let adminA: { id: string; email: string };
+  let adminB: { id: string; email: string };
 
   beforeAll(async () => {
     const { prisma: testPrisma } = await setupTestDatabase();
@@ -69,6 +81,10 @@ describe("Cross-Tenant IDOR Prevention", () => {
     contractorRepo =
       await import("../../src/lib/repository/contractor.repository");
     exportRepo = await import("../../src/lib/repository/export.repository");
+    siteManagerRepo =
+      await import("../../src/lib/repository/site-manager.repository");
+    magicLinkRepo =
+      await import("../../src/lib/repository/magic-link.repository");
   }, 120000); // 2 minute timeout for container startup
 
   afterAll(async () => {
@@ -150,15 +166,53 @@ describe("Cross-Tenant IDOR Prevention", () => {
       },
     });
 
-    const userA = await createTestUser(prisma, companyA.id);
-    const userB = await createTestUser(prisma, companyB.id);
+    siteManagerA = await createTestUser(prisma, companyA.id, {
+      role: "SITE_MANAGER",
+    });
+    siteManagerB = await createTestUser(prisma, companyB.id, {
+      role: "SITE_MANAGER",
+    });
+    adminA = await createTestUser(prisma, companyA.id);
+    adminB = await createTestUser(prisma, companyB.id);
+
+    await prisma.siteManagerAssignment.create({
+      data: {
+        company_id: companyA.id,
+        user_id: siteManagerA.id,
+        site_id: siteA.id,
+      },
+    });
+    await prisma.siteManagerAssignment.create({
+      data: {
+        company_id: companyB.id,
+        user_id: siteManagerB.id,
+        site_id: siteB.id,
+      },
+    });
+
+    magicLinkTokenA = await prisma.magicLinkToken.create({
+      data: {
+        company_id: companyA.id,
+        contractor_id: contractorA.id,
+        token_hash: "hash-company-a",
+        expires_at: new Date(Date.now() + 60 * 60 * 1000),
+      },
+    });
+    magicLinkTokenB = await prisma.magicLinkToken.create({
+      data: {
+        company_id: companyB.id,
+        contractor_id: contractorB.id,
+        token_hash: "hash-company-b",
+        expires_at: new Date(Date.now() + 60 * 60 * 1000),
+      },
+    });
 
     exportJobA = await prisma.exportJob.create({
       data: {
         company_id: companyA.id,
         export_type: "SIGN_IN_CSV",
         parameters: {},
-        requested_by: userA.id,
+        requested_by: adminA.id,
       },
     });
 
@@ -167,7 +221,7 @@ describe("Cross-Tenant IDOR Prevention", () => {
         company_id: companyB.id,
         export_type: "SIGN_IN_CSV",
         parameters: {},
-        requested_by: userB.id,
+        requested_by: adminB.id,
       },
     });
   });
@@ -331,6 +385,57 @@ describe("Cross-Tenant IDOR Prevention", () => {
 
       expect(result).not.toBeNull();
       expect(result?.id).toBe(exportJobA.id);
+    });
+  });
+
+  describe("Site Manager Repository - Tenant Isolation", () => {
+    it("should NOT return Company B's managed sites for Company A", async () => {
+      const result = await siteManagerRepo.listManagedSiteIds(
+        companyA.id,
+        siteManagerB.id,
+      );
+
+      expect(result).toHaveLength(0);
+    });
+
+    it("should return Company A's managed sites for Company A", async () => {
+      const result = await siteManagerRepo.listManagedSiteIds(
+        companyA.id,
+        siteManagerA.id,
+      );
+
+      expect(result).toEqual([siteA.id]);
+    });
+
+    it("should NOT allow Company A to remove Company B's site manager assignment", async () => {
+      const count = await siteManagerRepo.removeSiteManager(
+        companyA.id,
+        siteManagerB.id,
+        siteB.id,
+      );
+
+      expect(count).toBe(0);
+    });
+  });
+
+  describe("Magic Link Repository - Tenant Isolation", () => {
+    it("should NOT return Company B's magic link token when querying with Company A's ID", async () => {
+      const result = await magicLinkRepo.findMagicLinkTokenById(
+        companyA.id,
+        magicLinkTokenB.id,
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it("should return Company A's magic link token when querying correctly", async () => {
+      const result = await magicLinkRepo.findMagicLinkTokenById(
+        companyA.id,
+        magicLinkTokenA.id,
+      );
+
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe(magicLinkTokenA.id);
     });
   });
 

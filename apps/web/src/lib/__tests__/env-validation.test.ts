@@ -79,6 +79,9 @@ describe("validateEnv", () => {
         "production";
       process.env.CRON_SECRET = "cron-secret-at-least-16";
       process.env.DATABASE_DIRECT_URL = "postgresql://test@localhost/test";
+      process.env.MAGIC_LINK_SECRET = "magic-link-secret-at-least-32-chars";
+      process.env.RESEND_API_KEY = "re_test_key";
+      process.env.RESEND_FROM = "no-reply@example.com";
     });
 
     it("should warn about local storage mode", () => {

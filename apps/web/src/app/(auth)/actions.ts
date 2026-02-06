@@ -30,14 +30,15 @@ import { checkLoginRateLimit } from "@/lib/rate-limit";
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
+  totp: z.string().optional(),
 });
 
 /**
  * Action result type
  */
 export type ActionResult =
-  | { success: true; message?: string }
-  | { success: false; error: string };
+  | { success: true; message?: string; requiresMfa?: boolean }
+  | { success: false; error: string; requiresMfa?: boolean };
 
 /**
  * Login action
@@ -55,6 +56,7 @@ export async function loginAction(
   const rawData = {
     email: formData.get("email"),
     password: formData.get("password"),
+    totp: formData.get("totp"),
   };
 
   // Validate input
@@ -92,7 +94,13 @@ export async function loginAction(
       getUserAgent(),
     ]);
 
-    const result = await sessionLogin(email, password, ipAddress, userAgent);
+    const result = await sessionLogin(
+      email,
+      password,
+      ipAddress,
+      userAgent,
+      parsed.data.totp || undefined,
+    );
 
     if (!result.success) {
       logAuthEvent(log, "login_failed", email, false, {
@@ -102,6 +110,7 @@ export async function loginAction(
       return {
         success: false,
         error: result.error || "Login failed",
+        requiresMfa: result.requiresMfa,
       };
     }
 

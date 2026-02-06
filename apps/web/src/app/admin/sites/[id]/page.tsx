@@ -9,6 +9,7 @@ import { notFound } from "next/navigation";
 import { checkAuthReadOnly, checkPermissionReadOnly } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 import { findSiteById } from "@/lib/repository";
+import { isUserSiteManagerForSite } from "@/lib/repository/site-manager.repository";
 import { findActivePublicLinkForSite } from "@/lib/repository/site.repository";
 import {
   countCurrentlyOnSite,
@@ -43,6 +44,17 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
 
   // Get tenant context
   const context = await requireAuthenticatedContextReadOnly();
+
+  if (guard.user.role === "SITE_MANAGER") {
+    const allowed = await isUserSiteManagerForSite(
+      context.companyId,
+      guard.user.id,
+      siteId,
+    );
+    if (!allowed) {
+      notFound();
+    }
+  }
 
   // Fetch the site
   const site = await findSiteById(context.companyId, siteId);

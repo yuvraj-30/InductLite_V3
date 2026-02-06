@@ -61,6 +61,7 @@ describe("scopedDb", () => {
       company_id: "company-123",
       email: "a@b.com",
       password_hash: "x",
+      totp_secret: null,
       name: "Test",
       role: UserRole.VIEWER,
       is_active: true,

@@ -19,14 +19,13 @@ import {
 /**
  * User data without sensitive fields
  */
-export type SafeUser = Omit<User, "password_hash">;
+export type SafeUser = Omit<User, "password_hash" | "totp_secret">;
 
 /**
  * Convert User to SafeUser by removing password_hash
  */
 function toSafeUser(user: User): SafeUser {
-   
-  const { password_hash: _, ...safeUser } = user;
+  const { password_hash: _, totp_secret: __, ...safeUser } = user;
   return safeUser;
 }
 
@@ -58,6 +57,7 @@ export interface UpdateUserInput {
   email?: string;
   name?: string;
   password_hash?: string;
+  totp_secret?: string | null;
   role?: UserRole;
   is_active?: boolean;
 }

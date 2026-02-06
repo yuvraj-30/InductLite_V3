@@ -84,6 +84,28 @@ export function LoginForm() {
         </div>
       </div>
 
+      {state?.requiresMfa && (
+        <div>
+          <label
+            htmlFor="totp"
+            className="block text-sm font-medium text-gray-700"
+          >
+            MFA code
+          </label>
+          <div className="mt-1">
+            <input
+              id="totp"
+              name="totp"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+              placeholder="123456"
+            />
+          </div>
+        </div>
+      )}
+
       {/* Submit button */}
       <div>
         <SubmitButton />
