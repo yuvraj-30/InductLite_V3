@@ -79,8 +79,9 @@ test.describe.serial("Admin Authentication", () => {
       console.warn("clear-rate-limit failed:", String(err));
     }
 
-    // Attempt login with retry if transient rate-limiter blocks us
+    // Attempt login with retry if transient rate-limiter or auth errors occur
     const maxAttempts = 3;
+    let lastError: string | null = null;
     for (let attempt = 1; attempt <= maxAttempts; attempt++) {
       await page.goto("/login");
 
@@ -113,6 +114,21 @@ test.describe.serial("Admin Authentication", () => {
         // No rate limit alert, proceed to assert success
       }
 
+      // If login failed (e.g., invalid credentials), capture error and retry
+      try {
+        const errorText = await page
+          .getByText(/invalid email or password|login failed|try again/i)
+          .first()
+          .textContent({ timeout: 2000 });
+        if (errorText) {
+          lastError = errorText.trim();
+          await page.waitForTimeout(250);
+          continue;
+        }
+      } catch {
+        // No visible error, proceed
+      }
+
       // Should redirect to admin dashboard
       await expect(page).toHaveURL(/\/admin/);
 
@@ -122,7 +138,12 @@ test.describe.serial("Admin Authentication", () => {
       ).toBeVisible();
 
       // Success: break out of retry loop
+      lastError = null;
       break;
+    }
+
+    if (lastError) {
+      throw new Error(`Login failed after retries: ${lastError}`);
     }
   });
 

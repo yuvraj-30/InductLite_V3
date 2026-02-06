@@ -34,12 +34,18 @@
 - [ ] Upstash Redis configured for production (multi-instance safe)
 - [ ] Rate limit thresholds reviewed for expected traffic
 
-### 5. Monitoring
+### 5. Storage & Exports
+
+- [ ] Signed URL upload/download enabled for storage
+- [ ] Export job idempotency and retry/backoff verified
+
+### 6. Monitoring
 
 - [ ] Health endpoint accessible: `/health`
 - [ ] Structured logging to stdout (JSON format)
 - [ ] Error tracking configured (optional: Sentry, etc.)
 - [ ] Log drain configured on platform
+- [ ] Alerts configured for elevated 5xx rates and export failures
 
 ---
 
@@ -139,6 +145,7 @@ Check for:
 - **Weekly**: Review rate limit metrics, check storage usage
 - **Monthly**: Apply security updates, rotate secrets if needed
 - **Quarterly**: Review and test backup restoration
+- **Quarterly**: Execute restore drill runbook
 
 ### Scaling Considerations
 

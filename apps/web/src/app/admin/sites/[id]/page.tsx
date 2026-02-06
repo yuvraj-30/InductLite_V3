@@ -9,7 +9,11 @@ import { notFound } from "next/navigation";
 import { checkAuthReadOnly, checkPermissionReadOnly } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 import { findSiteById } from "@/lib/repository";
-import { prisma } from "@/lib/db";
+import { findActivePublicLinkForSite } from "@/lib/repository/site.repository";
+import {
+  countCurrentlyOnSite,
+  listRecentSignInsForSite,
+} from "@/lib/repository/signin.repository";
 import { EditSiteForm } from "./edit-site-form";
 import { RotateLinkButton } from "../site-buttons";
 import { CopyLinkButton } from "./CopyLinkButton";
@@ -47,24 +51,20 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
   }
 
   // Fetch active public link
-  const publicLink = await prisma.sitePublicLink.findFirst({
-    where: { site_id: siteId, is_active: true },
-  });
+  const publicLink = await findActivePublicLinkForSite(
+    context.companyId,
+    siteId,
+  );
 
   // Fetch recent sign-ins for this site
-  const recentSignIns = await prisma.signInRecord.findMany({
-    where: { site_id: siteId },
-    orderBy: { sign_in_ts: "desc" },
-    take: 10,
-  });
+  const recentSignIns = await listRecentSignInsForSite(
+    context.companyId,
+    siteId,
+    10,
+  );
 
   // Get currently on-site count
-  const currentlyOnSite = await prisma.signInRecord.count({
-    where: {
-      site_id: siteId,
-      sign_out_ts: null,
-    },
-  });
+  const currentlyOnSite = await countCurrentlyOnSite(context.companyId, siteId);
 
   // Check if user can manage sites
   const canManage = await checkPermissionReadOnly("site:manage");

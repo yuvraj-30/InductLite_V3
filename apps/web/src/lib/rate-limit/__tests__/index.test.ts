@@ -1,10 +1,26 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   checkPublicSlugRateLimit,
   checkLoginRateLimit,
 } from "@/lib/rate-limit";
 
 describe("rate-limit index", () => {
+  const originalAllowTestRunner = process.env.ALLOW_TEST_RUNNER;
+
+  beforeEach(() => {
+    // Disable test runner bypass to test actual rate limiting behavior
+    delete process.env.ALLOW_TEST_RUNNER;
+  });
+
+  afterEach(() => {
+    // Restore original value
+    if (originalAllowTestRunner !== undefined) {
+      process.env.ALLOW_TEST_RUNNER = originalAllowTestRunner;
+    } else {
+      delete process.env.ALLOW_TEST_RUNNER;
+    }
+  });
+
   it("checkPublicSlugRateLimit respects provided clientKey and decrements remaining", async () => {
     const res1 = await checkPublicSlugRateLimit("myslug", {
       clientKey: "ua:test-client",

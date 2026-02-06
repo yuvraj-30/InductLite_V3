@@ -18,6 +18,7 @@ env:
   SESSION_SECRET: ci-test-secret-at-least-32-characters-long
   SIGN_OUT_TOKEN_SECRET: ci-test-signout-secret-at-least-32-characters
   NEXT_PUBLIC_APP_URL: http://localhost:3000
+  CRON_SECRET: ci-test-cron-secret-at-least-16
   TRUST_PROXY: "0"
   ALLOW_TEST_RUNNER: "1"
 

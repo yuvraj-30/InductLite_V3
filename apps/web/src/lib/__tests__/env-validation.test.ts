@@ -77,6 +77,7 @@ describe("validateEnv", () => {
     beforeEach(() => {
       (process.env as Record<string, string | undefined>).NODE_ENV =
         "production";
+      process.env.CRON_SECRET = "cron-secret-at-least-16";
     });
 
     it("should warn about local storage mode", () => {
@@ -155,6 +156,8 @@ describe("validateEnv", () => {
       process.env.S3_ACCESS_KEY_ID = "key";
       process.env.S3_SECRET_ACCESS_KEY = "secret";
       // No Upstash
+      delete process.env.UPSTASH_REDIS_REST_URL;
+      delete process.env.UPSTASH_REDIS_REST_TOKEN;
 
       const result = validateEnv();
 

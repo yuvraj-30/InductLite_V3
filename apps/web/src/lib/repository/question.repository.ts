@@ -9,7 +9,7 @@
  * - Questions are cascaded when template is deleted
  */
 
-import { prisma } from "@/lib/db/prisma";
+import { publicDb } from "@/lib/db/public-db";
 import { scopedDb } from "@/lib/db/scoped-db";
 import { Prisma } from "@prisma/client";
 import { requireCompanyId, handlePrismaError, RepositoryError } from "./base";
@@ -124,7 +124,7 @@ export async function findQuestionById(
   requireCompanyId(companyId);
 
   try {
-    const question = await prisma.inductionQuestion.findFirst({
+    const question = await publicDb.inductionQuestion.findFirst({
       where: {
         id: questionId,
         template: { company_id: companyId },
@@ -160,7 +160,7 @@ export async function listQuestions(
   }
 
   try {
-    const questions = await prisma.inductionQuestion.findMany({
+    const questions = await publicDb.inductionQuestion.findMany({
       where: { template_id: templateId },
       orderBy: { display_order: "asc" },
     });
@@ -202,7 +202,7 @@ export async function createQuestion(
   // Get max display_order if not provided
   let displayOrder = input.display_order;
   if (displayOrder === undefined) {
-    const maxOrder = await prisma.inductionQuestion.findFirst({
+    const maxOrder = await publicDb.inductionQuestion.findFirst({
       where: { template_id: templateId },
       orderBy: { display_order: "desc" },
       select: { display_order: true },
@@ -211,7 +211,7 @@ export async function createQuestion(
   }
 
   try {
-    const question = await prisma.inductionQuestion.create({
+    const question = await publicDb.inductionQuestion.create({
       data: {
         template_id: templateId,
         question_text: input.question_text,
@@ -256,7 +256,7 @@ export async function updateQuestion(
   }
 
   try {
-    return await prisma.$transaction(async (tx) => {
+    return await publicDb.$transaction(async (tx) => {
       // Find question with template info - atomic within transaction
       const question = await tx.inductionQuestion.findFirst({
         where: {
@@ -290,8 +290,8 @@ export async function updateQuestion(
       }
 
       // Update within same transaction - template verified
-      const updated = await tx.inductionQuestion.update({
-        where: { id: questionId },
+      const updatedResult = await tx.inductionQuestion.updateMany({
+        where: { id: questionId, template_id: question.template_id },
         data: {
           question_text: input.question_text,
           question_type: input.question_type,
@@ -310,6 +310,18 @@ export async function updateQuestion(
                 : undefined,
         },
       });
+
+      if (updatedResult.count === 0) {
+        throw new RepositoryError("Question not found", "NOT_FOUND");
+      }
+
+      const updated = await tx.inductionQuestion.findFirst({
+        where: { id: questionId, template_id: question.template_id },
+      });
+
+      if (!updated) {
+        throw new RepositoryError("Question not found", "NOT_FOUND");
+      }
 
       return updated;
     });
@@ -334,7 +346,7 @@ export async function deleteQuestion(
   requireCompanyId(companyId);
 
   try {
-    await prisma.$transaction(async (tx) => {
+    await publicDb.$transaction(async (tx) => {
       // Find question with template info - atomic within transaction
       const question = await tx.inductionQuestion.findFirst({
         where: {
@@ -368,8 +380,8 @@ export async function deleteQuestion(
       }
 
       // Delete within same transaction - template verified
-      await tx.inductionQuestion.delete({
-        where: { id: questionId },
+      await tx.inductionQuestion.deleteMany({
+        where: { id: questionId, template_id: question.template_id },
       });
 
       // Reorder remaining questions
@@ -402,7 +414,7 @@ export async function reorderQuestions(
   requireCompanyId(companyId);
 
   // Perform verification and updates inside a single transaction to prevent TOCTOU
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await publicDb.$transaction(async (tx) => {
     // Verify template is editable within transaction
     const t = await tx.inductionTemplate.findFirst({
       where: { id: templateId, company_id: companyId },
@@ -446,8 +458,8 @@ export async function reorderQuestions(
     // Apply updates atomically
     await Promise.all(
       questionOrders.map((order) =>
-        tx.inductionQuestion.update({
-          where: { id: order.questionId },
+        tx.inductionQuestion.updateMany({
+          where: { id: order.questionId, template_id: templateId },
           data: { display_order: order.newOrder },
         }),
       ),
@@ -474,7 +486,7 @@ export async function bulkCreateQuestions(
   requireCompanyId(companyId);
 
   // Perform verification and creation inside a transaction to prevent TOCTOU
-  const created = await prisma.$transaction(async (tx) => {
+  const created = await publicDb.$transaction(async (tx) => {
     const template = await tx.inductionTemplate.findFirst({
       where: { id: templateId, company_id: companyId },
       select: { is_archived: true, is_published: true },

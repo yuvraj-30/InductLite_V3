@@ -20,6 +20,7 @@ env:
   SESSION_SECRET: ci-test-secret-at-least-32-characters-long
   SIGN_OUT_TOKEN_SECRET: ci-test-signout-secret-at-least-32-characters
   NEXT_PUBLIC_APP_URL: http://localhost:3000
+  CRON_SECRET: ci-test-cron-secret-at-least-16
   TRUST_PROXY: "0"
   ALLOW_TEST_RUNNER: "1"
 
@@ -67,7 +68,7 @@ jobs:
         run: npm ci
 
       - name: Prisma generate
-        run: npm run db:generate
+        run: npm run -w apps/web db:generate
 
       - name: Prisma validate
         run: npm run -w apps/web prisma:validate
@@ -76,7 +77,9 @@ jobs:
         run: npm run -w apps/web prisma:format:check
 
       - name: Migrate DB
-        run: npm run db:migrate
+        run: npm run -w apps/web db:migrate
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Lint (workspace via turbo)
         run: npm run lint
@@ -149,6 +152,8 @@ jobs:
 
       - name: Migrate DB
         run: npm run -w apps/web db:migrate
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Integration tests
         run: npm run -w apps/web test:integration
@@ -174,7 +179,6 @@ jobs:
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/inductlite_e2e?schema=public
       BASE_URL: http://localhost:3000
-      PLAYWRIGHT_BROWSERS_PATH: "0"
 
     steps:
       - name: Checkout
@@ -207,27 +211,32 @@ jobs:
 
       - name: Migrate DB
         run: npm run -w apps/web db:migrate
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Seed DB
         run: npm run -w apps/web db:seed
 
       - name: Install Playwright browsers
-        run: npm run -w apps/web playwright:install --if-present || (cd apps/web && npx playwright install --with-deps chromium)
+        run: cd apps/web && npx playwright install --with-deps chromium
 
       - name: Build (workspace via turbo)
         env:
           NODE_ENV: production
+          ALLOW_TEST_RUNNER: "1"
         run: npm run build
 
-      - name: Start standalone server
+      - name: Start server
         run: |
           set -euo pipefail
           cd apps/web
-          export PORT=3000
-          export NODE_ENV=production
-          echo "Starting standalone server..."
-          node ./.next/standalone/server.js &
+          npm start &
           echo $! > /tmp/web.pid
+        env:
+          PORT: "3000"
+          NODE_ENV: production
+          ALLOW_TEST_RUNNER: "1"
+          DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Wait for app
         run: |
@@ -244,6 +253,12 @@ jobs:
 
       - name: Run E2E smoke
         run: npm run -w apps/web test:e2e:smoke
+        env:
+          E2E_USE_SHARED_SERVER: "1"
+          ALLOW_TEST_RUNNER: "1"
+          BASE_URL: http://localhost:3000
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          E2E_SKIP_LOGIN_VERIFY: "1"
 
       - name: Stop server
         if: always()

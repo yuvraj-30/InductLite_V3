@@ -9,8 +9,8 @@
  * since they are for public (unauthenticated) access.
  */
 
-import { prisma } from "@/lib/db/prisma";
 import { publicDb } from "@/lib/db/public-db";
+import { scopedDb } from "@/lib/db/scoped-db";
 import { Prisma } from "@prisma/client";
 import { handlePrismaError, RepositoryError } from "./base";
 import {
@@ -109,11 +109,12 @@ export async function createPublicSignIn(
 
   try {
     // Use transaction for atomicity - create sign-in record without token first
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await publicDb.$transaction(async (tx) => {
+      const db = scopedDb(input.companyId, tx);
+
       // 1. Create sign-in record (token will be added after we have the ID)
-      const signInRecord = await tx.signInRecord.create({
+      const signInRecord = await db.signInRecord.create({
         data: {
-          company_id: input.companyId,
           site_id: input.siteId,
           visitor_name: input.visitorName.trim(),
           visitor_phone: formattedPhone,
@@ -139,7 +140,7 @@ export async function createPublicSignIn(
       // descriptive error to callers — we enforce tenant scoping by checking
       // the returned template's company_id below.
       /* eslint-disable security-guardrails/require-company-id -- intentional id-only lookup followed by explicit company_id check */
-      const templateById = await tx.inductionTemplate.findUnique({
+      const templateById = await tx.inductionTemplate.findFirst({
         where: { id: input.templateId },
         select: { id: true, company_id: true, version: true },
       });
@@ -195,8 +196,8 @@ export async function createPublicSignIn(
     const tokenHash = hashSignOutToken(signOutToken);
 
     // 5. Update the record with token hash and expiry for revocation
-    await prisma.signInRecord.update({
-      where: { id: result.id },
+    await publicDb.signInRecord.updateMany({
+      where: { id: result.id, company_id: input.companyId },
       data: {
         sign_out_token: tokenHash, // Store hash for revocation check
         sign_out_token_exp: expiresAt,
@@ -272,7 +273,7 @@ export async function signOutWithToken(
     // 4. Atomic update with all conditions in WHERE clause
     // This prevents TOCTOU: all checks and the update happen atomically
     // eslint-disable-next-line security-guardrails/require-company-id -- signInRecordId is globally unique, token hash provides auth
-    const result = await prisma.signInRecord.updateMany({
+    const result = await publicDb.signInRecord.updateMany({
       where: {
         id: verification.signInRecordId,
         sign_out_ts: null, // Not already signed out
@@ -293,7 +294,7 @@ export async function signOutWithToken(
     // 5. If no rows updated, determine the specific error
     if (result.count === 0) {
       // eslint-disable-next-line security-guardrails/require-company-id -- signInRecordId is globally unique
-      const signInRecord = await prisma.signInRecord.findUnique({
+      const signInRecord = await publicDb.signInRecord.findFirst({
         where: { id: verification.signInRecordId },
         select: {
           id: true,
@@ -352,7 +353,7 @@ export async function signOutWithToken(
 
     // 6. Fetch the record details for response
     // eslint-disable-next-line security-guardrails/require-company-id -- signInRecordId is globally unique
-    const signInRecord = await prisma.signInRecord.findUnique({
+    const signInRecord = await publicDb.signInRecord.findFirst({
       where: { id: verification.signInRecordId },
       select: {
         id: true,
@@ -397,7 +398,7 @@ export async function findPublicSignInById(signInRecordId: string): Promise<{
 } | null> {
   try {
     // eslint-disable-next-line security-guardrails/require-company-id -- public lookup by globally unique ID
-    const record = await publicDb.signInRecord.findUnique({
+    const record = await publicDb.signInRecord.findFirst({
       where: { id: signInRecordId },
       select: {
         id: true,

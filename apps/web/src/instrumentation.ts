@@ -11,6 +11,7 @@ export async function register() {
   // Only run on server
   if (process.env.NEXT_RUNTIME === "nodejs") {
     const { validateEnvOrThrow } = await import("@/lib/env-validation");
+    const { startOpenTelemetry } = await import("@/lib/observability/otel");
 
     try {
       validateEnvOrThrow();
@@ -26,5 +27,7 @@ export async function register() {
         throw error;
       }
     }
+
+    await startOpenTelemetry();
   }
 }

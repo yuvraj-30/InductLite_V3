@@ -7,6 +7,8 @@ vi.mock("@aws-sdk/client-s3", () => {
   return {
     S3Client: MockClient,
     PutObjectCommand: vi.fn(),
+    GetObjectCommand: vi.fn(),
+    DeleteObjectCommand: vi.fn(),
   };
 });
 
@@ -19,9 +21,9 @@ describe("S3 storage adapter (mocked)", () => {
     process.env.EXPORTS_S3_BUCKET = "test-bucket";
   });
 
-  it("writes file to s3 and returns s3 path and size", async () => {
+  it("writes file to s3 and returns storage key and size", async () => {
     const res = await writeExportFile("c1", "f.csv", "data,here\n");
-    expect(res.filePath).toMatch(/^s3:\/\//);
+    expect(res.filePath).toBe("exports/c1/f.csv");
     expect(res.size).toBeGreaterThan(0);
   });
 });

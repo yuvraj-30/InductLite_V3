@@ -12,9 +12,13 @@ import { test, expect } from "./test-fixtures";
 test.describe("CSRF Protection", () => {
   const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
 
-  test("should allow same-origin POST requests", async ({ page, loginAs }) => {
-    // Programmatic login for stability and speed
-    await loginAs();
+  test("should allow same-origin POST requests", async ({
+    page,
+    loginAs,
+    workerUser,
+  }) => {
+    // Programmatic login for stability and speed (use dynamically created worker user)
+    await loginAs(workerUser.email);
 
     // Make a same-origin POST request from the browser context
     await page.goto("/");
@@ -71,9 +75,10 @@ test.describe("CSRF Protection", () => {
     page,
     context,
     loginAs,
+    workerUser,
   }) => {
-    // Programmatic login
-    await loginAs();
+    // Programmatic login (use dynamically created worker user)
+    await loginAs(workerUser.email);
 
     // Give the browser a moment to have the cookie present
     await page.waitForTimeout(250);
@@ -139,9 +144,10 @@ test.describe("Cookie Security", () => {
     page,
     context,
     loginAs,
+    workerUser,
   }) => {
-    // Programmatic login to ensure the session cookie is present
-    await loginAs();
+    // Programmatic login to ensure the session cookie is present (use dynamically created worker user)
+    await loginAs(workerUser.email);
 
     // Give the browser a moment to have the cookie present
     await page.waitForTimeout(250);

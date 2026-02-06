@@ -5,6 +5,7 @@
  */
 
 import { scopedDb } from "@/lib/db/scoped-db";
+import { publicDb } from "@/lib/db/public-db";
 import type {
   Contractor,
   ContractorDocument,
@@ -77,6 +78,36 @@ export interface CreateDocumentInput {
   mime_type: string;
   expires_at?: Date;
   notes?: string;
+}
+
+/**
+ * Find contractor document by ID (tenant-scoped)
+ */
+export async function findContractorDocumentById(
+  companyId: string,
+  documentId: string,
+): Promise<ContractorDocument | null> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+    const contractor = await db.contractor.findFirst({
+      where: {
+        company_id: companyId,
+        documents: { some: { id: documentId } },
+      },
+      select: {
+        documents: {
+          where: { id: documentId },
+          take: 1,
+        },
+      },
+    });
+
+    return contractor?.documents?.[0] ?? null;
+  } catch (error) {
+    handlePrismaError(error, "ContractorDocument");
+  }
 }
 
 /**
@@ -419,7 +450,6 @@ export async function deleteContractorDocument(
       throw new Error("Contractor not found");
     }
 
-    // eslint-disable-next-line security-guardrails/require-company-id -- Verified ownership above; deleting child document scoped by nested contractor relation
     await db.contractorDocument.deleteMany({
       where: {
         id: documentId,
@@ -431,6 +461,50 @@ export async function deleteContractorDocument(
   } catch (error) {
     handlePrismaError(error, "ContractorDocument");
   }
+}
+
+/**
+ * System-level: list expired contractor documents for cleanup.
+ */
+export async function listExpiredContractorDocuments(
+  companyId: string,
+  limit: number = 100,
+): Promise<ContractorDocument[]> {
+  requireCompanyId(companyId);
+
+  const db = scopedDb(companyId);
+  const contractors = await db.contractor.findMany({
+    where: {
+      company_id: companyId,
+      documents: { some: { expires_at: { lt: new Date() } } },
+    },
+    select: {
+      documents: {
+        where: { expires_at: { lt: new Date() } },
+        orderBy: { expires_at: "asc" },
+        take: limit,
+      },
+    },
+  });
+
+  return contractors.flatMap((c) => c.documents).slice(0, limit);
+}
+
+/**
+ * System-level: delete contractor document by ID (tenant scoped by relation).
+ */
+export async function deleteContractorDocumentById(
+  companyId: string,
+  documentId: string,
+): Promise<void> {
+  requireCompanyId(companyId);
+
+  await publicDb.contractorDocument.deleteMany({
+    where: {
+      id: documentId,
+      contractor: { is: { company_id: companyId } },
+    },
+  });
 }
 
 /**

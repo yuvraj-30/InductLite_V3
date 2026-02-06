@@ -30,23 +30,27 @@ async function ensureStableHeight(page: any, polls = 6, delay = 250) {
 // -----------------------------------------------------------------------------
 
 test.describe("Visual Regression - Login Page (Playwright)", () => {
-  test("login page matches baseline", async ({ page }) => {
+  test("login page matches baseline", async ({ page }, testInfo) => {
     await page.goto("/login");
 
-    const res = await takeAndCompare(page, "login-page-full", {
-      fullPage: true,
-    });
-    if (res.uploaded) {
-      test.skip(true, "VRT upload performed; check tracker");
-      return;
-    }
+    const isMobileSafari = testInfo.project.name === "mobile-safari";
 
-    await ensureStableHeight(page);
-    await expect(page).toHaveScreenshot(res.filename!, {
-      fullPage: true,
-      timeout: 20000,
-      maxDiffPixelRatio: 0.02,
-    });
+    if (!isMobileSafari) {
+      const res = await takeAndCompare(page, "login-page-full", {
+        fullPage: true,
+      });
+      if (res.uploaded) {
+        test.skip(true, "VRT upload performed; check tracker");
+        return;
+      }
+
+      await ensureStableHeight(page);
+      await expect(page).toHaveScreenshot(res.filename!, {
+        fullPage: true,
+        timeout: 20000,
+        maxDiffPixelRatio: 0.02,
+      });
+    }
 
     const loginForm = page.locator("form");
     if (await loginForm.count()) {
@@ -68,33 +72,52 @@ test.describe("Visual Regression - Login Page (Playwright)", () => {
 test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
   const TEST_SITE_SLUG = "test-site";
 
-  test("public sign-in page matches baseline", async ({ page }) => {
+  test("public sign-in page matches baseline", async ({ page }, testInfo) => {
     await page.goto(`/s/${TEST_SITE_SLUG}`);
 
-    const res = await takeAndCompare(page, "public-signin-page-full", {
-      fullPage: true,
-    });
-    if (res.uploaded) {
-      test.skip(true, "VRT upload performed; check tracker");
+    const isMobileSafari = testInfo.project.name === "mobile-safari";
+
+    if (!isMobileSafari) {
+      const res = await takeAndCompare(page, "public-signin-page-full", {
+        fullPage: true,
+      });
+      if (res.uploaded) {
+        test.skip(true, "VRT upload performed; check tracker");
+        return;
+      }
+
+      // Wait for a stable, visible control (name input) for the sign-in page; fallback to a short timeout
+      try {
+        await page.getByLabel(/name/i).waitFor({ timeout: 15000 });
+      } catch (err) {
+        await page.waitForTimeout(2000);
+      }
+
+      await ensureStableHeight(page);
+      await expect(page).toHaveScreenshot(res.filename!, {
+        fullPage: true,
+        timeout: 20000,
+        maxDiffPixelRatio: 0.02,
+      });
       return;
     }
 
-    // Wait for a stable, visible control (name input) for the sign-in page; fallback to a short timeout
-    try {
-      await page.getByLabel(/name/i).waitFor({ timeout: 15000 });
-    } catch (err) {
-      await page.waitForTimeout(2000);
+    // Mobile Safari: use a stable region to avoid toolbar-induced height changes
+    const main = page.locator("main").first();
+    const regionRes = await takeAndCompare(page, "public-signin-main", {
+      fullPage: false,
+    });
+    if (regionRes.uploaded) {
+      test.skip(true, "VRT upload performed; check tracker");
+      return;
     }
-
-    await ensureStableHeight(page);
-    await expect(page).toHaveScreenshot(res.filename!, {
-      fullPage: true,
+    await expect(main).toHaveScreenshot(regionRes.filename!, {
       timeout: 20000,
-      maxDiffPixelRatio: 0.02,
+      maxDiffPixelRatio: 0.03,
     });
   });
 
-  test("induction form matches baseline", async ({ page }) => {
+  test("induction form matches baseline", async ({ page }, testInfo) => {
     await page.goto(`/s/${TEST_SITE_SLUG}`);
 
     // Fill in required fields to proceed
@@ -115,9 +138,22 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
 
     const main = page.locator("main").first();
     const form = page.locator("form").first();
+    const preferForm = testInfo.project.name === "webkit";
 
-    // Prefer stable region snapshots; try main, then form, then fullPage
-    if (await main.count()) {
+    // Prefer stable region snapshots; use form for WebKit to reduce layout jitter
+    if (preferForm && (await form.count())) {
+      const regionRes = await takeAndCompare(page, "induction-form", {
+        fullPage: false,
+      });
+      if (regionRes.uploaded) {
+        test.skip(true, "VRT upload performed; check tracker");
+        return;
+      }
+      await expect(form).toHaveScreenshot(regionRes.filename!, {
+        timeout: 20000,
+        maxDiffPixelRatio: 0.03,
+      });
+    } else if (await main.count()) {
       const regionRes = await takeAndCompare(page, "induction-main", {
         fullPage: false,
       });

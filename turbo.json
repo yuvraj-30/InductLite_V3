@@ -28,10 +28,12 @@
     },
     "db:generate": {
       "cache": false,
-      "outputs": ["node_modules/.prisma/**"]
+      "outputs": ["node_modules/.prisma/**"],
+      "env": ["DATABASE_URL"]
     },
     "db:migrate": {
-      "cache": false
+      "cache": false,
+      "env": ["DATABASE_URL"]
     },
     "db:push": {
       "cache": false

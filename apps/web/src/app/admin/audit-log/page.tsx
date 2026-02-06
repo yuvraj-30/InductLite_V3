@@ -7,7 +7,13 @@
 
 import { checkAdmin } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
-import { prisma } from "@/lib/db";
+import {
+  type AuditAction,
+  type AuditLogFilter,
+  listAuditLogsWithUsers,
+  listDistinctAuditActions,
+  listDistinctAuditEntityTypes,
+} from "@/lib/repository/audit.repository";
 
 export const metadata = {
   title: "Audit Log | InductLite",
@@ -45,53 +51,31 @@ export default async function AuditLogPage({
   // Pagination
   const page = Math.max(1, parseInt(params.page || "1", 10));
   const pageSize = 25;
-  const skip = (page - 1) * pageSize;
 
-  // Build filter
-  interface WhereClause {
-    company_id: string;
-    action?: string;
-    entity_type?: string;
-  }
-
-  const where: WhereClause = { company_id: companyId };
-  if (params.action) {
-    where.action = params.action;
-  }
-  if (params.entity_type) {
-    where.entity_type = params.entity_type;
-  }
-
-  // Fetch audit logs
-  const [logs, totalCount, actionTypes, entityTypes] = await Promise.all([
-    prisma.auditLog.findMany({
-      where,
-      orderBy: { created_at: "desc" },
-      skip,
-      take: pageSize,
-      include: {
-        user: { select: { name: true, email: true } },
-      },
-    }),
-
-    prisma.auditLog.count({ where }),
-
-    // Get distinct action types for filter
-    prisma.auditLog.findMany({
-      where: { company_id: companyId },
-      select: { action: true },
-      distinct: ["action"],
-    }),
-
-    // Get distinct entity types for filter
-    prisma.auditLog.findMany({
-      where: { company_id: companyId },
-      select: { entity_type: true },
-      distinct: ["entity_type"],
-    }),
+  const [actionTypes, entityTypes] = await Promise.all([
+    listDistinctAuditActions(companyId),
+    listDistinctAuditEntityTypes(companyId),
   ]);
 
-  const totalPages = Math.ceil(totalCount / pageSize);
+  const actionFilter = actionTypes.includes(params.action || "")
+    ? (params.action as AuditAction)
+    : undefined;
+
+  const filter: AuditLogFilter = {
+    ...(actionFilter && { action: actionFilter }),
+    ...(params.entity_type && { entity_type: params.entity_type }),
+  };
+
+  const logsResult = await listAuditLogsWithUsers(companyId, filter, {
+    page,
+    pageSize,
+  });
+
+  const totalPages = Math.ceil(logsResult.total / pageSize);
+  const totalCount = logsResult.total;
+  const skip = (page - 1) * pageSize;
+
+  const logs = logsResult.items;
 
   return (
     <div className="p-6">
@@ -119,9 +103,9 @@ export default async function AuditLogPage({
               className="block w-48 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
             >
               <option value="">All actions</option>
-              {actionTypes.map((a) => (
-                <option key={a.action} value={a.action}>
-                  {formatAction(a.action)}
+              {actionTypes.map((action) => (
+                <option key={action} value={action}>
+                  {formatAction(action)}
                 </option>
               ))}
             </select>
@@ -141,13 +125,11 @@ export default async function AuditLogPage({
               className="block w-48 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
             >
               <option value="">All entities</option>
-              {entityTypes
-                .filter((e) => e.entity_type)
-                .map((e) => (
-                  <option key={e.entity_type} value={e.entity_type!}>
-                    {e.entity_type}
-                  </option>
-                ))}
+              {entityTypes.map((entityType) => (
+                <option key={entityType} value={entityType}>
+                  {entityType}
+                </option>
+              ))}
             </select>
           </div>
 

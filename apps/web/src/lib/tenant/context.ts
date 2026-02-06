@@ -10,6 +10,7 @@
  */
 
 import { cache } from "react";
+import { redirect } from "next/navigation";
 import { getSessionUserReadOnly } from "@/lib/auth";
 import { findSiteByPublicSlug } from "@/lib/repository";
 import { RepositoryError } from "@/lib/repository/base";
@@ -72,6 +73,9 @@ export const getAuthenticatedContext = cache(
 export async function requireAuthenticatedContextReadOnly(): Promise<AuthenticatedTenantContext> {
   const context = await getAuthenticatedContext();
   if (!context) {
+    if (process.env.E2E_QUIET === "1") {
+      redirect("/login");
+    }
     throw new Error("Authentication required");
   }
   return context;

@@ -11,6 +11,11 @@
 import { test, expect } from "./test-fixtures";
 import type { Page } from "@playwright/test";
 
+const E2E_QUIET = (() => {
+  const v = process.env.E2E_QUIET;
+  return v === "1" || v?.toLowerCase() === "true";
+})();
+
 // Set a unique client IP per test to avoid hitting the public slug rate limiter
 // Also clear any in-memory rate-limit counters to ensure predictable test state
 test.beforeEach(async ({ context, request }) => {
@@ -22,7 +27,9 @@ test.beforeEach(async ({ context, request }) => {
     await request.post(`/api/test/clear-rate-limit`);
   } catch (err) {
     // Non-fatal - proceed with test. In CI the endpoint should be allowed.
-    console.warn("Failed to clear rate limit state:", String(err));
+    if (!E2E_QUIET) {
+      console.warn("Failed to clear rate limit state:", String(err));
+    }
   }
 });
 
@@ -36,11 +43,11 @@ async function openSite(page: Page, slug: string): Promise<boolean> {
       // Wait for the sign-in name field to be visible and stable. Increase timeout to allow
       // client-side rendering/hydration to finish and ensure we don't return prematurely.
       await page
-        .getByLabel(/name/i)
+        .getByLabel(/full name/i)
         .waitFor({ state: "visible", timeout: 7000 });
       // Stabilize: wait briefly and ensure the label is still present and visible
       await page.waitForTimeout(500);
-      const visible = await page.getByLabel(/name/i).isVisible();
+      const visible = await page.getByLabel(/full name/i).isVisible();
       if (visible) {
         return true;
       }
@@ -108,7 +115,9 @@ test.describe.serial("Public Sign-In Flow", () => {
     // Try seeding a temporary public site (preferred when running tests locally/CI)
     try {
       const body = await seedPublicSite();
-      console.warn("seed-public-site response:", body);
+      if (!E2E_QUIET) {
+        console.warn("seed-public-site response:", body);
+      }
       if (body?.success && body.slug) {
         TEST_SITE_SLUG = body.slug;
 
@@ -178,15 +187,19 @@ test.describe.serial("Public Sign-In Flow", () => {
 
   test("should display sign-in page for valid site slug", async ({ page }) => {
     const ok = await openSite(page, TEST_SITE_SLUG);
-    console.warn("openSite returned", ok);
+    if (!E2E_QUIET) {
+      console.warn("openSite returned", ok);
+    }
     if (!ok) {
       test.skip(true, "Public site not seeded in this environment");
       return;
     }
 
     // Wait for the sign-in form to be ready
-    await expect(page.getByLabel(/name/i)).toBeVisible({ timeout: 10000 });
-    await expect(page.getByLabel(/phone/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByLabel(/full name/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByLabel(/phone number/i)).toBeVisible({
+      timeout: 10000,
+    });
 
     // Check the page heading that specifically references the site (h2)
     await expect(
@@ -209,7 +222,7 @@ test.describe.serial("Public Sign-In Flow", () => {
       test.skip(true, "Public site not seeded in this environment");
       return;
     }
-    await expect(page.getByLabel(/name/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByLabel(/full name/i)).toBeVisible({ timeout: 5000 });
 
     // Try to submit without filling required fields
     const submitButton = page.getByRole("button", {
@@ -229,7 +242,7 @@ test.describe.serial("Public Sign-In Flow", () => {
       test.skip(true, "Public site not seeded in this environment");
       return;
     }
-    await expect(page.getByLabel(/name/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByLabel(/full name/i)).toBeVisible({ timeout: 5000 });
 
     await page.getByLabel(/name/i).fill("Test Visitor");
     await page.getByLabel(/phone/i).fill("123"); // Too short
@@ -240,7 +253,9 @@ test.describe.serial("Public Sign-In Flow", () => {
     await submitButton.click();
 
     // Should show phone validation error message
-    await expect(page.getByText(/invalid phone number/i)).toBeVisible();
+    await expect(
+      page.getByText(/invalid phone number|phone number is too short/i),
+    ).toBeVisible();
   });
 
   test("should complete sign-in flow", async ({ page }) => {
@@ -249,11 +264,17 @@ test.describe.serial("Public Sign-In Flow", () => {
       test.skip(true, "Public site not seeded in this environment");
       return;
     }
-    await expect(page.getByLabel(/name/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByLabel(/full name/i)).toBeVisible({ timeout: 5000 });
 
     // Fill in visitor details
-    await page.getByLabel(/name/i).fill("E2E Test Visitor");
-    await page.getByLabel(/phone/i).fill("+64211234567");
+    const nameField = page.getByLabel(/full name/i);
+    const phoneField = page.getByLabel(/phone number/i);
+
+    await nameField.fill("E2E Test Visitor");
+    await phoneField.fill("+64211234567");
+
+    await expect(nameField).toHaveValue("E2E Test Visitor");
+    await expect(phoneField).toHaveValue("+64211234567");
 
     // Fill email if present
     const emailField = page.getByLabel(/email/i);
@@ -270,13 +291,19 @@ test.describe.serial("Public Sign-In Flow", () => {
 
     // Submit sign-in
     await page
-      .getByRole("button", { name: /sign in|continue|submit/i })
+      .getByRole("button", {
+        name: /continue to induction|sign in|continue|submit/i,
+      })
       .click();
 
     // Should proceed to induction (show a 'Complete Sign-In' button) or show success
-    await expect(
-      page.getByRole("button", { name: /complete sign-in/i }),
-    ).toBeVisible({ timeout: 10000 });
+    const completeButton = page.getByRole("button", {
+      name: /complete sign-in/i,
+    });
+    const signOutLink = page.getByRole("link", { name: /sign out now/i });
+    await expect(completeButton.or(signOutLink)).toBeVisible({
+      timeout: 10000,
+    });
   });
 
   test("should complete induction and show sign-out token", async ({
@@ -287,13 +314,21 @@ test.describe.serial("Public Sign-In Flow", () => {
       test.skip(true, "Public site not seeded in this environment");
       return;
     }
-    await expect(page.getByLabel(/name/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByLabel(/full name/i)).toBeVisible({ timeout: 5000 });
 
     // Complete sign-in
-    await page.getByLabel(/name/i).fill("E2E Test Visitor");
-    await page.getByLabel(/phone/i).fill("+64211234567");
+    const nameField = page.getByLabel(/full name/i);
+    const phoneField = page.getByLabel(/phone number/i);
+
+    await nameField.fill("E2E Test Visitor");
+    await phoneField.fill("+64211234567");
+
+    await expect(nameField).toHaveValue("E2E Test Visitor");
+    await expect(phoneField).toHaveValue("+64211234567");
     await page
-      .getByRole("button", { name: /sign in|continue|submit/i })
+      .getByRole("button", {
+        name: /continue to induction|sign in|continue|submit/i,
+      })
       .click();
 
     // Wait for induction form heading

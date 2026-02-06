@@ -377,6 +377,7 @@ describe("Template Repository Unit Tests", () => {
             inductionTemplate: {
               updateMany: vi.fn().mockResolvedValue({}),
               update: vi.fn().mockResolvedValue(updatedTemplate),
+              findFirst: vi.fn().mockResolvedValue(updatedTemplate),
             },
           } as unknown as import("@prisma/client").Prisma.TransactionClient;
           return cb(tx);
@@ -431,6 +432,7 @@ describe("Template Repository Unit Tests", () => {
           const tx = {
             inductionTemplate: {
               create: vi.fn().mockResolvedValue(newTemplate),
+              findFirst: vi.fn().mockResolvedValue(newTemplate),
               findFirstOrThrow: vi.fn().mockResolvedValue(newTemplate),
             },
             inductionQuestion: { createMany: vi.fn().mockResolvedValue({}) },

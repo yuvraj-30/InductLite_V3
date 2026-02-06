@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
+import { hashPassword } from "@/lib/auth/password";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,7 +17,7 @@ export async function POST(req: Request) {
     // Runtime diagnostics: log masked DB URL and current schema + table count
     try {
       // Read runtime env safely
-       
+
       const env = (function getEnv() {
         try {
           return eval("process").env ?? {};
@@ -83,13 +84,15 @@ export async function POST(req: Request) {
       });
     }
 
-    // Create user with a dummy password hash (tests use create-session or UI flows)
+    // Hash the password properly for UI login tests
+    const passwordHash = await hashPassword(password);
+
+    // Create user with properly hashed password
     const safeEmail = String(email);
     const safeName = (safeEmail.split("@")[0] ?? safeEmail) as string;
     // Use a runtime-bound Prisma client so we write to the same DB the server process sees
     let created: any = null;
     try {
-       
       const env = (function getEnv() {
         try {
           return eval("process").env ?? {};
@@ -108,7 +111,7 @@ export async function POST(req: Request) {
           data: {
             company_id: company.id,
             email: safeEmail,
-            password_hash: "$argon2id$v=19$m=65536,t=3,p=4$placeholder",
+            password_hash: passwordHash,
             name: safeName,
             role: roleValue,
             is_active: true,
@@ -121,7 +124,7 @@ export async function POST(req: Request) {
           data: {
             company_id: company.id,
             email: safeEmail,
-            password_hash: "$argon2id$v=19$m=65536,t=3,p=4$placeholder",
+            password_hash: passwordHash,
             name: safeName,
             role: roleValue,
             is_active: true,
@@ -137,7 +140,7 @@ export async function POST(req: Request) {
         data: {
           company_id: company.id,
           email: safeEmail,
-          password_hash: "$argon2id$v=19$m=65536,t=3,p=4$placeholder",
+          password_hash: passwordHash,
           name: safeName,
           role: roleValue,
           is_active: true,
@@ -150,7 +153,6 @@ export async function POST(req: Request) {
 
     // Confirm visibility of created user from the same runtime DB URL (diagnostic)
     try {
-       
       const env = (function getEnv() {
         try {
           return eval("process").env ?? {};

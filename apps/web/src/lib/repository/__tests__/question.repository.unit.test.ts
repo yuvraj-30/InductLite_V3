@@ -4,7 +4,6 @@
  * Unit tests that mock Prisma for fast, isolated testing.
  */
 
-/* eslint-disable no-restricted-imports */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { RepositoryError } from "../base";
 import type { InductionTemplate, InductionQuestion } from "@prisma/client";
@@ -49,42 +48,39 @@ function createMockQuestion(
   };
 }
 
-// Mock Prisma client
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
-    inductionTemplate: {
-      findFirst: vi.fn(),
-    },
-    inductionQuestion: {
-      create: vi.fn(),
-      findFirst: vi.fn(),
-      findMany: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-      aggregate: vi.fn(),
-      updateMany: vi.fn(),
-    },
-    $transaction: vi.fn((callback) =>
+const templateDelegate = vi.hoisted(() => ({
+  findFirst: vi.fn(),
+}));
+
+const questionDelegate = vi.hoisted(() => ({
+  create: vi.fn(),
+  findFirst: vi.fn(),
+  findMany: vi.fn(),
+  updateMany: vi.fn(),
+  deleteMany: vi.fn(),
+}));
+
+vi.mock("@/lib/db/public-db", () => ({
+  publicDb: {
+    inductionQuestion: questionDelegate,
+    $transaction: vi.fn((callback: (tx: unknown) => unknown) =>
       callback({
-        inductionQuestion: {
-          create: vi.fn(),
-          findFirst: vi.fn(),
-          findMany: vi.fn(),
-          update: vi.fn(),
-          delete: vi.fn(),
-          aggregate: vi.fn(),
-          updateMany: vi.fn(),
-        },
-        inductionTemplate: {
-          findFirst: vi.fn(),
-        },
+        inductionQuestion: questionDelegate,
+        inductionTemplate: templateDelegate,
       }),
     ),
   },
 }));
 
+vi.mock("@/lib/db/scoped-db", () => ({
+  scopedDb: vi.fn(() => ({
+    inductionTemplate: templateDelegate,
+  })),
+}));
+
 // Import after mocking
-import { prisma } from "@/lib/db/prisma";
+import { publicDb } from "@/lib/db/public-db";
+import { scopedDb } from "@/lib/db/scoped-db";
 import { createQuestion, findQuestionById } from "../question.repository";
 
 describe("Question Repository Unit Tests", () => {
@@ -116,7 +112,10 @@ describe("Question Repository Unit Tests", () => {
 
     it("should reject MULTIPLE_CHOICE without options", async () => {
       // Mock template as editable
-      vi.mocked(prisma.inductionTemplate.findFirst).mockResolvedValue(
+      vi.mocked(scopedDb).mockReturnValue({
+        inductionTemplate: templateDelegate,
+      } as unknown as ReturnType<typeof scopedDb>);
+      vi.mocked(templateDelegate.findFirst).mockResolvedValue(
         createMockTemplate(),
       );
 
@@ -131,7 +130,10 @@ describe("Question Repository Unit Tests", () => {
     });
 
     it("should reject CHECKBOX without options", async () => {
-      vi.mocked(prisma.inductionTemplate.findFirst).mockResolvedValue(
+      vi.mocked(scopedDb).mockReturnValue({
+        inductionTemplate: templateDelegate,
+      } as unknown as ReturnType<typeof scopedDb>);
+      vi.mocked(templateDelegate.findFirst).mockResolvedValue(
         createMockTemplate(),
       );
 
@@ -148,7 +150,7 @@ describe("Question Repository Unit Tests", () => {
 
   describe("findQuestionById", () => {
     it("should return null when question not found", async () => {
-      vi.mocked(prisma.inductionQuestion.findFirst).mockResolvedValue(null);
+      vi.mocked(publicDb.inductionQuestion.findFirst).mockResolvedValue(null);
 
       const result = await findQuestionById("company-id", "non-existent");
 
@@ -163,7 +165,7 @@ describe("Question Repository Unit Tests", () => {
         },
       };
 
-      vi.mocked(prisma.inductionQuestion.findFirst).mockResolvedValue(
+      vi.mocked(publicDb.inductionQuestion.findFirst).mockResolvedValue(
         mockQuestion as InductionQuestion,
       );
 
@@ -178,16 +180,15 @@ describe("Question Repository Unit Tests", () => {
     const mockEditableTemplate = createMockTemplate();
 
     beforeEach(() => {
-      vi.mocked(prisma.inductionTemplate.findFirst).mockResolvedValue(
+      vi.mocked(scopedDb).mockReturnValue({
+        inductionTemplate: templateDelegate,
+      } as unknown as ReturnType<typeof scopedDb>);
+      vi.mocked(templateDelegate.findFirst).mockResolvedValue(
         mockEditableTemplate,
       );
-      vi.mocked(prisma.inductionQuestion.aggregate).mockResolvedValue({
-        _max: { display_order: 0 },
-        _avg: { display_order: null },
-        _sum: { display_order: null },
-        _min: { display_order: null },
-        _count: { display_order: 0 },
-      });
+      vi.mocked(publicDb.inductionQuestion.findFirst).mockResolvedValue({
+        display_order: 0,
+      } as InductionQuestion);
     });
 
     it("should accept TEXT question type", async () => {
@@ -197,7 +198,7 @@ describe("Question Repository Unit Tests", () => {
         question_type: "TEXT",
       });
 
-      vi.mocked(prisma.inductionQuestion.create).mockResolvedValue(
+      vi.mocked(publicDb.inductionQuestion.create).mockResolvedValue(
         mockQuestion,
       );
 
@@ -218,7 +219,7 @@ describe("Question Repository Unit Tests", () => {
         correct_answer: "yes",
       });
 
-      vi.mocked(prisma.inductionQuestion.create).mockResolvedValue(
+      vi.mocked(publicDb.inductionQuestion.create).mockResolvedValue(
         mockQuestion,
       );
 
@@ -239,7 +240,7 @@ describe("Question Repository Unit Tests", () => {
         question_type: "ACKNOWLEDGMENT",
       });
 
-      vi.mocked(prisma.inductionQuestion.create).mockResolvedValue(
+      vi.mocked(publicDb.inductionQuestion.create).mockResolvedValue(
         mockQuestion,
       );
 
@@ -260,7 +261,7 @@ describe("Question Repository Unit Tests", () => {
         options: ["Contractor", "Visitor", "Employee"],
       });
 
-      vi.mocked(prisma.inductionQuestion.create).mockResolvedValue(
+      vi.mocked(publicDb.inductionQuestion.create).mockResolvedValue(
         mockQuestion,
       );
 
@@ -278,7 +279,10 @@ describe("Question Repository Unit Tests", () => {
 
   describe("Immutability Enforcement", () => {
     it("should reject question creation on published template", async () => {
-      vi.mocked(prisma.inductionTemplate.findFirst).mockResolvedValue(
+      vi.mocked(scopedDb).mockReturnValue({
+        inductionTemplate: templateDelegate,
+      } as unknown as ReturnType<typeof scopedDb>);
+      vi.mocked(templateDelegate.findFirst).mockResolvedValue(
         createMockTemplate({
           name: "Published Template",
           is_published: true,
@@ -295,7 +299,10 @@ describe("Question Repository Unit Tests", () => {
     });
 
     it("should reject question creation on archived template", async () => {
-      vi.mocked(prisma.inductionTemplate.findFirst).mockResolvedValue(
+      vi.mocked(scopedDb).mockReturnValue({
+        inductionTemplate: templateDelegate,
+      } as unknown as ReturnType<typeof scopedDb>);
+      vi.mocked(templateDelegate.findFirst).mockResolvedValue(
         createMockTemplate({
           name: "Archived Template",
           is_archived: true,

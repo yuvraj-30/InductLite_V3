@@ -44,11 +44,14 @@ export async function setupTestDatabase(): Promise<{
   }
 
   // Apply schema using db push (creates tables from schema.prisma)
-  execSync("npx prisma db push --accept-data-loss --skip-generate", {
-    cwd: process.cwd(),
-    env: { ...process.env, DATABASE_URL: connectionString },
-    stdio: "pipe",
-  });
+  execSync(
+    "npx prisma db push --accept-data-loss --skip-generate --schema prisma/schema.prisma",
+    {
+      cwd: process.cwd(),
+      env: { ...process.env, DATABASE_URL: connectionString },
+      stdio: "pipe",
+    },
+  );
 
   // Create Prisma client
   prismaClient = new PrismaClient({

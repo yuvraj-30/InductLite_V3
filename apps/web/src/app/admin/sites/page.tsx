@@ -8,7 +8,7 @@ import Link from "next/link";
 import { checkAuthReadOnly, checkPermissionReadOnly } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import { findAllSites } from "@/lib/repository";
-import { prisma } from "@/lib/db";
+import { listActivePublicLinksForSites } from "@/lib/repository/site.repository";
 import { DeactivateSiteButton, ReactivateSiteButton } from "./site-buttons";
 
 export const metadata = {
@@ -35,16 +35,10 @@ export default async function SitesPage() {
   const sites = await findAllSites(context.companyId);
 
   // Get active public links for each site
-  const sitePublicLinks = await prisma.sitePublicLink.findMany({
-    where: {
-      site_id: { in: sites.map((s) => s.id) },
-      is_active: true,
-    },
-    select: {
-      site_id: true,
-      slug: true,
-    },
-  });
+  const sitePublicLinks = await listActivePublicLinksForSites(
+    context.companyId,
+    sites.map((s) => s.id),
+  );
 
   const linksBySiteId = new Map(
     sitePublicLinks.map((l) => [l.site_id, l.slug]),

@@ -3,29 +3,34 @@ import type { Prisma } from "@prisma/client";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { RepositoryError } from "../base";
 
-vi.mock("@/lib/db/prisma", () => ({
-  prisma: {
-    inductionTemplate: {
-      findFirst: vi.fn(),
-    },
-    inductionQuestion: {
-      findMany: vi.fn(),
-      update: vi.fn(),
-      createMany: vi.fn(),
-      findFirst: vi.fn(),
-      updateMany: vi.fn(),
-    },
-    $transaction: vi.fn((cb) =>
-      cb({
-        inductionTemplate: { findFirst: vi.fn() },
-        inductionQuestion: {
-          findMany: vi.fn(),
-          update: vi.fn(),
-          createMany: vi.fn(),
-        },
-      }),
-    ),
+const mockDb = vi.hoisted(() => ({
+  inductionTemplate: {
+    findFirst: vi.fn(),
   },
+  inductionQuestion: {
+    findMany: vi.fn(),
+    updateMany: vi.fn(),
+    createMany: vi.fn(),
+    findFirst: vi.fn(),
+  },
+  $transaction: vi.fn((cb: (tx: unknown) => unknown) =>
+    cb({
+      inductionTemplate: { findFirst: vi.fn() },
+      inductionQuestion: {
+        findMany: vi.fn(),
+        updateMany: vi.fn(),
+        createMany: vi.fn(),
+      },
+    }),
+  ),
+}));
+
+vi.mock("@/lib/db/prisma", () => ({
+  prisma: mockDb,
+}));
+
+vi.mock("@/lib/db/public-db", () => ({
+  publicDb: mockDb,
 }));
 
 import { prisma } from "@/lib/db/prisma";
@@ -50,7 +55,7 @@ describe("Question Repository Bulk Operations", () => {
           },
           inductionQuestion: {
             findMany: vi.fn().mockResolvedValue([{ id: "q1" }, { id: "q2" }]),
-            update: vi.fn().mockResolvedValue({}),
+            updateMany: vi.fn().mockResolvedValue({ count: 1 }),
           },
         } as unknown as Prisma.TransactionClient;
 
@@ -77,7 +82,7 @@ describe("Question Repository Bulk Operations", () => {
           },
           inductionQuestion: {
             findMany: vi.fn().mockResolvedValue([{ id: "q1" }]),
-            update: vi.fn(),
+            updateMany: vi.fn(),
           },
         } as unknown as Prisma.TransactionClient;
 

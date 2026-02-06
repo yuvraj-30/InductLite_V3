@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 /**
- * Nonce-based Content Security Policy (CSP) middleware.
+ * Nonce-based Content Security Policy (CSP) proxy.
  *
  * Goals:
  * - Keep enforced CSP stable and production-safe.
@@ -13,8 +13,9 @@ import { NextRequest, NextResponse } from "next/server";
 function toBase64(bytes: Uint8Array): string {
   // Edge runtime safe base64.
   let binary = "";
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]!);
-   
+  for (let i = 0; i < bytes.length; i++)
+    binary += String.fromCharCode(bytes[i]!);
+
   return btoa(binary);
 }
 
@@ -42,10 +43,7 @@ function safeOriginFromUrl(urlStr: string | undefined): string | null {
   }
 }
 
-function buildEnforcedCsp(opts: {
-  nonce: string;
-  isProd: boolean;
-}): string {
+function buildEnforcedCsp(opts: { nonce: string; isProd: boolean }): string {
   const { nonce, isProd } = opts;
 
   // Note: Avoid `strict-dynamic` unless you have strong coverage; it can break
@@ -122,7 +120,7 @@ function buildReportOnlyCsp(opts: {
   return directives.join("; ");
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const url = req.nextUrl;
 
   // Skip prefetches and obvious static assets.
@@ -164,10 +162,7 @@ export function middleware(req: NextRequest) {
 
     // Reporting API (modern) + legacy Report-To.
     // Browsers vary; setting both is pragmatic.
-    res.headers.set(
-      "Reporting-Endpoints",
-      `csp="${reportEndpointAbs}"`,
-    );
+    res.headers.set("Reporting-Endpoints", `csp=\"${reportEndpointAbs}\"`);
     res.headers.set(
       "Report-To",
       JSON.stringify({

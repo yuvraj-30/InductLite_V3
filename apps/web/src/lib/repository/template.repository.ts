@@ -17,7 +17,7 @@
  * - @@index([site_id, is_published]) - finding site active template
  */
 
-import { prisma } from "@/lib/db/prisma";
+import { publicDb } from "@/lib/db/public-db";
 import { scopedDb } from "@/lib/db/scoped-db";
 import { Prisma } from "@prisma/client";
 import {
@@ -73,7 +73,7 @@ export async function unarchiveTemplate(
     }
 
     // Fetch and return the updated template
-    const updated = await prisma.inductionTemplate.findFirst({
+    const updated = await db.inductionTemplate.findFirst({
       where: { id: templateId, company_id: companyId },
       include: {
         site: { select: { id: true, name: true } },
@@ -376,7 +376,9 @@ export async function getTemplateVersions(
   requireCompanyId(companyId);
 
   try {
-    return await prisma.inductionTemplate.findMany({
+    const db = scopedDb(companyId);
+
+    return await db.inductionTemplate.findMany({
       where: {
         company_id: companyId,
         name: templateName,
@@ -588,9 +590,11 @@ export async function publishTemplate(
     );
   }
 
-  return await prisma.$transaction(async (tx) => {
+  return await publicDb.$transaction(async (tx) => {
+    const db = scopedDb(companyId, tx);
+
     // Archive any existing published template with same name
-    await tx.inductionTemplate.updateMany({
+    await db.inductionTemplate.updateMany({
       where: {
         company_id: companyId,
         name: template.name,
@@ -607,7 +611,7 @@ export async function publishTemplate(
 
     // For site-specific templates, unpublish any other active template for this site
     if (template.site_id) {
-      await tx.inductionTemplate.updateMany({
+      await db.inductionTemplate.updateMany({
         where: {
           company_id: companyId,
           site_id: template.site_id,
@@ -623,7 +627,7 @@ export async function publishTemplate(
 
     // For company defaults, ensure only one default is published
     if (template.site_id === null && template.is_default) {
-      await tx.inductionTemplate.updateMany({
+      await db.inductionTemplate.updateMany({
         where: {
           company_id: companyId,
           site_id: null,
@@ -639,14 +643,26 @@ export async function publishTemplate(
     }
 
     // Publish this template (tenant-scoped) and return the updated template using a unique update
-    const updated = await tx.inductionTemplate.update({
-      where: { id: templateId },
+    const updateResult = await db.inductionTemplate.updateMany({
+      where: { id: templateId, company_id: companyId },
       data: { is_published: true, published_at: new Date() },
+    });
+
+    if (updateResult.count === 0) {
+      throw new RepositoryError("Template not found", "NOT_FOUND");
+    }
+
+    const updated = await db.inductionTemplate.findFirst({
+      where: { id: templateId, company_id: companyId },
       include: {
         site: { select: { id: true, name: true } },
         _count: { select: { questions: true, responses: true } },
       },
     });
+
+    if (!updated) {
+      throw new RepositoryError("Template not found", "NOT_FOUND");
+    }
 
     return updated;
   });
@@ -685,9 +701,11 @@ export async function createNewVersion(
 
   const newVersion = (latestVersion?.version ?? 0) + 1;
 
-  return await prisma.$transaction(async (tx) => {
+  return await publicDb.$transaction(async (tx) => {
+    const db = scopedDb(companyId, tx);
+
     // Create new template version
-    const newTemplate = await tx.inductionTemplate.create({
+    const newTemplate = await db.inductionTemplate.create({
       data: {
         company_id: companyId,
         site_id: source.site_id,
@@ -718,13 +736,19 @@ export async function createNewVersion(
     }
 
     // Return with questions
-    return await tx.inductionTemplate.findFirstOrThrow({
+    const created = await db.inductionTemplate.findFirst({
       where: { id: newTemplate.id, company_id: companyId },
       include: {
         site: { select: { id: true, name: true } },
         questions: { orderBy: { display_order: "asc" } },
       },
     });
+
+    if (!created) {
+      throw new RepositoryError("Template not found", "NOT_FOUND");
+    }
+
+    return created;
   });
 }
 
@@ -804,9 +828,11 @@ export async function deleteTemplate(
   requireCompanyId(companyId);
 
   try {
-    await prisma.$transaction(async (tx) => {
+    await publicDb.$transaction(async (tx) => {
+      const db = scopedDb(companyId, tx);
+
       // Atomic check within transaction - find template with response count
-      const template = await tx.inductionTemplate.findFirst({
+      const template = await db.inductionTemplate.findFirst({
         where: { id: templateId, company_id: companyId },
         include: { _count: { select: { responses: true } } },
       });
@@ -830,7 +856,7 @@ export async function deleteTemplate(
       }
 
       // Delete within same transaction - template verified to belong to company
-      await tx.inductionTemplate.deleteMany({
+      await db.inductionTemplate.deleteMany({
         where: { id: templateId, company_id: companyId },
       });
     });
