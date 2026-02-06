@@ -295,8 +295,12 @@ model ExportJob {
   file_size     Int?
   error_message String?
   queued_at     DateTime     @default(now())
+  run_at        DateTime     @default(now())
+  attempts      Int          @default(0)
   started_at    DateTime?
   completed_at  DateTime?
+  locked_at     DateTime?
+  lock_token    String?
   expires_at    DateTime? // When download link expires
   requested_by  String // User ID who requested
 
@@ -306,6 +310,8 @@ model ExportJob {
   @@index([company_id])
   @@index([company_id, status])
   @@index([status])
+  @@index([status, run_at])
+  @@index([locked_at])
   @@index([expires_at])
 }
 

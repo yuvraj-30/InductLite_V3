@@ -14,7 +14,8 @@ import {
   sessionOptions,
   SESSION_DURATION,
 } from "./session-config";
-import { prisma } from "@/lib/db";
+import { publicDb } from "@/lib/db/public-db";
+import { scopedDb } from "@/lib/db/scoped-db";
 import { verifyPassword, hashPassword, needsRehash } from "./password";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId, generateCsrfToken } from "./csrf";
@@ -113,7 +114,7 @@ export async function login(
   });
 
   // Find user by email (this is auth bootstrap - allowed without company_id)
-  const user = await prisma.user.findUnique({
+  const user = await publicDb.user.findFirst({
     where: { email: email.toLowerCase().trim() },
     include: { company: true },
   });
@@ -153,8 +154,9 @@ export async function login(
     const newFailedLogins = user.failed_logins + 1;
     const shouldLock = newFailedLogins >= MAX_FAILED_ATTEMPTS;
 
-    await prisma.user.update({
-      where: { id: user.id },
+    const db = scopedDb(user.company_id);
+    await db.user.updateMany({
+      where: { id: user.id, company_id: user.company_id },
       data: {
         failed_logins: newFailedLogins,
         locked_until: shouldLock
@@ -164,9 +166,8 @@ export async function login(
     });
 
     // Audit log failed attempt
-    await prisma.auditLog.create({
+    await db.auditLog.create({
       data: {
-        company_id: user.company_id,
         user_id: user.id,
         action: "auth.login_failed",
         details: {
@@ -211,8 +212,9 @@ export async function login(
     updateData.password_hash = await hashPassword(password);
   }
 
-  await prisma.user.update({
-    where: { id: user.id },
+  const db = scopedDb(user.company_id);
+  await db.user.updateMany({
+    where: { id: user.id, company_id: user.company_id },
     data: updateData,
   });
 
@@ -237,9 +239,8 @@ export async function login(
   await session.save();
 
   // Audit log successful login
-  await prisma.auditLog.create({
+  await db.auditLog.create({
     data: {
-      company_id: user.company_id,
       user_id: user.id,
       action: "auth.login_success",
       details: { method: "email_password" } as object,
@@ -275,9 +276,9 @@ export async function logout(
 
   if (session.user) {
     // Audit log logout
-    await prisma.auditLog.create({
+    const db = scopedDb(session.user.companyId);
+    await db.auditLog.create({
       data: {
-        company_id: session.user.companyId,
         user_id: session.user.id,
         action: "auth.logout",
         ip_address: ipAddress,
@@ -303,8 +304,9 @@ export async function changePassword(
   }
 
   // Get user from database
-  const user = await prisma.user.findUnique({
-    where: { id: sessionUser.id },
+  const db = scopedDb(sessionUser.companyId);
+  const user = await db.user.findFirst({
+    where: { id: sessionUser.id, company_id: sessionUser.companyId },
   });
 
   if (!user) {
@@ -322,15 +324,14 @@ export async function changePassword(
 
   // Hash and save new password
   const newPasswordHash = await hashPassword(newPassword);
-  await prisma.user.update({
-    where: { id: user.id },
+  await db.user.updateMany({
+    where: { id: user.id, company_id: sessionUser.companyId },
     data: { password_hash: newPasswordHash },
   });
 
   // Audit log
-  await prisma.auditLog.create({
+  await db.auditLog.create({
     data: {
-      company_id: user.company_id,
       user_id: user.id,
       action: "auth.password_changed",
     },

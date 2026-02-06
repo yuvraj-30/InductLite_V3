@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { logger } from "@/lib/logger";
+import { createRequestLogger } from "@/lib/logger";
+import { generateRequestId } from "@/lib/auth/csrf";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -19,6 +20,10 @@ interface HealthStatus {
 }
 
 export async function GET(): Promise<NextResponse<HealthStatus>> {
+  const log = createRequestLogger(generateRequestId(), {
+    path: "/health",
+    method: "GET",
+  });
   const startTime = Date.now();
   const healthStatus: HealthStatus = {
     status: "ok",
@@ -43,7 +48,7 @@ export async function GET(): Promise<NextResponse<HealthStatus>> {
     healthStatus.checks.database.error =
       error instanceof Error ? error.message : "Unknown database error";
 
-    logger.error(
+    log.error(
       { error, latency_ms: Date.now() - startTime },
       "Health check failed - database error",
     );
@@ -51,7 +56,7 @@ export async function GET(): Promise<NextResponse<HealthStatus>> {
     return NextResponse.json(healthStatus, { status: 503 });
   }
 
-  logger.debug({ latency_ms: Date.now() - startTime }, "Health check passed");
+  log.debug({ latency_ms: Date.now() - startTime }, "Health check passed");
 
   return NextResponse.json(healthStatus, { status: 200 });
 }

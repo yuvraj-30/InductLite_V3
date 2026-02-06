@@ -34,6 +34,21 @@ type MyFixtures = {
 // Ensure we only attempt to push the main DB schema once per test run
 let mainDbPushDone = false;
 
+const E2E_QUIET = (() => {
+  const v = process.env.E2E_QUIET;
+  return v === "1" || v?.toLowerCase() === "true";
+})();
+
+const console = {
+  ...globalThis.console,
+  log: (...args: unknown[]) => {
+    if (!E2E_QUIET) globalThis.console.log(...args);
+  },
+  warn: (...args: unknown[]) => {
+    if (!E2E_QUIET) globalThis.console.warn(...args);
+  },
+};
+
 export const test = base.extend<MyFixtures>({
   loginAs: async ({ context }, playUse) => {
     await playUse(async (email = "admin@buildright.co.nz") => {
@@ -103,20 +118,46 @@ export const test = base.extend<MyFixtures>({
 
   deletePublicSite: async ({ request }, playUse) => {
     await playUse(async (slug: string) => {
-      const { ok, body } = await _deletePublicSite(
-        request as APIRequestContext,
-        slug,
-      );
-      if (!ok || !body) {
-        throw new Error(
-          `deletePublicSite: failed to call endpoint: ${JSON.stringify(body)}`,
+      let lastBody: {
+        success?: boolean;
+        deleted?: boolean;
+        error?: string;
+      } | null = null;
+
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const { ok, body } = await _deletePublicSite(
+          request as APIRequestContext,
+          slug,
         );
+        lastBody = body;
+
+        if (ok && body) {
+          if (!body.success) {
+            // Return body so caller can inspect deleted flag or error
+            return body as {
+              success?: boolean;
+              deleted?: boolean;
+              error?: string;
+            };
+          }
+          return body as {
+            success?: boolean;
+            deleted?: boolean;
+            error?: string;
+          };
+        }
+
+        const shouldRetry =
+          body?.error && /ECONNRESET|socket hang up/i.test(body.error);
+        if (!shouldRetry || attempt === 3) {
+          break;
+        }
+        await new Promise((r) => setTimeout(r, 500 * attempt));
       }
-      if (!body.success) {
-        // Return body so caller can inspect deleted flag or error
-        return body as { success?: boolean; deleted?: boolean; error?: string };
-      }
-      return body as { success?: boolean; deleted?: boolean; error?: string };
+
+      throw new Error(
+        `deletePublicSite: failed to call endpoint: ${JSON.stringify(lastBody)}`,
+      );
     });
   },
 
@@ -125,6 +166,21 @@ export const test = base.extend<MyFixtures>({
   workerServer: async ({}, playUse, testInfo) => {
     const { spawn } = await import("child_process");
     const path = await import("path");
+
+    // Wait for server to be ready by polling the test endpoint
+    const waitForUrl = async (url: string, timeout = 120000) => {
+      const start = Date.now();
+      while (Date.now() - start < timeout) {
+        try {
+          const res = await fetch(url, { method: "POST" });
+          if (res && res.ok) return;
+        } catch (e) {
+          // ignore and retry
+        }
+        await new Promise((r) => setTimeout(r, 500));
+      }
+      throw new Error(`Timed out waiting for ${url} to become available`);
+    };
 
     // If running with a shared server (useful on Windows local runs), skip
     // per-worker DB/schema isolation and server spawning. Set
@@ -136,6 +192,66 @@ export const test = base.extend<MyFixtures>({
       // On Windows default to using a shared server to avoid spawn/shell issues
       // in test workers (local dev machines commonly hit these constraints).
       const baseUrl = process.env.BASE_URL ?? "http://localhost:3000";
+
+      // Ensure the main DB schema is applied once for shared-server mode
+      if (!mainDbPushDone) {
+        try {
+          const baseDb = process.env.DATABASE_URL;
+          if (baseDb) {
+            const { spawnSync } = await import("child_process");
+            const isWin = (process.platform as string) === "win32";
+            const run = (args: string[]) =>
+              spawnSync(isWin ? "npx.cmd" : "npx", args, {
+                cwd: process.cwd(),
+                env: { ...process.env, DATABASE_URL: baseDb },
+                stdio: "inherit",
+                shell: false,
+              });
+
+            let res = run([
+              "prisma",
+              "migrate",
+              "deploy",
+              "--schema",
+              "prisma/schema.prisma",
+            ]);
+
+            if (res && res.status !== 0) {
+              console.warn(
+                "E2E: main DB prisma migrate deploy failed; continuing with db push",
+                res.status,
+              );
+            }
+
+            res = run([
+              "prisma",
+              "db",
+              "push",
+              "--accept-data-loss",
+              "--skip-generate",
+              "--schema",
+              "prisma/schema.prisma",
+            ]);
+
+            if (res && res.status === 0) {
+              mainDbPushDone = true;
+              console.log("E2E: main DB schema sync succeeded");
+            } else {
+              console.warn(
+                "E2E: main DB schema sync failed or returned non-zero status",
+                res && res.status,
+              );
+            }
+          } else {
+            console.warn("E2E: DATABASE_URL missing; cannot db push");
+          }
+        } catch (e) {
+          console.warn("E2E: main DB prisma db push threw:", String(e));
+        }
+      }
+
+      await waitForUrl(`${baseUrl}/api/test/clear-rate-limit`, 120000);
+
       await playUse({ baseUrl, schema: "public" });
       return;
     }
@@ -180,7 +296,15 @@ export const test = base.extend<MyFixtures>({
         const isWin = (process.platform as string) === "win32";
         const res = spawnSync(
           isWin ? "npx.cmd" : "npx",
-          ["prisma", "db", "push", "--accept-data-loss", "--skip-generate"],
+          [
+            "prisma",
+            "db",
+            "push",
+            "--accept-data-loss",
+            "--skip-generate",
+            "--schema",
+            "prisma/schema.prisma",
+          ],
           {
             cwd: process.cwd(),
             env: { ...process.env, DATABASE_URL: baseDb },
@@ -776,21 +900,6 @@ export const test = base.extend<MyFixtures>({
         }
       }
     }
-
-    // Wait for server to be ready by polling the test endpoint
-    const waitForUrl = async (url: string, timeout = 120000) => {
-      const start = Date.now();
-      while (Date.now() - start < timeout) {
-        try {
-          const res = await fetch(url, { method: "POST" });
-          if (res && res.ok) return;
-        } catch (e) {
-          // ignore and retry
-        }
-        await new Promise((r) => setTimeout(r, 500));
-      }
-      throw new Error(`Timed out waiting for ${url} to become available`);
-    };
 
     try {
       await waitForUrl(`${baseUrl}/api/test/clear-rate-limit`, 120000);

@@ -3,8 +3,12 @@
 import { z } from "zod";
 import { assertOrigin, checkAdmin } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
-import { prisma } from "@/lib/db/prisma";
 import { createAuditLog } from "@/lib/repository/audit.repository";
+import {
+  createExportJob,
+  countExportJobsSince,
+  countRunningExportJobs,
+} from "@/lib/repository/export.repository";
 import { createExportSchema } from "@inductlite/shared";
 import {
   type ApiResponse,
@@ -16,6 +20,8 @@ import {
 import { generateRequestId } from "@/lib/auth/csrf";
 import { createRequestLogger } from "@/lib/logger";
 import { revalidatePath } from "next/cache";
+import { GUARDRAILS, isOffPeakNow } from "@/lib/guardrails";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export async function createExportAction(
   input: z.infer<typeof createExportSchema>,
@@ -43,18 +49,41 @@ export async function createExportAction(
   const guard = await checkAdmin();
   if (!guard.success) return permissionDeniedResponse(guard.error);
 
+  if (!isFeatureEnabled("EXPORTS")) {
+    return errorResponse("FORBIDDEN", "Exports are currently disabled");
+  }
+
   // Tenant context
   const context = await requireAuthenticatedContextReadOnly();
 
+  if (GUARDRAILS.EXPORT_OFFPEAK_ONLY && !isOffPeakNow()) {
+    return errorResponse(
+      "FORBIDDEN",
+      "Exports are only available during off-peak hours",
+    );
+  }
+
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const [exportsToday, runningNow] = await Promise.all([
+    countExportJobsSince(context.companyId, since),
+    countRunningExportJobs(context.companyId),
+  ]);
+
+  if (
+    exportsToday >= GUARDRAILS.MAX_EXPORTS_PER_COMPANY_PER_DAY ||
+    runningNow >= GUARDRAILS.MAX_CONCURRENT_EXPORTS_PER_COMPANY
+  ) {
+    return errorResponse(
+      "RATE_LIMITED",
+      "Export limits reached for your company. Please try later.",
+    );
+  }
+
   try {
-    const job = await prisma.exportJob.create({
-      data: {
-        company_id: context.companyId,
-        export_type: parsed.data.exportType,
-        parameters: parsed.data,
-        requested_by: context.userId,
-        status: "QUEUED",
-      },
+    const job = await createExportJob(context.companyId, {
+      export_type: parsed.data.exportType,
+      parameters: parsed.data,
+      requested_by: context.userId,
     });
 
     await createAuditLog(context.companyId, {

@@ -2,6 +2,19 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { generateCsrfToken } from "@/lib/auth/csrf";
 
+const E2E_QUIET = (() => {
+  const v = process.env.E2E_QUIET;
+  return v === "1" || v?.toLowerCase() === "true";
+})();
+
+const e2eLog = (...args: unknown[]) => {
+  if (!E2E_QUIET) console.log(...args);
+};
+
+const e2eWarn = (...args: unknown[]) => {
+  if (!E2E_QUIET) console.warn(...args);
+};
+
 // Force Node runtime and dynamic evaluation so env values are read at request-time
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -73,10 +86,7 @@ export async function GET(req: Request) {
         try {
           const u = new URL(dbUrl);
           const masked = `${u.protocol}//${u.username}:****@${u.hostname}${u.port ? `:${u.port}` : ""}${u.pathname}${u.search}`;
-          console.log(
-            "E2E: create-session lookup; masked DATABASE_URL:",
-            masked,
-          );
+          e2eLog("E2E: create-session lookup; masked DATABASE_URL:", masked);
           try {
             const { PrismaClient } = await import("@prisma/client");
             const diag = new PrismaClient({
@@ -86,23 +96,20 @@ export async function GET(req: Request) {
             const res: any = await diag.$queryRawUnsafe(
               `SELECT current_schema() AS schema_name, (SELECT COUNT(*)::int FROM information_schema.tables WHERE table_schema = current_schema()) AS tables_count`,
             );
-            console.log(
+            e2eLog(
               "E2E: create-session runtime diagnostic:",
               JSON.stringify(res),
             );
             await diag.$disconnect();
           } catch (e) {
-            console.warn(
-              "E2E: create-session diagnostic query failed:",
-              String(e),
-            );
+            e2eWarn("E2E: create-session diagnostic query failed:", String(e));
           }
         } catch (_) {
           // ignore
         }
       }
     } catch (e) {
-      console.warn("E2E: create-session diag read failed:", String(e));
+      e2eWarn("E2E: create-session diag read failed:", String(e));
     }
 
     // Use a runtime-bound Prisma client for consistent visibility with request-time DATABASE_URL
@@ -134,7 +141,7 @@ export async function GET(req: Request) {
         });
       }
     } catch (e) {
-      console.warn(
+      e2eWarn(
         "E2E: create-session runtime lookup failed, falling back to global prisma:",
         String(e),
       );
@@ -163,7 +170,7 @@ export async function GET(req: Request) {
             });
             await diag.$connect();
             const count = await diag.user.count({ where: { email } });
-            console.warn(
+            e2eWarn(
               "E2E: create-session user not found; diag count for email=",
               email,
               "count=",
@@ -172,17 +179,17 @@ export async function GET(req: Request) {
             const res = await diag.$queryRawUnsafe(
               "select current_schema() as schema, (select count(*) from information_schema.tables where table_schema = current_schema()) as tables_count;",
             );
-            console.warn(
+            e2eWarn(
               "E2E: create-session diag schema/tables:",
               JSON.stringify(res),
             );
             await diag.$disconnect();
           } catch (e) {
-            console.warn("E2E: create-session diag lookup failed:", String(e));
+            e2eWarn("E2E: create-session diag lookup failed:", String(e));
           }
         }
       } catch (e) {
-        console.warn("E2E: create-session diag outer failed:", String(e));
+        e2eWarn("E2E: create-session diag outer failed:", String(e));
       }
 
       return NextResponse.json({ error: "user not found" }, { status: 404 });

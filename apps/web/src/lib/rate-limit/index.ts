@@ -14,6 +14,11 @@ import { getRedisClient } from "./client";
 import { getStableClientKey } from "./clientKey";
 import { recordRateLimitBlocked } from "./telemetry";
 
+const E2E_QUIET = (() => {
+  const v = process.env.E2E_QUIET;
+  return v === "1" || v?.toLowerCase() === "true";
+})();
+
 /**
  * In-memory fallback for development (when Redis is not configured)
  */
@@ -127,7 +132,12 @@ export async function __test_clearInMemoryStoreForClient(clientKey: string) {
             } while (Number(cursor) !== 0);
           }
         } catch (cleanupErr) {
-          console.warn("Redis cleanup by pattern failed:", String(cleanupErr));
+          if (!E2E_QUIET) {
+            console.warn(
+              "Redis cleanup by pattern failed:",
+              String(cleanupErr),
+            );
+          }
         }
       }
     }
@@ -137,6 +147,19 @@ export async function __test_clearInMemoryStoreForClient(clientKey: string) {
 }
 
 const inMemoryStore = new InMemoryStore();
+
+const RL_PUBLIC_SLUG_PER_IP_PER_MIN = Number(
+  process.env.RL_PUBLIC_SLUG_PER_IP_PER_MIN ?? 10,
+);
+const RL_SIGNIN_PER_IP_PER_MIN = Number(
+  process.env.RL_SIGNIN_PER_IP_PER_MIN ?? 30,
+);
+const RL_SIGNIN_PER_SITE_PER_MIN = Number(
+  process.env.RL_SIGNIN_PER_SITE_PER_MIN ?? 200,
+);
+const RL_SIGNOUT_PER_IP_PER_MIN = Number(
+  process.env.RL_SIGNOUT_PER_IP_PER_MIN ?? 30,
+);
 
 // Clean up every minute
 if (typeof setInterval !== "undefined") {
@@ -152,7 +175,7 @@ function createRateLimiter(): Ratelimit | null {
   if (redis) {
     return new Ratelimit({
       redis,
-      limiter: Ratelimit.slidingWindow(10, "60 s"), // 10 requests per minute
+      limiter: Ratelimit.slidingWindow(RL_PUBLIC_SLUG_PER_IP_PER_MIN, "60 s"),
       analytics: true,
       prefix: "inductlite:ratelimit",
     });
@@ -243,7 +266,7 @@ export async function checkPublicSlugRateLimit(
 
   // In-memory fallback for development
   const windowMs = 60000; // 1 minute
-  const limit = 10;
+  const limit = RL_PUBLIC_SLUG_PER_IP_PER_MIN;
   const count = await inMemoryStore.incr(key, windowMs);
   const remaining = Math.max(0, limit - count);
   const success = count <= limit;
@@ -370,7 +393,7 @@ export async function checkLoginRateLimit(
 
 /**
  * Check rate limit for public sign-in submissions
- * Moderate restriction: 10 sign-ins per hour per IP
+ * Guardrails: 30 per minute per IP + 200 per minute per site
  */
 export async function checkSignInRateLimit(
   siteSlug: string,
@@ -397,37 +420,52 @@ export async function checkSignInRateLimit(
   }
 
   const key = `signin:${clientKey}:${siteSlug}`;
+  const siteKey = `signin-site:${siteSlug}`;
 
   const redis = getRedisClient();
   if (redis) {
     const signInLimiter = new Ratelimit({
       redis,
-      limiter: Ratelimit.slidingWindow(10, "1 h"), // 10 sign-ins per hour
+      limiter: Ratelimit.slidingWindow(RL_SIGNIN_PER_IP_PER_MIN, "1 m"),
       analytics: true,
       prefix: "inductlite:signin-ratelimit",
     });
 
-    const result = await signInLimiter.limit(key);
+    const siteLimiter = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(RL_SIGNIN_PER_SITE_PER_MIN, "1 m"),
+      analytics: true,
+      prefix: "inductlite:signin-site-ratelimit",
+    });
 
-    if (!result.success) {
+    const [ipResult, siteResult] = await Promise.all([
+      signInLimiter.limit(key),
+      siteLimiter.limit(siteKey),
+    ]);
+
+    const success = ipResult.success && siteResult.success;
+    if (!success) {
       log.warn({ clientKey, siteSlug }, "Sign-in rate limit exceeded");
       recordRateLimitBlocked({ kind: "signin", clientKey, meta: { siteSlug } });
     }
 
     return {
-      success: result.success,
-      limit: result.limit,
-      remaining: result.remaining,
-      reset: result.reset,
+      success,
+      limit: Math.min(ipResult.limit, siteResult.limit),
+      remaining: Math.min(ipResult.remaining, siteResult.remaining),
+      reset: Math.max(ipResult.reset, siteResult.reset),
     };
   }
 
   // In-memory fallback
-  const windowMs = 60 * 60 * 1000; // 1 hour
-  const limit = 10;
-  const count = await inMemoryStore.incr(key, windowMs);
-  const remaining = Math.max(0, limit - count);
-  const success = count <= limit;
+  const windowMs = 60 * 1000; // 1 minute
+  const ipCount = await inMemoryStore.incr(key, windowMs);
+  const siteCount = await inMemoryStore.incr(siteKey, windowMs);
+  const ipRemaining = Math.max(0, RL_SIGNIN_PER_IP_PER_MIN - ipCount);
+  const siteRemaining = Math.max(0, RL_SIGNIN_PER_SITE_PER_MIN - siteCount);
+  const success =
+    ipCount <= RL_SIGNIN_PER_IP_PER_MIN &&
+    siteCount <= RL_SIGNIN_PER_SITE_PER_MIN;
 
   if (!success) {
     log.warn(
@@ -439,15 +477,15 @@ export async function checkSignInRateLimit(
 
   return {
     success,
-    limit,
-    remaining,
+    limit: Math.min(RL_SIGNIN_PER_IP_PER_MIN, RL_SIGNIN_PER_SITE_PER_MIN),
+    remaining: Math.min(ipRemaining, siteRemaining),
     reset: Date.now() + windowMs,
   };
 }
 
 /**
  * Check rate limit for sign-out attempts
- * Moderate restriction: 5 attempts per 15 minutes per token
+ * Guardrails: 30 per minute per token/IP
  */
 export async function checkSignOutRateLimit(
   tokenPrefix: string,
@@ -479,7 +517,7 @@ export async function checkSignOutRateLimit(
   if (redis) {
     const signOutLimiter = new Ratelimit({
       redis,
-      limiter: Ratelimit.slidingWindow(5, "15 m"),
+      limiter: Ratelimit.slidingWindow(RL_SIGNOUT_PER_IP_PER_MIN, "1 m"),
       analytics: true,
       prefix: "inductlite:signout-ratelimit",
     });
@@ -504,8 +542,8 @@ export async function checkSignOutRateLimit(
   }
 
   // In-memory fallback
-  const windowMs = 15 * 60 * 1000;
-  const limit = 5;
+  const windowMs = 60 * 1000;
+  const limit = RL_SIGNOUT_PER_IP_PER_MIN;
   const count = await inMemoryStore.incr(key, windowMs);
   const remaining = Math.max(0, limit - count);
   const success = count <= limit;

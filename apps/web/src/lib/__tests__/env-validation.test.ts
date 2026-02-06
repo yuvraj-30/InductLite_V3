@@ -155,6 +155,8 @@ describe("validateEnv", () => {
       process.env.S3_ACCESS_KEY_ID = "key";
       process.env.S3_SECRET_ACCESS_KEY = "secret";
       // No Upstash
+      delete process.env.UPSTASH_REDIS_REST_URL;
+      delete process.env.UPSTASH_REDIS_REST_TOKEN;
 
       const result = validateEnv();
 

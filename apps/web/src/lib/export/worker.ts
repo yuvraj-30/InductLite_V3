@@ -1,5 +1,6 @@
-import { prisma } from "@/lib/db/prisma";
+import { scopedDb } from "@/lib/db/scoped-db";
 import { formatSignInRecordForCsv, formatContractorForCsv } from "./formatters";
+import { GUARDRAILS } from "@/lib/guardrails";
 
 function escapeCsv(cell: string): string {
   if (cell.includes('"') || cell.includes(",") || cell.includes("\n")) {
@@ -11,10 +12,17 @@ function escapeCsv(cell: string): string {
 export async function generateSignInCsvForCompany(
   companyId: string,
 ): Promise<string> {
-  const records = await prisma.signInRecord.findMany({
+  const db = scopedDb(companyId);
+  const records = await db.signInRecord.findMany({
     where: { company_id: companyId },
     include: { site: { select: { name: true } } },
+    orderBy: { sign_in_ts: "desc" },
+    take: GUARDRAILS.MAX_EXPORT_ROWS + 1,
   });
+
+  if (records.length > GUARDRAILS.MAX_EXPORT_ROWS) {
+    throw new Error("Export exceeds MAX_EXPORT_ROWS guardrail");
+  }
 
   const rows: Array<Record<string, string>> = records.map(
     formatSignInRecordForCsv,
@@ -33,16 +41,28 @@ export async function generateSignInCsvForCompany(
     lines.push(cols.join(","));
   }
 
-  return lines.join("\n");
+  const csv = lines.join("\n");
+  if (Buffer.byteLength(csv) > GUARDRAILS.MAX_EXPORT_BYTES) {
+    throw new Error("Export exceeds MAX_EXPORT_BYTES guardrail");
+  }
+
+  return csv;
 }
 
 export async function generateContractorCsvForCompany(
   companyId: string,
 ): Promise<string> {
-  const contractors = await prisma.contractor.findMany({
+  const db = scopedDb(companyId);
+  const contractors = await db.contractor.findMany({
     where: { company_id: companyId },
     include: { documents: true },
+    orderBy: { name: "asc" },
+    take: GUARDRAILS.MAX_EXPORT_ROWS + 1,
   });
+
+  if (contractors.length > GUARDRAILS.MAX_EXPORT_ROWS) {
+    throw new Error("Export exceeds MAX_EXPORT_ROWS guardrail");
+  }
 
   const rows: Array<Record<string, string>> = contractors.map(
     formatContractorForCsv,
@@ -61,5 +81,10 @@ export async function generateContractorCsvForCompany(
     lines.push(cols.join(","));
   }
 
-  return lines.join("\n");
+  const csv = lines.join("\n");
+  if (Buffer.byteLength(csv) > GUARDRAILS.MAX_EXPORT_BYTES) {
+    throw new Error("Export exceeds MAX_EXPORT_BYTES guardrail");
+  }
+
+  return csv;
 }

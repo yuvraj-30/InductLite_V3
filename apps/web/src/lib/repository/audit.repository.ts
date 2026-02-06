@@ -58,6 +58,7 @@ export type AuditAction =
   | "contractor.update"
   | "contractor.deactivate"
   | "contractor.document_upload"
+  | "contractor.document_download"
   | "contractor.document_delete"
   // Sign-in actions
   | "signin.create"
@@ -69,6 +70,7 @@ export type AuditAction =
   | "export.create"
   | "export.complete"
   | "export.download"
+  | "export.denied"
   // Public link actions
   | "publiclink.create"
   | "publiclink.deactivate";
@@ -192,6 +194,98 @@ export async function listAuditLogs(
     ]);
 
     return paginatedResult(logs, total, page, pageSize);
+  } catch (error) {
+    handlePrismaError(error, "AuditLog");
+  }
+}
+
+/**
+ * List audit logs with user details (for admin UI)
+ */
+export async function listAuditLogsWithUsers(
+  companyId: string,
+  filter?: AuditLogFilter,
+  pagination?: PaginationParams,
+): Promise<
+  PaginatedResult<AuditLog & { user: { name: string; email: string } | null }>
+> {
+  requireCompanyId(companyId);
+
+  const { skip, take, page, pageSize } = normalizePagination(pagination ?? {});
+
+  const where: Prisma.AuditLogWhereInput = {
+    company_id: companyId,
+    ...(filter?.action && {
+      action: Array.isArray(filter.action)
+        ? { in: filter.action }
+        : filter.action,
+    }),
+    ...(filter?.entity_type && { entity_type: filter.entity_type }),
+    ...(filter?.entity_id && { entity_id: filter.entity_id }),
+    ...(filter?.user_id && { user_id: filter.user_id }),
+    ...(filter?.dateRange && {
+      created_at: buildDateRangeFilter(filter.dateRange),
+    }),
+  };
+
+  try {
+    const db = scopedDb(companyId);
+    const [logs, total] = await Promise.all([
+      db.auditLog.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { created_at: "desc" },
+        include: { user: { select: { name: true, email: true } } },
+      }),
+      db.auditLog.count({ where }),
+    ]);
+
+    return paginatedResult(logs, total, page, pageSize);
+  } catch (error) {
+    handlePrismaError(error, "AuditLog");
+  }
+}
+
+/**
+ * List distinct audit action types for a company
+ */
+export async function listDistinctAuditActions(
+  companyId: string,
+): Promise<string[]> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+    const results = await db.auditLog.findMany({
+      where: { company_id: companyId },
+      select: { action: true },
+      distinct: ["action"],
+    });
+    return results.map((r) => r.action);
+  } catch (error) {
+    handlePrismaError(error, "AuditLog");
+  }
+}
+
+/**
+ * List distinct audit entity types for a company
+ */
+export async function listDistinctAuditEntityTypes(
+  companyId: string,
+): Promise<string[]> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+    const results = await db.auditLog.findMany({
+      where: { company_id: companyId },
+      select: { entity_type: true },
+      distinct: ["entity_type"],
+    });
+    return results
+      .map((r) => r.entity_type)
+      .filter((v): v is string => Boolean(v));
   } catch (error) {
     handlePrismaError(error, "AuditLog");
   }

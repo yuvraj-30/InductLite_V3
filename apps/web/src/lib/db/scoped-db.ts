@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { prisma } from "@/lib/db/prisma";
+import type { Prisma } from "@prisma/client";
 
 const TENANT_MODELS = [
   "user",
@@ -8,12 +9,31 @@ const TENANT_MODELS = [
   "signInRecord",
   "contractor",
   "contractorDocument",
+  "exportJob",
   "auditLog",
 ] as const;
 
 function andWhere(companyGuard: object, where?: any) {
   if (!where) return companyGuard;
   return { AND: [where, companyGuard] };
+}
+
+function getModelGuard(
+  model: string,
+  companyId: string,
+): {
+  where: object;
+  data?: object;
+} {
+  switch (model) {
+    case "contractorDocument":
+      return { where: { contractor: { company_id: companyId } } };
+    default:
+      return {
+        where: { company_id: companyId },
+        data: { company_id: companyId },
+      };
+  }
 }
 
 function throwIfUnsafe(operation: string, model: string) {
@@ -35,17 +55,18 @@ function throwIfUnsafe(operation: string, model: string) {
  * scopedDb enforces company_id in WHERE clauses for tenant models.
  * It also prevents unsafe unique operations on tenant models.
  */
-export function scopedDb(companyId: string) {
+export function scopedDb(
+  companyId: string,
+  client: Prisma.TransactionClient | typeof prisma = prisma,
+) {
   if (!companyId || typeof companyId !== "string") {
     throw new Error("company_id is required");
   }
 
-  const companyGuard = { company_id: companyId };
-
   const proxy: Record<string, unknown> = {};
 
   // Narrow Prisma to a generic record keyed by model name with function delegates
-  const genericPrisma = prisma as unknown as Record<
+  const genericPrisma = client as unknown as Record<
     string,
     Record<string, (...args: any[]) => any>
   >;
@@ -100,6 +121,9 @@ export function scopedDb(companyId: string) {
         },
       } as Record<string, (...args: unknown[]) => unknown>);
 
+    // Resolve the tenant guard for this model
+    const modelGuard = getModelGuard(model, companyId);
+
     // Narrow to an object with required delegate methods so TypeScript understands
     const d = delegateObj as {
       findFirst: (args?: any) => any;
@@ -115,41 +139,41 @@ export function scopedDb(companyId: string) {
       findFirst: (args?: Record<string, unknown>) =>
         d.findFirst({
           ...(args ?? {}),
-          where: andWhere(companyGuard, args?.where),
+          where: andWhere(modelGuard.where, args?.where),
         }),
       findMany: (args?: Record<string, unknown>) =>
         d.findMany({
           ...(args ?? {}),
-          where: andWhere(companyGuard, args?.where),
+          where: andWhere(modelGuard.where, args?.where),
         }),
       count: (args?: Record<string, unknown>) =>
         d.count({
           ...(args ?? {}),
-          where: andWhere(companyGuard, args?.where),
+          where: andWhere(modelGuard.where, args?.where),
         }),
       create: (args?: Record<string, unknown>) =>
         d.create({
           ...(args ?? {}),
           data: {
             ...((args as Record<string, any>)?.data ?? {}),
-            company_id: companyId,
+            ...(modelGuard.data ?? {}),
           },
         }),
       updateMany: (args?: Record<string, unknown>) =>
         d.updateMany({
           ...(args ?? {}),
-          where: andWhere(companyGuard, args?.where),
+          where: andWhere(modelGuard.where, args?.where),
         }),
       deleteMany: (args?: Record<string, unknown>) =>
         d.deleteMany({
           ...(args ?? {}),
-          where: andWhere(companyGuard, args?.where),
+          where: andWhere(modelGuard.where, args?.where),
         }),
       groupBy: (args?: Record<string, unknown>) => {
         if (typeof d.groupBy === "function") {
           return d.groupBy({
             ...(args ?? {}),
-            where: andWhere(companyGuard, args?.where) as Record<
+            where: andWhere(modelGuard.where, args?.where) as Record<
               string,
               unknown
             >,
@@ -190,6 +214,7 @@ export function scopedDb(companyId: string) {
       count: (args?: any) => Promise<number>;
       create: (args?: any) => Promise<any>;
       updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
     };
     signInRecord: {
       findFirst: (args?: any) => Promise<any>;
@@ -208,13 +233,25 @@ export function scopedDb(companyId: string) {
       deleteMany: (args?: any) => Promise<any>;
     };
     contractorDocument: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
       create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
       deleteMany: (args?: any) => Promise<any>;
     };
     auditLog: {
       create: (args?: any) => Promise<any>;
       findMany: (args?: any) => Promise<any[]>;
       count: (args?: any) => Promise<number>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    exportJob: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
       deleteMany: (args?: any) => Promise<any>;
     };
   };

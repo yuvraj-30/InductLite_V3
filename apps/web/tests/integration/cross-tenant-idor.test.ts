@@ -26,12 +26,17 @@ type SiteRepo = typeof import("../../src/lib/repository/site.repository");
 type TemplateRepo =
   typeof import("../../src/lib/repository/template.repository");
 type SigninRepo = typeof import("../../src/lib/repository/signin.repository");
+type ContractorRepo =
+  typeof import("../../src/lib/repository/contractor.repository");
+type ExportRepo = typeof import("../../src/lib/repository/export.repository");
 
 describe("Cross-Tenant IDOR Prevention", () => {
   let prisma: PrismaClient;
   let siteRepo: SiteRepo;
   let templateRepo: TemplateRepo;
   let signinRepo: SigninRepo;
+  let contractorRepo: ContractorRepo;
+  let exportRepo: ExportRepo;
 
   // Two separate tenants
   let companyA: { id: string; slug: string; name: string };
@@ -47,6 +52,11 @@ describe("Cross-Tenant IDOR Prevention", () => {
   let templateB: { id: string; version: number };
   let signInRecordB: { id: string; visitorPhone: string };
 
+  let contractorDocA: { id: string };
+  let contractorDocB: { id: string };
+  let exportJobA: { id: string };
+  let exportJobB: { id: string };
+
   beforeAll(async () => {
     const { prisma: testPrisma } = await setupTestDatabase();
     prisma = testPrisma;
@@ -56,6 +66,9 @@ describe("Cross-Tenant IDOR Prevention", () => {
     siteRepo = await import("../../src/lib/repository/site.repository");
     templateRepo = await import("../../src/lib/repository/template.repository");
     signinRepo = await import("../../src/lib/repository/signin.repository");
+    contractorRepo =
+      await import("../../src/lib/repository/contractor.repository");
+    exportRepo = await import("../../src/lib/repository/export.repository");
   }, 120000); // 2 minute timeout for container startup
 
   afterAll(async () => {
@@ -100,6 +113,63 @@ describe("Cross-Tenant IDOR Prevention", () => {
         visitorPhone: "0412345002",
       },
     );
+
+    const contractorA = await prisma.contractor.create({
+      data: {
+        company_id: companyA.id,
+        name: "Contractor A",
+        is_active: true,
+      },
+    });
+    contractorDocA = await prisma.contractorDocument.create({
+      data: {
+        contractor_id: contractorA.id,
+        document_type: "INSURANCE",
+        file_name: "doc-a.pdf",
+        file_path: "uploads/a/doc-a.pdf",
+        file_size: 1234,
+        mime_type: "pdf",
+      },
+    });
+
+    const contractorB = await prisma.contractor.create({
+      data: {
+        company_id: companyB.id,
+        name: "Contractor B",
+        is_active: true,
+      },
+    });
+    contractorDocB = await prisma.contractorDocument.create({
+      data: {
+        contractor_id: contractorB.id,
+        document_type: "INSURANCE",
+        file_name: "doc-b.pdf",
+        file_path: "uploads/b/doc-b.pdf",
+        file_size: 1234,
+        mime_type: "pdf",
+      },
+    });
+
+    const userA = await createTestUser(prisma, companyA.id);
+    const userB = await createTestUser(prisma, companyB.id);
+
+    exportJobA = await prisma.exportJob.create({
+      data: {
+        company_id: companyA.id,
+        export_type: "SIGN_IN_CSV",
+        parameters: {},
+        requested_by: userA.id,
+      },
+    });
+
+    exportJobB = await prisma.exportJob.create({
+      data: {
+        company_id: companyB.id,
+        export_type: "SIGN_IN_CSV",
+        parameters: {},
+        requested_by: userB.id,
+      },
+    });
   });
 
   describe("Site Repository - Tenant Isolation", () => {
@@ -219,6 +289,48 @@ describe("Cross-Tenant IDOR Prevention", () => {
         where: { id: signInRecordB.id },
       });
       expect(record?.sign_out_ts).toBeNull();
+    });
+  });
+
+  describe("Contractor Document Repository - Tenant Isolation", () => {
+    it("should NOT return Company B's contractor document when querying with Company A's ID", async () => {
+      const result = await contractorRepo.findContractorDocumentById(
+        companyA.id,
+        contractorDocB.id,
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it("should return Company A's contractor document when querying correctly", async () => {
+      const result = await contractorRepo.findContractorDocumentById(
+        companyA.id,
+        contractorDocA.id,
+      );
+
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe(contractorDocA.id);
+    });
+  });
+
+  describe("Export Job Repository - Tenant Isolation", () => {
+    it("should NOT return Company B's export job when querying with Company A's ID", async () => {
+      const result = await exportRepo.findExportJobById(
+        companyA.id,
+        exportJobB.id,
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it("should return Company A's export job when querying correctly", async () => {
+      const result = await exportRepo.findExportJobById(
+        companyA.id,
+        exportJobA.id,
+      );
+
+      expect(result).not.toBeNull();
+      expect(result?.id).toBe(exportJobA.id);
     });
   });
 

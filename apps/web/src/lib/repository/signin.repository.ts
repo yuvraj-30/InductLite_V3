@@ -144,6 +144,28 @@ export async function listCurrentlyOnSite(
 }
 
 /**
+ * List recent sign-ins for a site
+ */
+export async function listRecentSignInsForSite(
+  companyId: string,
+  siteId: string,
+  limit: number = 10,
+): Promise<SignInRecord[]> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+    return await db.signInRecord.findMany({
+      where: { company_id: companyId, site_id: siteId },
+      orderBy: { sign_in_ts: "desc" },
+      take: limit,
+    });
+  } catch (error) {
+    handlePrismaError(error, "SignInRecord");
+  }
+}
+
+/**
  * Count people currently on-site
  */
 export async function countCurrentlyOnSite(

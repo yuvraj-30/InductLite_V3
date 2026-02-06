@@ -18,6 +18,7 @@
     "vrt:logs": "docker compose -f ./docker-compose.vrt.yml logs -f"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.1",
     "@testcontainers/postgresql": "^11.11.0",
     "@types/deep-eql": "^4.0.2",
     "@types/docker-modem": "^3.0.6",

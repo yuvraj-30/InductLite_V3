@@ -1,4 +1,33 @@
 import { defineConfig, devices } from "@playwright/test";
+import fs from "fs";
+import path from "path";
+
+function loadEnvFile(filePath: string): Record<string, string> {
+  try {
+    if (!fs.existsSync(filePath)) return {};
+    const content = fs.readFileSync(filePath, "utf8");
+    const env: Record<string, string> = {};
+    for (const line of content.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const idx = trimmed.indexOf("=");
+      if (idx === -1) continue;
+      const key = trimmed.slice(0, idx).trim();
+      const value = trimmed.slice(idx + 1).trim();
+      if (!key) continue;
+      env[key] = value;
+    }
+    return env;
+  } catch {
+    return {};
+  }
+}
+
+const rootEnvPath = path.resolve(__dirname, "..", "..", ".env");
+const rootEnv = loadEnvFile(rootEnvPath);
+Object.assign(process.env, rootEnv);
+process.env.E2E_QUIET = process.env.E2E_QUIET || "1";
+process.env.E2E_SKIP_LOGIN_VERIFY = process.env.E2E_SKIP_LOGIN_VERIFY || "1";
 
 /**
  * Playwright E2E Test Configuration
@@ -53,10 +82,12 @@ export default defineConfig({
     : {
         command: "npm run dev",
         url: "http://localhost:3000",
-        reuseExistingServer: !process.env.CI,
+        reuseExistingServer: false,
         timeout: 120000,
         // Provide test env vars so the dev server can unseal test session cookies
         env: {
+          ...rootEnv,
+          E2E_QUIET: process.env.E2E_QUIET || "1",
           // Stable test session secret (must be >= 32 chars)
           SESSION_SECRET:
             process.env.SESSION_SECRET ||

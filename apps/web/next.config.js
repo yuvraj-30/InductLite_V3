@@ -1,3 +1,11 @@
+let withSentryConfig = (config) => config;
+try {
+  // Optional dependency: only use if installed
+  ({ withSentryConfig } = require("@sentry/nextjs"));
+} catch {
+  // Sentry not installed; keep config unchanged
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -62,4 +70,6 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = withSentryConfig(nextConfig, {
+  silent: true,
+});

@@ -11,8 +11,8 @@
 import Link from "next/link";
 import { checkPermissionReadOnly } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
-import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
+import { getDashboardMetrics } from "@/lib/repository/dashboard.repository";
 
 export const metadata = {
   title: "Dashboard | InductLite",
@@ -28,17 +28,7 @@ export default async function AdminDashboardPage() {
 
   const context = await requireAuthenticatedContextReadOnly();
   const companyId = context.companyId;
-
-  // Calculate date ranges
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const sevenDaysAgo = new Date(todayStart);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const thirtyDaysFromNow = new Date(now);
-  thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-
-  // Fetch all KPIs in parallel
-  const [
+  const {
     activeSitesCount,
     totalSitesCount,
     currentlyOnSiteCount,
@@ -47,72 +37,7 @@ export default async function AdminDashboardPage() {
     documentsExpiringSoon,
     recentSignIns,
     recentAuditLogs,
-  ] = await Promise.all([
-    // Active sites count
-    prisma.site.count({
-      where: { company_id: companyId, is_active: true },
-    }),
-
-    // Total sites count
-    prisma.site.count({
-      where: { company_id: companyId },
-    }),
-
-    // Currently on-site (signed in but not signed out)
-    prisma.signInRecord.count({
-      where: {
-        company_id: companyId,
-        sign_out_ts: null,
-      },
-    }),
-
-    // Sign-ins today
-    prisma.signInRecord.count({
-      where: {
-        company_id: companyId,
-        sign_in_ts: { gte: todayStart },
-      },
-    }),
-
-    // Sign-ins last 7 days
-    prisma.signInRecord.count({
-      where: {
-        company_id: companyId,
-        sign_in_ts: { gte: sevenDaysAgo },
-      },
-    }),
-
-    // Documents expiring within 30 days
-    prisma.contractorDocument.count({
-      where: {
-        contractor: { company_id: companyId },
-        expires_at: {
-          lte: thirtyDaysFromNow,
-          gte: now,
-        },
-      },
-    }),
-
-    // Recent sign-ins
-    prisma.signInRecord.findMany({
-      where: { company_id: companyId },
-      orderBy: { sign_in_ts: "desc" },
-      take: 5,
-      include: {
-        site: { select: { name: true } },
-      },
-    }),
-
-    // Recent audit logs
-    prisma.auditLog.findMany({
-      where: { company_id: companyId },
-      orderBy: { created_at: "desc" },
-      take: 5,
-      include: {
-        user: { select: { name: true } },
-      },
-    }),
-  ]);
+  } = await getDashboardMetrics(companyId);
 
   return (
     <div className="p-6">

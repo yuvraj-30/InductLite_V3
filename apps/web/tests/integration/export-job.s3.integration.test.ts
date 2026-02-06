@@ -15,6 +15,7 @@ import {
   createTestCompany,
   createTestSite,
   createTestSignInRecord,
+  createTestUser,
 } from "./setup";
 
 // Mock S3 before importing runner to ensure our mock is used
@@ -36,6 +37,7 @@ describe("Export Job Runner - SIGN_IN_CSV to S3 (mocked)", () => {
   let runner: Runner;
   let company: { id: string; slug: string };
   let site: { id: string; name: string };
+  let user: { id: string; email: string };
 
   beforeAll(async () => {
     const res = await setupTestDatabase();
@@ -57,6 +59,7 @@ describe("Export Job Runner - SIGN_IN_CSV to S3 (mocked)", () => {
     mockSend.mockClear();
     company = await createTestCompany(prisma);
     site = await createTestSite(prisma, company.id);
+    user = await createTestUser(prisma, company.id);
   });
 
   it("processes queued SIGN_IN_CSV job and writes to S3 (mocked)", async () => {
@@ -70,7 +73,7 @@ describe("Export Job Runner - SIGN_IN_CSV to S3 (mocked)", () => {
         company_id: company.id,
         export_type: "SIGN_IN_CSV",
         parameters: {},
-        requested_by: "u-test",
+        requested_by: user.id,
       },
     });
 
@@ -83,6 +86,6 @@ describe("Export Job Runner - SIGN_IN_CSV to S3 (mocked)", () => {
     });
     expect(updated).not.toBeNull();
     expect(updated?.status).toBe("SUCCEEDED");
-    expect(updated?.file_path).toMatch(/^s3:\/\//);
+    expect(updated?.file_path).toMatch(/^exports\//);
   });
 });

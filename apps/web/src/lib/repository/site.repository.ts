@@ -236,6 +236,101 @@ export async function listSitesWithCounts(
 }
 
 /**
+ * List active public links for a set of sites, scoped by company via relation.
+ */
+export async function listActivePublicLinksForSites(
+  companyId: string,
+  siteIds: string[],
+): Promise<Array<{ site_id: string; slug: string }>> {
+  requireCompanyId(companyId);
+
+  if (siteIds.length === 0) return [];
+
+  try {
+    return await publicDb.sitePublicLink.findMany({
+      where: {
+        site_id: { in: siteIds },
+        is_active: true,
+        site: { is: { company_id: companyId } },
+      },
+      select: { site_id: true, slug: true },
+    });
+  } catch (error) {
+    handlePrismaError(error, "SitePublicLink");
+  }
+}
+
+/**
+ * Find active public link for a specific site (scoped by company via relation).
+ */
+export async function findActivePublicLinkForSite(
+  companyId: string,
+  siteId: string,
+): Promise<{ site_id: string; slug: string } | null> {
+  requireCompanyId(companyId);
+
+  try {
+    return await publicDb.sitePublicLink.findFirst({
+      where: {
+        site_id: siteId,
+        is_active: true,
+        site: { is: { company_id: companyId } },
+      },
+      select: { site_id: true, slug: true },
+    });
+  } catch (error) {
+    handlePrismaError(error, "SitePublicLink");
+  }
+}
+
+/**
+ * Create a public link for a site (scoped by company via relation)
+ */
+export async function createPublicLinkForSite(
+  companyId: string,
+  siteId: string,
+  slug: string,
+): Promise<{ id: string; slug: string }> {
+  requireCompanyId(companyId);
+
+  try {
+    return await publicDb.sitePublicLink.create({
+      data: {
+        site: { connect: { id: siteId } },
+        slug,
+        is_active: true,
+      },
+      select: { id: true, slug: true },
+    });
+  } catch (error) {
+    handlePrismaError(error, "SitePublicLink");
+  }
+}
+
+/**
+ * Deactivate all active public links for a site (scoped by company via relation)
+ */
+export async function deactivatePublicLinksForSite(
+  companyId: string,
+  siteId: string,
+): Promise<void> {
+  requireCompanyId(companyId);
+
+  try {
+    await publicDb.sitePublicLink.updateMany({
+      where: {
+        site_id: siteId,
+        is_active: true,
+        site: { is: { company_id: companyId } },
+      },
+      data: { is_active: false, rotated_at: new Date() },
+    });
+  } catch (error) {
+    handlePrismaError(error, "SitePublicLink");
+  }
+}
+
+/**
  * Create a new site
  */
 export async function createSite(

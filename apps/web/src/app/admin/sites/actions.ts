@@ -18,10 +18,14 @@ import {
   reactivateSite,
   findSiteById,
 } from "@/lib/repository";
+import {
+  createPublicLinkForSite,
+  deactivatePublicLinksForSite,
+  findActivePublicLinkForSite,
+} from "@/lib/repository/site.repository";
 import { createAuditLog } from "@/lib/repository/audit.repository";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
-import { prisma } from "@/lib/db";
 import { randomBytes } from "crypto";
 
 /**
@@ -134,13 +138,11 @@ export async function createSiteAction(
     });
 
     // Create the initial public link with secure slug
-    await prisma.sitePublicLink.create({
-      data: {
-        site_id: site.id,
-        slug: generateSecureSlug(),
-        is_active: true,
-      },
-    });
+    await createPublicLinkForSite(
+      context.companyId,
+      site.id,
+      generateSecureSlug(),
+    );
 
     // Audit log
     await createAuditLog(context.companyId, {
@@ -296,10 +298,7 @@ export async function deactivateSiteAction(
     await deactivateSite(context.companyId, siteId);
 
     // Deactivate all public links for this site
-    await prisma.sitePublicLink.updateMany({
-      where: { site_id: siteId },
-      data: { is_active: false },
-    });
+    await deactivatePublicLinksForSite(context.companyId, siteId);
 
     // Audit log
     await createAuditLog(context.companyId, {
@@ -356,18 +355,17 @@ export async function reactivateSiteAction(
     await reactivateSite(context.companyId, siteId);
 
     // Create a new public link if none active
-    const activeLink = await prisma.sitePublicLink.findFirst({
-      where: { site_id: siteId, is_active: true },
-    });
+    const activeLink = await findActivePublicLinkForSite(
+      context.companyId,
+      siteId,
+    );
 
     if (!activeLink) {
-      await prisma.sitePublicLink.create({
-        data: {
-          site_id: siteId,
-          slug: generateSecureSlug(),
-          is_active: true,
-        },
-      });
+      await createPublicLinkForSite(
+        context.companyId,
+        siteId,
+        generateSecureSlug(),
+      );
     }
 
     // Audit log
@@ -423,28 +421,17 @@ export async function rotatePublicLinkAction(
 
   try {
     // Get old active link slug for audit
-    const oldLink = await prisma.sitePublicLink.findFirst({
-      where: { site_id: siteId, is_active: true },
-    });
+    const oldLink = await findActivePublicLinkForSite(
+      context.companyId,
+      siteId,
+    );
 
     // Deactivate all existing links for this site
-    await prisma.sitePublicLink.updateMany({
-      where: { site_id: siteId, is_active: true },
-      data: {
-        is_active: false,
-        rotated_at: new Date(),
-      },
-    });
+    await deactivatePublicLinksForSite(context.companyId, siteId);
 
     // Create new link with fresh secure slug
     const newSlug = generateSecureSlug();
-    await prisma.sitePublicLink.create({
-      data: {
-        site_id: siteId,
-        slug: newSlug,
-        is_active: true,
-      },
-    });
+    await createPublicLinkForSite(context.companyId, siteId, newSlug);
 
     // Audit log
     await createAuditLog(context.companyId, {

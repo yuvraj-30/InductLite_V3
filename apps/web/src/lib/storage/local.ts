@@ -13,3 +13,14 @@ export async function writeExportFile(
   const stats = await fs.stat(filePath);
   return { filePath, size: stats.size };
 }
+
+export async function deleteObject(filePath: string): Promise<void> {
+  try {
+    await fs.unlink(filePath);
+  } catch (err) {
+    // Ignore missing files
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw err;
+    }
+  }
+}

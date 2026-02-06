@@ -188,7 +188,9 @@ describe("Contractor Repository (unit)", () => {
               id: "d1",
               contractor: { is: { id: "c1", company_id: "company-123" } },
             }),
-            expect.objectContaining({ company_id: "company-123" }),
+            expect.objectContaining({
+              contractor: { company_id: "company-123" },
+            }),
           ]),
         }),
       }),

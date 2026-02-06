@@ -19,8 +19,10 @@ test.describe("Admin Export UI & Processing", () => {
     // Queue a SIGN_IN_CSV
     await page.getByRole("button", { name: /Queue Export/i }).click();
 
-    // Expect the job appears in the table (queued)
-    await expect(page.getByText(/QUEUED/i)).toBeVisible({ timeout: 5000 });
+    // Expect the job appears in the table (queued) and capture its ID
+    const queuedRow = page.locator("tr", { hasText: "QUEUED" }).first();
+    await expect(queuedRow).toBeVisible({ timeout: 5000 });
+    const jobId = (await queuedRow.locator("td").first().innerText()).trim();
 
     // Trigger the test-only runner endpoint until job succeeded
     const endpoint = `${baseURL}/api/test/process-next-export`;
@@ -30,13 +32,13 @@ test.describe("Admin Export UI & Processing", () => {
 
     let attempts = 0;
     let succeeded = false;
-    while (attempts < 20) {
+    while (attempts < 30) {
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "x-test-runner": "1" },
       });
       const json = await res.json();
-      if (json?.res?.status === "SUCCEEDED") {
+      if (json?.res?.id === jobId && json?.res?.status === "SUCCEEDED") {
         succeeded = true;
         break;
       }
@@ -46,9 +48,15 @@ test.describe("Admin Export UI & Processing", () => {
 
     expect(succeeded).toBe(true);
 
-    // Reload UI and check file link is present in the succeeded job row
+    // Reload UI only after our job is succeeded, then ensure download link is present
     await page.reload();
-    const succeededRow = page.locator("tr", { hasText: "SUCCEEDED" }).first();
-    await expect(succeededRow.getByRole("link")).toBeVisible({ timeout: 5000 });
+    const succeededRow = page.locator("tr", { hasText: jobId }).first();
+    await expect(succeededRow.getByText(/SUCCEEDED/)).toBeVisible({
+      timeout: 15000,
+    });
+    const downloadLink = succeededRow.locator(
+      `a[href*="/api/exports/${jobId}/download"]`,
+    );
+    await expect(downloadLink).toHaveCount(1, { timeout: 15000 });
   });
 });

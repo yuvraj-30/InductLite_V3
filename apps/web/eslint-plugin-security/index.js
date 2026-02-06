@@ -9,6 +9,31 @@
 
 "use strict";
 
+function containsCompanyId(node) {
+  if (!node || typeof node !== "object") return false;
+
+  if (node.type === "Property") {
+    if (
+      node.key &&
+      node.key.type === "Identifier" &&
+      node.key.name === "company_id"
+    ) {
+      return true;
+    }
+    return containsCompanyId(node.value);
+  }
+
+  if (node.type === "ObjectExpression") {
+    return node.properties.some((p) => containsCompanyId(p));
+  }
+
+  if (node.type === "ArrayExpression") {
+    return node.elements.some((e) => containsCompanyId(e));
+  }
+
+  return false;
+}
+
 module.exports = {
   rules: {
     /**
@@ -157,12 +182,7 @@ module.exports = {
                     whereProperty &&
                     whereProperty.value.type === "ObjectExpression"
                   ) {
-                    const hasCompanyId = whereProperty.value.properties.some(
-                      (p) =>
-                        p.type === "Property" &&
-                        p.key.type === "Identifier" &&
-                        p.key.name === "company_id",
-                    );
+                    const hasCompanyId = containsCompanyId(whereProperty.value);
 
                     // Only report if we're in a clearly tenant-scoped context
                     const calleeName = getCalleeName(node.callee);
@@ -192,7 +212,6 @@ module.exports = {
         };
       },
     },
-
     /**
      * Prevent environment variable access in client components
      *
