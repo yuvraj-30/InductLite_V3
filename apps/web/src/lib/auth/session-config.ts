@@ -50,28 +50,36 @@ function getRuntimeEnv(): Record<string, string | undefined> {
 }
 
 // Helper to determine if we should use secure cookies at runtime
-// In production, use secure cookies unless:
-// - ALLOW_TEST_RUNNER is set (E2E testing over HTTP)
-// - BASE_URL indicates localhost (development/testing)
 function shouldUseSecureCookies(): boolean {
   const env = getRuntimeEnv();
-  if (env.NODE_ENV !== "production") {
-    return false;
+  return env.NODE_ENV === "production";
+}
+
+function getSessionSecrets(): SessionOptions["password"] {
+  const primary = process.env.SESSION_SECRET?.trim();
+  const previousRaw = process.env.SESSION_SECRET_PREVIOUS || "";
+  const previous = previousRaw
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+  const secrets = [primary, ...previous].filter(
+    (value): value is string => Boolean(value),
+  );
+
+  if (secrets.length <= 1) {
+    return secrets[0] ?? "";
   }
-  if (env.ALLOW_TEST_RUNNER === "1") {
-    return false;
-  }
-  // Check if BASE_URL is localhost (E2E testing)
-  const baseUrl = env.BASE_URL || "";
-  if (baseUrl.includes("localhost") || baseUrl.includes("127.0.0.1")) {
-    return false;
-  }
-  return true;
+
+  return secrets.reduce<Record<string, string>>((acc, password, index) => {
+    acc[String(index + 1)] = password;
+    return acc;
+  }, {});
 }
 
 // Base session options (without secure flag which is computed at runtime)
 const baseSessionOptions = {
-  password: process.env.SESSION_SECRET!,
+  password: getSessionSecrets(),
   cookieName: "inductlite_session",
   cookieOptions: {
     httpOnly: true,
@@ -119,6 +127,17 @@ export function validateSessionConfig(): void {
   }
   if (process.env.SESSION_SECRET.length < 32) {
     throw new Error("SESSION_SECRET must be at least 32 characters");
+  }
+
+  const previousRaw = process.env.SESSION_SECRET_PREVIOUS || "";
+  const previous = previousRaw
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  for (const secret of previous) {
+    if (secret.length < 32) {
+      throw new Error("SESSION_SECRET_PREVIOUS secrets must be at least 32 characters");
+    }
   }
 }
 

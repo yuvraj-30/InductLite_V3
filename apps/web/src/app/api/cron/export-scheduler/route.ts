@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function GET(req: Request) {
-  const auth = requireCronSecret(req, "/api/cron/export-scheduler");
+  const auth = await requireCronSecret(req, "/api/cron/export-scheduler");
   if (!auth.ok) return auth.response;
 
   const startTime = Date.now();

@@ -22,6 +22,12 @@ const ENV_CONFIG: EnvConfig[] = [
     production: true,
     description: "PostgreSQL connection string",
   },
+  {
+    name: "DATABASE_DIRECT_URL",
+    required: false,
+    production: true,
+    description: "Direct Postgres connection string for migrations",
+  },
 
   // Session security
   {
@@ -30,6 +36,12 @@ const ENV_CONFIG: EnvConfig[] = [
     production: true,
     minLength: 32,
     description: "Session encryption key (minimum 32 characters)",
+  },
+  {
+    name: "SESSION_SECRET_PREVIOUS",
+    required: false,
+    production: false,
+    description: "Comma-separated previous session secrets for rotation",
   },
 
   // App URL
@@ -48,6 +60,24 @@ const ENV_CONFIG: EnvConfig[] = [
     production: true,
     minLength: 16,
     description: "Shared secret for cron API routes",
+  },
+  {
+    name: "CRON_ALLOWED_IPS",
+    required: false,
+    production: false,
+    description: "Comma-separated CIDR/IP allowlist for cron endpoints",
+  },
+  {
+    name: "CRON_ALLOW_GITHUB_ACTIONS",
+    required: false,
+    production: false,
+    description: "Allow GitHub Actions IP ranges for cron endpoints",
+  },
+  {
+    name: "CRON_ALLOW_PRIVATE_IPS",
+    required: false,
+    production: false,
+    description: "Allow private IP ranges for cron endpoints",
   },
 
   // S3 storage (required for production)

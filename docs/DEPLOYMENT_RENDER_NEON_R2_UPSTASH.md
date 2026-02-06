@@ -13,11 +13,18 @@
 
 ### Core
 
-- DATABASE_URL
+- DATABASE_URL (Neon pooler endpoint, port 6543)
+- DATABASE_DIRECT_URL (Neon direct endpoint, port 5432, for migrations)
 - SESSION_SECRET
+- SESSION_SECRET_PREVIOUS (optional)
 - NEXT_PUBLIC_APP_URL
 - TRUST_PROXY=1
 - CRON_SECRET
+- CRON_ALLOWED_IPS (optional)
+- CRON_ALLOW_GITHUB_ACTIONS=1
+- CRON_ALLOW_PRIVATE_IPS=0
+
+Note: IP allowlist matching is IPv4/CIDR only.
 
 ### Storage (R2/S3)
 

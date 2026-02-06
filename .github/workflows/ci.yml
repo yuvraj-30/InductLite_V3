@@ -234,7 +234,7 @@ jobs:
           echo $! > /tmp/web.pid
         env:
           PORT: "3000"
-          NODE_ENV: production
+          NODE_ENV: test
           ALLOW_TEST_RUNNER: "1"
           DATABASE_URL: ${{ env.DATABASE_URL }}
 
