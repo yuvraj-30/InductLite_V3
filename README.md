@@ -65,6 +65,7 @@ ADMIN_PASSWORD=changeme-in-production
 ## Production Deployment
 
 See [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md) for full deployment guide.
+Go-live steps: [docs/GO_LIVE_CHECKLIST.md](docs/GO_LIVE_CHECKLIST.md).
 
 ### Quick Production Start
 
