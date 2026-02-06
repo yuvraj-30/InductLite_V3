@@ -78,6 +78,8 @@ jobs:
 
       - name: Migrate DB
         run: npm run -w apps/web db:migrate
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Lint (workspace via turbo)
         run: npm run lint
@@ -150,6 +152,8 @@ jobs:
 
       - name: Migrate DB
         run: npm run -w apps/web db:migrate
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Integration tests
         run: npm run -w apps/web test:integration
@@ -207,6 +211,8 @@ jobs:
 
       - name: Migrate DB
         run: npm run -w apps/web db:migrate
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
 
       - name: Seed DB
         run: npm run -w apps/web db:seed
