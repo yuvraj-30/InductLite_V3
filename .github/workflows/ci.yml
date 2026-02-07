@@ -186,6 +186,10 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/inductlite_e2e?schema=public
       DATABASE_DIRECT_URL: postgresql://postgres:postgres@localhost:5432/inductlite_e2e?schema=public
       BASE_URL: http://localhost:3000
+      # Test-only stubs for services not required in CI e2e runs
+      MAGIC_LINK_SECRET: ci-magic-link-secret
+      RESEND_API_KEY: ci-resend-key
+      RESEND_FROM: ci@example.com
 
     steps:
       - name: Checkout
@@ -237,13 +241,22 @@ jobs:
         run: |
           set -euo pipefail
           cd apps/web
-          npm start &
+          # Use the standalone server when build output is 'standalone' (avoids Next.js warning)
+          if [ -f .next/standalone/server.js ]; then
+            node .next/standalone/server.js &
+          else
+            npm start &
+          fi
           echo $! > /tmp/web.pid
         env:
           PORT: "3000"
           NODE_ENV: test
           ALLOW_TEST_RUNNER: "1"
           DATABASE_URL: ${{ env.DATABASE_URL }}
+          # Test-only stubs for services not required in CI e2e runs
+          MAGIC_LINK_SECRET: ci-magic-link-secret
+          RESEND_API_KEY: ci-resend-key
+          RESEND_FROM: ci@example.com
 
       - name: Wait for app
         run: |
@@ -258,8 +271,17 @@ jobs:
           echo "App did not become ready in time"
           exit 1
 
-      - name: Run E2E smoke
-        run: npm run -w apps/web test:e2e:smoke
+      - name: Run E2E smoke (capture logs)
+        run: |
+          set -euo pipefail
+          cd apps/web
+          # Capture stdout/stderr to a file while still streaming to the runner log
+          npm run test:e2e:smoke 2>&1 | tee playwright-output.txt
+          test_exit=${PIPESTATUS[0]}
+          if [ $test_exit -ne 0 ]; then
+            echo "Playwright tests failed with exit code $test_exit"
+            exit $test_exit
+          fi
         env:
           E2E_USE_SHARED_SERVER: "1"
           ALLOW_TEST_RUNNER: "1"
@@ -278,10 +300,28 @@ jobs:
           TRUST_PROXY: "1"
           ALLOW_TEST_RUNNER: "1"
 
-      - name: Upload Playwright report
+      - name: Print Playwright diagnostics
+        if: failure()
+        run: |
+          echo "=== Playwright log (start) ==="
+          if [ -f apps/web/playwright-output.txt ]; then
+            sed -n '1,400p' apps/web/playwright-output.txt || true
+          else
+            echo "No Playwright log found at apps/web/playwright-output.txt"
+          fi
+          echo "=== Playwright report dir ==="
+          ls -la apps/web/playwright-report || true
+          if [ -f apps/web/playwright-report/index.html ]; then
+            echo "=== Report head (index.html) ==="
+            head -n 200 apps/web/playwright-report/index.html || true
+          fi
+
+      - name: Upload Playwright artifacts
         uses: actions/upload-artifact@v6
         if: always()
         with:
-          name: playwright-report
-          path: apps/web/playwright-report/
+          name: playwright-artifacts
+          path: |
+            apps/web/playwright-report/**
+            apps/web/playwright-output.txt
           retention-days: 7
