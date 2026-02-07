@@ -35,6 +35,7 @@ export async function setupTestDatabase(): Promise<{
 
   // Set DATABASE_URL for Prisma BEFORE any imports happen
   process.env.DATABASE_URL = connectionString;
+  process.env.DATABASE_DIRECT_URL = connectionString;
 
   // Clear any cached global Prisma client so it reconnects with new URL
   const globalAny = globalThis as unknown as { prisma?: PrismaClient };
@@ -48,7 +49,11 @@ export async function setupTestDatabase(): Promise<{
     "npx prisma db push --accept-data-loss --skip-generate --schema prisma/schema.prisma",
     {
       cwd: process.cwd(),
-      env: { ...process.env, DATABASE_URL: connectionString },
+      env: {
+        ...process.env,
+        DATABASE_URL: connectionString,
+        DATABASE_DIRECT_URL: connectionString,
+      },
       stdio: "pipe",
     },
   );

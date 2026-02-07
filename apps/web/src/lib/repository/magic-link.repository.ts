@@ -65,6 +65,7 @@ export async function consumeMagicLinkToken(tokenHash: string): Promise<
 > {
   try {
     // allowlisted public lookup by unique token hash
+    // eslint-disable-next-line security-guardrails/require-company-id -- public lookup by token hash
     const token = await publicDb.magicLinkToken.findFirst({
       where: {
         token_hash: tokenHash,
