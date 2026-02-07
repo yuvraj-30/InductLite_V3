@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-// @ts-expect-error - qrcode.react types missing in environment
 import { QRCodeSVG } from "qrcode.react";
 
 interface QRCodeButtonProps {
