@@ -44,6 +44,8 @@ jobs:
           --health-retries=5
     env:
       DATABASE_URL: postgresql://inductlite:inductlite_dev_password@localhost:5432/inductlite?schema=public
+      # Provide a direct URL for Prisma CLI (migrations/generate) to avoid Prisma P1012 in CI
+      DATABASE_DIRECT_URL: ${{ env.DATABASE_URL }}
 
     steps:
       - name: Checkout
@@ -121,6 +123,7 @@ jobs:
           --health-retries=5
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/inductlite_integration?schema=public
+      DATABASE_DIRECT_URL: ${{ env.DATABASE_URL }}
 
     steps:
       - name: Checkout
@@ -178,6 +181,7 @@ jobs:
           --health-retries=5
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/inductlite_e2e?schema=public
+      DATABASE_DIRECT_URL: ${{ env.DATABASE_URL }}
       BASE_URL: http://localhost:3000
 
     steps:

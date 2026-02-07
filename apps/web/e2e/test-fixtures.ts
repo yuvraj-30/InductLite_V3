@@ -39,6 +39,17 @@ const E2E_QUIET = (() => {
   return v === "1" || v?.toLowerCase() === "true";
 })();
 
+const E2E_RUN_ID = (() => {
+  const isCi = process.env.CI === "true" || process.env.CI === "1";
+  if (!isCi) return null;
+  return (
+    process.env.TEST_RUN_ID ||
+    process.env.GITHUB_RUN_ID ||
+    process.env.GITHUB_RUN_NUMBER ||
+    null
+  );
+})();
+
 const console = {
   ...globalThis.console,
   log: (...args: unknown[]) => {
@@ -203,45 +214,49 @@ export const test = base.extend<MyFixtures>({
             const run = (args: string[]) =>
               spawnSync(isWin ? "npx.cmd" : "npx", args, {
                 cwd: process.cwd(),
-                env: { ...process.env, DATABASE_URL: baseDb },
+                env: {
+                  ...process.env,
+                  DATABASE_URL: baseDb,
+                  DATABASE_DIRECT_URL: baseDb,
+                },
                 stdio: "inherit",
                 shell: false,
               });
 
-            let res = run([
-              "prisma",
-              "migrate",
-              "deploy",
-              "--schema",
-              "prisma/schema.prisma",
-            ]);
+                    let res = run([
+                      "prisma",
+                      "migrate",
+                      "deploy",
+                      "--schema",
+                      "prisma/schema.prisma",
+                    ]);
 
-            if (res && res.status !== 0) {
-              console.warn(
-                "E2E: main DB prisma migrate deploy failed; continuing with db push",
-                res.status,
-              );
-            }
+                    if (res && res.status !== 0) {
+                      console.warn(
+                        "E2E: main DB prisma migrate deploy failed; continuing with db push",
+                        res.status,
+                      );
+                    }
 
-            res = run([
-              "prisma",
-              "db",
-              "push",
-              "--accept-data-loss",
-              "--skip-generate",
-              "--schema",
-              "prisma/schema.prisma",
-            ]);
+                    res = run([
+                      "prisma",
+                      "db",
+                      "push",
+                      "--accept-data-loss",
+                      "--skip-generate",
+                      "--schema",
+                      "prisma/schema.prisma",
+                    ]);
 
-            if (res && res.status === 0) {
-              mainDbPushDone = true;
-              console.log("E2E: main DB schema sync succeeded");
-            } else {
-              console.warn(
-                "E2E: main DB schema sync failed or returned non-zero status",
-                res && res.status,
-              );
-            }
+                    if (res && res.status === 0) {
+                      mainDbPushDone = true;
+                      console.log("E2E: main DB schema sync succeeded");
+                    } else {
+                      console.warn(
+                        "E2E: main DB schema sync failed or returned non-zero status",
+                        res && res.status,
+                      );
+                    }
           } else {
             console.warn("E2E: DATABASE_URL missing; cannot db push");
           }
@@ -258,7 +273,9 @@ export const test = base.extend<MyFixtures>({
 
     const workerIndex = testInfo.workerIndex;
     const suffix = Math.random().toString(36).substring(2, 8);
-    const schema = `e2e_w${workerIndex}_${suffix}`;
+    const schema = E2E_RUN_ID
+      ? `e2e_${E2E_RUN_ID}_w${workerIndex}_${suffix}`
+      : `e2e_w${workerIndex}_${suffix}`;
     // Pick a base port per worker to avoid conflicts; 3100 + workerIndex
     const basePort = 3100;
     const port = basePort + Number(workerIndex);
@@ -307,7 +324,11 @@ export const test = base.extend<MyFixtures>({
           ],
           {
             cwd: process.cwd(),
-            env: { ...process.env, DATABASE_URL: baseDb },
+            env: {
+              ...process.env,
+              DATABASE_URL: baseDb,
+              DATABASE_DIRECT_URL: baseDb,
+            },
             stdio: "inherit",
             shell: false,
           },
@@ -465,7 +486,7 @@ export const test = base.extend<MyFixtures>({
           res = runCommand(
             found,
             ["migrate", "deploy", "--schema=prisma/schema.prisma"],
-            { DATABASE_URL: dbUrl },
+            { DATABASE_URL: dbUrl, DATABASE_DIRECT_URL: dbUrl },
           );
           if (res && (res.error as NodeJS.ErrnoException)?.code === "ENOENT") {
             // try node invocation
@@ -478,7 +499,7 @@ export const test = base.extend<MyFixtures>({
               const alt = runCommand(
                 process.execPath,
                 [found, "migrate", "deploy", "--schema=prisma/schema.prisma"],
-                { DATABASE_URL: dbUrl },
+                { DATABASE_URL: dbUrl, DATABASE_DIRECT_URL: dbUrl },
               );
               if (alt && alt.status === 0) res = alt;
             } catch (e) {
@@ -495,7 +516,7 @@ export const test = base.extend<MyFixtures>({
           res = runCommand(
             isWin ? "npx.cmd" : "npx",
             ["prisma", "migrate", "deploy", "--schema=prisma/schema.prisma"],
-            { DATABASE_URL: dbUrl },
+            { DATABASE_URL: dbUrl, DATABASE_DIRECT_URL: dbUrl },
           );
         }
 
@@ -522,7 +543,7 @@ export const test = base.extend<MyFixtures>({
           const seedCmd = runCommand(
             isWin ? "npx.cmd" : "npx",
             ["tsx", "prisma/seed.ts"],
-            { DATABASE_URL: dbUrl },
+            { DATABASE_URL: dbUrl, DATABASE_DIRECT_URL: dbUrl },
           );
           if (seedCmd && seedCmd.error) {
             console.warn(
@@ -576,7 +597,7 @@ export const test = base.extend<MyFixtures>({
             res = runCommand(
               found,
               ["db", "push", "--accept-data-loss", "--skip-generate"],
-              { DATABASE_URL: dbUrl },
+              { DATABASE_URL: dbUrl, DATABASE_DIRECT_URL: dbUrl },
             );
             if (
               res &&
@@ -597,7 +618,7 @@ export const test = base.extend<MyFixtures>({
                     "--accept-data-loss",
                     "--skip-generate",
                   ],
-                  { DATABASE_URL: dbUrl },
+                  { DATABASE_URL: dbUrl, DATABASE_DIRECT_URL: dbUrl },
                 );
                 if (alt && alt.status === 0) res = alt;
               } catch (e) {
@@ -614,7 +635,7 @@ export const test = base.extend<MyFixtures>({
             res = runCommand(
               isWin ? "npx.cmd" : "npx",
               ["prisma", "db", "push", "--accept-data-loss", "--skip-generate"],
-              { DATABASE_URL: dbUrl },
+              { DATABASE_URL: dbUrl, DATABASE_DIRECT_URL: dbUrl },
             );
           }
 
@@ -781,6 +802,7 @@ export const test = base.extend<MyFixtures>({
         env: {
           ...process.env,
           DATABASE_URL: dbUrl,
+          DATABASE_DIRECT_URL: dbUrl,
           PORT: String(port),
           ALLOW_TEST_RUNNER: "1",
           SESSION_SECRET:
@@ -806,6 +828,7 @@ export const test = base.extend<MyFixtures>({
           env: {
             ...process.env,
             DATABASE_URL: dbUrl,
+            DATABASE_DIRECT_URL: dbUrl,
             PORT: String(port),
             ALLOW_TEST_RUNNER: "1",
             SESSION_SECRET:
@@ -870,6 +893,7 @@ export const test = base.extend<MyFixtures>({
               env: {
                 ...process.env,
                 DATABASE_URL: dbUrl,
+                DATABASE_DIRECT_URL: dbUrl,
                 PORT: String(port),
                 ALLOW_TEST_RUNNER: "1",
                 SESSION_SECRET:
@@ -889,6 +913,7 @@ export const test = base.extend<MyFixtures>({
             env: {
               ...process.env,
               DATABASE_URL: dbUrl,
+              DATABASE_DIRECT_URL: dbUrl,
               PORT: String(port),
               ALLOW_TEST_RUNNER: "1",
               SESSION_SECRET:
@@ -940,7 +965,9 @@ export const test = base.extend<MyFixtures>({
   workerUser: async ({ workerServer }, playUse, testInfo) => {
     const workerIndex = testInfo.workerIndex;
     const suffix = Math.random().toString(36).substring(2, 8);
-    const clientKey = `worker-${workerIndex}-${suffix}`;
+    const clientKey = E2E_RUN_ID
+      ? `run-${E2E_RUN_ID}-worker-${workerIndex}-${suffix}`
+      : `worker-${workerIndex}-${suffix}`;
     const email = `e2e-admin-${workerIndex}-${suffix}@example.test`;
     const password = "Admin123!";
 

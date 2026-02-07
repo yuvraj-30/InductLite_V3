@@ -19,6 +19,25 @@ const E2E_QUIET = (() => {
   return v === "1" || v?.toLowerCase() === "true";
 })();
 
+function getTestRunId(): string | null {
+  const allowTestRunner =
+    process.env.NODE_ENV === "test" || process.env.ALLOW_TEST_RUNNER === "1";
+  if (!allowTestRunner) return null;
+
+  const isCi = process.env.CI === "true" || process.env.CI === "1";
+  if (!isCi) return null;
+
+  return (
+    process.env.TEST_RUN_ID ||
+    process.env.GITHUB_RUN_ID ||
+    process.env.GITHUB_RUN_NUMBER ||
+    null
+  );
+}
+
+const TEST_RUN_ID = getTestRunId();
+const TEST_RUN_PREFIX = TEST_RUN_ID ? `run:${TEST_RUN_ID}:` : "";
+
 /**
  * In-memory fallback for development (when Redis is not configured)
  */
@@ -81,9 +100,12 @@ export function __test_clearInMemoryStore() {
 // Clear rate limit keys related to a specific clientKey (used by tests to avoid global clears)
 export async function __test_clearInMemoryStoreForClient(clientKey: string) {
   // login:<clientKey>:..., signin:<clientKey>:..., public-slug:<clientKey>
-  inMemoryStore.clearPrefix(`login:${clientKey}:`);
-  inMemoryStore.clearPrefix(`signin:${clientKey}:`);
-  inMemoryStore.clearPrefix(`public-slug:${clientKey}`);
+  const runPrefix = TEST_RUN_PREFIX;
+  inMemoryStore.clearPrefix(`${runPrefix}login:${clientKey}:`);
+  inMemoryStore.clearPrefix(`${runPrefix}signin:${clientKey}:`);
+  inMemoryStore.clearPrefix(`${runPrefix}public-slug:${clientKey}`);
+  inMemoryStore.clearPrefix(`${runPrefix}signin-site:`);
+  inMemoryStore.clearPrefix(`${runPrefix}signout:${clientKey}:`);
 
   // If Redis is available, try to remove keys with these prefixes as well.
   try {
@@ -92,12 +114,13 @@ export async function __test_clearInMemoryStoreForClient(clientKey: string) {
       const prefixes = [
         `inductlite:login-ratelimit`,
         `inductlite:signin-ratelimit`,
+        `inductlite:signin-site-ratelimit`,
         `inductlite:ratelimit`,
       ];
       for (const prefix of prefixes) {
         // Attempt a pattern-based scan and delete; this is best-effort and will be noisy on large DBs,
         // but in test environments the dataset is small and acceptable.
-        const pattern = `${prefix}*${clientKey}*`;
+        const pattern = `${prefix}*${runPrefix}*${clientKey}*`;
         try {
           // Narrow the Redis client to only the methods we need for cleanup
           const r = redis as unknown as {
@@ -238,7 +261,7 @@ export async function checkPublicSlugRateLimit(
     });
   }
 
-  const key = `public-slug:${clientKey}`;
+  const key = `${TEST_RUN_PREFIX}public-slug:${clientKey}`;
 
   // Use Upstash rate limiter if available
   if (rateLimiter) {
@@ -338,7 +361,7 @@ export async function checkLoginRateLimit(
   }
 
   // Rate limit by both clientKey and email to prevent distributed attacks
-  const key = `login:${clientKey}:${email.toLowerCase()}`;
+  const key = `${TEST_RUN_PREFIX}login:${clientKey}:${email.toLowerCase()}`;
 
   const redis = getRedisClient();
   if (redis) {
@@ -419,8 +442,8 @@ export async function checkSignInRateLimit(
     });
   }
 
-  const key = `signin:${clientKey}:${siteSlug}`;
-  const siteKey = `signin-site:${siteSlug}`;
+  const key = `${TEST_RUN_PREFIX}signin:${clientKey}:${siteSlug}`;
+  const siteKey = `${TEST_RUN_PREFIX}signin-site:${siteSlug}`;
 
   const redis = getRedisClient();
   if (redis) {
@@ -511,7 +534,7 @@ export async function checkSignOutRateLimit(
     });
   }
 
-  const key = `signout:${clientKey}:${tokenPrefix}`;
+  const key = `${TEST_RUN_PREFIX}signout:${clientKey}:${tokenPrefix}`;
 
   const redis = getRedisClient();
   if (redis) {

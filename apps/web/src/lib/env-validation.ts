@@ -28,6 +28,13 @@ const ENV_CONFIG: EnvConfig[] = [
     production: true,
     description: "Direct Postgres connection string for migrations",
   },
+  // Optional: Neon pooler endpoint (port 6543) for Neon deployments
+  {
+    name: "NEON_POOLER_URL",
+    required: false,
+    production: false,
+    description: "Optional Neon pooler endpoint (port 6543) for runtime DB connections",
+  },
 
   // Session security
   {
@@ -313,6 +320,28 @@ export function validateEnv(): {
   const isProd = process.env.NODE_ENV === "production";
   const storageMode = process.env.STORAGE_MODE || "local";
 
+  // Runtime fallback: If DATABASE_URL is not set but a NEON_POOLER_URL is present,
+  // use the pooler endpoint as the runtime DATABASE_URL to avoid connection
+  // exhaustion in serverless environments (Neon uses pooler on port 6543).
+  if (!process.env.DATABASE_URL && process.env.NEON_POOLER_URL) {
+    process.env.DATABASE_URL = process.env.NEON_POOLER_URL;
+    warnings.push(
+      "DATABASE_URL not set; using NEON_POOLER_URL as runtime DATABASE_URL fallback. For Neon deployments prefer setting DATABASE_URL to the pooler endpoint (port 6543).",
+    );
+  }
+
+  // If both are present and DATABASE_URL looks like a direct endpoint (5432)
+  // while NEON_POOLER_URL uses 6543, recommend using the pooler for runtime.
+  if (
+    process.env.DATABASE_URL &&
+    process.env.NEON_POOLER_URL &&
+    process.env.DATABASE_URL.includes(":5432") &&
+    process.env.NEON_POOLER_URL.includes(":6543")
+  ) {
+    warnings.push(
+      "DATABASE_URL appears to point at a direct (5432) endpoint while NEON_POOLER_URL points at the pooler (6543). Consider using the pooler for runtime DATABASE_URL to avoid connection limits.",
+    );
+  }
   for (const config of ENV_CONFIG) {
     const value = process.env[config.name];
     const isS3Var = config.name.startsWith("S3_");
