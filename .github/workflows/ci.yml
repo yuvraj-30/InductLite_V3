@@ -1,3 +1,4 @@
+# CI workflow (automated)
 name: CI
 
 on:
