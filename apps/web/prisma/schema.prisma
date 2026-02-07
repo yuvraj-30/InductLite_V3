@@ -7,8 +7,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DATABASE_DIRECT_URL")
 }
 
@@ -25,15 +25,15 @@ model Company {
   updated_at     DateTime @updatedAt
 
   // Relations
-  users               User[]
-  sites               Site[]
-  induction_templates InductionTemplate[]
-  contractors         Contractor[]
+  users                    User[]
+  sites                    Site[]
+  induction_templates      InductionTemplate[]
+  contractors              Contractor[]
   site_manager_assignments SiteManagerAssignment[]
-  magic_link_tokens   MagicLinkToken[]
-  sign_in_records     SignInRecord[]
-  export_jobs         ExportJob[]
-  audit_logs          AuditLog[]
+  magic_link_tokens        MagicLinkToken[]
+  sign_in_records          SignInRecord[]
+  export_jobs              ExportJob[]
+  audit_logs               AuditLog[]
 
   @@index([slug])
 }
@@ -54,10 +54,10 @@ model User {
   updated_at    DateTime  @updatedAt
 
   // Relations
-  company        Company                 @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  audit_logs     AuditLog[]              @relation("user_audit_logs")
-  sign_outs      SignInRecord[]          @relation("signed_out_by")
-  sites_managed  SiteManagerAssignment[] @relation("site_manager_user")
+  company       Company                 @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  audit_logs    AuditLog[]              @relation("user_audit_logs")
+  sign_outs     SignInRecord[]          @relation("signed_out_by")
+  sites_managed SiteManagerAssignment[] @relation("site_manager_user")
 
   @@unique([company_id, email])
   @@index([company_id])
@@ -81,6 +81,7 @@ model Site {
   address     String?
   description String?
   is_active   Boolean  @default(true)
+  webhooks    Json?
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
@@ -155,6 +156,7 @@ model InductionQuestion {
   is_required    Boolean      @default(true)
   display_order  Int
   correct_answer Json? // For validation (if applicable)
+  logic          Json?
   created_at     DateTime     @default(now())
   updated_at     DateTime     @updatedAt
 
@@ -250,9 +252,9 @@ model Contractor {
   updated_at    DateTime @updatedAt
 
   // Relations
-  company            Company           @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  documents          ContractorDocument[]
-  magic_link_tokens  MagicLinkToken[]
+  company           Company              @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  documents         ContractorDocument[]
+  magic_link_tokens MagicLinkToken[]
 
   @@unique([company_id, name])
   @@index([company_id])
@@ -277,13 +279,13 @@ model SiteManagerAssignment {
 }
 
 model MagicLinkToken {
-  id             String   @id @default(cuid())
-  company_id     String
-  contractor_id  String
-  token_hash     String   @unique
-  expires_at     DateTime
-  used_at        DateTime?
-  created_at     DateTime @default(now())
+  id            String    @id @default(cuid())
+  company_id    String
+  contractor_id String
+  token_hash    String    @unique
+  expires_at    DateTime
+  used_at       DateTime?
+  created_at    DateTime  @default(now())
 
   company    Company    @relation(fields: [company_id], references: [id], onDelete: Cascade)
   contractor Contractor @relation(fields: [contractor_id], references: [id], onDelete: Cascade)

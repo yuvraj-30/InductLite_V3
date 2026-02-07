@@ -18,6 +18,7 @@ import {
 import { EditSiteForm } from "./edit-site-form";
 import { RotateLinkButton } from "../site-buttons";
 import { CopyLinkButton } from "./CopyLinkButton";
+import { QRCodeButton } from "./QRCodeButton";
 
 export const metadata = {
   title: "Site Details | InductLite",
@@ -264,6 +265,7 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
                   </a>
 
                   <CopyLinkButton url={publicUrl} />
+                  <QRCodeButton url={publicUrl} siteName={site.name} />
                 </div>
 
                 {canManageSites && (

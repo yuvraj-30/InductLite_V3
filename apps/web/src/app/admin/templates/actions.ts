@@ -143,6 +143,7 @@ const createQuestionSchema = z.object({
   is_required: z.boolean().optional(),
   display_order: z.number().int().positive().optional(),
   correct_answer: z.unknown().optional(),
+  logic: z.unknown().optional(),
 });
 
 const updateQuestionSchema = z.object({
@@ -157,6 +158,7 @@ const updateQuestionSchema = z.object({
   options: z.array(z.string()).nullable().optional(),
   is_required: z.boolean().optional(),
   correct_answer: z.unknown().nullable().optional(),
+  logic: z.unknown().nullable().optional(),
 });
 
 const reorderSchema = z.array(

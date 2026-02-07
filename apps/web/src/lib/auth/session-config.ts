@@ -63,16 +63,17 @@ function getSessionSecrets(): SessionOptions["password"] {
     .map((entry) => entry.trim())
     .filter(Boolean);
 
-  const secrets = [primary, ...previous].filter(
-    (value): value is string => Boolean(value),
+  const secrets = [primary, ...previous].filter((value): value is string =>
+    Boolean(value),
   );
 
-  if (secrets.length <= 1) {
-    return secrets[0] ?? "";
-  }
+  // Return a map of passwords for iron-session to support rotation
+  if (secrets.length === 0) return "";
+  if (secrets.length === 1) return secrets[0]!;
 
   return secrets.reduce<Record<string, string>>((acc, password, index) => {
-    acc[String(index + 1)] = password;
+    // Current password is always at index 0, but iron-session supports any key
+    acc[String(index)] = password;
     return acc;
   }, {});
 }
@@ -136,7 +137,9 @@ export function validateSessionConfig(): void {
     .filter(Boolean);
   for (const secret of previous) {
     if (secret.length < 32) {
-      throw new Error("SESSION_SECRET_PREVIOUS secrets must be at least 32 characters");
+      throw new Error(
+        "SESSION_SECRET_PREVIOUS secrets must be at least 32 characters",
+      );
     }
   }
 }

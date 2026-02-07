@@ -39,6 +39,7 @@ export interface Question {
   is_required: boolean;
   display_order: number;
   correct_answer: JsonValue;
+  logic?: JsonValue;
   created_at: Date;
   updated_at: Date;
 }
@@ -53,6 +54,7 @@ export interface CreateQuestionInput {
   is_required?: boolean;
   display_order?: number; // If not provided, appended at end
   correct_answer?: unknown;
+  logic?: unknown;
 }
 
 /**
@@ -64,6 +66,7 @@ export interface UpdateQuestionInput {
   options?: string[] | null;
   is_required?: boolean;
   correct_answer?: unknown | null;
+  logic?: unknown | null;
 }
 
 /**
@@ -133,7 +136,7 @@ export async function findQuestionById(
 
     if (!question) return null;
 
-    return question;
+    return question as Question;
   } catch (error) {
     handlePrismaError(error, "InductionQuestion");
   }
@@ -165,7 +168,7 @@ export async function listQuestions(
       orderBy: { display_order: "asc" },
     });
 
-    return questions;
+    return questions as Question[];
   } catch (error) {
     handlePrismaError(error, "InductionQuestion");
   }
@@ -219,11 +222,13 @@ export async function createQuestion(
         options: input.options ?? Prisma.JsonNull,
         is_required: input.is_required ?? true,
         display_order: displayOrder,
-        correct_answer: input.correct_answer ?? Prisma.JsonNull,
-      },
+        correct_answer:
+          (input.correct_answer as Prisma.InputJsonValue) ?? Prisma.JsonNull,
+        logic: (input.logic as Prisma.InputJsonValue) ?? Prisma.JsonNull,
+      } as unknown as Prisma.InductionQuestionCreateInput,
     });
 
-    return question;
+    return question as Question;
   } catch (error) {
     handlePrismaError(error, "InductionQuestion");
   }
@@ -306,9 +311,15 @@ export async function updateQuestion(
             input.correct_answer === null
               ? Prisma.JsonNull
               : input.correct_answer !== undefined
-                ? input.correct_answer
+                ? (input.correct_answer as Prisma.InputJsonValue)
                 : undefined,
-        },
+          logic:
+            input.logic === null
+              ? Prisma.JsonNull
+              : input.logic !== undefined
+                ? (input.logic as Prisma.InputJsonValue)
+                : undefined,
+        } as unknown as Prisma.InductionQuestionUpdateManyMutationInput,
       });
 
       if (updatedResult.count === 0) {
@@ -323,7 +334,7 @@ export async function updateQuestion(
         throw new RepositoryError("Question not found", "NOT_FOUND");
       }
 
-      return updated;
+      return updated as Question;
     });
   } catch (error) {
     if (error instanceof RepositoryError) {
@@ -466,10 +477,10 @@ export async function reorderQuestions(
     );
 
     // Return updated questions from transaction for consistency
-    return await tx.inductionQuestion.findMany({
+    return (await tx.inductionQuestion.findMany({
       where: { template_id: templateId },
       orderBy: { display_order: "asc" },
-    });
+    })) as Question[];
   });
 
   return result;
@@ -519,13 +530,14 @@ export async function bulkCreateQuestions(
         is_required: q.is_required ?? true,
         display_order: q.display_order ?? index + 1,
         correct_answer: q.correct_answer ?? Prisma.JsonNull,
+        logic: q.logic ?? Prisma.JsonNull,
       })),
     });
 
-    return await tx.inductionQuestion.findMany({
+    return (await tx.inductionQuestion.findMany({
       where: { template_id: templateId },
       orderBy: { display_order: "asc" },
-    });
+    })) as Question[];
   });
 
   return created;

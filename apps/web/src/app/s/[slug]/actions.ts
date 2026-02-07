@@ -343,6 +343,25 @@ export async function submitSignIn(
       "Visitor signed in",
     );
 
+    // Trigger webhooks (non-blocking)
+    const siteWithWebhooks = site as unknown as { webhooks?: unknown };
+    if (siteWithWebhooks.webhooks && Array.isArray(siteWithWebhooks.webhooks)) {
+      const webhooks = siteWithWebhooks.webhooks as string[];
+      webhooks.forEach((url) => {
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            event: "induction.completed",
+            timestamp: new Date().toISOString(),
+            data: result,
+          }),
+        }).catch((err) => {
+          log.error({ url, err: String(err) }, "Webhook delivery failed");
+        });
+      });
+    }
+
     return successResponse(result, "Signed in successfully");
   } catch (error) {
     log.error(

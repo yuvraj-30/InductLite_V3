@@ -35,11 +35,12 @@ function ipToInt(ip: string): number | null {
   const [a, b, c, d] = nums;
   if ([a, b, c, d].some((n) => n === undefined)) return null;
   return (
-    ((a as number) << 24) +
-    ((b as number) << 16) +
-    ((c as number) << 8) +
-    (d as number)
-  ) >>> 0;
+    (((a as number) << 24) +
+      ((b as number) << 16) +
+      ((c as number) << 8) +
+      (d as number)) >>>
+    0
+  );
 }
 
 function isIpv4InCidr(ip: string, cidr: string): boolean {
@@ -160,6 +161,7 @@ export async function requireCronSecret(
   const allowlist = parseIpList(process.env.CRON_ALLOWED_IPS);
   const allowPrivate = process.env.CRON_ALLOW_PRIVATE_IPS === "1";
   const allowGithub = process.env.CRON_ALLOW_GITHUB_ACTIONS !== "0";
+  const allowRender = process.env.CRON_ALLOW_RENDER_INTERNAL === "1";
 
   let allowed = false;
   if (isIpAllowed(clientIp, allowlist)) {
@@ -167,6 +169,14 @@ export async function requireCronSecret(
   }
 
   if (!allowed && allowPrivate && isPrivateIpv4(clientIp)) {
+    allowed = true;
+  }
+
+  if (
+    !allowed &&
+    allowRender &&
+    (clientIp === "127.0.0.1" || clientIp === "::1" || isPrivateIpv4(clientIp))
+  ) {
     allowed = true;
   }
 

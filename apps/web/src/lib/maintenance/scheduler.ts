@@ -1,5 +1,6 @@
 import { setIntervalAsync, clearIntervalAsync } from "set-interval-async/fixed";
 import { runRetentionTasks } from "./retention";
+import { processEmailQueue } from "@/lib/email/worker";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
 
@@ -15,7 +16,8 @@ export function startMaintenanceScheduler(
   handle = setIntervalAsync(async () => {
     try {
       await runRetentionTasks();
-      log.info({}, "Maintenance retention tasks completed");
+      await processEmailQueue();
+      log.info({}, "Maintenance and email queue tasks completed");
     } catch (err) {
       log.error({ err: String(err) }, "Maintenance scheduler error");
     }
