@@ -37,7 +37,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     "settings:manage",
     "audit:read",
   ],
-  SITE_MANAGER: ["site:manage"],
+  SITE_MANAGER: ["site:manage", "contractor:manage", "export:create"],
   VIEWER: [
     // Viewers can only read, no write permissions
     // They can view data via normal page access
@@ -152,9 +152,8 @@ export async function checkSitePermission(
   }
 
   if (user.role === "SITE_MANAGER") {
-    const { isUserSiteManagerForSite } = await import(
-      "@/lib/repository/site-manager.repository"
-    );
+    const { isUserSiteManagerForSite } =
+      await import("@/lib/repository/site-manager.repository");
     const allowed = await isUserSiteManagerForSite(
       user.companyId,
       user.id,
@@ -309,9 +308,8 @@ export async function checkSitePermissionReadOnly(
   }
 
   if (user.role === "SITE_MANAGER") {
-    const { isUserSiteManagerForSite } = await import(
-      "@/lib/repository/site-manager.repository"
-    );
+    const { isUserSiteManagerForSite } =
+      await import("@/lib/repository/site-manager.repository");
     const allowed = await isUserSiteManagerForSite(
       user.companyId,
       user.id,

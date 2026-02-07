@@ -55,10 +55,14 @@ describe("RBAC Guards", () => {
       }
     });
 
-    it("should grant site manage to SITE_MANAGER only", () => {
+    it("should grant permissions to SITE_MANAGER according to Phase 2 requirements", () => {
       expect(hasPermission("SITE_MANAGER", "site:manage")).toBe(true);
+      expect(hasPermission("SITE_MANAGER", "contractor:manage")).toBe(true);
+      expect(hasPermission("SITE_MANAGER", "export:create")).toBe(true);
       expect(hasPermission("SITE_MANAGER", "template:manage")).toBe(false);
       expect(hasPermission("SITE_MANAGER", "audit:read")).toBe(false);
+      expect(hasPermission("SITE_MANAGER", "user:manage")).toBe(false);
+      expect(hasPermission("SITE_MANAGER", "settings:manage")).toBe(false);
     });
   });
 
@@ -78,10 +82,13 @@ describe("RBAC Guards", () => {
       expect(permissions).toEqual([]);
     });
 
-    it("should return site:manage for SITE_MANAGER", () => {
+    it("should return correct permissions for SITE_MANAGER", () => {
       const permissions = getRolePermissions("SITE_MANAGER");
 
-      expect(permissions).toEqual(["site:manage"]);
+      expect(permissions).toContain("site:manage");
+      expect(permissions).toContain("contractor:manage");
+      expect(permissions).toContain("export:create");
+      expect(permissions.length).toBe(3);
     });
   });
 

@@ -18,6 +18,7 @@ import type {
   Question,
   QuestionType,
   CreateQuestionInput,
+  UpdateQuestionInput,
 } from "@/lib/repository";
 
 interface Props {
@@ -119,11 +120,18 @@ function QuestionTypeIcon({ type }: { type: QuestionType }) {
   }
 }
 
+export interface QuestionLogic {
+  trigger: string;
+  action: "skip";
+  count: number;
+}
+
 interface QuestionFormData {
   question_text: string;
   question_type: QuestionType;
   options: string[];
   is_required: boolean;
+  logic?: QuestionLogic | null;
 }
 
 function QuestionForm({
@@ -149,6 +157,10 @@ function QuestionForm({
   const [isRequired, setIsRequired] = useState(
     initialData?.is_required ?? true,
   );
+  const [logicTrigger, setLogicTrigger] = useState(
+    initialData?.logic?.trigger || "",
+  );
+  const [logicCount, setLogicCount] = useState(initialData?.logic?.count || 1);
 
   const needsOptions =
     questionType === "MULTIPLE_CHOICE" || questionType === "CHECKBOX";
@@ -176,6 +188,11 @@ function QuestionForm({
       question_type: questionType,
       options: needsOptions ? options.filter((o) => o.trim() !== "") : [],
       is_required: isRequired,
+      logic:
+        (questionType === "YES_NO" || questionType === "MULTIPLE_CHOICE") &&
+        logicTrigger
+          ? { trigger: logicTrigger, action: "skip", count: logicCount }
+          : null,
     });
   }
 
@@ -268,6 +285,48 @@ function QuestionForm({
         </div>
       )}
 
+      {(questionType === "YES_NO" || questionType === "MULTIPLE_CHOICE") && (
+        <div className="border-t pt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Conditional Logic
+          </label>
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span>If answer is</span>
+            <select
+              value={logicTrigger}
+              onChange={(e) => setLogicTrigger(e.target.value)}
+              className="border border-gray-300 rounded-md shadow-sm py-1 px-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">(No logic)</option>
+              {questionType === "YES_NO" ? (
+                <>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </>
+              ) : (
+                options
+                  .filter((o) => o.trim() !== "")
+                  .map((o) => (
+                    <option key={o} value={o}>
+                      {o}
+                    </option>
+                  ))
+              )}
+            </select>
+            <span>skip</span>
+            <input
+              type="number"
+              min="1"
+              max="10"
+              value={logicCount}
+              onChange={(e) => setLogicCount(parseInt(e.target.value) || 1)}
+              className="w-16 border border-gray-300 rounded-md shadow-sm py-1 px-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            />
+            <span>questions.</span>
+          </div>
+        </div>
+      )}
+
       <div className="flex gap-2 pt-2">
         <button
           type="submit"
@@ -304,7 +363,8 @@ export function QuestionBuilder({ templateId, questions, isEditable }: Props) {
       question_type: data.question_type,
       is_required: data.is_required,
       options: data.options.length > 0 ? data.options : undefined,
-    };
+      logic: data.logic || undefined,
+    } as CreateQuestionInput;
 
     const result = await addQuestionAction(templateId, input);
 
@@ -327,7 +387,8 @@ export function QuestionBuilder({ templateId, questions, isEditable }: Props) {
       question_type: data.question_type,
       is_required: data.is_required,
       options: data.options.length > 0 ? data.options : null,
-    });
+      logic: data.logic || null,
+    } as UpdateQuestionInput);
 
     if (result.success) {
       setEditingId(null);
@@ -418,6 +479,7 @@ export function QuestionBuilder({ templateId, questions, isEditable }: Props) {
                   question_type: question.question_type,
                   options: (question.options as string[]) || [],
                   is_required: question.is_required,
+                  logic: question.logic as unknown as QuestionLogic,
                 }}
                 onSubmit={(data) => handleUpdate(question.id, data)}
                 onCancel={() => setEditingId(null)}
@@ -447,6 +509,15 @@ export function QuestionBuilder({ templateId, questions, isEditable }: Props) {
                           Options: {(question.options as string[]).join(", ")}
                         </div>
                       )}
+                    {question.logic && (
+                      <div className="mt-1 text-xs text-blue-600 font-medium">
+                        ↳ If answer is "
+                        {(question.logic as unknown as QuestionLogic).trigger}"
+                        skip{" "}
+                        {(question.logic as unknown as QuestionLogic).count}{" "}
+                        question(s)
+                      </div>
+                    )}
                   </div>
                 </div>
 

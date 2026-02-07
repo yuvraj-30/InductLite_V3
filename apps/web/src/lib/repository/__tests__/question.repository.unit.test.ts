@@ -42,10 +42,11 @@ function createMockQuestion(
     display_order: 1,
     options: null,
     correct_answer: null,
+    logic: null,
     created_at: new Date(),
     updated_at: new Date(),
     ...overrides,
-  };
+  } as unknown as InductionQuestion;
 }
 
 const templateDelegate = vi.hoisted(() => ({

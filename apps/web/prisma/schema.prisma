@@ -81,6 +81,7 @@ model Site {
   address     String?
   description String?
   is_active   Boolean  @default(true)
+  webhooks    Json?
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
@@ -155,6 +156,7 @@ model InductionQuestion {
   is_required    Boolean      @default(true)
   display_order  Int
   correct_answer Json? // For validation (if applicable)
+  logic          Json?
   created_at     DateTime     @default(now())
   updated_at     DateTime     @updatedAt
 

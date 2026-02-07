@@ -85,7 +85,7 @@ export async function unarchiveTemplate(
       throw new RepositoryError("Template not found", "NOT_FOUND");
     }
 
-    return updated;
+    return updated as TemplateWithCounts;
   } catch (error) {
     if (error instanceof RepositoryError) {
       throw error;
@@ -153,6 +153,7 @@ export interface QuestionData {
   is_required: boolean;
   display_order: number;
   correct_answer: JsonValue;
+  logic?: JsonValue;
   created_at: Date;
   updated_at: Date;
 }
@@ -209,13 +210,14 @@ export async function findTemplateById(
 
   try {
     const db = scopedDb(companyId);
-    return await db.inductionTemplate.findFirst({
+    const result = await db.inductionTemplate.findFirst({
       where: { id: templateId, company_id: companyId },
       include: {
         site: { select: { id: true, name: true } },
         _count: { select: { questions: true, responses: true } },
       },
     });
+    return result as TemplateWithCounts | null;
   } catch (error) {
     handlePrismaError(error, "InductionTemplate");
   }
@@ -232,7 +234,7 @@ export async function findTemplateWithQuestions(
 
   try {
     const db = scopedDb(companyId);
-    return await db.inductionTemplate.findFirst({
+    const result = await db.inductionTemplate.findFirst({
       where: { id: templateId, company_id: companyId },
       include: {
         site: { select: { id: true, name: true } },
@@ -241,6 +243,7 @@ export async function findTemplateWithQuestions(
         },
       },
     });
+    return result as TemplateWithQuestions | null;
   } catch (error) {
     handlePrismaError(error, "InductionTemplate");
   }
@@ -329,7 +332,7 @@ export async function getActiveTemplateForSite(
     // First try site-specific published template
     const db = scopedDb(companyId);
 
-    let template = await db.inductionTemplate.findFirst({
+    const template = await db.inductionTemplate.findFirst({
       where: {
         company_id: companyId,
         site_id: siteId,
@@ -344,7 +347,7 @@ export async function getActiveTemplateForSite(
 
     // Fall back to company default
     if (!template) {
-      template = await db.inductionTemplate.findFirst({
+      const defaultTemplate = await db.inductionTemplate.findFirst({
         where: {
           company_id: companyId,
           site_id: null,
@@ -357,9 +360,10 @@ export async function getActiveTemplateForSite(
           questions: { orderBy: { display_order: "asc" } },
         },
       });
+      return defaultTemplate as TemplateWithQuestions | null;
     }
 
-    return template;
+    return template as TemplateWithQuestions | null;
   } catch (error) {
     handlePrismaError(error, "InductionTemplate");
   }
@@ -447,7 +451,7 @@ export async function createTemplate(
   }
 
   try {
-    return await db.inductionTemplate.create({
+    const created = await db.inductionTemplate.create({
       data: {
         site_id: input.site_id ?? null,
         name: name,
@@ -462,6 +466,7 @@ export async function createTemplate(
         _count: { select: { questions: true, responses: true } },
       },
     });
+    return created as TemplateWithCounts;
   } catch (error) {
     handlePrismaError(error, "InductionTemplate");
   }
@@ -542,7 +547,7 @@ export async function updateTemplate(
       throw new RepositoryError("Template not found", "NOT_FOUND");
     }
 
-    return updated;
+    return updated as TemplateWithCounts;
   } catch (error) {
     if (error instanceof RepositoryError) {
       throw error;
@@ -664,7 +669,7 @@ export async function publishTemplate(
       throw new RepositoryError("Template not found", "NOT_FOUND");
     }
 
-    return updated;
+    return updated as TemplateWithCounts;
   });
 }
 
@@ -748,7 +753,7 @@ export async function createNewVersion(
       throw new RepositoryError("Template not found", "NOT_FOUND");
     }
 
-    return created;
+    return created as TemplateWithQuestions;
   });
 }
 
@@ -806,7 +811,7 @@ export async function archiveTemplate(
       throw new RepositoryError("Template not found", "NOT_FOUND");
     }
 
-    return updated;
+    return updated as TemplateWithCounts;
   } catch (error) {
     if (error instanceof RepositoryError) {
       throw error;

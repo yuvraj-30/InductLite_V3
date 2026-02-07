@@ -1,5 +1,3 @@
- 
- 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/lib/db/prisma", () => ({
@@ -33,6 +31,7 @@ describe("Export worker CSV generation", () => {
           address: null,
           description: null,
           is_active: true,
+          webhooks: null,
           updated_at: new Date(),
         },
         visitor_name: "Alice",
