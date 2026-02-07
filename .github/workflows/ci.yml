@@ -6,6 +6,8 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  # Allow manual runs from any branch when needed for debugging or retries
+  workflow_dispatch: { }
 
 permissions:
   contents: read
