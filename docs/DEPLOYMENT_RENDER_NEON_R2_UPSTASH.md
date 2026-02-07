@@ -13,7 +13,8 @@
 
 ### Core
 
-- DATABASE_URL (Neon pooler endpoint, port 6543)
+- DATABASE_URL (Neon pooler endpoint, port 6543) — runtime DB URL; in Render you may set this to `NEON_POOLER_URL`
+- NEON_POOLER_URL (optional) — Neon pooler endpoint (port 6543)
 - DATABASE_DIRECT_URL (Neon direct endpoint, port 5432, for migrations)
 - SESSION_SECRET
 - SESSION_SECRET_PREVIOUS (optional)
