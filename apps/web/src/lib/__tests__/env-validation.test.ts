@@ -131,6 +131,7 @@ describe("validateEnv", () => {
 
     it("should pass with full production config", () => {
       process.env.DATABASE_URL = "postgresql://test@localhost/test";
+      process.env.NEON_POOLER_URL = "postgresql://test@localhost:6543/test";
       process.env.SESSION_SECRET =
         "production-secret-at-least-32-characters-long";
       process.env.NEXT_PUBLIC_APP_URL = "https://example.com";
@@ -147,6 +148,48 @@ describe("validateEnv", () => {
 
       expect(result.valid).toBe(true);
       expect(result.errors).toHaveLength(0);
+    });
+
+    it("should allow NEON_POOLER_URL without affecting validation", () => {
+      process.env.DATABASE_URL = "postgresql://test@localhost/test";
+      process.env.NEON_POOLER_URL = "postgresql://test@localhost:6543/test";
+      process.env.SESSION_SECRET =
+        "production-secret-at-least-32-characters-long";
+      process.env.NEXT_PUBLIC_APP_URL = "https://example.com";
+
+      const result = validateEnv();
+
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it("should fallback to NEON_POOLER_URL when DATABASE_URL missing and emit warning", () => {
+      delete process.env.DATABASE_URL;
+      process.env.NEON_POOLER_URL = "postgresql://test@localhost:6543/test";
+      process.env.SESSION_SECRET =
+        "production-secret-at-least-32-characters-long";
+      process.env.NEXT_PUBLIC_APP_URL = "https://example.com";
+
+      const result = validateEnv();
+
+      expect(result.valid).toBe(true);
+      expect(result.warnings.some((w) => w.includes("using NEON_POOLER_URL"))).toBe(true);
+      expect(process.env.DATABASE_URL).toBe(process.env.NEON_POOLER_URL);
+    });
+
+    it("should recommend pooler when DATABASE_URL is direct and NEON_POOLER_URL exists", () => {
+      process.env.DATABASE_URL = "postgresql://test@localhost:5432/test";
+      process.env.NEON_POOLER_URL = "postgresql://test@localhost:6543/test";
+      process.env.SESSION_SECRET =
+        "production-secret-at-least-32-characters-long";
+      process.env.NEXT_PUBLIC_APP_URL = "https://example.com";
+
+      const result = validateEnv();
+
+      expect(result.valid).toBe(true);
+      expect(
+        result.warnings.some((w) => w.includes("pooler for runtime")),
+      ).toBe(true);
     });
 
     it("should warn about missing Upstash Redis", () => {
