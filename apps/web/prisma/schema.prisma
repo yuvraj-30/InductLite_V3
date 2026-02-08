@@ -120,19 +120,19 @@ model SitePublicLink {
 // ============================================================================
 
 model InductionTemplate {
-  id           String    @id @default(cuid())
-  company_id   String
-  site_id      String? // null = company-wide default template
-  name         String
-  description  String?
-  version      Int       @default(1)
-  is_published Boolean   @default(false)
-  is_default   Boolean   @default(false) // Company-wide default (only when site_id is null)
-  is_archived  Boolean   @default(false) // Immutable once archived (old versions)
-  published_at DateTime?
-  force_reinduction Boolean @default(false)
-  created_at   DateTime  @default(now())
-  updated_at   DateTime  @updatedAt
+  id                String    @id @default(cuid())
+  company_id        String
+  site_id           String? // null = company-wide default template
+  name              String
+  description       String?
+  version           Int       @default(1)
+  is_published      Boolean   @default(false)
+  is_default        Boolean   @default(false) // Company-wide default (only when site_id is null)
+  is_archived       Boolean   @default(false) // Immutable once archived (old versions)
+  published_at      DateTime?
+  force_reinduction Boolean   @default(false)
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
 
   // Relations
   company   Company             @relation(fields: [company_id], references: [id], onDelete: Cascade)
