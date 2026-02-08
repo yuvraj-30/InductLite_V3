@@ -9,7 +9,9 @@ export default defineConfig({
       "src/**/*.test.ts",
       "src/**/*.test.tsx",
       "src/**/__tests__/*.test.ts",
+      "src/**/*.unit.test.ts",
     ],
+    passWithNoTests: true,
     exclude: ["node_modules", ".next"],
     coverage: {
       provider: "v8",
