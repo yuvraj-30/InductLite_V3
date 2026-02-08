@@ -1,29 +1,179 @@
+import { publicDb } from "@/lib/db/public-db";
+import { sendEmail } from "@/lib/email/resend";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
 
 /**
  * Email Queue Processor
- * Logic:
- * 1. Find unsent email notifications in the database (AuditLog with action "email.queued" and status in details)
- * 2. Send via Resend
- * 3. Mark as sent
- *
- * NOTE: For MVP, we use the AuditLog or a simple table to track outbound emails.
- * Since a dedicated Email table wasn't explicitly in Phase 2, we'll implement
- * a robust check for "Red Flag" events or "Magic Links" that need sending.
  */
-
 export async function processEmailQueue() {
-  const log = createRequestLogger(generateRequestId());
-
-  // Example: Find Red Flags from the last hour that haven't been notified
-  // For Phase 3.1, we'll focus on the infrastructure to send emails
-  // triggered by events.
+  const requestId = generateRequestId();
+  const log = createRequestLogger(requestId);
 
   try {
-    // This is a placeholder for the actual queue processing logic
-    // which will be expanded as triggers (Red Flags, Magic Links) are implemented.
-    log.info({}, "Email worker checked for pending notifications");
+    // 1. Process Red Flags (High Priority)
+    // Find recent sign-ins with red flags that haven't been notified
+    const pendingRedFlags = await publicDb.inductionResponse.findMany({
+      where: {
+        passed: true, // They finished, but we need to check answers
+        sign_in_record: {
+          created_at: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+        },
+      },
+      include: {
+        sign_in_record: {
+          include: {
+            site: {
+              include: {
+                site_managers: {
+                  include: {
+                    user: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        template: {
+          include: {
+            questions: true,
+          },
+        },
+      },
+    });
+
+    for (const response of pendingRedFlags) {
+      const answers = response.answers as unknown as Array<{
+        questionId: string;
+        answer: unknown;
+      }>;
+      const redFlagQuestions = (
+        response.template.questions as unknown as Array<{
+          red_flag: boolean;
+          id: string;
+          question_text: string;
+        }>
+      ).filter((q) => q.red_flag);
+
+      let hasRedFlag = false;
+      const flagsFound: string[] = [];
+
+      for (const q of redFlagQuestions) {
+        const answer = answers.find((a) => a.questionId === q.id);
+        // Logic: For YES_NO, 'yes' is usually the red flag in construction (e.g. "Do you have symptoms?")
+        // We'll treat ANY answer to a red_flag question as a trigger for now,
+        // or specifically 'yes' / 'true'.
+        if (
+          answer &&
+          (String(answer.answer).toLowerCase() === "yes" ||
+            answer.answer === true)
+        ) {
+          hasRedFlag = true;
+          flagsFound.push(q.question_text);
+        }
+      }
+
+      if (hasRedFlag) {
+        // Check if we already sent this one (idempotency via AuditLog)
+        const existingLog = await publicDb.auditLog.findFirst({
+          where: {
+            action: "email.red_flag_alert",
+            entity_id: response.id,
+          },
+        });
+
+        if (!existingLog) {
+          const managers = response.sign_in_record.site.site_managers;
+          for (const assignment of managers) {
+            const manager = assignment.user;
+            if (manager.email) {
+              await sendEmail({
+                to: manager.email,
+                subject: `⚠️ RED FLAG ALERT: ${response.sign_in_record.visitor_name} at ${response.sign_in_record.site.name}`,
+                html: `
+                  <h1>Safety Alert</h1>
+                  <p>A visitor has answered "YES" to one or more red-flag safety questions.</p>
+                  <p><strong>Visitor:</strong> ${response.sign_in_record.visitor_name}</p>
+                  <p><strong>Site:</strong> ${response.sign_in_record.site.name}</p>
+                  <p><strong>Flags Triggered:</strong></p>
+                  <ul>
+                    ${flagsFound.map((f) => `<li>${f}</li>`).join("")}
+                  </ul>
+                  <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/sites/${response.sign_in_record.site_id}">View Site Dashboard</a></p>
+                `,
+              });
+            }
+          }
+
+          // Record that we sent it
+          await publicDb.auditLog.create({
+            data: {
+              company_id: response.sign_in_record.company_id,
+              action: "email.red_flag_alert",
+              entity_type: "InductionResponse",
+              entity_id: response.id,
+              details: { manager_count: managers.length },
+            },
+          });
+        }
+      }
+    }
+
+    // 2. Process Pending Notifications from EmailNotification table
+    // Type-safe workaround for late-bound schema models
+    const dbAny = publicDb as unknown as {
+      emailNotification: {
+        findMany: (args: unknown) => Promise<
+          Array<{
+            id: string;
+            to: string;
+            subject: string;
+            body: string;
+            attempts: number;
+          }>
+        >;
+        update: (args: unknown) => Promise<unknown>;
+      };
+    };
+    const notificationTable = dbAny.emailNotification;
+
+    if (notificationTable) {
+      const pending = await notificationTable.findMany({
+        where: { status: "PENDING", attempts: { lt: 3 } },
+        take: 50,
+      });
+
+      for (const notification of pending) {
+        try {
+          await sendEmail({
+            to: notification.to,
+            subject: notification.subject,
+            html: notification.body,
+          });
+
+          await notificationTable.update({
+            where: { id: notification.id },
+            data: {
+              status: "SENT",
+              sent_at: new Date(),
+              attempts: notification.attempts + 1,
+            },
+          });
+        } catch (err) {
+          await notificationTable.update({
+            where: { id: notification.id },
+            data: {
+              attempts: notification.attempts + 1,
+              last_tried: new Date(),
+              error: String(err),
+              status: notification.attempts >= 2 ? "FAILED" : "PENDING",
+            },
+          });
+        }
+      }
+    }
+
+    log.info({}, "Email worker processing completed");
   } catch (err) {
     log.error({ err: String(err) }, "Email worker error");
   }

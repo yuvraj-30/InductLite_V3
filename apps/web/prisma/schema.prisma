@@ -34,6 +34,7 @@ model Company {
   sign_in_records          SignInRecord[]
   export_jobs              ExportJob[]
   audit_logs               AuditLog[]
+  email_notifications      EmailNotification[]
 
   @@index([slug])
 }
@@ -58,6 +59,7 @@ model User {
   audit_logs    AuditLog[]              @relation("user_audit_logs")
   sign_outs     SignInRecord[]          @relation("signed_out_by")
   sites_managed SiteManagerAssignment[] @relation("site_manager_user")
+  notifications EmailNotification[]
 
   @@unique([company_id, email])
   @@index([company_id])
@@ -128,6 +130,7 @@ model InductionTemplate {
   is_default   Boolean   @default(false) // Company-wide default (only when site_id is null)
   is_archived  Boolean   @default(false) // Immutable once archived (old versions)
   published_at DateTime?
+  force_reinduction Boolean @default(false)
   created_at   DateTime  @default(now())
   updated_at   DateTime  @updatedAt
 
@@ -157,6 +160,7 @@ model InductionQuestion {
   display_order  Int
   correct_answer Json? // For validation (if applicable)
   logic          Json?
+  red_flag       Boolean      @default(false)
   created_at     DateTime     @default(now())
   updated_at     DateTime     @updatedAt
 
@@ -232,6 +236,34 @@ model InductionResponse {
 
   @@index([template_id])
   @@index([sign_in_record_id])
+}
+
+model EmailNotification {
+  id         String             @id @default(cuid())
+  company_id String
+  user_id    String? // Target user
+  to         String
+  subject    String
+  body       String
+  status     NotificationStatus @default(PENDING)
+  error      String?
+  attempts   Int                @default(0)
+  last_tried DateTime?
+  sent_at    DateTime?
+  created_at DateTime           @default(now())
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([company_id])
+  @@index([status])
+  @@index([created_at])
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
 }
 
 // ============================================================================

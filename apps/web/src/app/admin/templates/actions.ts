@@ -319,6 +319,7 @@ export async function updateTemplateAction(
  */
 export async function publishTemplateAction(
   templateId: string,
+  forceReinduction: boolean = false,
 ): Promise<ApiResponse<{ templateId: string; version: number }>> {
   const requestId = generateRequestId();
   const log = createRequestLogger(requestId);
@@ -352,7 +353,11 @@ export async function publishTemplateAction(
   }
 
   try {
-    const template = await publishTemplate(context.companyId, templateId);
+    const template = await publishTemplate(
+      context.companyId,
+      templateId,
+      forceReinduction,
+    );
 
     await createAuditLog(context.companyId, {
       action: "template.publish",

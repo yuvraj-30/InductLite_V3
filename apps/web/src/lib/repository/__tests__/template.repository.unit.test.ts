@@ -28,10 +28,11 @@ function createMockTemplate(
     is_default: false,
     site_id: null,
     published_at: null,
+    force_reinduction: false,
     created_at: new Date(),
     updated_at: new Date(),
     ...overrides,
-  };
+  } as unknown as InductionTemplate;
 }
 
 // Helper to create a template object that includes questions for tests
@@ -49,9 +50,11 @@ function createMockTemplateWithQuestions(
     is_required: true,
     display_order: 1,
     correct_answer: null,
+    logic: null,
+    red_flag: false,
     created_at: new Date(),
     updated_at: new Date(),
-  };
+  } as unknown as QuestionData;
 
   const questions = (overrides.questions ?? [defaultQuestion]).map((q, i) => ({
     ...defaultQuestion,
@@ -72,12 +75,13 @@ function createMockTemplateWithQuestions(
     is_default: false,
     site_id: null,
     published_at: null,
+    force_reinduction: false,
     created_at: new Date(),
     updated_at: new Date(),
     site: { id: "site-1", name: "Site" },
     questions,
     ...overrides,
-  };
+  } as unknown as TemplateWithQuestions;
 }
 
 // Mock Prisma client

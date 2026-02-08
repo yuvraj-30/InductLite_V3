@@ -23,10 +23,11 @@ function createMockTemplate(
     is_default: false,
     site_id: null,
     published_at: null,
+    force_reinduction: false,
     created_at: new Date(),
     updated_at: new Date(),
     ...overrides,
-  };
+  } as unknown as InductionTemplate;
 }
 
 // Helper to create mock question with all required fields
@@ -43,6 +44,7 @@ function createMockQuestion(
     options: null,
     correct_answer: null,
     logic: null,
+    red_flag: false,
     created_at: new Date(),
     updated_at: new Date(),
     ...overrides,

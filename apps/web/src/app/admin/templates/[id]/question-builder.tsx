@@ -21,6 +21,10 @@ import type {
   UpdateQuestionInput,
 } from "@/lib/repository";
 
+interface QuestionWithRedFlag extends Question {
+  red_flag: boolean;
+}
+
 interface Props {
   templateId: string;
   questions: Question[];
@@ -132,6 +136,7 @@ interface QuestionFormData {
   options: string[];
   is_required: boolean;
   logic?: QuestionLogic | null;
+  red_flag: boolean;
 }
 
 function QuestionForm({
@@ -161,6 +166,7 @@ function QuestionForm({
     initialData?.logic?.trigger || "",
   );
   const [logicCount, setLogicCount] = useState(initialData?.logic?.count || 1);
+  const [redFlag, setRedFlag] = useState(initialData?.red_flag ?? false);
 
   const needsOptions =
     questionType === "MULTIPLE_CHOICE" || questionType === "CHECKBOX";
@@ -193,6 +199,7 @@ function QuestionForm({
         logicTrigger
           ? { trigger: logicTrigger, action: "skip", count: logicCount }
           : null,
+      red_flag: redFlag,
     });
   }
 
@@ -231,6 +238,22 @@ function QuestionForm({
               </option>
             ))}
           </select>
+        </div>
+
+        <div className="flex items-center mt-6">
+          <input
+            id="red-flag"
+            type="checkbox"
+            checked={redFlag}
+            onChange={(e) => setRedFlag(e.target.checked)}
+            className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+          />
+          <label
+            htmlFor="red-flag"
+            className="ml-2 block text-sm text-gray-700 font-medium"
+          >
+            Red Flag Answer (Notify Manager)
+          </label>
         </div>
 
         <div className="flex items-center mt-6">
@@ -347,7 +370,12 @@ function QuestionForm({
   );
 }
 
-export function QuestionBuilder({ templateId, questions, isEditable }: Props) {
+export function QuestionBuilder({
+  templateId,
+  questions: initialQuestions,
+  isEditable,
+}: Props) {
+  const questions = initialQuestions as unknown as QuestionWithRedFlag[];
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -364,6 +392,7 @@ export function QuestionBuilder({ templateId, questions, isEditable }: Props) {
       is_required: data.is_required,
       options: data.options.length > 0 ? data.options : undefined,
       logic: data.logic || undefined,
+      red_flag: data.red_flag,
     } as CreateQuestionInput;
 
     const result = await addQuestionAction(templateId, input);
@@ -388,6 +417,7 @@ export function QuestionBuilder({ templateId, questions, isEditable }: Props) {
       is_required: data.is_required,
       options: data.options.length > 0 ? data.options : null,
       logic: data.logic || null,
+      red_flag: data.red_flag,
     } as UpdateQuestionInput);
 
     if (result.success) {
@@ -480,6 +510,7 @@ export function QuestionBuilder({ templateId, questions, isEditable }: Props) {
                   options: (question.options as string[]) || [],
                   is_required: question.is_required,
                   logic: question.logic as unknown as QuestionLogic,
+                  red_flag: question.red_flag,
                 }}
                 onSubmit={(data) => handleUpdate(question.id, data)}
                 onCancel={() => setEditingId(null)}
@@ -501,6 +532,11 @@ export function QuestionBuilder({ templateId, questions, isEditable }: Props) {
                       </span>
                       {question.is_required && (
                         <span className="text-red-500 text-sm">*</span>
+                      )}
+                      {question.red_flag && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                          Red Flag
+                        </span>
                       )}
                     </div>
                     {question.options &&

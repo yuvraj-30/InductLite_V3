@@ -112,6 +112,7 @@ export interface TemplateWithCounts {
   is_default: boolean;
   is_archived: boolean;
   published_at: Date | null;
+  force_reinduction: boolean;
   created_at: Date;
   updated_at: Date;
   site: { id: string; name: string } | null;
@@ -139,6 +140,7 @@ export interface TemplateWithQuestions {
   updated_at: Date;
   site: { id: string; name: string } | null;
   questions: QuestionData[];
+  force_reinduction: boolean;
 }
 
 /**
@@ -567,6 +569,7 @@ export async function updateTemplate(
 export async function publishTemplate(
   companyId: string,
   templateId: string,
+  forceReinduction: boolean = false,
 ): Promise<TemplateWithCounts> {
   requireCompanyId(companyId);
 
@@ -650,7 +653,11 @@ export async function publishTemplate(
     // Publish this template (tenant-scoped) and return the updated template using a unique update
     const updateResult = await db.inductionTemplate.updateMany({
       where: { id: templateId, company_id: companyId },
-      data: { is_published: true, published_at: new Date() },
+      data: {
+        is_published: true,
+        published_at: new Date(),
+        force_reinduction: forceReinduction,
+      },
     });
 
     if (updateResult.count === 0) {
