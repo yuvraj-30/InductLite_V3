@@ -1,0 +1,94 @@
+import { describe, it, expect, beforeEach } from "vitest";
+/* @vitest-environment node */
+import { publicDb } from "../../../lib/db/public-db";
+import {
+  publishTemplate,
+  createTemplate,
+  createNewVersion,
+} from "../../repository/template.repository";
+
+describe("Template Versioning & Re-induction Integration", () => {
+  const companyId = "test-company-versioning";
+
+  beforeEach(async () => {
+    // Cleanup
+    await publicDb.inductionResponse.deleteMany({
+      where: { template: { company_id: companyId } },
+    });
+    await publicDb.inductionQuestion.deleteMany({
+      where: { template: { company_id: companyId } },
+    });
+    await publicDb.inductionTemplate.deleteMany({
+      where: { company_id: companyId },
+    });
+    await publicDb.site.deleteMany({
+      where: { company_id: companyId },
+    });
+    await publicDb.company.upsert({
+      where: { id: companyId },
+      create: { id: companyId, name: "Test Co", slug: "test-co-versioning" },
+      update: {},
+    });
+  });
+
+  it("should invalidate old records when forceReinduction is true", async () => {
+    // 1. Create a site
+    const site = await publicDb.site.create({
+      data: { company_id: companyId, name: "VRT Site" },
+    });
+
+    // 2. Create and publish V1
+    const t1 = await createTemplate(companyId, {
+      name: "Safety Induction",
+      site_id: site.id,
+    });
+
+    await publicDb.inductionQuestion.create({
+      data: {
+        template_id: t1.id,
+        question_text: "Test?",
+        question_type: "YES_NO",
+        display_order: 1,
+      },
+    });
+
+    await publishTemplate(companyId, t1.id, false);
+
+    // 3. Create a sign-in and response for V1
+    const signIn = await publicDb.signInRecord.create({
+      data: {
+        company_id: companyId,
+        site_id: site.id,
+        visitor_name: "Old Worker",
+        visitor_phone: "123",
+        visitor_type: "CONTRACTOR",
+      },
+    });
+
+    await publicDb.inductionResponse.create({
+      data: {
+        sign_in_record_id: signIn.id,
+        template_id: t1.id,
+        template_version: 1,
+        answers: [],
+        passed: true,
+      },
+    });
+
+    // Verify initial state
+    const initialResp = await publicDb.inductionResponse.findFirst({
+      where: { sign_in_record_id: signIn.id },
+    });
+    expect(initialResp?.passed).toBe(true);
+
+    // 4. Create V2 and publish with forceReinduction: true
+    const t2 = await createNewVersion(companyId, t1.id);
+    await publishTemplate(companyId, t2.id, true);
+
+    // 5. Verify old response is now "invalidated" (passed: false)
+    const updatedResp = await publicDb.inductionResponse.findFirst({
+      where: { sign_in_record_id: signIn.id },
+    });
+    expect(updatedResp?.passed).toBe(false);
+  });
+});

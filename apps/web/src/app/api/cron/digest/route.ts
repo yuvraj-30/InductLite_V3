@@ -1,72 +1,24 @@
 import { NextResponse } from "next/server";
-import { publicDb } from "@/lib/db/public-db";
-import { requireCronSecret } from "@/lib/cron";
-import { sendEmail } from "@/lib/email/resend";
+import { processWeeklyDigest } from "@/lib/email/worker";
+import { createRequestLogger } from "@/lib/logger";
+import { generateRequestId } from "@/lib/auth/csrf";
 
-/**
- * Weekly Admin Digest
- * Triggers every Monday at 8:00 AM (configured in GH Actions)
- */
-export async function GET(req: Request) {
-  const cron = await requireCronSecret(req, "/api/cron/digest");
-  if (!cron.ok) return cron.response;
+export async function POST(req: Request) {
+  const requestId = generateRequestId();
+  const log = createRequestLogger(requestId);
 
-  const { log } = cron;
-  const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  // Security check for CRON_SECRET
+  const authHeader = req.headers.get("authorization");
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   try {
-    // 1. Fetch stats
-    const [inductionCount, redFlagCount, expiringLicenses] = await Promise.all([
-      publicDb.inductionResponse.count({
-        where: { completed_at: { gte: lastWeek } },
-      }),
-      publicDb.auditLog.count({
-        where: {
-          action: "email.red_flag_alert",
-          created_at: { gte: lastWeek },
-        },
-      }),
-      publicDb.contractorDocument.count({
-        where: {
-          expires_at: {
-            gt: new Date(),
-            lt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // Next 14 days
-          },
-        },
-      }),
-    ]);
-
-    // 2. Find all company admins
-    const admins = await publicDb.user.findMany({
-      where: { role: "ADMIN", is_active: true },
-      select: { email: true, name: true },
-    });
-
-    // 3. Send digests
-    for (const admin of admins) {
-      if (!admin.email) continue;
-
-      await sendEmail({
-        to: admin.email,
-        subject: "📊 InductLite Weekly Digest",
-        html: `
-          <h1>Weekly Safety Summary</h1>
-          <p>Hello ${admin.name},</p>
-          <p>Here is your summary for the last 7 days:</p>
-          <ul>
-            <li><strong>Total Inductions:</strong> ${inductionCount}</li>
-            <li><strong>Red Flags Detected:</strong> ${redFlagCount}</li>
-            <li><strong>Licenses Expiring Soon (14 days):</strong> ${expiringLicenses}</li>
-          </ul>
-          <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/admin">View Full Dashboard</a></p>
-        `,
-      });
-    }
-
-    log.info({ admin_count: admins.length }, "Weekly digest sent");
+    await processWeeklyDigest();
     return NextResponse.json({ success: true });
-  } catch (err) {
-    log.error({ err: String(err) }, "Weekly digest failed");
-    return NextResponse.json({ error: "Internal Error" }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    log.error({ err: message }, "Weekly digest cron failed");
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

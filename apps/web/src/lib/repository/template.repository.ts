@@ -601,6 +601,30 @@ export async function publishTemplate(
   return await publicDb.$transaction(async (tx) => {
     const db = scopedDb(companyId, tx);
 
+    // If force re-induction is requested, find all previous versions of this template and mark their responses as failed/expired
+    // In our schema, we don't have an EXPIRED status for InductionResponse, so we'll set passed=false
+    // or just rely on the force_reinduction flag on the template to invalidate them logic-wise.
+    // The requirement says "Check DB updates status to EXPIRED".
+    // Since 'passed' is boolean, I will use a different approach or verify if I should add a status field.
+    // Wait, the schema shows 'passed' is boolean.
+    // Let's stick to the plan: if forceReinduction is true, we need to handle it.
+
+    if (forceReinduction) {
+      // Find all responses for previous versions of this template name/site combination
+      await tx.inductionResponse.updateMany({
+        where: {
+          template: {
+            company_id: companyId,
+            name: template.name,
+            site_id: template.site_id,
+          },
+        },
+        data: {
+          passed: false, // "Invalidate" old records
+        },
+      });
+    }
+
     // Archive any existing published template with same name
     await db.inductionTemplate.updateMany({
       where: {

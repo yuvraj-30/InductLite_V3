@@ -1,0 +1,8 @@
+# Stop reading these huge files
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+.next/
+dist/
+coverage/
+public/

@@ -178,3 +178,89 @@ export async function processEmailQueue() {
     log.error({ err: String(err) }, "Email worker error");
   }
 }
+
+/**
+ * Weekly Digest Processor
+ */
+export async function processWeeklyDigest() {
+  const requestId = generateRequestId();
+  const log = createRequestLogger(requestId);
+
+  try {
+    const companies = await publicDb.company.findMany({
+      include: {
+        users: {
+          where: { role: "ADMIN", is_active: true },
+        },
+      },
+    });
+
+    const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    for (const company of companies) {
+      if (company.users.length === 0) continue;
+
+      const [inductionCount, redFlagCount, expiringDocuments] =
+        await Promise.all([
+          publicDb.signInRecord.count({
+            where: {
+              company_id: company.id,
+              sign_in_ts: { gte: lastWeek },
+            },
+          }),
+          publicDb.auditLog.count({
+            where: {
+              company_id: company.id,
+              action: "email.red_flag_alert",
+              created_at: { gte: lastWeek },
+            },
+          }),
+          publicDb.contractorDocument.count({
+            where: {
+              contractor: { company_id: company.id },
+              expires_at: {
+                gt: new Date(),
+                lt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Next 30 days
+              },
+            },
+          }),
+        ]);
+
+      const html = `
+        <h1>Weekly Site Safety Digest</h1>
+        <p>Here is the summary for <strong>${company.name}</strong> for the last 7 days:</p>
+        <ul>
+          <li><strong>Total Inductions/Sign-ins:</strong> ${inductionCount}</li>
+          <li><strong>Red Flags Detected:</strong> ${redFlagCount}</li>
+          <li><strong>Documents Expiring (Next 30 days):</strong> ${expiringDocuments}</li>
+        </ul>
+        <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/admin">View Full Dashboard</a></p>
+      `;
+
+      for (const admin of company.users) {
+        await sendEmail({
+          to: admin.email,
+          subject: `📊 Weekly Safety Digest: ${company.name}`,
+          html,
+        });
+      }
+
+      await publicDb.auditLog.create({
+        data: {
+          company_id: company.id,
+          action: "email.weekly_digest",
+          details: {
+            inductionCount,
+            redFlagCount,
+            expiringDocuments,
+            recipient_count: company.users.length,
+          },
+        },
+      });
+    }
+
+    log.info({}, "Weekly digest processing completed");
+  } catch (err) {
+    log.error({ err: String(err) }, "Weekly digest error");
+  }
+}

@@ -10,6 +10,7 @@
  */
 
 import { useState, useTransition, useRef } from "react";
+// @ts-expect-error - react-signature-canvas types missing in environment
 import SignatureCanvas from "react-signature-canvas";
 import { submitSignIn, type SiteInfo, type TemplateInfo } from "../actions";
 import { InductionQuestions } from "./InductionQuestions";

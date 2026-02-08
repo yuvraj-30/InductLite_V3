@@ -1,4 +1,5 @@
-import { test, expect } from "@playwright/test";
+import { test } from "@playwright/test";
+// @ts-expect-error - axe-playwright types missing in environment
 import { injectAxe, checkA11y } from "axe-playwright";
 
 test.describe("Accessibility Checks", () => {
