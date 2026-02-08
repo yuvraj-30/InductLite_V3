@@ -30,6 +30,7 @@ function createMockTemplate(
     published_at: null,
     created_at: new Date(),
     updated_at: new Date(),
+    force_reinduction: false, // Added to resolve TS2322
     ...overrides,
   };
 }
@@ -51,6 +52,7 @@ function createMockTemplateWithQuestions(
     correct_answer: null,
     created_at: new Date(),
     updated_at: new Date(),
+    logic: null, // Added based on InductionQuestion schema
   };
 
   const questions = (overrides.questions ?? [defaultQuestion]).map((q, i) => ({
@@ -74,6 +76,7 @@ function createMockTemplateWithQuestions(
     published_at: null,
     created_at: new Date(),
     updated_at: new Date(),
+    force_reinduction: false, // Added to resolve TS2345
     site: { id: "site-1", name: "Site" },
     questions,
     ...overrides,

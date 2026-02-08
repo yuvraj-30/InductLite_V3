@@ -114,6 +114,7 @@ export interface TemplateWithCounts {
   published_at: Date | null;
   created_at: Date;
   updated_at: Date;
+  force_reinduction: boolean; // Added for new schema field
   site: { id: string; name: string } | null;
   _count: {
     questions: number;
@@ -137,6 +138,7 @@ export interface TemplateWithQuestions {
   published_at: Date | null;
   created_at: Date;
   updated_at: Date;
+  force_reinduction: boolean; // Added for new schema field
   site: { id: string; name: string } | null;
   questions: QuestionData[];
 }

@@ -25,6 +25,7 @@ function createMockTemplate(
     published_at: null,
     created_at: new Date(),
     updated_at: new Date(),
+    force_reinduction: false, // Added to resolve TS2322
     ...overrides,
   };
 }
