@@ -9,7 +9,8 @@
  * 3. Success confirmation with sign-out link
  */
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
+import SignatureCanvas from "react-signature-canvas";
 import { submitSignIn, type SiteInfo, type TemplateInfo } from "../actions";
 import { InductionQuestions } from "./InductionQuestions";
 import { SuccessScreen } from "./SuccessScreen";
@@ -19,9 +20,10 @@ interface SignInFlowProps {
   slug: string;
   site: SiteInfo;
   template: TemplateInfo;
+  isKiosk?: boolean;
 }
 
-type Step = "details" | "induction" | "success";
+type Step = "details" | "induction" | "signature" | "success";
 
 interface VisitorDetails {
   visitorName: string;
@@ -41,11 +43,12 @@ interface SignInResult {
   signInTime: Date;
 }
 
-export function SignInFlow({ slug, site, template }: SignInFlowProps) {
+export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
   const [step, setStep] = useState<Step>("details");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const sigCanvas = useRef<SignatureCanvas>(null);
 
   const [details, setDetails] = useState<VisitorDetails>({
     visitorName: "",
@@ -99,6 +102,19 @@ export function SignInFlow({ slug, site, template }: SignInFlowProps) {
   };
 
   const handleInductionSubmit = () => {
+    setStep("signature");
+  };
+
+  const handleSignatureSubmit = () => {
+    if (sigCanvas.current?.isEmpty()) {
+      setError("Please provide a signature");
+      return;
+    }
+
+    const signatureData = sigCanvas.current
+      ?.getTrimmedCanvas()
+      .toDataURL("image/png");
+
     setError(null);
     setFieldErrors({});
 
@@ -115,7 +131,8 @@ export function SignInFlow({ slug, site, template }: SignInFlowProps) {
           questionId,
           answer,
         })),
-      });
+        signatureData,
+      } as unknown as Parameters<typeof submitSignIn>[0]);
 
       if (!result.success) {
         if (
@@ -141,6 +158,11 @@ export function SignInFlow({ slug, site, template }: SignInFlowProps) {
   };
 
   if (step === "success" && signInResult) {
+    if (isKiosk) {
+      setTimeout(() => {
+        window.location.reload();
+      }, 10000);
+    }
     return <SuccessScreen result={signInResult} />;
   }
 
@@ -178,6 +200,7 @@ export function SignInFlow({ slug, site, template }: SignInFlowProps) {
         <div className="flex justify-between mt-1 text-xs text-gray-500">
           <span>Your Details</span>
           <span>Induction</span>
+          <span>Sign Off</span>
         </div>
       </div>
 
@@ -211,6 +234,7 @@ export function SignInFlow({ slug, site, template }: SignInFlowProps) {
               id="visitorName"
               type="text"
               value={details.visitorName}
+              autoComplete={isKiosk ? "off" : "name"}
               onChange={(e) =>
                 setDetails({ ...details, visitorName: e.target.value })
               }
@@ -237,6 +261,7 @@ export function SignInFlow({ slug, site, template }: SignInFlowProps) {
               id="visitorPhone"
               type="tel"
               value={details.visitorPhone}
+              autoComplete={isKiosk ? "off" : "tel"}
               onChange={(e) =>
                 setDetails({ ...details, visitorPhone: e.target.value })
               }
@@ -263,6 +288,7 @@ export function SignInFlow({ slug, site, template }: SignInFlowProps) {
               id="visitorEmail"
               type="email"
               value={details.visitorEmail}
+              autoComplete={isKiosk ? "off" : "email"}
               onChange={(e) =>
                 setDetails({ ...details, visitorEmail: e.target.value })
               }
@@ -368,10 +394,57 @@ export function SignInFlow({ slug, site, template }: SignInFlowProps) {
           <button
             type="button"
             onClick={handleInductionSubmit}
-            disabled={isPending}
-            className="w-full mt-6 py-3 px-4 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full mt-6 py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700"
           >
-            {isPending ? "Signing in..." : "Complete Sign-In ✓"}
+            Continue to Sign Off →
+          </button>
+        </div>
+      )}
+
+      {/* Step 3: Digital Signature */}
+      {step === "signature" && (
+        <div className="p-4 space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Sign Off</h2>
+            <p className="text-sm text-gray-500">
+              Please sign below to confirm your induction completion.
+            </p>
+          </div>
+
+          <div className="border-2 border-gray-200 rounded-lg bg-gray-50">
+            <SignatureCanvas
+              ref={sigCanvas}
+              penColor="black"
+              canvasProps={{
+                className: "w-full h-40 rounded-lg touch-none",
+              }}
+            />
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => sigCanvas.current?.clear()}
+              className="flex-1 py-2 px-4 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50"
+            >
+              Clear
+            </button>
+            <button
+              type="button"
+              onClick={handleSignatureSubmit}
+              disabled={isPending}
+              className="flex-2 py-2 px-8 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50"
+            >
+              {isPending ? "Signing in..." : "Confirm & Sign In ✓"}
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setStep("induction")}
+            className="text-blue-600 text-sm hover:underline"
+          >
+            ← Back to questions
           </button>
         </div>
       )}

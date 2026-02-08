@@ -227,6 +227,7 @@ model InductionResponse {
   template_id       String
   template_version  Int // Snapshot of version at time of completion
   answers           Json // Array of { question_id, answer }
+  signature_url     String? // Base64 or R2 URL
   completed_at      DateTime @default(now())
   passed            Boolean  @default(true)
 

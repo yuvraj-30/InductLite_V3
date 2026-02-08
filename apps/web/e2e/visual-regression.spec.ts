@@ -192,6 +192,35 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
       });
     }
   });
+
+  test("signature pad matches baseline", async ({ page }) => {
+    await page.goto(`/s/${TEST_SITE_SLUG}`);
+
+    // Step 1: Fill details
+    await page.getByLabel(/name/i).fill("Signature Visual Test");
+    await page.getByLabel(/phone/i).fill("+64211234567");
+    await page.getByRole("button", { name: /continue/i }).click();
+
+    // Step 2: Skip induction (assuming no required questions for test)
+    await page.getByRole("button", { name: /continue/i }).click();
+
+    // Step 3: Wait for signature step
+    const canvas = page.locator("canvas.sigCanvas");
+    await expect(canvas).toBeVisible();
+
+    const regionRes = await takeAndCompare(page, "signature-pad", {
+      fullPage: false,
+    });
+    if (regionRes.uploaded) {
+      test.skip(true, "VRT upload performed; check tracker");
+      return;
+    }
+
+    await expect(canvas).toHaveScreenshot(regionRes.filename!, {
+      timeout: 20000,
+      maxDiffPixelRatio: 0.05,
+    });
+  });
 });
 
 // Admin dashboard visual tests (requires auth)
