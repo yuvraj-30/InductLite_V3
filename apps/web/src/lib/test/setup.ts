@@ -2,7 +2,6 @@
 import fs from "fs";
 import path from "path";
 import { parse as parseEnv } from "dotenv";
-import { vi } from "vitest";
 
 function loadEnvFile(filePath: string): void {
   if (!fs.existsSync(filePath)) return;

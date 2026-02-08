@@ -52,11 +52,12 @@ export const signInSchema = z.object({
   answers: z.array(
     z
       .object({
-        questionId: z.string().cuid("Invalid question ID"),
+        questionId: z.string().min(1, "Invalid question ID"),
         answer: z.unknown().transform((val) => val as unknown),
       })
       .transform((obj) => ({ questionId: obj.questionId, answer: obj.answer })),
   ),
+  signatureData: z.string().optional(),
 });
 
 export type SignInInput = z.infer<typeof signInSchema>;

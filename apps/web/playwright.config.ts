@@ -82,7 +82,7 @@ export default defineConfig({
     : {
         command: "npm run dev",
         url: "http://localhost:3000",
-        reuseExistingServer: false,
+        reuseExistingServer: true,
         timeout: 120000,
         // Provide test env vars so the dev server can unseal test session cookies
         env: {

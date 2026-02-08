@@ -40,21 +40,29 @@ export function InductionQuestions({
           key={question.id}
           className="border-b border-gray-100 pb-4 last:border-0"
         >
-          <label className="block text-sm font-medium text-gray-900 mb-2">
+          <label
+            htmlFor={`q-${question.id}`}
+            className="block text-sm font-medium text-gray-900 mb-2"
+          >
             {index + 1}. {question.questionText}
             {question.isRequired && (
-              <span className="text-red-500 ml-1">*</span>
+              <span className="text-red-500 ml-1" aria-hidden="true">
+                *
+              </span>
             )}
           </label>
 
           {/* TEXT question */}
           {question.questionType === "TEXT" && (
             <input
+              id={`q-${question.id}`}
               type="text"
               value={(answers[question.id] as string) || ""}
+              autoComplete="off"
               onChange={(e) => onAnswerChange(question.id, e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter your answer"
+              aria-required={question.isRequired}
             />
           )}
 
@@ -112,7 +120,7 @@ export function InductionQuestions({
           {/* YES_NO question */}
           {question.questionType === "YES_NO" && (
             <div className="flex space-x-4">
-              <label className="flex-1 flex items-center justify-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <label className="flex-1 flex items-center justify-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer focus-within:ring-2 focus-within:ring-blue-500">
                 <input
                   type="radio"
                   name={question.id}
@@ -120,10 +128,11 @@ export function InductionQuestions({
                   checked={answers[question.id] === "yes"}
                   onChange={() => onAnswerChange(question.id, "yes")}
                   className="h-4 w-4 text-green-600 focus:ring-green-500"
+                  aria-required={question.isRequired}
                 />
                 <span className="ml-2 font-medium text-green-700">Yes</span>
               </label>
-              <label className="flex-1 flex items-center justify-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <label className="flex-1 flex items-center justify-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer focus-within:ring-2 focus-within:ring-blue-500">
                 <input
                   type="radio"
                   name={question.id}
@@ -131,6 +140,7 @@ export function InductionQuestions({
                   checked={answers[question.id] === "no"}
                   onChange={() => onAnswerChange(question.id, "no")}
                   className="h-4 w-4 text-red-600 focus:ring-red-500"
+                  aria-required={question.isRequired}
                 />
                 <span className="ml-2 font-medium text-red-700">No</span>
               </label>

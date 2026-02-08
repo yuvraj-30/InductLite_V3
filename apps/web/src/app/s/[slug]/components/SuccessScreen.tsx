@@ -57,10 +57,12 @@ export function SuccessScreen({ result }: SuccessScreenProps) {
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden">
       {/* Success header */}
-      <div className="bg-green-500 text-white px-6 py-8 text-center">
-        <div className="text-5xl mb-4">✓</div>
-        <h1 className="text-2xl font-bold">Signed In Successfully</h1>
-        <p className="text-green-100 mt-2">Welcome to {result.siteName}</p>
+      <div className="bg-green-600 text-white px-6 py-8 text-center">
+        <div className="text-5xl mb-4" aria-hidden="true">
+          ✓
+        </div>
+        <h2 className="text-2xl font-bold">Signed In Successfully</h2>
+        <p className="text-green-50 mt-2">Welcome to {result.siteName}</p>
       </div>
 
       {/* Details */}

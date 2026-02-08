@@ -10,7 +10,6 @@
  */
 
 import { useState, useTransition, useRef } from "react";
-// @ts-expect-error - react-signature-canvas types missing in environment
 import SignatureCanvas from "react-signature-canvas";
 import { submitSignIn, type SiteInfo, type TemplateInfo } from "../actions";
 import { InductionQuestions } from "./InductionQuestions";
@@ -168,7 +167,11 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div
+      className="bg-white rounded-lg shadow-lg overflow-hidden"
+      role="region"
+      aria-label="Sign-In Form"
+    >
       {/* Progress indicator */}
       <div className="bg-gray-50 px-4 py-3 border-b">
         <div className="flex items-center">
@@ -207,8 +210,11 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
 
       {/* Error display */}
       {error && (
-        <div className="bg-red-50 border-b border-red-200 px-4 py-3">
-          <p className="text-red-700 text-sm">{error}</p>
+        <div
+          role="alert"
+          className="bg-red-50 border-b border-red-200 px-4 py-3"
+        >
+          <p className="text-red-900 text-sm font-medium">{error}</p>
         </div>
       )}
 
@@ -417,7 +423,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
               ref={sigCanvas}
               penColor="black"
               canvasProps={{
-                className: "w-full h-40 rounded-lg touch-none",
+                className: "sigCanvas w-full h-40 rounded-lg touch-none",
               }}
             />
           </div>

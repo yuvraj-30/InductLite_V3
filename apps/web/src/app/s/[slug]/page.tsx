@@ -80,24 +80,30 @@ export default async function PublicSignInPage({
 
   return (
     <div className="min-h-screen bg-gray-100">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-blue-600"
+      >
+        Skip to content
+      </a>
       {/* Header */}
-      <header className="bg-blue-600 text-white shadow-lg">
+      <header className="bg-blue-700 text-white shadow-lg">
         <div className="max-w-lg mx-auto px-4 py-4">
           <h1 className="text-xl font-bold">{site.companyName}</h1>
-          <p className="text-blue-100 text-sm">{site.name}</p>
+          <p className="text-blue-50 text-sm">{site.name}</p>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-lg mx-auto px-4 py-6">
+      <main id="main-content" className="max-w-lg mx-auto px-4 py-6">
         <SignInFlow slug={slug} site={site} template={template} />
       </main>
 
       {/* Footer */}
-      <footer className="text-center text-sm text-gray-500 py-4">
+      <footer className="text-center text-sm text-gray-600 py-4">
         <p>
           Powered by{" "}
-          <Link href="/" className="text-blue-600 hover:underline">
+          <Link href="/" className="text-blue-700 font-medium hover:underline">
             InductLite
           </Link>
         </p>
