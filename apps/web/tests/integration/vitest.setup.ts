@@ -41,16 +41,7 @@ vi.mock("next/headers", () => ({
   })),
 }));
 
-// Mock next/headers for server component testing in a test environment
-vi.mock("next/headers", () => ({
-  cookies: vi.fn(() => ({
-    get: vi.fn(),
-  })),
-  headers: vi.fn(() => ({
-    get: vi.fn(),
-  })),
-}));
-
 // Suppress console during tests (optional)
 vi.spyOn(console, "log").mockImplementation(() => {});
 vi.spyOn(console, "info").mockImplementation(() => {});
+vi.spyOn(console, "warn").mockImplementation(() => {});

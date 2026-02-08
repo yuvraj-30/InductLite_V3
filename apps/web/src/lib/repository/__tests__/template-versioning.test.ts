@@ -43,7 +43,7 @@ describe("Template Versioning Logic", () => {
     const mockUpdateMany = vi.fn().mockResolvedValue({ count: 1 });
     const mockFindFirst = vi
       .fn()
-      .mockResolvedValue({ ...mockTemplate, is_published: true });
+      .mockResolvedValue({ ...mockTemplate, is_published: false });
 
     vi.mocked(scopedDb).mockReturnValue({
       inductionTemplate: {

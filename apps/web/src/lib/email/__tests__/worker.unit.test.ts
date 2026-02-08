@@ -51,9 +51,9 @@ describe("processEmailQueue", () => {
       },
     };
 
-    vi.spyOn(publicDb.inductionResponse, "findMany").mockResolvedValue([
-      mockResponse as any,
-    ]);
+    vi.spyOn(publicDb.inductionResponse, "findMany")
+      .mockResolvedValueOnce([mockResponse as any])
+      .mockResolvedValue([]); // Ensure only runs once
 
     vi.spyOn(publicDb.auditLog, "findFirst").mockResolvedValue(null);
 
@@ -89,10 +89,22 @@ describe("processEmailQueue", () => {
       attempts: 0,
     };
 
+    // The emailNotification property is added to publicDb late-bound/dynamically
+    // in apps/web/src/lib/email/worker.ts (L124-138). When mocking, we must
+    // ensure the property exists on the mocked publicDb.
     const dbAny = publicDb as any;
-    vi.spyOn(dbAny.emailNotification, "findMany").mockResolvedValue([
-      mockNotification,
-    ]);
+
+    // Ensure the EmailNotification mock exists
+    if (!dbAny.emailNotification) {
+      dbAny.emailNotification = {
+        findMany: vi.fn(),
+        update: vi.fn(),
+      };
+    }
+
+    vi.spyOn(dbAny.emailNotification, "findMany")
+      .mockResolvedValueOnce([mockNotification])
+      .mockResolvedValue([]);
     const updateSpy = vi
       .spyOn(dbAny.emailNotification, "update")
       .mockResolvedValue({});

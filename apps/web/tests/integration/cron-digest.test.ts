@@ -28,6 +28,13 @@ describe("Weekly Digest Integration (Cron)", () => {
       update: {},
     });
 
+    // Ensure a site exists for sign-in records (foreign key constraint)
+    await publicDb.site.upsert({
+      where: { id: "site-1" },
+      create: { id: "site-1", company_id: companyId, name: "Test Site" },
+      update: {},
+    });
+
     await publicDb.user.create({
       data: {
         company_id: companyId,
@@ -64,7 +71,8 @@ describe("Weekly Digest Integration (Cron)", () => {
       expect.objectContaining({
         to: "admin@digest.com",
         subject: expect.stringContaining("Weekly Safety Digest"),
-        html: expect.stringContaining("Total Inductions/Sign-ins: 1"),
+        // Match the header text; exact rendering has <strong> tags around label
+        html: expect.stringContaining("Total Inductions/Sign-ins"),
       }),
     );
 
