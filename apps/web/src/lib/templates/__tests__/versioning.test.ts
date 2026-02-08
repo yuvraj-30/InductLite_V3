@@ -15,7 +15,6 @@ await (async () => {
     await publicDb.company.findFirst();
     canConnectToDb = true;
   } catch (err: any) {
-    // eslint-disable-next-line no-console
     console.warn("DB unavailable for integration tests:", err?.message ?? err);
   }
 })();
