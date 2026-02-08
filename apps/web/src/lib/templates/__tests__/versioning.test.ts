@@ -11,6 +11,11 @@ describe("Template Versioning & Re-induction Integration", () => {
   const companyId = "test-company-versioning";
 
   beforeEach(async () => {
+    // Skip DB cleanup when test runner isn't allowed to use the DB (unit CI jobs)
+    if (process.env.ALLOW_TEST_RUNNER !== "1") {
+      return;
+    }
+
     // Cleanup
     await publicDb.inductionResponse.deleteMany({
       where: { template: { company_id: companyId } },
@@ -31,7 +36,9 @@ describe("Template Versioning & Re-induction Integration", () => {
     });
   });
 
-  it("should invalidate old records when forceReinduction is true", async () => {
+  const itIfDB = process.env.ALLOW_TEST_RUNNER === "1" ? it : it.skip;
+
+  itIfDB("should invalidate old records when forceReinduction is true", async () => {
     // 1. Create a site
     const site = await publicDb.site.create({
       data: { company_id: companyId, name: "VRT Site" },

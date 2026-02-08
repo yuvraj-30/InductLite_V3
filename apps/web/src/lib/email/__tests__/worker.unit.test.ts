@@ -51,15 +51,27 @@ describe("processEmailQueue", () => {
       },
     };
 
-    vi.spyOn(publicDb.inductionResponse, "findMany")
+    const dbAny = publicDb as any;
+    // Ensure inductionResponse mock exists (late-bound on publicDb in worker)
+    if (!dbAny.inductionResponse) {
+      dbAny.inductionResponse = { findMany: vi.fn(), updateMany: vi.fn() };
+    }
+
+    // Directly stub the method (vi.spyOn may fail on late-bound props in some envs)
+    dbAny.inductionResponse.findMany = vi
+      .fn()
       .mockResolvedValueOnce([mockResponse as any])
       .mockResolvedValue([]); // Ensure only runs once
 
-    vi.spyOn(publicDb.auditLog, "findFirst").mockResolvedValue(null);
+    // Ensure auditLog mock exists and stub methods
+    if (!publicDb.auditLog) {
+      (publicDb as any).auditLog = { findFirst: vi.fn(), create: vi.fn() };
+    }
+    (publicDb as any).auditLog.findFirst = vi.fn().mockResolvedValue(null);
 
-    const auditSpy = vi
-      .spyOn(publicDb.auditLog, "create")
-      .mockResolvedValue({} as any);
+    const auditSpy = ((publicDb as any).auditLog.create = vi
+      .fn()
+      .mockResolvedValue({} as any));
 
     await processEmailQueue();
 
@@ -102,12 +114,15 @@ describe("processEmailQueue", () => {
       };
     }
 
-    vi.spyOn(dbAny.emailNotification, "findMany")
+    // Directly stub the method (vi.spyOn may fail on late-bound props in some envs)
+    dbAny.emailNotification.findMany = vi
+      .fn()
       .mockResolvedValueOnce([mockNotification])
       .mockResolvedValue([]);
-    const updateSpy = vi
-      .spyOn(dbAny.emailNotification, "update")
-      .mockResolvedValue({});
+    // Directly stub update and capture spy
+    const updateSpy = (dbAny.emailNotification.update = vi
+      .fn()
+      .mockResolvedValue({}));
 
     await processEmailQueue();
 
