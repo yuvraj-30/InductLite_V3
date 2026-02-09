@@ -260,3 +260,22 @@ After pushing any code:
 2. **Investigate:** If it fails, strictly use `gh run view --log-failed` to diagnose the _remote_ environment (which may differ from local).
 3. **Resolution:** Fix the error -> Commit -> Push -> Watch again.
 4. **Merge:** Only merge (`gh pr merge --squash`) when the remote run is Green.
+
+## 🚀 Phase 7: Enterprise Competitor Features (Zero-Cost)
+
+### 7.1 Photo Verification (Anti-Buddy Punching)
+- **Context:** Verify who is actually signing in.
+- **Action:** Add `photo_url` to `SignInRecord`.
+- **UI:** Add Camera step to induction wizard using HTML5 `getUserMedia`.
+- **Storage:** Upload compressed JPG to S3/R2.
+
+### 7.2 GPS Geofence Check
+- **Context:** Ensure users are physically on-site.
+- **Action:** Add `latitude` and `longitude` to `Site` model.
+- **Logic:** On Client Sign-in, capture `navigator.geolocation`. Calculate distance using Haversine formula.
+- **Constraint:** Do NOT use Google Maps API (Cost). Use client-side math.
+
+### 7.3 Emergency Push Alerts
+- **Context:** Evacuation warnings without SMS costs.
+- **Action:** Store `PushSubscription` JSON in `SignInRecord`.
+- **Logic:** Admin clicks "Evacuate". Server loops through active sign-ins and sends Web Push payload.
