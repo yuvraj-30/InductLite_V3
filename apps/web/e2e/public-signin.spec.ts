@@ -412,6 +412,10 @@ test.describe.serial("Public Sign-In Flow", () => {
       level: 2,
       name: /sign off/i,
     });
+    const successHeading = page.getByRole("heading", {
+      level: 2,
+      name: /signed in successfully/i,
+    });
 
     // Wait up to 20s for either the final sign-out link or the sign-off confirmation screen
     for (let i = 0; i < 40; i++) {
@@ -430,11 +434,12 @@ test.describe.serial("Public Sign-In Flow", () => {
         })
         .first();
 
-      const canvas = page.locator("canvas").first();
+      const canvas = page.locator("#signature-canvas");
       if ((await canvas.count()) > 0) {
         await canvas.scrollIntoViewIfNeeded().catch(() => null);
-        const box = await canvas.boundingBox();
-        if (box) {
+        const drawStroke = async () => {
+          const box = await canvas.boundingBox();
+          if (!box) return false;
           const startX = box.x + Math.max(8, box.width * 0.2);
           const startY = box.y + Math.max(8, box.height * 0.3);
           const endX = box.x + Math.max(16, box.width * 0.8);
@@ -443,19 +448,48 @@ test.describe.serial("Public Sign-In Flow", () => {
           await page.mouse.down();
           await page.mouse.move(endX, endY, { steps: 8 });
           await page.mouse.up();
+          return true;
+        };
+
+        await drawStroke();
+
+        // CI can occasionally miss a very fast stroke on canvas; retry once.
+        if (await confirmBtn.isDisabled().catch(() => true)) {
+          await drawStroke();
         }
       }
 
-      const canClick =
-        (await confirmBtn.count()) > 0 &&
-        (await confirmBtn.isVisible().catch(() => false));
-      if (canClick) {
-        await confirmBtn.scrollIntoViewIfNeeded().catch(() => null);
-        await confirmBtn
-          .evaluate((el) => (el as HTMLButtonElement).click())
-          .catch(() => null);
-      } else {
-        await page.keyboard.press("Enter").catch(() => null);
+      await expect(page.getByText("Please provide a signature")).not.toBeVisible({
+        timeout: 3000,
+      });
+
+      await expect(confirmBtn).toBeEnabled({ timeout: 10000 });
+      await confirmBtn.scrollIntoViewIfNeeded().catch(() => null);
+
+      // CI can intermittently miss a single click on this step; retry until we see transition.
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await confirmBtn.click({ timeout: 5000 });
+
+        let transitioned = false;
+        for (let i = 0; i < 16; i++) {
+          if (await signOutAnchor.first().isVisible().catch(() => false)) {
+            transitioned = true;
+            break;
+          }
+          if (await successHeading.isVisible().catch(() => false)) {
+            transitioned = true;
+            break;
+          }
+          if (!(await signOffHeading.isVisible().catch(() => false))) {
+            transitioned = true;
+            break;
+          }
+          await page.waitForTimeout(500);
+        }
+
+        if (transitioned) {
+          break;
+        }
       }
     }
 

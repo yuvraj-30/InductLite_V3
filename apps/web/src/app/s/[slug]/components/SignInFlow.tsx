@@ -48,6 +48,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [hasSignature, setHasSignature] = useState(false);
   const sigCanvas = useRef<SignatureCanvas>(null);
 
   const [details, setDetails] = useState<VisitorDetails>({
@@ -106,14 +107,15 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
   };
 
   const handleSignatureSubmit = () => {
-    if (sigCanvas.current?.isEmpty()) {
+    const isEmpty = sigCanvas.current?.isEmpty() ?? true;
+    if (isEmpty) {
+      setHasSignature(false);
       setError("Please provide a signature");
       return;
     }
 
-    const signatureData = sigCanvas.current
-      ?.getTrimmedCanvas()
-      .toDataURL("image/png");
+    // getTrimmedCanvas() can throw in some bundled environments; toDataURL is sufficient here.
+    const signatureData = sigCanvas.current?.toDataURL("image/png");
 
     setError(null);
     setFieldErrors({});
@@ -422,7 +424,10 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
             <SignatureCanvas
               ref={sigCanvas}
               penColor="black"
+              onBegin={() => setError(null)}
+              onEnd={() => setHasSignature(!(sigCanvas.current?.isEmpty() ?? true))}
               canvasProps={{
+                id: "signature-canvas",
                 className: "sigCanvas w-full h-40 rounded-lg touch-none",
               }}
             />
@@ -431,7 +436,10 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={() => sigCanvas.current?.clear()}
+              onClick={() => {
+                sigCanvas.current?.clear();
+                setHasSignature(false);
+              }}
               className="flex-1 py-2 px-4 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50"
             >
               Clear
@@ -439,7 +447,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
             <button
               type="button"
               onClick={handleSignatureSubmit}
-              disabled={isPending}
+              disabled={isPending || !hasSignature}
               className="flex-2 py-2 px-8 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50"
             >
               {isPending ? "Signing in..." : "Confirm & Sign In ✓"}
