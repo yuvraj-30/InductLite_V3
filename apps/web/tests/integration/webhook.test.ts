@@ -1,5 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  beforeAll,
+  afterAll,
+} from "vitest";
 import { submitSignIn } from "../../src/app/s/[slug]/actions";
+import { setupTestDatabase, teardownTestDatabase } from "./setup";
 
 // Mock dependencies
 vi.mock("../../src/lib/repository/site.repository", () => ({
@@ -23,6 +32,14 @@ import { getActiveTemplateForSite } from "../../src/lib/repository/template.repo
 import { createPublicSignIn } from "../../src/lib/repository/public-signin.repository";
 
 describe("Webhook Integration", () => {
+  beforeAll(async () => {
+    await setupTestDatabase();
+  }, 120000);
+
+  afterAll(async () => {
+    await teardownTestDatabase();
+  }, 120000);
+
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock global fetch

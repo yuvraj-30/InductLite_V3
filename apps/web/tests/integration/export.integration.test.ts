@@ -1,8 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { PrismaClient } from "@prisma/client";
 import {
-  setupTestDatabase,
-  teardownTestDatabase,
   cleanDatabase,
   createTestCompany,
   createTestSite,
@@ -12,21 +10,19 @@ import {
 type ExportWorker = typeof import("../../src/lib/export/worker");
 
 describe("Export Worker - CSV generation", () => {
-  let prisma: PrismaClient;
+  // Use global prisma instance from setupFiles
+  const prisma = (globalThis as unknown as { prisma: PrismaClient }).prisma;
   let worker: ExportWorker;
   let company: { id: string; slug: string };
   let site: { id: string; name: string };
 
   beforeAll(async () => {
-    const res = await setupTestDatabase();
-    prisma = res.prisma;
-
     // Dynamic import after DB is configured
     worker = await import("../../src/lib/export/worker");
-  }, 300000);
+  });
 
   afterAll(async () => {
-    await teardownTestDatabase();
+    // No teardown needed as global hook handles it
   });
 
   beforeEach(async () => {

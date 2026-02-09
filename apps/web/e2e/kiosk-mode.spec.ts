@@ -12,6 +12,47 @@ test.describe("Kiosk Mode", () => {
     // 1. Fill in visitor details
     await page.fill('input[id="visitorName"]', "Kiosk Tester");
     await page.fill('input[id="visitorPhone"]', "+64211111111");
+
+    // Fill optional email if present
+    const emailField = page.locator('input[type="email"], input[name="email"]');
+    if ((await emailField.count()) > 0) {
+      await emailField.first().fill("kiosk@test.com");
+    }
+
+    // Select visitor type if present (some kiosk templates require selecting a type)
+    // Try multiple selector strategies to ensure we satisfy the required enum schema
+    const visitorTypeSelect = page.locator(
+      'select[name="visitorType"], select[id*="visitorType"], select[aria-label*="visitor type"]',
+    );
+    if ((await visitorTypeSelect.count()) > 0) {
+      await visitorTypeSelect
+        .first()
+        .selectOption({ value: "CONTRACTOR" })
+        .catch(() => null);
+    } else {
+      // Try radio option fallback
+      const contractorRadio = page
+        .getByRole("radio", { name: /contractor/i })
+        .first();
+      if ((await contractorRadio.count()) > 0) {
+        await contractorRadio.check().catch(() => null);
+      }
+    }
+
+    // Dump form controls for debugging (will help identify required fields)
+    const controlsJson = await page.evaluate(() =>
+      Array.from(document.querySelectorAll("input,select,textarea")).map(
+        (el) => ({
+          tag: el.tagName,
+          name: el.getAttribute("name"),
+          id: (el as HTMLElement).id,
+          type: (el as HTMLInputElement).type,
+          value: (el as HTMLInputElement).value,
+        }),
+      ),
+    );
+    console.log("kiosk-form-controls:", JSON.stringify(controlsJson, null, 2));
+
     await page.click('button[type="submit"]');
 
     // 2. Complete induction (assume some questions exist)
@@ -26,8 +67,20 @@ test.describe("Kiosk Mode", () => {
       await input.check();
     }
 
+    // Fill any text inputs (required text answers) with a default value
+    const textInputs = page.locator('input[type="text"]');
+    const textCount = await textInputs.count();
+    for (let i = 0; i < textCount; i++) {
+      const txt = textInputs.nth(i);
+      if (await txt.isVisible()) {
+        await txt.fill("None");
+      }
+    }
+
     // Wait for the button to be stable and click it
-    const continueBtn = page.getByRole("button", { name: /continue/i });
+    const continueBtn = page.getByRole("button", {
+      name: /continue|continue to sign off|continue to sign off/i,
+    });
     await continueBtn.waitFor({ state: "visible" });
     await continueBtn.click();
 
@@ -44,10 +97,42 @@ test.describe("Kiosk Mode", () => {
       await page.mouse.up();
     }
 
+    // Capture POST requests to inspect payloads and responses for debugging
+    const postRequests: Array<{
+      url: string;
+      postData?: string;
+      status?: number;
+      responseBody?: string;
+    }> = [];
+    page.on("requestfinished", async (req) => {
+      try {
+        if (req.method() === "POST") {
+          const r = { url: req.url() } as any;
+          try {
+            r.postData = req.postData();
+          } catch {}
+          const resp = await req.response();
+          if (resp) {
+            r.status = resp.status();
+            try {
+              r.responseBody = await resp.text();
+            } catch {}
+          }
+          postRequests.push(r);
+        }
+      } catch (err) {
+        // ignore
+      }
+    });
+
     // Submit
     const signBtn = page.getByRole("button", { name: /confirm & sign in/i });
     await signBtn.waitFor({ state: "visible" });
     await signBtn.click();
+
+    // Allow a short time for any requests to finish and then log them for debugging
+    await page.waitForTimeout(1000);
+    console.log("kiosk-post-requests:", JSON.stringify(postRequests, null, 2));
 
     // 4. Assert Success Screen
     await expect(

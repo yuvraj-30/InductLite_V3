@@ -11,7 +11,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    include: ["tests/integration/**/*.test.ts"],
+    include: ["tests/integration/**/*.{test,spec}.ts"],
     exclude: ["node_modules", ".next"],
     // Longer timeout for container startup
     testTimeout: 120000, // 2 minutes

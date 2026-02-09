@@ -70,8 +70,8 @@ describe("Cross-Tenant IDOR Prevention", () => {
   let adminB: { id: string; email: string };
 
   beforeAll(async () => {
-    const { prisma: testPrisma } = await setupTestDatabase();
-    prisma = testPrisma;
+    const res = await setupTestDatabase();
+    prisma = res.prisma;
 
     // Dynamic import repositories AFTER database is set up
     // This ensures they use the test database connection
@@ -85,11 +85,11 @@ describe("Cross-Tenant IDOR Prevention", () => {
       await import("../../src/lib/repository/site-manager.repository");
     magicLinkRepo =
       await import("../../src/lib/repository/magic-link.repository");
-  }, 120000); // 2 minute timeout for container startup
+  }, 120000);
 
   afterAll(async () => {
     await teardownTestDatabase();
-  });
+  }, 120000);
 
   beforeEach(async () => {
     await cleanDatabase(prisma);

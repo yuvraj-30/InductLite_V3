@@ -96,7 +96,9 @@ export async function teardownTestDatabase(): Promise<void> {
  * Clean all data from tables (for use between tests).
  * Preserves schema but removes all rows.
  */
-export async function cleanDatabase(prisma: PrismaClient | undefined): Promise<void> {
+export async function cleanDatabase(
+  prisma: PrismaClient | undefined,
+): Promise<void> {
   // If prisma is not provided (some suites rely on a global setup), ensure the
   // test database is initialized so operations succeed.
   if (!prisma) {
