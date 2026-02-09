@@ -360,21 +360,24 @@ test.describe.serial("Public Sign-In Flow", () => {
       await acknowledgments.nth(i).check();
     }
 
-    // 2. Answer YES_NO questions (radio buttons)
-    // Select all "Yes" options
-    const yesNoQuestions = page.locator('input[type="radio"][value="yes"]');
-    const yesCount = await yesNoQuestions.count();
-    for (let i = 0; i < yesCount; i++) {
-      await yesNoQuestions.nth(i).check();
-    }
+    // 2. Answer all radio groups (YES_NO + MULTIPLE_CHOICE)
+    // This avoids template-specific assumptions and ensures required groups are filled.
+    const radioGroupNames = await page
+      .locator('input[type="radio"][name]')
+      .evaluateAll((nodes) => {
+        const names = nodes
+          .map((node) => node.getAttribute("name"))
+          .filter((name): name is string => !!name);
+        return Array.from(new Set(names));
+      });
 
-    // 3. Answer MULTIPLE_CHOICE questions (radio buttons)
-    // Select the correct answer for PPE question
-    const ppeOption = page.locator('input[type="radio"]').filter({
-      hasText: /hard hat, high-vis vest, and safety boots/i,
-    });
-    if ((await ppeOption.count()) > 0) {
-      await ppeOption.first().check();
+    for (const groupName of radioGroupNames) {
+      const firstOption = page
+        .locator(`input[type="radio"][name="${groupName}"]`)
+        .first();
+      if (await firstOption.isVisible().catch(() => false)) {
+        await firstOption.check().catch(() => null);
+      }
     }
 
     // 4. Answer TEXT questions (optional medical conditions)
