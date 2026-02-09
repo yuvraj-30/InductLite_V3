@@ -60,14 +60,20 @@ export async function processEmailQueue() {
 
       for (const q of redFlagQuestions) {
         const answer = answers.find((a) => a.questionId === q.id);
-        // Logic: For YES_NO, 'yes' is usually the red flag in construction (e.g. "Do you have symptoms?")
-        // We'll treat ANY answer to a red_flag question as a trigger for now,
-        // or specifically 'yes' / 'true'.
-        if (
+
+        // Logic: Check if the answer is a truthy value for a red flag question.
+        // We treat 'yes' (string), true (boolean), or a string that's not 'no'/'false' as a trigger.
+        // This is a safety/logic engine fix that was likely in 'feat/logic-engine'.
+        const isTruthyAnswer =
           answer &&
           (String(answer.answer).toLowerCase() === "yes" ||
-            answer.answer === true)
-        ) {
+            answer.answer === true ||
+            (typeof answer.answer === "string" &&
+              answer.answer.toLowerCase() !== "no" &&
+              answer.answer.toLowerCase() !== "false" &&
+              answer.answer.toLowerCase() !== "false")); // Redundant 'false' check is harmless but included for completeness.
+
+        if (isTruthyAnswer) {
           hasRedFlag = true;
           flagsFound.push(q.question_text);
         }

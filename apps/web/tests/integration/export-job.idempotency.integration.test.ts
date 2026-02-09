@@ -15,12 +15,13 @@ describe("Export Job claim idempotency", () => {
   let company: { id: string };
   let user: { id: string };
   let exportRepo: ExportRepo;
+  const globalAny = globalThis as unknown as { prisma: PrismaClient };
 
   beforeAll(async () => {
-    const res = await setupTestDatabase();
-    prisma = res.prisma;
+    await setupTestDatabase();
+    prisma = globalAny.prisma;
     exportRepo = await import("@/lib/repository/export.repository");
-  }, 120000);
+  });
 
   afterAll(async () => {
     await teardownTestDatabase();

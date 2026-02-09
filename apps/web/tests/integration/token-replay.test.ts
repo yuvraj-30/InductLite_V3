@@ -35,15 +35,17 @@ describe("Token Replay Attack Prevention", () => {
   let signOutToken: SignOutTokenModule;
   let publicSigninRepo: PublicSigninRepo;
 
+  const globalAny = globalThis as unknown as { prisma: PrismaClient };
+
   beforeAll(async () => {
-    const { prisma: testPrisma } = await setupTestDatabase();
-    prisma = testPrisma;
+    await setupTestDatabase();
+    prisma = globalAny.prisma;
 
     // Dynamic import AFTER database is set up
     signOutToken = await import("../../src/lib/auth/sign-out-token");
     publicSigninRepo =
       await import("../../src/lib/repository/public-signin.repository");
-  }, 120000);
+  });
 
   afterAll(async () => {
     await teardownTestDatabase();

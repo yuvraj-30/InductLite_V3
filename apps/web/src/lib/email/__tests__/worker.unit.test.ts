@@ -51,15 +51,27 @@ describe("processEmailQueue", () => {
       },
     };
 
-    vi.spyOn(publicDb.inductionResponse, "findMany").mockResolvedValue([
-      mockResponse as any,
-    ]);
+    const dbAny = publicDb as any;
+    // Ensure inductionResponse mock exists (late-bound on publicDb in worker)
+    if (!dbAny.inductionResponse) {
+      dbAny.inductionResponse = { findMany: vi.fn(), updateMany: vi.fn() };
+    }
 
-    vi.spyOn(publicDb.auditLog, "findFirst").mockResolvedValue(null);
+    // Directly stub the method (vi.spyOn may fail on late-bound props in some envs)
+    dbAny.inductionResponse.findMany = vi
+      .fn()
+      .mockResolvedValueOnce([mockResponse as any])
+      .mockResolvedValue([]); // Ensure only runs once
 
-    const auditSpy = vi
-      .spyOn(publicDb.auditLog, "create")
-      .mockResolvedValue({} as any);
+    // Ensure auditLog mock exists and stub methods
+    if (!publicDb.auditLog) {
+      (publicDb as any).auditLog = { findFirst: vi.fn(), create: vi.fn() };
+    }
+    (publicDb as any).auditLog.findFirst = vi.fn().mockResolvedValue(null);
+
+    const auditSpy = ((publicDb as any).auditLog.create = vi
+      .fn()
+      .mockResolvedValue({} as any));
 
     await processEmailQueue();
 
@@ -89,13 +101,28 @@ describe("processEmailQueue", () => {
       attempts: 0,
     };
 
+    // The emailNotification property is added to publicDb late-bound/dynamically
+    // in apps/web/src/lib/email/worker.ts (L124-138). When mocking, we must
+    // ensure the property exists on the mocked publicDb.
     const dbAny = publicDb as any;
-    vi.spyOn(dbAny.emailNotification, "findMany").mockResolvedValue([
-      mockNotification,
-    ]);
-    const updateSpy = vi
-      .spyOn(dbAny.emailNotification, "update")
-      .mockResolvedValue({});
+
+    // Ensure the EmailNotification mock exists
+    if (!dbAny.emailNotification) {
+      dbAny.emailNotification = {
+        findMany: vi.fn(),
+        update: vi.fn(),
+      };
+    }
+
+    // Directly stub the method (vi.spyOn may fail on late-bound props in some envs)
+    dbAny.emailNotification.findMany = vi
+      .fn()
+      .mockResolvedValueOnce([mockNotification])
+      .mockResolvedValue([]);
+    // Directly stub update and capture spy
+    const updateSpy = (dbAny.emailNotification.update = vi
+      .fn()
+      .mockResolvedValue({}));
 
     await processEmailQueue();
 

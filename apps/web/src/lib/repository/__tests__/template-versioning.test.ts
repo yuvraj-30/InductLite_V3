@@ -21,7 +21,13 @@ vi.mock("../base", () => ({
 
 vi.mock("../../db/public-db", () => ({
   publicDb: {
-    $transaction: vi.fn((callback) => callback({})),
+    $transaction: vi.fn((callback) =>
+      callback({
+        // Provide the minimal transaction API used by publishTemplate
+        inductionResponse: { updateMany: vi.fn(), deleteMany: vi.fn() },
+        inductionTemplate: { updateMany: vi.fn() },
+      }),
+    ),
   },
 }));
 
@@ -43,7 +49,7 @@ describe("Template Versioning Logic", () => {
     const mockUpdateMany = vi.fn().mockResolvedValue({ count: 1 });
     const mockFindFirst = vi
       .fn()
-      .mockResolvedValue({ ...mockTemplate, is_published: true });
+      .mockResolvedValue({ ...mockTemplate, is_published: false });
 
     vi.mocked(scopedDb).mockReturnValue({
       inductionTemplate: {

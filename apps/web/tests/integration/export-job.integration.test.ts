@@ -21,13 +21,13 @@ describe("Export Job Runner - end-to-end CSV export", () => {
   let company: { id: string; slug: string };
   let site: { id: string; name: string };
   let user: { id: string; email: string };
+  const globalAny = globalThis as unknown as { prisma: PrismaClient };
 
   beforeAll(async () => {
-    const res = await setupTestDatabase();
-    prisma = res.prisma;
-
+    await setupTestDatabase();
+    prisma = globalAny.prisma;
     runner = await import("../../src/lib/export/runner");
-  }, 120000);
+  });
 
   afterAll(async () => {
     await teardownTestDatabase();

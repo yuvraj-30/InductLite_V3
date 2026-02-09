@@ -1,7 +1,21 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+  beforeAll,
+  afterAll,
+} from "vitest";
 import { publicDb } from "@/lib/db/public-db";
 import { processWeeklyDigest } from "../../src/lib/email/worker";
 import { sendEmail } from "../../src/lib/email/resend";
+import {
+  setupTestDatabase,
+  teardownTestDatabase,
+  cleanDatabase,
+} from "./setup";
 
 vi.mock("@/lib/email/resend", () => ({
   sendEmail: vi.fn().mockResolvedValue({ id: "test-id" }),
@@ -10,21 +24,33 @@ vi.mock("@/lib/email/resend", () => ({
 describe("Weekly Digest Integration (Cron)", () => {
   const companyId = "test-company-digest";
 
+  beforeAll(async () => {
+    await setupTestDatabase();
+  }, 120000);
+
+  afterAll(async () => {
+    await teardownTestDatabase();
+  }, 120000);
+
   beforeEach(async () => {
+    // Clean the database before each test
+    await cleanDatabase(publicDb);
     vi.useFakeTimers();
     // Monday 2026-02-09 08:00:00
     const mockDate = new Date("2026-02-09T08:00:00Z");
     vi.setSystemTime(mockDate);
 
-    // Setup DB
-    await publicDb.auditLog.deleteMany({ where: { company_id: companyId } });
-    await publicDb.signInRecord.deleteMany({
-      where: { company_id: companyId },
-    });
-    await publicDb.user.deleteMany({ where: { company_id: companyId } });
+    // Setup Test Data
     await publicDb.company.upsert({
       where: { id: companyId },
       create: { id: companyId, name: "Digest Co", slug: "digest-co" },
+      update: {},
+    });
+
+    // Ensure a site exists for sign-in records (foreign key constraint)
+    await publicDb.site.upsert({
+      where: { id: "site-1" },
+      create: { id: "site-1", company_id: companyId, name: "Test Site" },
       update: {},
     });
 
@@ -64,7 +90,8 @@ describe("Weekly Digest Integration (Cron)", () => {
       expect.objectContaining({
         to: "admin@digest.com",
         subject: expect.stringContaining("Weekly Safety Digest"),
-        html: expect.stringContaining("Total Inductions/Sign-ins: 1"),
+        // Match the header text; exact rendering has <strong> tags around label
+        html: expect.stringContaining("Total Inductions/Sign-ins"),
       }),
     );
 

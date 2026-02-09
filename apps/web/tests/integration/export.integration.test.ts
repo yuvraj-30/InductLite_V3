@@ -16,14 +16,14 @@ describe("Export Worker - CSV generation", () => {
   let worker: ExportWorker;
   let company: { id: string; slug: string };
   let site: { id: string; name: string };
+  const globalAny = globalThis as unknown as { prisma: PrismaClient };
 
   beforeAll(async () => {
-    const res = await setupTestDatabase();
-    prisma = res.prisma;
-
+    await setupTestDatabase();
+    prisma = globalAny.prisma;
     // Dynamic import after DB is configured
     worker = await import("../../src/lib/export/worker");
-  }, 120000);
+  });
 
   afterAll(async () => {
     await teardownTestDatabase();
