@@ -25,7 +25,7 @@ describe("Weekly Digest Integration (Cron)", () => {
   const companyId = "test-company-digest";
 
   beforeAll(async () => {
-    const res = await setupTestDatabase();
+    await setupTestDatabase();
   }, 120000);
 
   afterAll(async () => {
