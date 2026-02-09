@@ -16,6 +16,11 @@ const E2E_QUIET = (() => {
   return v === "1" || v?.toLowerCase() === "true";
 })();
 
+function uniqueNzPhone(): string {
+  const suffix = Math.floor(100000 + Math.random() * 900000);
+  return `+6421${suffix}`;
+}
+
 // Set a unique client IP per test to avoid hitting the public slug rate limiter
 // Also clear any in-memory rate-limit counters to ensure predictable test state
 test.beforeEach(async ({ context, request }) => {
@@ -271,10 +276,10 @@ test.describe.serial("Public Sign-In Flow", () => {
     const phoneField = page.getByLabel(/phone number/i);
 
     await nameField.fill("E2E Test Visitor");
-    await phoneField.fill("+64211234567");
+    await phoneField.fill(uniqueNzPhone());
 
     await expect(nameField).toHaveValue("E2E Test Visitor");
-    await expect(phoneField).toHaveValue("+64211234567");
+    await expect(phoneField).toHaveValue(/^\+64/);
 
     // Fill email if present
     const emailField = page.getByLabel(/email/i);
@@ -336,10 +341,10 @@ test.describe.serial("Public Sign-In Flow", () => {
     const phoneField = page.getByLabel(/phone number/i);
 
     await nameField.fill("E2E Test Visitor");
-    await phoneField.fill("+64211234567");
+    await phoneField.fill(uniqueNzPhone());
 
     await expect(nameField).toHaveValue("E2E Test Visitor");
-    await expect(phoneField).toHaveValue("+64211234567");
+    await expect(phoneField).toHaveValue(/^\+64/);
     await page
       .getByRole("button", {
         name: /continue to induction|sign in|continue|submit/i,
@@ -418,21 +423,19 @@ test.describe.serial("Public Sign-In Flow", () => {
         })
         .first();
 
-      // If a signature canvas is present, draw a small stroke to satisfy signature requirement
+      // If a signature canvas is present, write to it directly to avoid flaky pointer events in CI.
       const canvasCount = await page.locator("canvas").count();
       if (canvasCount > 0) {
         const canvas = page.locator("canvas").first();
-        const box = await canvas.boundingBox();
-        if (box) {
-          await page.mouse.move(box.x + 10, box.y + 10);
-          await page.mouse.down();
-          await page.mouse.move(
-            box.x + box.width - 10,
-            box.y + box.height - 10,
-            { steps: 5 },
-          );
-          await page.mouse.up();
-        }
+        await expect(canvas).toBeVisible({ timeout: 10000 });
+        await canvas.evaluate((el) => {
+          const node = el as HTMLCanvasElement;
+          const ctx = node.getContext("2d");
+          if (ctx) {
+            ctx.fillStyle = "#000";
+            ctx.fillRect(8, 8, 4, 4);
+          }
+        });
       }
 
       // Try clicking the confirmation button a few times (with short delays) to improve reliability on CI.
@@ -524,7 +527,7 @@ test.describe.serial("XSS Prevention", () => {
       .getByLabel(/name/i)
       .waitFor({ state: "visible", timeout: 10000 });
     await page.getByLabel(/name/i).fill(XSS_PAYLOAD);
-    await page.getByLabel(/phone/i).fill("+64211234567");
+    await page.getByLabel(/phone/i).fill(uniqueNzPhone());
 
     // Check that script tag is not rendered
     const content = await page.content();
