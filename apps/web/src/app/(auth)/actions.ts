@@ -30,7 +30,13 @@ import { checkLoginRateLimit } from "@/lib/rate-limit";
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
-  totp: z.string().optional(),
+  totp: z
+    .preprocess((value) => {
+      if (value === null || value === undefined || value === "") {
+        return undefined;
+      }
+      return value;
+    }, z.string().optional()),
 });
 
 /**

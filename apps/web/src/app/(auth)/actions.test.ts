@@ -26,6 +26,11 @@ import { checkLoginRateLimit } from "@/lib/rate-limit";
 import { login as sessionLogin } from "@/lib/auth";
 
 describe("loginAction", () => {
+  const makeFormData = (fields: Record<string, string>) =>
+    ({
+      get: (key: string) => (key in fields ? fields[key]! : null),
+    }) as unknown as FormData;
+
   beforeEach(() => {
     vi.resetAllMocks();
   });
@@ -38,10 +43,10 @@ describe("loginAction", () => {
       reset: Date.now() + 1000,
     });
 
-    const formData = {
-      get: (key: string) =>
-        key === "email" ? "alice@example.com" : "password123",
-    } as unknown as FormData;
+    const formData = makeFormData({
+      email: "alice@example.com",
+      password: "password123",
+    });
 
     const result = await loginAction(null, formData);
 
@@ -60,10 +65,10 @@ describe("loginAction", () => {
 
     (sessionLogin as unknown as Mock).mockResolvedValue({ success: true });
 
-    const formData = {
-      get: (key: string) =>
-        key === "email" ? "bob@example.com" : "password321",
-    } as unknown as FormData;
+    const formData = makeFormData({
+      email: "bob@example.com",
+      password: "password321",
+    });
 
     await loginAction(null, formData);
 
@@ -95,14 +100,40 @@ describe("loginAction", () => {
       requiresMfa: true,
     });
 
-    const formData = {
-      get: (key: string) =>
-        key === "email" ? "mfa@example.com" : "password123",
-    } as unknown as FormData;
+    const formData = makeFormData({
+      email: "mfa@example.com",
+      password: "password123",
+    });
 
     const result = await loginAction(null, formData);
 
     expect(result.success).toBe(false);
     expect((result as any).requiresMfa).toBe(true);
+  });
+
+  it("accepts missing totp field (null from FormData) and proceeds with login", async () => {
+    (checkLoginRateLimit as unknown as Mock).mockResolvedValue({
+      success: true,
+      remaining: 4,
+      limit: 5,
+      reset: Date.now() + 10000,
+    });
+    (sessionLogin as unknown as Mock).mockResolvedValue({ success: true });
+
+    const formData = makeFormData({
+      email: "no-totp@example.com",
+      password: "password123",
+      // intentionally omit totp so get("totp") => null
+    });
+
+    await loginAction(null, formData);
+
+    expect(sessionLogin).toHaveBeenCalledWith(
+      "no-totp@example.com",
+      "password123",
+      "127.0.0.1",
+      "test-agent",
+      undefined,
+    );
   });
 });
