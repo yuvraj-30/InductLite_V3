@@ -25,8 +25,6 @@ export default defineConfig({
       ],
     },
     setupFiles: ["./src/lib/test/setup.ts"],
-  },
-  resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
     },

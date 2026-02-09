@@ -26,6 +26,7 @@ function createMockTemplate(
     force_reinduction: false,
     created_at: new Date(),
     updated_at: new Date(),
+    force_reinduction: false, // Added to resolve TS2322
     ...overrides,
   } as unknown as InductionTemplate;
 }

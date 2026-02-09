@@ -348,16 +348,21 @@ export async function submitSignIn(
     if (siteWithWebhooks.webhooks && Array.isArray(siteWithWebhooks.webhooks)) {
       const webhooks = siteWithWebhooks.webhooks as string[];
       webhooks.forEach((url) => {
-        fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            event: "induction.completed",
-            timestamp: new Date().toISOString(),
-            data: result,
-          }),
-        }).catch((err) => {
-          log.error({ url, err: String(err) }, "Webhook delivery failed");
+        // Use a detached promise to avoid blocking the response
+        Promise.resolve().then(async () => {
+          try {
+            await fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                event: "induction.completed",
+                timestamp: new Date().toISOString(),
+                data: result,
+              }),
+            });
+          } catch (err) {
+            log.error({ url, err: String(err) }, "Webhook delivery failed");
+          }
         });
       });
     }

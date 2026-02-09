@@ -1,32 +1,41 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { submitSignIn } from "../../src/app/s/[slug]/actions";
 
-// Mock dependencies
-vi.mock("../../src/lib/repository/site.repository", () => ({
+// Mock next/headers
+vi.mock("next/headers", () => ({
+  headers: vi.fn(async () => new Map()),
+}));
+
+// Mock repositories
+vi.mock("@/lib/repository/site.repository", () => ({
   findSiteByPublicSlug: vi.fn(),
 }));
-vi.mock("../../src/lib/repository/template.repository", () => ({
+vi.mock("@/lib/repository/template.repository", () => ({
   getActiveTemplateForSite: vi.fn(),
 }));
-vi.mock("../../src/lib/repository/public-signin.repository", () => ({
+vi.mock("@/lib/repository/public-signin.repository", () => ({
   createPublicSignIn: vi.fn(),
+  signOutWithToken: vi.fn(),
 }));
-vi.mock("../../src/lib/repository/audit.repository", () => ({
+vi.mock("@/lib/repository/audit.repository", () => ({
   createAuditLog: vi.fn(),
 }));
-vi.mock("../../src/lib/rate-limit", () => ({
+vi.mock("@/lib/rate-limit", () => ({
   checkSignInRateLimit: vi.fn(() => ({ success: true })),
+  checkPublicSlugRateLimit: vi.fn(() => ({ success: true })),
 }));
 
-import { findSiteByPublicSlug } from "../../src/lib/repository/site.repository";
-import { getActiveTemplateForSite } from "../../src/lib/repository/template.repository";
-import { createPublicSignIn } from "../../src/lib/repository/public-signin.repository";
+// Import actions AFTER mocks
+import { submitSignIn } from "@/app/s/[slug]/actions";
+import { findSiteByPublicSlug } from "@/lib/repository/site.repository";
+import { getActiveTemplateForSite } from "@/lib/repository/template.repository";
+import { createPublicSignIn } from "@/lib/repository/public-signin.repository";
+import { headers } from "next/headers";
 
 describe("Webhook Integration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock global fetch
     global.fetch = vi.fn(() => Promise.resolve({ ok: true } as Response));
+    vi.mocked(headers).mockResolvedValue(new Map() as any);
   });
 
   it("should fire webhooks when a visitor signs in", async () => {
@@ -57,6 +66,10 @@ describe("Webhook Integration", () => {
     } as any);
 
     expect(result.success).toBe(true);
+
+    // Wait for the detached promise to execute
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
     expect(global.fetch).toHaveBeenCalledWith(
       "https://example.com/webhook",
       expect.objectContaining({ method: "POST" }),
