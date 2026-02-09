@@ -423,24 +423,27 @@ test.describe.serial("Public Sign-In Flow", () => {
         })
         .first();
 
-      // If a signature canvas is present, write to it directly to avoid flaky pointer events in CI.
-      const canvasCount = await page.locator("canvas").count();
-      if (canvasCount > 0) {
-        const canvas = page.locator("canvas").first();
-        await expect(canvas).toBeVisible({ timeout: 10000 });
-        await canvas.evaluate((el) => {
-          const node = el as HTMLCanvasElement;
-          const ctx = node.getContext("2d");
-          if (ctx) {
-            ctx.fillStyle = "#000";
-            ctx.fillRect(8, 8, 4, 4);
-          }
-        });
-      }
+      // Draw + submit in a retry loop. CI can intermittently miss the first pointer stroke.
+      for (let attempt = 0; attempt < 6; attempt++) {
+        if (await signOutNowLink.isVisible().catch(() => false)) break;
+        if (!(await signOffHeading.isVisible().catch(() => false))) break;
 
-      // Try clicking the confirmation button a few times (with short delays) to improve reliability on CI.
-      // Avoid auto-waiting on a missing role-based locator, which can consume the full test timeout.
-      for (let attempt = 0; attempt < 3; attempt++) {
+        const canvas = page.locator("canvas").first();
+        if ((await canvas.count()) > 0) {
+          await canvas.scrollIntoViewIfNeeded().catch(() => null);
+          const box = await canvas.boundingBox();
+          if (box) {
+            const startX = box.x + Math.max(8, box.width * 0.2);
+            const startY = box.y + Math.max(8, box.height * 0.3);
+            const endX = box.x + Math.max(16, box.width * 0.8);
+            const endY = box.y + Math.max(16, box.height * 0.7);
+            await page.mouse.move(startX, startY);
+            await page.mouse.down();
+            await page.mouse.move(endX, endY, { steps: 8 });
+            await page.mouse.up();
+          }
+        }
+
         const canClick =
           (await confirmBtn.count()) > 0 &&
           (await confirmBtn.isVisible().catch(() => false));
@@ -448,7 +451,6 @@ test.describe.serial("Public Sign-In Flow", () => {
           await confirmBtn.scrollIntoViewIfNeeded().catch(() => null);
           await confirmBtn.click().catch(() => null);
         } else {
-          // Some templates submit the sign-off form on Enter.
           await page.keyboard.press("Enter").catch(() => null);
         }
 
