@@ -13,6 +13,8 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { PrismaClient } from "@prisma/client";
 import {
+  setupTestDatabase,
+  teardownTestDatabase,
   cleanDatabase,
   createTestCompany,
   createTestSite,
@@ -36,6 +38,7 @@ describe("Token Replay Attack Prevention", () => {
   const globalAny = globalThis as unknown as { prisma: PrismaClient };
 
   beforeAll(async () => {
+    await setupTestDatabase();
     prisma = globalAny.prisma;
 
     // Dynamic import AFTER database is set up
@@ -45,7 +48,7 @@ describe("Token Replay Attack Prevention", () => {
   });
 
   afterAll(async () => {
-    // Handled by global setup
+    await teardownTestDatabase();
   });
 
   beforeEach(async () => {
