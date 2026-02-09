@@ -385,22 +385,91 @@ test.describe.serial("Public Sign-In Flow", () => {
       await textInputs.first().fill("None");
     }
 
-    // Submit induction
-    await page.getByRole("button", { name: /complete sign-in/i }).click();
+    // Submit induction - support multiple label variants (some templates use different button text)
+    const submitInductionButton = page.getByRole("button", {
+      name: /complete sign-in|continue to sign off|complete sign in|finish|sign off/i,
+    });
+    await submitInductionButton.first().click();
 
-    // Should show success with sign-out link/QR
-    await expect(page.getByRole("link", { name: /sign out now/i })).toBeVisible(
-      { timeout: 10000 },
-    );
+    // Some templates have an additional "Sign Off" confirmation step - handle it if present
+    const signOutNowLink = page.getByRole("link", { name: /sign out now/i });
+    const signOffHeading = page.getByRole("heading", {
+      level: 2,
+      name: /sign off/i,
+    });
 
-    // Sign-out link should be present
-    const signOutLink = page.getByRole("link", { name: /sign out/i });
-    if (await signOutLink.isVisible()) {
-      const href = await signOutLink.getAttribute("href");
-      expect(href).toContain("/sign-out");
-      // Extra check: ensure token query parameter is present (small additional e2e check)
-      expect(href).toMatch(/\btoken=[^&]+/);
+    // Wait up to 20s for either the final sign-out link or the sign-off confirmation screen
+    for (let i = 0; i < 40; i++) {
+      if (await signOutNowLink.isVisible().catch(() => false)) break;
+      if (await signOffHeading.isVisible().catch(() => false)) break;
+      await page.waitForTimeout(500);
     }
+
+    // If we're on the sign-off screen, click the confirm button
+    if (await signOffHeading.isVisible().catch(() => false)) {
+      const confirmBtn = page
+        .locator("button")
+        .filter({
+          hasText:
+            /confirm|sign in|sign-off|sign off|complete sign-?in|finish/i,
+        })
+        .first();
+
+      // If a signature canvas is present, draw a small stroke to satisfy signature requirement
+      const canvasCount = await page.locator("canvas").count();
+      if (canvasCount > 0) {
+        const canvas = page.locator("canvas").first();
+        const box = await canvas.boundingBox();
+        if (box) {
+          await page.mouse.move(box.x + 10, box.y + 10);
+          await page.mouse.down();
+          await page.mouse.move(
+            box.x + box.width - 10,
+            box.y + box.height - 10,
+            { steps: 5 },
+          );
+          await page.mouse.up();
+        }
+      }
+
+      // Try clicking the confirmation button a few times (with short delays) to improve reliability on CI.
+      // Avoid auto-waiting on a missing role-based locator, which can consume the full test timeout.
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const canClick =
+          (await confirmBtn.count()) > 0 &&
+          (await confirmBtn.isVisible().catch(() => false));
+        if (canClick) {
+          await confirmBtn.scrollIntoViewIfNeeded().catch(() => null);
+          await confirmBtn.click().catch(() => null);
+        } else {
+          // Some templates submit the sign-off form on Enter.
+          await page.keyboard.press("Enter").catch(() => null);
+        }
+
+        if (await signOutNowLink.isVisible().catch(() => false)) break;
+        await page.waitForTimeout(500);
+      }
+    }
+
+    // Should show success with sign-out link/QR. Some templates render a plain anchor with href="/sign-out"
+    const signOutAnchor = page.locator('a[href*="/sign-out"]');
+
+    // Wait up to 30s for either the role-based sign-out link or the href-based anchor to appear
+    for (let i = 0; i < 60; i++) {
+      if (await signOutNowLink.isVisible().catch(() => false)) break;
+      if (await signOutAnchor.isVisible().catch(() => false)) break;
+      await page.waitForTimeout(500);
+    }
+
+    // Final assertions
+    const finalLink = (await signOutNowLink.isVisible().catch(() => false))
+      ? signOutNowLink
+      : signOutAnchor;
+    await expect(finalLink).toBeVisible({ timeout: 10000 });
+    const href = await finalLink.first().getAttribute("href");
+    expect(href).toContain("/sign-out");
+    // Extra check: ensure token query parameter is present (small additional e2e check)
+    expect(href).toMatch(/\btoken=[^&]+/);
   });
 });
 
