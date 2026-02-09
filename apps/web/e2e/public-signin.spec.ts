@@ -423,7 +423,7 @@ test.describe.serial("Public Sign-In Flow", () => {
         })
         .first();
 
-      const canvas = page.getByTestId("signature-canvas");
+      const canvas = page.locator("#signature-canvas");
       if ((await canvas.count()) > 0) {
         await canvas.scrollIntoViewIfNeeded().catch(() => null);
         const box = await canvas.boundingBox();

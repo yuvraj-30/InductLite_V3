@@ -428,7 +428,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
               onBegin={() => setError(null)}
               onEnd={() => setHasSignature(!(sigCanvas.current?.isEmpty() ?? true))}
               canvasProps={{
-                "data-testid": "signature-canvas",
+                id: "signature-canvas",
                 className: "sigCanvas w-full h-40 rounded-lg touch-none",
               }}
             />
