@@ -407,9 +407,13 @@ test.describe.serial("Public Sign-In Flow", () => {
 
     // If we're on the sign-off screen, click the confirm button
     if (await signOffHeading.isVisible().catch(() => false)) {
-      const confirmBtn = page.getByRole("button", {
-        name: /confirm|confirm & sign in|confirm & sign in ✓/i,
-      });
+      const confirmBtn = page
+        .locator("button")
+        .filter({
+          hasText:
+            /confirm|sign in|sign-off|sign off|complete sign-?in|finish/i,
+        })
+        .first();
 
       // If a signature canvas is present, draw a small stroke to satisfy signature requirement
       const canvasCount = await page.locator("canvas").count();
@@ -428,13 +432,20 @@ test.describe.serial("Public Sign-In Flow", () => {
         }
       }
 
-      // Try clicking the confirm button a few times (with short delays) to improve reliability on CI.
+      // Try clicking the confirmation button a few times (with short delays) to improve reliability on CI.
+      // Avoid auto-waiting on a missing role-based locator, which can consume the full test timeout.
       for (let attempt = 0; attempt < 3; attempt++) {
-        await confirmBtn.first().scrollIntoViewIfNeeded();
-        await confirmBtn
-          .first()
-          .click()
-          .catch(() => null);
+        const canClick =
+          (await confirmBtn.count()) > 0 &&
+          (await confirmBtn.isVisible().catch(() => false));
+        if (canClick) {
+          await confirmBtn.scrollIntoViewIfNeeded().catch(() => null);
+          await confirmBtn.click().catch(() => null);
+        } else {
+          // Some templates submit the sign-off form on Enter.
+          await page.keyboard.press("Enter").catch(() => null);
+        }
+
         if (await signOutNowLink.isVisible().catch(() => false)) break;
         await page.waitForTimeout(500);
       }
@@ -526,3 +537,4 @@ test.describe.serial("XSS Prevention", () => {
     expect(content).not.toContain("<script>alert");
   });
 });
+
