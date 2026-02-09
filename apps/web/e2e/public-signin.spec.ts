@@ -297,9 +297,14 @@ test.describe.serial("Public Sign-In Flow", () => {
       .click();
 
     // After submission we should see one of: complete button, sign-out link, or the induction form.
-    const completeButton = page.getByRole("button", { name: /complete sign-in/i });
+    const completeButton = page.getByRole("button", {
+      name: /complete sign-in/i,
+    });
     const signOutLink = page.getByRole("link", { name: /sign out now/i });
-    const inductionHeading = page.getByRole("heading", { level: 2, name: /site induction/i });
+    const inductionHeading = page.getByRole("heading", {
+      level: 2,
+      name: /site induction/i,
+    });
 
     // Wait up to 10s for any of these to appear
     for (let i = 0; i < 20; i++) {
@@ -309,7 +314,10 @@ test.describe.serial("Public Sign-In Flow", () => {
       await page.waitForTimeout(500);
     }
 
-    const anyVisible = (await completeButton.isVisible().catch(() => false)) || (await signOutLink.isVisible().catch(() => false)) || (await inductionHeading.isVisible().catch(() => false));
+    const anyVisible =
+      (await completeButton.isVisible().catch(() => false)) ||
+      (await signOutLink.isVisible().catch(() => false)) ||
+      (await inductionHeading.isVisible().catch(() => false));
     expect(anyVisible).toBe(true);
   });
 
@@ -385,7 +393,10 @@ test.describe.serial("Public Sign-In Flow", () => {
 
     // Some templates have an additional "Sign Off" confirmation step - handle it if present
     const signOutNowLink = page.getByRole("link", { name: /sign out now/i });
-    const signOffHeading = page.getByRole("heading", { level: 2, name: /sign off/i });
+    const signOffHeading = page.getByRole("heading", {
+      level: 2,
+      name: /sign off/i,
+    });
 
     // Wait up to 20s for either the final sign-out link or the sign-off confirmation screen
     for (let i = 0; i < 40; i++) {
@@ -396,7 +407,9 @@ test.describe.serial("Public Sign-In Flow", () => {
 
     // If we're on the sign-off screen, click the confirm button
     if (await signOffHeading.isVisible().catch(() => false)) {
-      const confirmBtn = page.getByRole("button", { name: /confirm|confirm & sign in|confirm & sign in ✓/i });
+      const confirmBtn = page.getByRole("button", {
+        name: /confirm|confirm & sign in|confirm & sign in ✓/i,
+      });
 
       // If a signature canvas is present, draw a small stroke to satisfy signature requirement
       const canvasCount = await page.locator("canvas").count();
@@ -406,7 +419,11 @@ test.describe.serial("Public Sign-In Flow", () => {
         if (box) {
           await page.mouse.move(box.x + 10, box.y + 10);
           await page.mouse.down();
-          await page.mouse.move(box.x + box.width - 10, box.y + box.height - 10, { steps: 5 });
+          await page.mouse.move(
+            box.x + box.width - 10,
+            box.y + box.height - 10,
+            { steps: 5 },
+          );
           await page.mouse.up();
         }
       }
@@ -414,7 +431,10 @@ test.describe.serial("Public Sign-In Flow", () => {
       // Try clicking the confirm button a few times (with short delays) to improve reliability on CI.
       for (let attempt = 0; attempt < 3; attempt++) {
         await confirmBtn.first().scrollIntoViewIfNeeded();
-        await confirmBtn.first().click().catch(() => null);
+        await confirmBtn
+          .first()
+          .click()
+          .catch(() => null);
         if (await signOutNowLink.isVisible().catch(() => false)) break;
         await page.waitForTimeout(500);
       }
@@ -431,7 +451,9 @@ test.describe.serial("Public Sign-In Flow", () => {
     }
 
     // Final assertions
-    const finalLink = (await signOutNowLink.isVisible().catch(() => false)) ? signOutNowLink : signOutAnchor;
+    const finalLink = (await signOutNowLink.isVisible().catch(() => false))
+      ? signOutNowLink
+      : signOutAnchor;
     await expect(finalLink).toBeVisible({ timeout: 10000 });
     const href = await finalLink.first().getAttribute("href");
     expect(href).toContain("/sign-out");
