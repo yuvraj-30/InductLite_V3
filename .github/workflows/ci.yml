@@ -20,6 +20,7 @@ env:
   # CI-safe defaults (override in repo/environment secrets if needed)
   NODE_ENV: test
   NEXT_TELEMETRY_DISABLED: "1"
+  JWT_SECRET: test-secret-value-123
   SESSION_SECRET: ci-test-secret-at-least-32-characters-long
   SIGN_OUT_TOKEN_SECRET: ci-test-signout-secret-at-least-32-characters
   NEXT_PUBLIC_APP_URL: http://localhost:3000

@@ -329,13 +329,6 @@ test.describe.serial("Public Sign-In Flow", () => {
   test("should complete induction and show sign-out token", async ({
     page,
   }) => {
-    if (process.env.CI) {
-      test.skip(
-        true,
-        "Temporarily skipped in CI due persistent headless signature-step flake",
-      );
-    }
-
     const ok = await openSite(page, TEST_SITE_SLUG);
     if (!ok) {
       test.skip(true, "Public site not seeded in this environment");
@@ -536,7 +529,52 @@ test.describe.serial("Sign-Out Flow", () => {
 
 test.describe.serial("XSS Prevention", () => {
   const XSS_PAYLOAD = "<script>alert('xss')</script>";
-  const TEST_SITE_SLUG = "test-site";
+  let TEST_SITE_SLUG = "test-site";
+
+  test.beforeAll(async ({ request, seedPublicSite }) => {
+    try {
+      const body = await seedPublicSite();
+      if (body?.success && body.slug) {
+        TEST_SITE_SLUG = body.slug;
+        return;
+      }
+    } catch (err) {
+      console.warn(
+        "seed-public-site failed for XSS suite, falling back to existing seed:",
+        String(err),
+      );
+    }
+
+    // Fallback: verify the default seeded slug exists, otherwise skip suite tests.
+    try {
+      const res = await request.get(`/s/${TEST_SITE_SLUG}`);
+      const txt = await res.text();
+      if (
+        res.status() === 404 ||
+        /Site Not Found|No active template/i.test(txt)
+      ) {
+        test.skip(
+          true,
+          "Public site not seeded in this environment (run 'npm run db:seed')",
+        );
+      }
+    } catch {
+      test.skip(
+        true,
+        "Could not verify public site; skipping XSS tests for this environment",
+      );
+    }
+  });
+
+  test.afterAll(async ({ deletePublicSite }) => {
+    try {
+      if (TEST_SITE_SLUG && TEST_SITE_SLUG.startsWith("test-site-e2e")) {
+        await deletePublicSite(TEST_SITE_SLUG);
+      }
+    } catch (err) {
+      console.warn("Failed to delete seeded XSS public site:", String(err));
+    }
+  });
 
   test("should sanitize name field input", async ({ page }) => {
     const ok = await openSite(page, TEST_SITE_SLUG);
