@@ -1,5 +1,5 @@
 import { getSiteForSignIn } from "../actions";
-import { SignInFlow } from "./components/SignInFlow";
+import { SignInFlow } from "../components/SignInFlow";
 import { notFound } from "next/navigation";
 
 interface Props {
