@@ -21,13 +21,7 @@ vi.mock("../base", () => ({
 
 vi.mock("../../db/public-db", () => ({
   publicDb: {
-    $transaction: vi.fn((callback) =>
-      callback({
-        // Provide the minimal transaction API used by publishTemplate
-        inductionResponse: { updateMany: vi.fn(), deleteMany: vi.fn() },
-        inductionTemplate: { updateMany: vi.fn() },
-      }),
-    ),
+    $transaction: vi.fn((callback) => callback({})),
   },
 }));
 

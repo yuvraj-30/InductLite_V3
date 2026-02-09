@@ -537,4 +537,3 @@ test.describe.serial("XSS Prevention", () => {
     expect(content).not.toContain("<script>alert");
   });
 });
-
