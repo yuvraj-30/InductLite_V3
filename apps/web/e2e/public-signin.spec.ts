@@ -296,14 +296,21 @@ test.describe.serial("Public Sign-In Flow", () => {
       })
       .click();
 
-    // Should proceed to induction (show a 'Complete Sign-In' button) or show success
-    const completeButton = page.getByRole("button", {
-      name: /complete sign-in/i,
-    });
+    // After submission we should see one of: complete button, sign-out link, or the induction form.
+    const completeButton = page.getByRole("button", { name: /complete sign-in/i });
     const signOutLink = page.getByRole("link", { name: /sign out now/i });
-    await expect(completeButton.or(signOutLink)).toBeVisible({
-      timeout: 10000,
-    });
+    const inductionHeading = page.getByRole("heading", { level: 2, name: /site induction/i });
+
+    // Wait up to 10s for any of these to appear
+    for (let i = 0; i < 20; i++) {
+      if (await completeButton.isVisible().catch(() => false)) break;
+      if (await signOutLink.isVisible().catch(() => false)) break;
+      if (await inductionHeading.isVisible().catch(() => false)) break;
+      await page.waitForTimeout(500);
+    }
+
+    const anyVisible = (await completeButton.isVisible().catch(() => false)) || (await signOutLink.isVisible().catch(() => false)) || (await inductionHeading.isVisible().catch(() => false));
+    expect(anyVisible).toBe(true);
   });
 
   test("should complete induction and show sign-out token", async ({

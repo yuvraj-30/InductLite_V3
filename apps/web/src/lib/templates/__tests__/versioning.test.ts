@@ -48,7 +48,8 @@ describe("Template Versioning & Re-induction Integration", () => {
     });
   });
 
-  const itIfDB = process.env.ALLOW_TEST_RUNNER === "1" && canConnectToDb ? it : it.skip;
+  const itIfDB =
+    process.env.ALLOW_TEST_RUNNER === "1" && canConnectToDb ? it : it.skip;
 
   itIfDB(
     "should invalidate old records when forceReinduction is true",
