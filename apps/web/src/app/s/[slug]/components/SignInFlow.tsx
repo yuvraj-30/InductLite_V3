@@ -114,9 +114,8 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
       return;
     }
 
-    const signatureData = sigCanvas.current
-      ?.getTrimmedCanvas()
-      .toDataURL("image/png");
+    // getTrimmedCanvas() can throw in some bundled environments; toDataURL is sufficient here.
+    const signatureData = sigCanvas.current?.toDataURL("image/png");
 
     setError(null);
     setFieldErrors({});
