@@ -6,6 +6,42 @@ try {
   // Sentry not installed; keep config unchanged
 }
 
+const withPWA = require("@ducanh2912/next-pwa").default({
+  dest: "public",
+  disable: process.env.NODE_ENV !== "production",
+  register: true,
+  skipWaiting: true,
+  workboxOptions: {
+    runtimeCaching: [
+      {
+        urlPattern: /^https?:\/\/[^/]+\/s\/[^/?#]+(?:\?.*)?$/,
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "public-pages",
+          cacheableResponse: { statuses: [0, 200] },
+          expiration: {
+            maxEntries: 128,
+            maxAgeSeconds: 60 * 60 * 24,
+          },
+        },
+      },
+      {
+        urlPattern: /^https?:\/\/[^/]+\/api\/.*$/,
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "api-network-first",
+          networkTimeoutSeconds: 10,
+          cacheableResponse: { statuses: [0, 200] },
+          expiration: {
+            maxEntries: 128,
+            maxAgeSeconds: 60 * 60 * 24,
+          },
+        },
+      },
+    ],
+  },
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -70,6 +106,6 @@ const nextConfig = {
   },
 };
 
-module.exports = withSentryConfig(nextConfig, {
+module.exports = withSentryConfig(withPWA(nextConfig), {
   silent: true,
 });
