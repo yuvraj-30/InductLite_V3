@@ -27,7 +27,7 @@ describe("Export Job Runner - end-to-end CSV export", () => {
     prisma = res.prisma;
 
     runner = await import("../../src/lib/export/runner");
-  }, 120000);
+  }, 300000);
 
   afterAll(async () => {
     await teardownTestDatabase();

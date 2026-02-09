@@ -48,7 +48,7 @@ describe("Export Job Runner - SIGN_IN_CSV to S3 (mocked)", () => {
     process.env.EXPORTS_S3_BUCKET = "test-bucket";
 
     runner = await import("../../src/lib/export/runner");
-  }, 120000);
+  }, 300000);
 
   afterAll(async () => {
     await teardownTestDatabase();

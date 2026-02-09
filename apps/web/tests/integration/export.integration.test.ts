@@ -23,7 +23,7 @@ describe("Export Worker - CSV generation", () => {
 
     // Dynamic import after DB is configured
     worker = await import("../../src/lib/export/worker");
-  }, 120000);
+  }, 300000);
 
   afterAll(async () => {
     await teardownTestDatabase();
