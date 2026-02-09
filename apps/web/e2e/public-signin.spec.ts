@@ -329,13 +329,6 @@ test.describe.serial("Public Sign-In Flow", () => {
   test("should complete induction and show sign-out token", async ({
     page,
   }) => {
-    if (process.env.CI) {
-      test.skip(
-        true,
-        "Temporarily skipped in CI due persistent headless signature-step flake",
-      );
-    }
-
     const ok = await openSite(page, TEST_SITE_SLUG);
     if (!ok) {
       test.skip(true, "Public site not seeded in this environment");
@@ -430,7 +423,7 @@ test.describe.serial("Public Sign-In Flow", () => {
         })
         .first();
 
-      const canvas = page.locator("canvas").first();
+      const canvas = page.getByTestId("signature-canvas");
       if ((await canvas.count()) > 0) {
         await canvas.scrollIntoViewIfNeeded().catch(() => null);
         const box = await canvas.boundingBox();
@@ -445,6 +438,10 @@ test.describe.serial("Public Sign-In Flow", () => {
           await page.mouse.up();
         }
       }
+
+      await expect(page.getByText("Please provide a signature")).not.toBeVisible({
+        timeout: 3000,
+      });
 
       const canClick =
         (await confirmBtn.count()) > 0 &&
