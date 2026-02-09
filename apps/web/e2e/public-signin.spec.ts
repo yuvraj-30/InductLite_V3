@@ -426,8 +426,9 @@ test.describe.serial("Public Sign-In Flow", () => {
       const canvas = page.locator("#signature-canvas");
       if ((await canvas.count()) > 0) {
         await canvas.scrollIntoViewIfNeeded().catch(() => null);
-        const box = await canvas.boundingBox();
-        if (box) {
+        const drawStroke = async () => {
+          const box = await canvas.boundingBox();
+          if (!box) return false;
           const startX = box.x + Math.max(8, box.width * 0.2);
           const startY = box.y + Math.max(8, box.height * 0.3);
           const endX = box.x + Math.max(16, box.width * 0.8);
@@ -436,6 +437,14 @@ test.describe.serial("Public Sign-In Flow", () => {
           await page.mouse.down();
           await page.mouse.move(endX, endY, { steps: 8 });
           await page.mouse.up();
+          return true;
+        };
+
+        await drawStroke();
+
+        // CI can occasionally miss a very fast stroke on canvas; retry once.
+        if (await confirmBtn.isDisabled().catch(() => true)) {
+          await drawStroke();
         }
       }
 
@@ -443,9 +452,12 @@ test.describe.serial("Public Sign-In Flow", () => {
         timeout: 3000,
       });
 
+      await expect(confirmBtn).toBeEnabled({ timeout: 10000 });
+
       const canClick =
         (await confirmBtn.count()) > 0 &&
-        (await confirmBtn.isVisible().catch(() => false));
+        (await confirmBtn.isVisible().catch(() => false)) &&
+        (await confirmBtn.isEnabled().catch(() => false));
       if (canClick) {
         await confirmBtn.scrollIntoViewIfNeeded().catch(() => null);
         await confirmBtn
