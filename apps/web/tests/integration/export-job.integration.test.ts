@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { PrismaClient } from "@prisma/client";
 import {
+  setupTestDatabase,
+  teardownTestDatabase,
   cleanDatabase,
   createTestCompany,
   createTestSite,
@@ -14,18 +16,21 @@ import path from "path";
 type Runner = typeof import("../../src/lib/export/runner");
 
 describe("Export Job Runner - end-to-end CSV export", () => {
-  const prisma = (globalThis as unknown as { prisma: PrismaClient }).prisma;
+  let prisma: PrismaClient;
   let runner: Runner;
   let company: { id: string; slug: string };
   let site: { id: string; name: string };
   let user: { id: string; email: string };
+  const globalAny = globalThis as unknown as { prisma: PrismaClient };
 
   beforeAll(async () => {
+    await setupTestDatabase();
+    prisma = globalAny.prisma;
     runner = await import("../../src/lib/export/runner");
   });
 
   afterAll(async () => {
-    // No teardown needed as global hook handles it
+    await teardownTestDatabase();
   });
 
   beforeEach(async () => {

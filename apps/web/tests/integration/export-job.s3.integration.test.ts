@@ -9,6 +9,8 @@ import {
 } from "vitest";
 import { PrismaClient } from "@prisma/client";
 import {
+  setupTestDatabase,
+  teardownTestDatabase,
   cleanDatabase,
   createTestCompany,
   createTestSite,
@@ -31,13 +33,16 @@ vi.mock("@aws-sdk/client-s3", () => {
 type Runner = typeof import("../../src/lib/export/runner");
 
 describe("Export Job Runner - SIGN_IN_CSV to S3 (mocked)", () => {
-  const prisma = (globalThis as unknown as { prisma: PrismaClient }).prisma;
+  let prisma: PrismaClient;
   let runner: Runner;
   let company: { id: string; slug: string };
   let site: { id: string; name: string };
   let user: { id: string; email: string };
+  const globalAny = globalThis as unknown as { prisma: PrismaClient };
 
   beforeAll(async () => {
+    await setupTestDatabase();
+    prisma = globalAny.prisma;
     // Set S3 mode
     process.env.STORAGE_MODE = "s3";
     process.env.EXPORTS_S3_BUCKET = "test-bucket";
@@ -46,7 +51,7 @@ describe("Export Job Runner - SIGN_IN_CSV to S3 (mocked)", () => {
   });
 
   afterAll(async () => {
-    // No teardown needed as global hook handles it
+    await teardownTestDatabase();
   });
 
   beforeEach(async () => {

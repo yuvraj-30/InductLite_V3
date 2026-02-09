@@ -1,21 +1,30 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { PrismaClient } from "@prisma/client";
-import { cleanDatabase, createTestCompany, createTestUser } from "./setup";
+import {
+  setupTestDatabase,
+  teardownTestDatabase,
+  cleanDatabase,
+  createTestCompany,
+  createTestUser,
+} from "./setup";
 
 type ExportRepo = typeof import("@/lib/repository/export.repository");
 
 describe("Export Job claim idempotency", () => {
-  const prisma = (globalThis as unknown as { prisma: PrismaClient }).prisma;
+  let prisma: PrismaClient;
   let company: { id: string };
   let user: { id: string };
   let exportRepo: ExportRepo;
+  const globalAny = globalThis as unknown as { prisma: PrismaClient };
 
   beforeAll(async () => {
+    await setupTestDatabase();
+    prisma = globalAny.prisma;
     exportRepo = await import("@/lib/repository/export.repository");
   });
 
   afterAll(async () => {
-    // No teardown needed as global hook handles it
+    await teardownTestDatabase();
   });
 
   beforeEach(async () => {
