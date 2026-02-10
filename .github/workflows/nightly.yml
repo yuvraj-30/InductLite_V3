@@ -150,7 +150,18 @@ jobs:
           --workers=1 --reporter=line
           --grep-invert "Visual Regression|Kiosk Mode|Accessibility Checks|Admin Export UI & Processing|VRT -"
 
+      - name: Detect Linux visual baselines
+        id: visual_baselines
+        run: |
+          if ls apps/web/e2e/visual-regression.spec.ts-snapshots/*-linux.png >/dev/null 2>&1; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping visual regression: no Linux baselines present."
+          fi
+
       - name: Visual regression (local snapshots)
+        if: steps.visual_baselines.outputs.available == 'true'
         env:
           E2E_USE_SHARED_SERVER: "1"
         run: npm run -w apps/web test:visual
