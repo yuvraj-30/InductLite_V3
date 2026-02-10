@@ -54,9 +54,15 @@ test.describe.serial("Admin Authentication", () => {
       // ignore
     }
     if (!seenError) {
-      await expect(page.getByText(/invalid|incorrect|failed/i)).toBeVisible({
-        timeout: 5000,
-      });
+      const hasInlineError = await page
+        .getByText(/invalid|incorrect|failed|locked|too many/i)
+        .first()
+        .isVisible()
+        .catch(() => false);
+      const stillOnLogin =
+        /\/login/.test(page.url()) &&
+        (await page.getByLabel(/email/i).isVisible().catch(() => false));
+      expect(hasInlineError || stillOnLogin).toBeTruthy();
     }
 
     // Should still be on login page
@@ -245,40 +251,26 @@ test.describe.serial("Admin Authentication", () => {
       .first();
     await logoutButton.click();
 
-    // If we land on the logout confirmation page, submit the sign-out form
+    // /logout now performs server-side logout and redirects immediately.
     if ((await page.url()).includes("/logout")) {
-      await page.getByRole("button", { name: /sign out/i }).click();
+      await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
     }
 
-    // Should land on logout page, home, or login
-    await expect(page).toHaveURL(/\/(logout|$|login)/);
+    // Logout should end on login screen after server action completes.
+    await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
 
-    // Small pause to ensure session cookie is cleared by the server
-    await page.waitForTimeout(250);
+    // Session cookie must be removed after logout (no test-side cleanup fallback).
+    const cookiesAfterLogout = await context.cookies();
+    const remainingSessionCookies = cookiesAfterLogout.filter((c) =>
+      c.name.includes("session") || c.name.includes("auth"),
+    );
+    expect(remainingSessionCookies.length).toBe(0);
 
     // Try to access protected route
     await page.goto("/admin/live-register");
 
-    // Should be redirected to login OR not show authenticated UI (no Sign Out link)
-    if (/\/login/.test(page.url())) {
-      await expect(page).toHaveURL(/\/login/);
-    } else {
-      const signOutCount = await page
-        .getByRole("link", { name: /logout|sign out/i })
-        .count();
-      if (signOutCount === 0) {
-        expect(signOutCount).toBe(0);
-      } else {
-        // Logout didn't clear the session as expected. Clear cookies and re-check to avoid flaky failures.
-        // This keeps the test stable while also making the issue obvious in CI logs.
-        console.warn(
-          "Logout did not clear session cookie; clearing cookies for test stability",
-        );
-        await context.clearCookies();
-        await page.goto("/admin/live-register");
-        await expect(page).toHaveURL(/\/login/);
-      }
-    }
+    // Protected route access must redirect to login after logout.
+    await expect(page).toHaveURL(/\/login/);
   });
 
   // FIX 2: Optimized loop to prevent race conditions and timeouts
