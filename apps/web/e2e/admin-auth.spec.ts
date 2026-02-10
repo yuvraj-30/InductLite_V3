@@ -144,7 +144,6 @@ test.describe.serial("Admin Authentication", () => {
 
   test("should logout and clear session", async ({
     page,
-    context,
     workerUser,
     loginAs,
   }) => {
