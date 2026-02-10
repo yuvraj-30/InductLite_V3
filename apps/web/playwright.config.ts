@@ -42,8 +42,9 @@ export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  retries: process.env.CI ? 2 : 1,
+  // Run more workers locally by default for faster full-suite feedback.
+  workers: process.env.CI ? 1 : Number(process.env.E2E_WORKERS || 8),
   reporter: [["html", { open: "never" }], ["list"]],
   use: {
     baseURL: process.env.BASE_URL || "http://localhost:3000",
@@ -82,7 +83,9 @@ export default defineConfig({
     : {
         command: "npm run dev",
         url: "http://localhost:3000",
-        reuseExistingServer: true,
+        // Default to false so we don't accidentally reuse a stale local server
+        // missing E2E env flags (ALLOW_TEST_RUNNER/TRUST_PROXY).
+        reuseExistingServer: process.env.PW_REUSE_EXISTING_SERVER === "1",
         timeout: 120000,
         // Provide test env vars so the dev server can unseal test session cookies
         env: {
@@ -99,8 +102,8 @@ export default defineConfig({
         },
       },
 
-  // Global timeout (increase to tolerate retries and dev server startup delays)
-  timeout: 60000,
+  // Keep test runtime bounded locally: fail fast on stuck steps.
+  timeout: Number(process.env.E2E_TEST_TIMEOUT_MS || 30000),
   expect: {
     timeout: 10000,
     // Default screenshot tolerance: allow small pixel diffs for flaky rendering differences and apply a common style mask

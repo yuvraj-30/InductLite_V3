@@ -185,8 +185,17 @@ export const test = base.extend<MyFixtures>({
         try {
           const res = await fetch(url, { method: "POST" });
           if (res && res.ok) return;
+          if (res && (res.status === 401 || res.status === 403)) {
+            const body = await res.text().catch(() => "");
+            throw new Error(
+              `E2E endpoint denied (${res.status}) for ${url}. Response: ${body || "<empty>"}`,
+            );
+          }
         } catch (e) {
           // ignore and retry
+          if (e instanceof Error && e.message.includes("E2E endpoint denied")) {
+            throw e;
+          }
         }
         await new Promise((r) => setTimeout(r, 500));
       }
@@ -203,6 +212,74 @@ export const test = base.extend<MyFixtures>({
       // On Windows default to using a shared server to avoid spawn/shell issues
       // in test workers (local dev machines commonly hit these constraints).
       const baseUrl = process.env.BASE_URL ?? "http://localhost:3000";
+
+      // Fail fast with a clear message when reusing a server that was started
+      // without E2E test-runner permissions.
+      // Treat 404/503 as transient during Next dev warmup and retry.
+      try {
+        const started = Date.now();
+        let allowSeen = false;
+        let lastStatus: number | null = null;
+        let lastBody = "";
+
+        while (Date.now() - started < 120000) {
+          try {
+            const runtimeRes = await fetch(`${baseUrl}/api/test/runtime`);
+            lastStatus = runtimeRes.status;
+            const txt = await runtimeRes.text().catch(() => "");
+            lastBody = txt;
+
+            if (runtimeRes.status === 404 || runtimeRes.status === 503) {
+              await new Promise((r) => setTimeout(r, 500));
+              continue;
+            }
+
+            if (!runtimeRes.ok) {
+              throw new Error(
+                `runtime endpoint returned ${runtimeRes.status} ${runtimeRes.statusText} ${txt}`,
+              );
+            }
+
+            const runtimeBody = (() => {
+              try {
+                return JSON.parse(txt) as {
+                  allowTestRunner?: boolean;
+                  nodeEnv?: string;
+                };
+              } catch {
+                return {} as { allowTestRunner?: boolean; nodeEnv?: string };
+              }
+            })();
+
+            if (runtimeBody.allowTestRunner) {
+              allowSeen = true;
+              break;
+            }
+
+            throw new Error(
+              `E2E shared server at ${baseUrl} has ALLOW_TEST_RUNNER disabled. Start tests via Playwright webServer (default), or run dev server with ALLOW_TEST_RUNNER=1 and TRUST_PROXY=1.`,
+            );
+          } catch (err) {
+            if (
+              err instanceof Error &&
+              /ALLOW_TEST_RUNNER disabled/.test(err.message)
+            ) {
+              throw err;
+            }
+            await new Promise((r) => setTimeout(r, 500));
+          }
+        }
+
+        if (!allowSeen) {
+          throw new Error(
+            `runtime preflight timed out (lastStatus=${lastStatus}, lastBody=${lastBody || "<empty>"})`,
+          );
+        }
+      } catch (err) {
+        throw new Error(
+          `E2E shared-server preflight failed at ${baseUrl}: ${String(err)}`,
+        );
+      }
 
       // Ensure the main DB schema is applied once for shared-server mode
       if (!mainDbPushDone) {
