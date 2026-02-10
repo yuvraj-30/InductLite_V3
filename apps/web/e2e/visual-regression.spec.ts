@@ -96,7 +96,7 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
     }
   });
 
-  test("public sign-in page matches baseline", async ({ page }, testInfo) => {
+  test("public sign-in page matches baseline", async ({ page }) => {
     await page.goto(`/s/${TEST_SITE_SLUG}`);
     await expect(page.getByLabel(/name|full name/i)).toBeVisible({
       timeout: 10000,
@@ -118,7 +118,7 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
     });
   });
 
-  test("induction form matches baseline", async ({ page }, testInfo) => {
+  test("induction form matches baseline", async ({ page }) => {
     await page.goto(`/s/${TEST_SITE_SLUG}`);
     await expect(page.getByLabel(/name|full name/i)).toBeVisible({
       timeout: 10000,
