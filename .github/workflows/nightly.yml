@@ -21,6 +21,9 @@ env:
   CRON_SECRET: ci-test-cron-secret-at-least-16
   TRUST_PROXY: "0"
   ALLOW_TEST_RUNNER: "1"
+  MAGIC_LINK_SECRET: ci-magic-link-secret
+  RESEND_API_KEY: ci-resend-key
+  RESEND_FROM: ci@example.com
 
 jobs:
   full:
