@@ -16,7 +16,7 @@
 
 ### 2. Security
 
-- [ ] CSP headers enabled (middleware.ts)
+- [ ] CSP headers enabled (`apps/web/src/proxy.ts`)
 - [ ] Session cookies set with `secure: true` (automatic in production)
 - [ ] HTTPS enforced on all routes
 - [ ] Admin password changed from default

@@ -17,4 +17,4 @@
 ## Rotation
 
 - Rotate quarterly or after incidents.
-- Follow [docs/RUNBOOK_KEY_ROTATION.md](docs/RUNBOOK_KEY_ROTATION.md).
+- Follow [docs/RUNBOOK_KEY_ROTATION.md](RUNBOOK_KEY_ROTATION.md).

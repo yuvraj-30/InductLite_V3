@@ -4,7 +4,7 @@ Production-ready multi-tenant SaaS for NZ small construction/maintenance compani
 
 ## Tech Stack
 
-- **Framework**: Next.js 14+ (App Router, TypeScript)
+- **Framework**: Next.js 16 (App Router, TypeScript)
 - **Database**: PostgreSQL + Prisma ORM
 - **Background Jobs**: pg-boss (Postgres-based queue)
 - **Rate Limiting**: Upstash Redis Rate Limit
@@ -16,7 +16,7 @@ Production-ready multi-tenant SaaS for NZ small construction/maintenance compani
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 24+ (LTS recommended; Node 20 is minimum compatibility)
 - Docker & Docker Compose
 - npm 10+
 
