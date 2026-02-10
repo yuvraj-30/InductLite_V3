@@ -242,7 +242,8 @@ test.describe.serial("Public Sign-In Flow", () => {
 
     // Set one valid field and leave name empty so validation is deterministic even with autofill.
     await page.getByLabel(/phone number/i).fill(uniqueNzPhone());
-    await page.getByLabel(/full name/i).fill("");
+    // Whitespace-only should still fail because validation trims name.
+    await page.getByLabel(/full name/i).fill("   ");
 
     // Try to submit without filling required fields
     const submitButton = page.getByRole("button", {
