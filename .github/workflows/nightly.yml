@@ -142,7 +142,7 @@ jobs:
           BASE_URL: http://localhost:3000
           TRUST_PROXY: "1"
           ALLOW_TEST_RUNNER: "1"
-        run: npm run -w apps/web test:e2e:full
+        run: npm run -w apps/web test:e2e:full:all
 
       - name: Visual regression (local snapshots)
         run: npm run -w apps/web test:visual
