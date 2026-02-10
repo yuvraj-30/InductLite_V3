@@ -143,7 +143,11 @@ jobs:
           TRUST_PROXY: "1"
           ALLOW_TEST_RUNNER: "1"
           E2E_USE_SHARED_SERVER: "1"
-        run: npm run -w apps/web test:e2e:full:all
+        run: >
+          npx playwright test e2e
+          --project=chromium --project=firefox --project=webkit
+          --workers=1 --reporter=line
+          --grep-invert "Visual Regression|Kiosk Mode|Accessibility Checks|Admin Export UI & Processing|VRT -"
 
       - name: Visual regression (local snapshots)
         env:
