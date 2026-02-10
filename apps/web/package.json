@@ -18,7 +18,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
-    "test:visual": "playwright test e2e/visual-regression.spec.ts",
+    "test:visual": "playwright test e2e/visual-regression.spec.ts --workers=1 --reporter=line",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
@@ -36,7 +36,7 @@
     "prisma:validate": "prisma validate",
     "prisma:format:check": "prisma format --check",
     "test:e2e:smoke": "playwright test e2e/public-signin.spec.ts e2e/admin-auth.spec.ts e2e/csrf-security.spec.ts --project=chromium --workers=1",
-    "test:e2e:full": "playwright test e2e --project=chromium --project=firefox --project=webkit --workers=8 --reporter=line --grep-invert \"Visual Regression|Kiosk Mode|Accessibility Checks|Admin Export UI & Processing|VRT -\"",
+    "test:e2e:full": "playwright test e2e --project=chromium --project=firefox --project=webkit --workers=2 --reporter=line --grep-invert \"Visual Regression|Kiosk Mode|Accessibility Checks|Admin Export UI & Processing|VRT -\"",
     "test:e2e:full:all": "playwright test e2e --project=chromium --project=firefox --project=webkit --workers=1 --reporter=line"
   },
   "dependencies": {

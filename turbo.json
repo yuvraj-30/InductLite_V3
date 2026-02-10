@@ -26,6 +26,30 @@
       "dependsOn": ["db:generate"],
       "outputs": []
     },
+    "test:integration": {
+      "dependsOn": ["db:generate"],
+      "outputs": []
+    },
+    "test:coverage": {
+      "dependsOn": ["db:generate"],
+      "outputs": []
+    },
+    "test:e2e:smoke": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
+    "test:e2e:full": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
+    "test:e2e:full:all": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
+    "test:visual": {
+      "dependsOn": ["build"],
+      "outputs": []
+    },
     "db:generate": {
       "cache": false,
       "outputs": ["node_modules/.prisma/**"],

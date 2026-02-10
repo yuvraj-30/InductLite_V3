@@ -447,37 +447,52 @@ export async function checkSignInRateLimit(
 
   const redis = getRedisClient();
   if (redis) {
-    const signInLimiter = new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(RL_SIGNIN_PER_IP_PER_MIN, "1 m"),
-      analytics: true,
-      prefix: "inductlite:signin-ratelimit",
-    });
+    try {
+      const signInLimiter = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(RL_SIGNIN_PER_IP_PER_MIN, "1 m"),
+        analytics: true,
+        prefix: "inductlite:signin-ratelimit",
+      });
 
-    const siteLimiter = new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(RL_SIGNIN_PER_SITE_PER_MIN, "1 m"),
-      analytics: true,
-      prefix: "inductlite:signin-site-ratelimit",
-    });
+      const siteLimiter = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(RL_SIGNIN_PER_SITE_PER_MIN, "1 m"),
+        analytics: true,
+        prefix: "inductlite:signin-site-ratelimit",
+      });
 
-    const [ipResult, siteResult] = await Promise.all([
-      signInLimiter.limit(key),
-      siteLimiter.limit(siteKey),
-    ]);
+      const [ipResult, siteResult] = await Promise.all([
+        signInLimiter.limit(key),
+        siteLimiter.limit(siteKey),
+      ]);
 
-    const success = ipResult.success && siteResult.success;
-    if (!success) {
-      log.warn({ clientKey, siteSlug }, "Sign-in rate limit exceeded");
-      recordRateLimitBlocked({ kind: "signin", clientKey, meta: { siteSlug } });
+      const success = ipResult.success && siteResult.success;
+      if (!success) {
+        log.warn({ clientKey, siteSlug }, "Sign-in rate limit exceeded");
+        recordRateLimitBlocked({
+          kind: "signin",
+          clientKey,
+          meta: { siteSlug },
+        });
+      }
+
+      return {
+        success,
+        limit: Math.min(ipResult.limit, siteResult.limit),
+        remaining: Math.min(ipResult.remaining, siteResult.remaining),
+        reset: Math.max(ipResult.reset, siteResult.reset),
+      };
+    } catch (error) {
+      log.warn(
+        {
+          clientKey,
+          siteSlug,
+          error: error instanceof Error ? error.message : String(error),
+        },
+        "Redis sign-in rate limiter unavailable, falling back to in-memory",
+      );
     }
-
-    return {
-      success,
-      limit: Math.min(ipResult.limit, siteResult.limit),
-      remaining: Math.min(ipResult.remaining, siteResult.remaining),
-      reset: Math.max(ipResult.reset, siteResult.reset),
-    };
   }
 
   // In-memory fallback

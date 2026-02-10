@@ -17,6 +17,7 @@ export default defineConfig({
     testTimeout: 120000, // 2 minutes
     hookTimeout: 120000,
     // Run tests sequentially to avoid container conflicts
+    fileParallelism: false,
     sequence: {
       concurrent: false,
     },
