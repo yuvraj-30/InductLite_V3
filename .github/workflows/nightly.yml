@@ -42,6 +42,7 @@ jobs:
           --health-retries=5
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/inductlite_nightly?schema=public
+      DATABASE_DIRECT_URL: postgresql://postgres:postgres@localhost:5432/inductlite_nightly?schema=public
       BASE_URL: http://localhost:3000
       PLAYWRIGHT_BROWSERS_PATH: "0"
 
