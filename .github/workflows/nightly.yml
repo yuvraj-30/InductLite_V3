@@ -110,7 +110,15 @@ jobs:
           cd apps/web
           export PORT=3000
           export NODE_ENV=test
-          node ./.next/standalone/server.js &
+          if [ -f .next/standalone/server.js ]; then
+            node .next/standalone/server.js &
+          elif [ -f .next/standalone/apps/web/server.js ]; then
+            node .next/standalone/apps/web/server.js &
+          else
+            echo "Standalone server not found. Available server.js files:"
+            find .next/standalone -name server.js -print || true
+            exit 1
+          fi
           echo $! > /tmp/web.pid
 
       - name: Wait for app
