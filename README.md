@@ -67,6 +67,8 @@ ADMIN_PASSWORD=changeme-in-production
 See [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md) for full deployment guide.
 Go-live steps: [docs/GO_LIVE_CHECKLIST.md](docs/GO_LIVE_CHECKLIST.md).
 
+- Market and competitor strategy: [docs/NZ_MARKET_COMPETITOR_ANALYSIS.md](docs/NZ_MARKET_COMPETITOR_ANALYSIS.md).
+
 **Render free tier:** keep the single web service awake and trigger cron routes via GitHub Actions. See [.github/workflows/render-keep-alive.yml](.github/workflows/render-keep-alive.yml) and [docs/DEPLOYMENT_RENDER_NEON_R2_UPSTASH.md](docs/DEPLOYMENT_RENDER_NEON_R2_UPSTASH.md) for `CRON_SECRET` and `RENDER_APP_URL` setup.
 
 ### Quick Production Start
