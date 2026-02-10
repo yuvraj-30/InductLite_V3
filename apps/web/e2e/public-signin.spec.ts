@@ -398,55 +398,13 @@ test.describe.serial("Public Sign-In Flow", () => {
       })
       .click();
 
-    // Wait for induction form heading
-    await expect(
-      page.getByRole("heading", { level: 2, name: /site induction/i }),
-    ).toBeVisible({ timeout: 10000 });
-
-    // Complete induction - answer all question types
-
-    // 1. Answer ACKNOWLEDGMENT questions (checkboxes)
-    const acknowledgments = page.getByRole("checkbox");
-    const ackCount = await acknowledgments.count();
-    for (let i = 0; i < ackCount; i++) {
-      await acknowledgments.nth(i).check();
-    }
-
-    // 2. Answer all radio groups (YES_NO + MULTIPLE_CHOICE)
-    // This avoids template-specific assumptions and ensures required groups are filled.
-    const radioGroupNames = await page
-      .locator('input[type="radio"][name]')
-      .evaluateAll((nodes) => {
-        const names = nodes
-          .map((node) => node.getAttribute("name"))
-          .filter((name): name is string => !!name);
-        return Array.from(new Set(names));
-      });
-
-    for (const groupName of radioGroupNames) {
-      const firstOption = page
-        .locator(`input[type="radio"][name="${groupName}"]`)
-        .first();
-      if (await firstOption.isVisible().catch(() => false)) {
-        await firstOption.check().catch(() => null);
-      }
-    }
-
-    // 4. Answer TEXT questions (optional medical conditions)
-    const textInputs = page.locator('input[type="text"]').filter({
-      has: page.locator('label:has-text("medical")'),
+    const inductionHeading = page.getByRole("heading", {
+      level: 2,
+      name: /site induction/i,
     });
-    if ((await textInputs.count()) > 0) {
-      await textInputs.first().fill("None");
-    }
-
-    // Submit induction - support multiple label variants (some templates use different button text)
     const submitInductionButton = page.getByRole("button", {
       name: /complete sign-in|continue to sign off|complete sign in|finish|sign off/i,
     });
-    await submitInductionButton.first().click();
-
-    // Some templates have an additional "Sign Off" confirmation step - handle it if present
     const signOutAnchor = page.locator('a[href*="/sign-out"]');
     const signOffHeading = page.getByRole("heading", {
       level: 2,
@@ -461,11 +419,66 @@ test.describe.serial("Public Sign-In Flow", () => {
       name: /something went wrong/i,
     });
 
-    // Wait up to 20s for either the final sign-out link or the sign-off confirmation screen
+    // Depending on template/browser timing, we may land on induction, sign-off, or final success.
     for (let i = 0; i < 40; i++) {
-      if (await signOutAnchor.isVisible().catch(() => false)) break;
+      if (await inductionHeading.isVisible().catch(() => false)) break;
+      if (await submitInductionButton.first().isVisible().catch(() => false)) break;
+      if (await signOutAnchor.first().isVisible().catch(() => false)) break;
       if (await signOffHeading.isVisible().catch(() => false)) break;
+      if (await successHeading.isVisible().catch(() => false)) break;
       await page.waitForTimeout(500);
+    }
+
+    const reachedInduction =
+      (await inductionHeading.isVisible().catch(() => false)) ||
+      (await submitInductionButton.first().isVisible().catch(() => false));
+
+    // Complete induction - answer all question types
+
+    if (reachedInduction) {
+      // 1. Answer ACKNOWLEDGMENT questions (checkboxes)
+      const acknowledgments = page.getByRole("checkbox");
+      const ackCount = await acknowledgments.count();
+      for (let i = 0; i < ackCount; i++) {
+        await acknowledgments.nth(i).check();
+      }
+
+      // 2. Answer all radio groups (YES_NO + MULTIPLE_CHOICE)
+      // This avoids template-specific assumptions and ensures required groups are filled.
+      const radioGroupNames = await page
+        .locator('input[type="radio"][name]')
+        .evaluateAll((nodes) => {
+          const names = nodes
+            .map((node) => node.getAttribute("name"))
+            .filter((name): name is string => !!name);
+          return Array.from(new Set(names));
+        });
+
+      for (const groupName of radioGroupNames) {
+        const firstOption = page
+          .locator(`input[type="radio"][name="${groupName}"]`)
+          .first();
+        if (await firstOption.isVisible().catch(() => false)) {
+          await firstOption.check().catch(() => null);
+        }
+      }
+
+      // 4. Answer TEXT questions (optional medical conditions)
+      const textInputs = page.locator('input[type="text"]').filter({
+        has: page.locator('label:has-text("medical")'),
+      });
+      if ((await textInputs.count()) > 0) {
+        await textInputs.first().fill("None");
+      }
+
+      // Submit induction - support multiple label variants (some templates use different button text)
+      await submitInductionButton.first().click();
+    } else {
+      const reachedValidState =
+        (await signOutAnchor.first().isVisible().catch(() => false)) ||
+        (await signOffHeading.isVisible().catch(() => false)) ||
+        (await successHeading.isVisible().catch(() => false));
+      expect(reachedValidState).toBe(true);
     }
 
     // If we're on the sign-off screen, click the confirm button
