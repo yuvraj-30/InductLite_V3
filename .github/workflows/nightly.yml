@@ -144,6 +144,7 @@ jobs:
           ALLOW_TEST_RUNNER: "1"
           E2E_USE_SHARED_SERVER: "1"
         run: >
+          cd apps/web &&
           npx playwright test e2e
           --project=chromium --project=firefox --project=webkit
           --workers=1 --reporter=line
