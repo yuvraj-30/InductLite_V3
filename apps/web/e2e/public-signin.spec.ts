@@ -240,9 +240,9 @@ test.describe.serial("Public Sign-In Flow", () => {
     }
     await expect(page.getByLabel(/full name/i)).toBeVisible({ timeout: 5000 });
 
-    // Clear potentially autofilled values so this assertion is deterministic across browsers.
+    // Set one valid field and leave name empty so validation is deterministic even with autofill.
+    await page.getByLabel(/phone number/i).fill(uniqueNzPhone());
     await page.getByLabel(/full name/i).fill("");
-    await page.getByLabel(/phone number/i).fill("");
 
     // Try to submit without filling required fields
     const submitButton = page.getByRole("button", {
@@ -250,12 +250,11 @@ test.describe.serial("Public Sign-In Flow", () => {
     });
     await submitButton.click();
 
-    // Should show at least one field-level required error.
-    const nameRequired = page.getByText(/name is required/i).first();
-    const phoneRequired = page.getByText(/phone number is required/i).first();
-    const hasNameRequired = await nameRequired.isVisible().catch(() => false);
-    const hasPhoneRequired = await phoneRequired.isVisible().catch(() => false);
-    expect(hasNameRequired || hasPhoneRequired).toBe(true);
+    // Should show name-required and keep user on details step.
+    await expect(page.getByText(/name is required/i)).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 2, name: /site induction/i }),
+    ).not.toBeVisible();
   });
 
   test("should validate phone number format", async ({ page }) => {
