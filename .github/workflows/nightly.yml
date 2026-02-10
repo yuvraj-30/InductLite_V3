@@ -142,9 +142,12 @@ jobs:
           BASE_URL: http://localhost:3000
           TRUST_PROXY: "1"
           ALLOW_TEST_RUNNER: "1"
+          E2E_USE_SHARED_SERVER: "1"
         run: npm run -w apps/web test:e2e:full:all
 
       - name: Visual regression (local snapshots)
+        env:
+          E2E_USE_SHARED_SERVER: "1"
         run: npm run -w apps/web test:visual
 
       - name: Stop server
