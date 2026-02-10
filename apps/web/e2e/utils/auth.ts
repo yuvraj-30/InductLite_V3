@@ -15,6 +15,7 @@ export async function programmaticLogin(
   try {
     const rt = await context.request.get(`${base}/api/test/runtime`, {
       headers: { "x-allow-test-runner": "1" },
+      timeout: 3000,
     });
     try {
       const rtJson = await rt.json().catch(() => null);
@@ -31,7 +32,7 @@ export async function programmaticLogin(
 
   const res = await context.request.get(
     `${base}/api/test/create-session?email=${encodeURIComponent(email)}&json=1`,
-    { headers: { "x-allow-test-runner": "1" } },
+    { headers: { "x-allow-test-runner": "1" }, timeout: 10000 },
   );
 
   if (res.status() !== 200) {
