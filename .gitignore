@@ -61,7 +61,14 @@ vrt-db/
 # Temp/debug files
 tmp*
 tmp/
+.tmp*
+.tmp*/
 apps/web/eslint-plugin-security/test/run-one.js
+
+# Generated PWA artifacts (next-pwa build output)
+apps/web/public/sw.js
+apps/web/public/workbox-*.js
+apps/web/public/fallback-*.js
 
 # TypeScript
 *.tsbuildinfo

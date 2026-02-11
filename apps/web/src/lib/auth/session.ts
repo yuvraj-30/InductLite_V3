@@ -316,7 +316,7 @@ export async function login(
  */
 export async function destroySession(): Promise<void> {
   const session = await getSession();
-  session.destroy();
+  await session.destroy();
 }
 
 /**
@@ -328,20 +328,23 @@ export async function logout(
 ): Promise<void> {
   const session = await getSession();
 
-  if (session.user) {
-    // Audit log logout
-    const db = scopedDb(session.user.companyId);
-    await db.auditLog.create({
-      data: {
-        user_id: session.user.id,
-        action: "auth.logout",
-        ip_address: ipAddress,
-        user_agent: userAgent,
-      },
-    });
+  try {
+    if (session.user) {
+      // Audit log logout
+      const db = scopedDb(session.user.companyId);
+      await db.auditLog.create({
+        data: {
+          user_id: session.user.id,
+          action: "auth.logout",
+          ip_address: ipAddress,
+          user_agent: userAgent,
+        },
+      });
+    }
+  } finally {
+    // Always clear auth session even if audit logging fails.
+    await session.destroy();
   }
-
-  session.destroy();
 }
 
 /**
