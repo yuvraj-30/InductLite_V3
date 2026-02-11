@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getSessionUser } from "@/lib/auth";
+import { getSessionUserReadOnly } from "@/lib/auth";
 import { ChangePasswordForm } from "./change-password-form";
 
 /**
@@ -9,7 +9,7 @@ import { ChangePasswordForm } from "./change-password-form";
  */
 export default async function ChangePasswordPage() {
   // Require authentication
-  const user = await getSessionUser();
+  const user = await getSessionUserReadOnly();
   if (!user) {
     redirect("/login");
   }
@@ -26,7 +26,7 @@ export default async function ChangePasswordPage() {
 
       <div className="mt-6 text-center">
         <a
-          href="/dashboard"
+          href="/admin/dashboard"
           className="text-sm font-medium text-blue-600 hover:text-blue-500"
         >
           Back to dashboard

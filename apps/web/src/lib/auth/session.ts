@@ -418,7 +418,7 @@ export async function requireAdmin(): Promise<SessionUser> {
   const user = await requireAuth();
 
   if (user.role !== "ADMIN") {
-    redirect("/dashboard?error=unauthorized");
+    redirect("/admin/dashboard?error=unauthorized");
   }
 
   return user;

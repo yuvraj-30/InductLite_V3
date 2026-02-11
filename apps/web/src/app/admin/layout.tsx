@@ -12,6 +12,8 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const user = await requireAuthPageReadOnly();
+  const canManageContractors =
+    user.role === "ADMIN" || user.role === "SITE_MANAGER";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -86,12 +88,18 @@ export default async function AdminLayout({
               </Link>
             </li>
             <li>
-              <Link
-                href="/admin/contractors"
-                className="block px-4 py-2 text-sm text-gray-400 hover:bg-gray-100 rounded-md"
-              >
-                🔧 Contractors
-              </Link>
+              {canManageContractors ? (
+                <Link
+                  href="/admin/contractors"
+                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
+                >
+                  Contractors
+                </Link>
+              ) : (
+                <span className="block px-4 py-2 text-sm text-gray-400 rounded-md cursor-not-allowed">
+                  Contractors
+                </span>
+              )}
             </li>
             <li>
               <Link
@@ -111,14 +119,14 @@ export default async function AdminLayout({
                 <li>
                   <Link
                     href="/admin/users"
-                    className="block px-4 py-2 text-sm text-gray-400 hover:bg-gray-100 rounded-md"
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md"
                   >
-                    👥 Users
+                    Users
                   </Link>
                 </li>
                 <li>
                   <Link
-                    href="/admin/audit"
+                    href="/admin/audit-log"
                     className="block px-4 py-2 text-sm text-gray-400 hover:bg-gray-100 rounded-md"
                   >
                     📜 Audit Log
@@ -135,3 +143,4 @@ export default async function AdminLayout({
     </div>
   );
 }
+

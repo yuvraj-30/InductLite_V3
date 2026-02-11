@@ -5,7 +5,7 @@
  * Only visible to admins.
  */
 
-import { checkAdmin } from "@/lib/auth";
+import { requireAdminPageReadOnly } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import {
   type AuditAction,
@@ -32,17 +32,8 @@ export default async function AuditLogPage({
 }: AuditLogPageProps) {
   const params = await searchParams;
 
-  // Check admin permission
-  const guard = await checkAdmin();
-  if (!guard.success) {
-    return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-700">{guard.error}</p>
-        </div>
-      </div>
-    );
-  }
+  // Check admin permission (read-only guard for server components/pages).
+  await requireAdminPageReadOnly();
 
   // Get tenant context
   const context = await requireAuthenticatedContextReadOnly();

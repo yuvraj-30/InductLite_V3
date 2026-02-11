@@ -24,7 +24,11 @@ export default async function AdminDashboardPage() {
   if (!result.success) {
     if (result.code === "UNAUTHENTICATED") redirect("/login");
     if (result.code === "FORBIDDEN") redirect("/unauthorized");
+    redirect("/unauthorized");
   }
+  const canManageContractors =
+    result.user.role === "ADMIN" || result.user.role === "SITE_MANAGER";
+  const canManageUsers = result.user.role === "ADMIN";
 
   const context = await requireAuthenticatedContextReadOnly();
   const companyId = context.companyId;
@@ -187,6 +191,38 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
       </div>
+
+      {(canManageContractors || canManageUsers) && (
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-gray-900 mb-3">
+            Management
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {canManageContractors && (
+              <Link
+                href="/admin/contractors"
+                className="bg-white rounded-lg shadow p-5 hover:shadow-md transition-shadow"
+              >
+                <p className="text-sm font-medium text-gray-500">Contractors</p>
+                <p className="mt-1 text-lg font-semibold text-gray-900">
+                  View and manage contractor records
+                </p>
+              </Link>
+            )}
+            {canManageUsers && (
+              <Link
+                href="/admin/users"
+                className="bg-white rounded-lg shadow p-5 hover:shadow-md transition-shadow"
+              >
+                <p className="text-sm font-medium text-gray-500">Users</p>
+                <p className="mt-1 text-lg font-semibold text-gray-900">
+                  View roles and account status
+                </p>
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
