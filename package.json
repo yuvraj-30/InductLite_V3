@@ -21,7 +21,13 @@
     "db:studio": "turbo run db:studio",
     "vrt:up": "docker compose -f ./docker-compose.vrt.yml up -d",
     "vrt:down": "docker compose -f ./docker-compose.vrt.yml down --volumes",
-    "vrt:logs": "docker compose -f ./docker-compose.vrt.yml logs -f"
+    "vrt:logs": "docker compose -f ./docker-compose.vrt.yml logs -f",
+    "test:integration": "turbo run test:integration",
+    "test:coverage": "turbo run test:coverage",
+    "test:e2e:smoke": "turbo run test:e2e:smoke",
+    "test:e2e:full": "turbo run test:e2e:full",
+    "test:e2e:full:all": "turbo run test:e2e:full:all",
+    "test:visual": "turbo run test:visual"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.1",
@@ -43,6 +49,7 @@
     "node": ">=20.9.0"
   },
   "overrides": {
-    "undici": ">=6.23.0"
+    "undici": ">=6.23.0",
+    "lru-cache": "^10.4.3"
   }
 }
