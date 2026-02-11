@@ -23,7 +23,7 @@ await prisma.site.findFirst({ where: { id: siteId } }); // NEVER for tenant data
 
 **Blocked Prisma operations** on tenant models: `findUnique`, `update`, `delete`, `upsert` — use `findFirst/findMany` + `updateMany/deleteMany` instead. The `scopedDb` proxy throws at runtime if you try.
 
-**Unscoped access (`publicDb`)**: Only for slug lookups in public sign-in flow. See [public-db.ts](apps/web/src/lib/db/public-db.ts).
+**Unscoped access (`publicDb`)**: Only for slug lookups in public sign-in flow. See [public-db.ts](../apps/web/src/lib/db/public-db.ts).
 
 ## Server Actions Pattern
 
@@ -47,7 +47,7 @@ export async function createSiteAction(formData: FormData): Promise<ActionResult
 }
 ```
 
-Reference: [apps/web/src/app/admin/sites/actions.ts](apps/web/src/app/admin/sites/actions.ts)
+Reference: [apps/web/src/app/admin/sites/actions.ts](../apps/web/src/app/admin/sites/actions.ts)
 
 ## Two Context Patterns
 
@@ -65,13 +65,13 @@ Both return `{ companyId, ... }` for use with `scopedDb()`.
 
 | Concern | Path |
 |---------|------|
-| Tenant scoping | [apps/web/src/lib/db/scoped-db.ts](apps/web/src/lib/db/scoped-db.ts) |
-| Repository layer | [apps/web/src/lib/repository/](apps/web/src/lib/repository/) |
-| Auth + CSRF | [apps/web/src/lib/auth/](apps/web/src/lib/auth/) |
-| Rate limiting | [apps/web/src/lib/rate-limit/](apps/web/src/lib/rate-limit/) |
-| Export jobs | [apps/web/src/lib/export/](apps/web/src/lib/export/) |
-| ESLint security | [apps/web/eslint-plugin-security/](apps/web/eslint-plugin-security/) |
-| Prisma schema | [apps/web/prisma/schema.prisma](apps/web/prisma/schema.prisma) |
+| Tenant scoping | [apps/web/src/lib/db/scoped-db.ts](../apps/web/src/lib/db/scoped-db.ts) |
+| Repository layer | [apps/web/src/lib/repository/](../apps/web/src/lib/repository) |
+| Auth + CSRF | [apps/web/src/lib/auth/](../apps/web/src/lib/auth) |
+| Rate limiting | [apps/web/src/lib/rate-limit/](../apps/web/src/lib/rate-limit) |
+| Export jobs | [apps/web/src/lib/export/](../apps/web/src/lib/export) |
+| ESLint security | [apps/web/eslint-plugin-security/](../apps/web/eslint-plugin-security) |
+| Prisma schema | [apps/web/prisma/schema.prisma](../apps/web/prisma/schema.prisma) |
 
 ## Commands
 
@@ -121,11 +121,11 @@ Guardrails: Max 50k rows, 100MB, 5 exports/company/day, 120s timeout.
 
 ## Adding New Tenant Tables
 
-1. Add model to [schema.prisma](apps/web/prisma/schema.prisma) with `company_id` + `@@index([company_id])`
-2. Add model name to `TENANT_MODELS` array in [scoped-db.ts](apps/web/src/lib/db/scoped-db.ts)
-3. Add to ESLint `tenantTables` in [eslint-plugin-security/index.js](apps/web/eslint-plugin-security/index.js)
+1. Add model to [schema.prisma](../apps/web/prisma/schema.prisma) with `company_id` + `@@index([company_id])`
+2. Add model name to `TENANT_MODELS` array in [scoped-db.ts](../apps/web/src/lib/db/scoped-db.ts)
+3. Add to ESLint `tenantTables` in [eslint-plugin-security/index.js](../apps/web/eslint-plugin-security/index.js)
 4. Create repository in `apps/web/src/lib/repository/` using `scopedDb` pattern
-5. Add IDOR test in [tests/integration/cross-tenant-idor.test.ts](apps/web/tests/integration/cross-tenant-idor.test.ts)
+5. Add IDOR test in [tests/integration/cross-tenant-idor.test.ts](../apps/web/tests/integration/cross-tenant-idor.test.ts)
 
 ## Error Handling: RepositoryError Pattern
 
@@ -165,7 +165,7 @@ Three rate limiters with different thresholds. Uses Upstash Redis in production,
 | Public sign-in | 10 requests | 1 hour | `signin:{clientKey}:{siteSlug}` |
 | Public slug access | 10 requests | 1 min | `public-slug:{clientKey}` |
 
-**clientKey** = `hash(ip + userAgent)` — see [clientKey.ts](apps/web/src/lib/rate-limit/clientKey.ts)
+**clientKey** = `hash(ip + userAgent)` — see [clientKey.ts](../apps/web/src/lib/rate-limit/clientKey.ts)
 
 ```ts
 // Usage in server actions
@@ -181,7 +181,7 @@ if (!rateLimit.success) {
 
 ## CSP & Middleware
 
-[middleware.ts](apps/web/src/middleware.ts) applies nonce-based Content Security Policy on every request.
+[middleware.ts](../apps/web/src/proxy.ts) applies nonce-based Content Security Policy on every request.
 
 **Key behaviors**:
 - Generates per-request nonce via `crypto.getRandomValues`
