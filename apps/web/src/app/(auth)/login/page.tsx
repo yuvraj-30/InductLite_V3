@@ -12,7 +12,8 @@ export default async function LoginPage() {
   // Check if already authenticated (read-only, no cookie writes)
   const user = await getSessionUserReadOnly();
   if (user) {
-    redirect("/admin/dashboard");
+    // Avoid redirecting non-admin roles into an unauthorized loop.
+    redirect(user.role === "ADMIN" ? "/admin/dashboard" : "/admin/sites");
   }
 
   return (

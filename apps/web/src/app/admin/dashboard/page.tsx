@@ -9,7 +9,7 @@
  */
 
 import Link from "next/link";
-import { checkPermissionReadOnly } from "@/lib/auth";
+import { checkAuthReadOnly } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import { redirect } from "next/navigation";
 import { getDashboardMetrics } from "@/lib/repository/dashboard.repository";
@@ -19,12 +19,11 @@ export const metadata = {
 };
 
 export default async function AdminDashboardPage() {
-  // Check auth - ADMIN or VIEWER can view dashboard
-  const result = await checkPermissionReadOnly("audit:read");
+  // Check authentication only. Audit-specific sections remain role-gated below.
+  const result = await checkAuthReadOnly();
   if (!result.success) {
     if (result.code === "UNAUTHENTICATED") redirect("/login");
-    if (result.code === "FORBIDDEN") redirect("/unauthorized");
-    redirect("/unauthorized");
+    redirect("/login");
   }
   const canManageContractors =
     result.user.role === "ADMIN" || result.user.role === "SITE_MANAGER";
