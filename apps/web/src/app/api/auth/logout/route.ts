@@ -3,6 +3,7 @@ import { logout } from "@/lib/auth";
 import { getClientIp, getUserAgent } from "@/lib/auth/csrf";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
+import { buildPublicUrl } from "@/lib/url/public-url";
 
 export async function POST(request: Request) {
   const requestId = generateRequestId();
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
     log.error({ action: "auth.logout", error: String(error) });
   }
 
-  return NextResponse.redirect(new URL("/login", request.url), {
+  return NextResponse.redirect(buildPublicUrl("/login", request.url), {
     status: 303,
   });
 }

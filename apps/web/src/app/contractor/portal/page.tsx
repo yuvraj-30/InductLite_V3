@@ -1,6 +1,7 @@
 import { getContractorSession } from "@/lib/auth/contractor-session";
 import { findContractorByIdWithDocuments } from "@/lib/repository";
 import { getSignedDownloadUrl } from "@/lib/storage";
+import { Alert } from "@/components/ui/alert";
 
 export const metadata = {
   title: "Contractor Portal | InductLite",
@@ -11,11 +12,9 @@ export default async function ContractorPortalPage() {
   if (!session) {
     return (
       <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-700">
-            Your session has expired. Please request a new magic link.
-          </p>
-        </div>
+        <Alert variant="error">
+          Your session has expired. Please request a new magic link.
+        </Alert>
       </div>
     );
   }
@@ -28,9 +27,7 @@ export default async function ContractorPortalPage() {
   if (!contractor) {
     return (
       <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-700">Contractor not found.</p>
-        </div>
+        <Alert variant="error">Contractor not found.</Alert>
       </div>
     );
   }
@@ -44,29 +41,23 @@ export default async function ContractorPortalPage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-4">
-        Contractor portal
-      </h1>
-      <p className="text-gray-600 mb-6">Welcome, {contractor.name}.</p>
+      <h1 className="mb-4 text-2xl font-bold text-gray-900">Contractor Portal</h1>
+      <p className="mb-6 text-gray-600">Welcome, {contractor.name}.</p>
 
-      <div className="bg-white shadow rounded-lg overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-200">
+      <div className="overflow-hidden rounded-lg border bg-white">
+        <div className="border-b border-gray-200 px-4 py-3">
           <h2 className="text-lg font-medium text-gray-900">Documents</h2>
         </div>
         <ul className="divide-y divide-gray-200">
           {documents.length === 0 ? (
-            <li className="px-4 py-4 text-sm text-gray-500">
-              No documents available.
-            </li>
+            <li className="px-4 py-4 text-sm text-gray-500">No documents available.</li>
           ) : (
             documents.map((doc) => (
-              <li key={doc.id} className="px-4 py-4 flex justify-between">
+              <li key={doc.id} className="flex justify-between px-4 py-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    {doc.file_name}
-                  </p>
+                  <p className="text-sm font-medium text-gray-900">{doc.file_name}</p>
                   <p className="text-xs text-gray-500">
-                    {doc.document_type} · {doc.mime_type}
+                    {doc.document_type} | {doc.mime_type}
                   </p>
                 </div>
                 <a

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { consumeMagicLink } from "@/lib/auth/magic-link";
 import { setContractorSession } from "@/lib/auth/contractor-session";
+import { buildPublicUrl } from "@/lib/url/public-url";
 
 export const runtime = "nodejs";
 
@@ -9,12 +10,16 @@ export async function GET(req: Request) {
   const token = url.searchParams.get("token") || "";
 
   if (!token) {
-    return NextResponse.redirect(new URL("/contractor?status=invalid", url));
+    return NextResponse.redirect(
+      buildPublicUrl("/contractor?status=invalid", req.url),
+    );
   }
 
   const result = await consumeMagicLink(token);
   if (!result) {
-    return NextResponse.redirect(new URL("/contractor?status=invalid", url));
+    return NextResponse.redirect(
+      buildPublicUrl("/contractor?status=invalid", req.url),
+    );
   }
 
   await setContractorSession({
@@ -22,5 +27,5 @@ export async function GET(req: Request) {
     companyId: result.company.id,
   });
 
-  return NextResponse.redirect(new URL("/contractor/portal", url));
+  return NextResponse.redirect(buildPublicUrl("/contractor/portal", req.url));
 }

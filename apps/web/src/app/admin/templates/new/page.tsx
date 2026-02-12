@@ -5,25 +5,21 @@
  */
 
 import Link from "next/link";
-import { checkAuthReadOnly } from "@/lib/auth";
+import { checkPermissionReadOnly } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 import { findAllSites } from "@/lib/repository";
 import { NewTemplateForm } from "./new-template-form";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "New Template | InductLite",
 };
 
 export default async function NewTemplatePage() {
-  const guard = await checkAuthReadOnly();
+  const guard = await checkPermissionReadOnly("template:manage");
   if (!guard.success) {
-    return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-700">{guard.error}</p>
-        </div>
-      </div>
-    );
+    if (guard.code === "UNAUTHENTICATED") redirect("/login");
+    redirect("/unauthorized");
   }
 
   const context = await requireAuthenticatedContextReadOnly();

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSessionUserReadOnly } from "@/lib/auth";
+import Link from "next/link";
 import { ChangePasswordForm } from "./change-password-form";
 
 /**
@@ -25,12 +26,9 @@ export default async function ChangePasswordPage() {
       <ChangePasswordForm />
 
       <div className="mt-6 text-center">
-        <a
-          href="/admin/dashboard"
-          className="text-sm font-medium text-blue-600 hover:text-blue-500"
-        >
+        <Link href="/admin/dashboard" className="text-sm font-medium text-blue-600 hover:text-blue-500">
           Back to dashboard
-        </a>
+        </Link>
       </div>
     </div>
   );

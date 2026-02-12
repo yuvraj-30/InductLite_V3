@@ -65,13 +65,25 @@ export async function POST(req: Request) {
     const password = (body?.password as string) ?? "Admin123!";
     const roleStr = (body?.role as string | undefined) ?? "ADMIN";
     const { UserRole } = await import("@prisma/client");
-    const roleValue = roleStr === "ADMIN" ? UserRole.ADMIN : UserRole.VIEWER;
+    const roleMap: Record<string, typeof UserRole[keyof typeof UserRole]> = {
+      ADMIN: UserRole.ADMIN,
+      SITE_MANAGER: UserRole.SITE_MANAGER,
+      VIEWER: UserRole.VIEWER,
+    };
+    const roleValue = roleMap[roleStr] ?? null;
     const companySlug =
       (body?.companySlug as string) ??
       `e2e-${Date.now().toString(36).slice(2, 8)}`;
 
     if (!email) {
       return NextResponse.json({ error: "email required" }, { status: 400 });
+    }
+
+    if (!roleValue) {
+      return NextResponse.json(
+        { error: "role must be one of ADMIN, SITE_MANAGER, VIEWER" },
+        { status: 400 },
+      );
     }
 
     // Find or create a test company specific to this worker/run

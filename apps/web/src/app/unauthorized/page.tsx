@@ -7,31 +7,37 @@ import Link from "next/link";
  */
 export default function UnauthorizedPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full text-center">
-        <div className="mb-6">
-          <span className="text-6xl">🚫</span>
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white p-8 text-center shadow-sm">
+        <div className="mb-6 text-red-500">
+          <svg
+            className="mx-auto h-14 w-14"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01M7 4h10l3 3v10l-3 3H7l-3-3V7l3-3z"
+            />
+          </svg>
         </div>
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">Access Denied</h1>
+        <h1 className="mb-4 text-3xl font-bold text-gray-900">Access Denied</h1>
 
-        <p className="text-gray-600 mb-8">
-          You don&apos;t have permission to access this page. Please contact
-          your administrator if you believe this is an error.
+        <p className="mb-8 text-gray-600">
+          You don&apos;t have permission to access this page. Contact your
+          administrator if you believe this is an error.
         </p>
 
         <div className="space-y-4">
-          <Link
-            href="/admin/dashboard"
-            className="block w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-          >
+          <Link href="/admin/dashboard" className="btn-primary block w-full">
             Go to Dashboard
           </Link>
 
-          <Link
-            href="/logout"
-            className="block w-full py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-          >
+          <Link href="/logout" className="btn-secondary block w-full">
             Sign Out
           </Link>
         </div>

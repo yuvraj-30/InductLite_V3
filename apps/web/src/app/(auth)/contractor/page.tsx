@@ -1,4 +1,5 @@
 import { MagicLinkForm } from "./magic-link-form";
+import { Alert } from "@/components/ui/alert";
 
 export const metadata = {
   title: "Contractor Access | InductLite",
@@ -20,12 +21,9 @@ export default async function ContractorLoginPage({
         Contractor access
       </h2>
       {status === "invalid" && (
-        <div
-          className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm"
-          role="alert"
-        >
+        <Alert variant="error" className="mb-6">
           The link is invalid or has expired. Request a new one below.
-        </div>
+        </Alert>
       )}
       <MagicLinkForm />
     </div>
