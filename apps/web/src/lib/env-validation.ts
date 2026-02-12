@@ -427,10 +427,19 @@ export function validateEnv(): {
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
-    if (appUrl.startsWith("http://") && !appUrl.includes("localhost")) {
-      warnings.push(
-        "NEXT_PUBLIC_APP_URL uses HTTP. Consider HTTPS for production.",
-      );
+    if (appUrl) {
+      try {
+        const parsed = new URL(appUrl);
+        const isLocalHost =
+          parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+        if (parsed.protocol === "http:" && !isLocalHost) {
+          warnings.push(
+            "NEXT_PUBLIC_APP_URL uses HTTP. Consider HTTPS for production.",
+          );
+        }
+      } catch {
+        // URL format validation is handled earlier; ignore here.
+      }
     }
   }
 
