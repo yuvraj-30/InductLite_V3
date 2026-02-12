@@ -28,6 +28,27 @@ if (process.argv.includes("--check")) {
   process.exit(0);
 }
 
+const appRoot = process.cwd();
+const standaloneAppRoot = path.dirname(serverPath);
+
+function syncDirIfMissing(sourceDir, targetDir) {
+  if (!fs.existsSync(sourceDir) || fs.existsSync(targetDir)) {
+    return;
+  }
+  fs.mkdirSync(path.dirname(targetDir), { recursive: true });
+  fs.cpSync(sourceDir, targetDir, { recursive: true });
+}
+
+// In monorepo standalone output, .next/static and public are not always bundled
+// beside server.js. Ensure they exist so CSS/JS/public assets are served.
+syncDirIfMissing(path.resolve(appRoot, ".next", "static"), path.resolve(standaloneAppRoot, ".next", "static"));
+syncDirIfMissing(path.resolve(appRoot, "public"), path.resolve(standaloneAppRoot, "public"));
+
+if (process.argv.includes("--prepare-only")) {
+  console.log("standalone-assets-prepared");
+  process.exit(0);
+}
+
 const child = spawn(process.execPath, [serverPath], {
   stdio: "inherit",
   env: {
