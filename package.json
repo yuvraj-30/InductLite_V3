@@ -40,7 +40,7 @@
     "packages/*"
   ],
   "engines": {
-    "node": ">=20.9.0"
+    "node": "24.x"
   },
   "overrides": {
     "undici": ">=6.23.0"

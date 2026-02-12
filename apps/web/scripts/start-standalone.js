@@ -30,7 +30,11 @@ if (process.argv.includes("--check")) {
 
 const child = spawn(process.execPath, [serverPath], {
   stdio: "inherit",
-  env: process.env,
+  env: {
+    ...process.env,
+    // Render expects the web process to bind to all interfaces.
+    HOSTNAME: process.env.HOSTNAME || "0.0.0.0",
+  },
 });
 
 child.on("exit", (code, signal) => {
