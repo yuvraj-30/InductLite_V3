@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { checkPermission } from "@/lib/auth";
-import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
+import { checkPermissionReadOnly } from "@/lib/auth";
 import { findContractorDocumentById } from "@/lib/repository/contractor.repository";
 import { createAuditLog } from "@/lib/repository/audit.repository";
 import { getSignedDownloadUrl } from "@/lib/storage";
@@ -11,7 +10,7 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const guard = await checkPermission("contractor:manage");
+  const guard = await checkPermissionReadOnly("contractor:manage");
   if (!guard.success) {
     return NextResponse.json(
       { error: guard.error },
@@ -19,7 +18,7 @@ export async function GET(
     );
   }
 
-  const context = await requireAuthenticatedContextReadOnly();
+  const context = guard.user;
   const { id } = await params;
 
   const doc = await findContractorDocumentById(context.companyId, id);
@@ -36,7 +35,7 @@ export async function GET(
     action: "contractor.document_download",
     entity_type: "ContractorDocument",
     entity_id: doc.id,
-    user_id: context.userId,
+    user_id: context.id,
     request_id: requestId,
   });
 
