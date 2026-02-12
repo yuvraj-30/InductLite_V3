@@ -37,9 +37,11 @@ export default function UnauthorizedPage() {
             Go to Dashboard
           </Link>
 
-          <Link href="/logout" className="btn-secondary block w-full">
-            Sign Out
-          </Link>
+          <form action="/api/auth/logout" method="post">
+            <button type="submit" className="btn-secondary block w-full">
+              Sign Out
+            </button>
+          </form>
         </div>
       </div>
     </div>

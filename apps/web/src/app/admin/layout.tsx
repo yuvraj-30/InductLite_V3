@@ -41,9 +41,14 @@ export default async function AdminLayout({
             >
               Password
             </Link>
-            <Link href="/logout" className="text-sm text-red-600 hover:text-red-700">
-              Sign Out
-            </Link>
+            <form action="/api/auth/logout" method="post">
+              <button
+                type="submit"
+                className="text-sm text-red-600 hover:text-red-700"
+              >
+                Sign Out
+              </button>
+            </form>
           </div>
         </div>
       </header>

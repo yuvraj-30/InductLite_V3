@@ -24,7 +24,9 @@ async function handleLogout(request: Request) {
 }
 
 export async function GET(request: Request) {
-  return handleLogout(request);
+  return NextResponse.redirect(buildPublicUrl("/login", request.url), {
+    status: 303,
+  });
 }
 
 export async function POST(request: Request) {
