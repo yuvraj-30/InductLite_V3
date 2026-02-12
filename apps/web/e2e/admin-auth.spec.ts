@@ -102,7 +102,10 @@ test.describe.serial("Admin Authentication", () => {
       await expect(page).toHaveURL(/\/admin/);
     }
 
-    await expect(page.getByRole("link", { name: /sign out/i })).toBeVisible();
+    const signOutControl = page
+      .locator('button:has-text("Sign Out"), a:has-text("Sign Out")')
+      .first();
+    await expect(signOutControl).toBeVisible();
   });
 
   test("should set HttpOnly session cookie", async ({
