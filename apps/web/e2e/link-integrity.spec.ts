@@ -7,10 +7,13 @@ type LinkTarget = {
 
 function normalizePath(input: string): string | null {
   if (!input) return null;
+  const normalizedScheme = input.trim().toLowerCase();
   if (
-    input.startsWith("mailto:") ||
-    input.startsWith("tel:") ||
-    input.startsWith("javascript:")
+    normalizedScheme.startsWith("mailto:") ||
+    normalizedScheme.startsWith("tel:") ||
+    normalizedScheme.startsWith("javascript:") ||
+    normalizedScheme.startsWith("data:") ||
+    normalizedScheme.startsWith("vbscript:")
   ) {
     return null;
   }
