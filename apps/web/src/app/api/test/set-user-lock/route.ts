@@ -4,10 +4,6 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
-  if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'NotFound' }, { status: 404 });
-  }
-
   if (
     process.env.NODE_ENV !== "test" &&
     process.env.ALLOW_TEST_RUNNER !== "1"

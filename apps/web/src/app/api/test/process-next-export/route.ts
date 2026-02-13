@@ -2,10 +2,6 @@ import { NextResponse } from "next/server";
 import { processNextExportJob } from "@/lib/export/runner";
 
 export async function POST(req: Request) {
-  if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'NotFound' }, { status: 404 });
-  }
-
   const allowedHeader = req.headers.get("x-test-runner");
   if (
     process.env.NODE_ENV !== "test" &&

@@ -4,10 +4,6 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  if (process.env.NODE_ENV === 'production') {
-    return NextResponse.json({ error: 'NotFound' }, { status: 404 });
-  }
-
   // Allow quick checks from tests; no secrets returned.
   const url = new URL(req.url);
   const email = url.searchParams.get("email");
