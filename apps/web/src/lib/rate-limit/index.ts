@@ -183,6 +183,9 @@ const RL_SIGNIN_PER_SITE_PER_MIN = Number(
 const RL_SIGNOUT_PER_IP_PER_MIN = Number(
   process.env.RL_SIGNOUT_PER_IP_PER_MIN ?? 30,
 );
+const RL_CONTRACTOR_MAGIC_LINK_PER_IP_PER_HOUR = Number(
+  process.env.RL_CONTRACTOR_MAGIC_LINK_PER_IP_PER_HOUR ?? 3,
+);
 
 // Clean up every minute
 if (typeof setInterval !== "undefined") {
@@ -404,6 +407,90 @@ export async function checkLoginRateLimit(
       "Login rate limit exceeded (in-memory)",
     );
     recordRateLimitBlocked({ kind: "login", clientKey, meta: { email } });
+  }
+
+  return {
+    success,
+    limit,
+    remaining,
+    reset: Date.now() + windowMs,
+  };
+}
+
+/**
+ * Check rate limit for contractor magic-link requests.
+ * Default: 3 requests per 60 minutes per client IP key.
+ */
+export async function checkContractorMagicLinkRateLimit(options?: {
+  requestId?: string;
+  clientKey?: string;
+}): Promise<RateLimitResult> {
+  const requestId = options?.requestId ?? generateRequestId();
+  const log = createRequestLogger(requestId);
+
+  let clientKey: string;
+  if (options?.clientKey) {
+    clientKey = options.clientKey;
+  } else {
+    const headersList = await headers();
+    const headersObj: Record<string, string | undefined> = {
+      "x-forwarded-for": headersList.get("x-forwarded-for") ?? undefined,
+      "x-real-ip": headersList.get("x-real-ip") ?? undefined,
+      "user-agent": headersList.get("user-agent") ?? undefined,
+      accept: headersList.get("accept") ?? undefined,
+    };
+
+    clientKey = getStableClientKey(headersObj, {
+      trustProxy: process.env.TRUST_PROXY === "1",
+    });
+  }
+
+  const key = `${TEST_RUN_PREFIX}contractor-magic-link:${clientKey}`;
+
+  const redis = getRedisClient();
+  if (redis) {
+    const limiter = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(
+        RL_CONTRACTOR_MAGIC_LINK_PER_IP_PER_HOUR,
+        "60 m",
+      ),
+      analytics: true,
+      prefix: "inductlite:contractor-magic-ratelimit",
+    });
+
+    const result = await limiter.limit(key);
+    if (!result.success) {
+      log.warn({ clientKey }, "Contractor magic-link rate limit exceeded");
+      recordRateLimitBlocked({
+        kind: "contractor-magic-link",
+        clientKey,
+      });
+    }
+
+    return {
+      success: result.success,
+      limit: result.limit,
+      remaining: result.remaining,
+      reset: result.reset,
+    };
+  }
+
+  const windowMs = 60 * 60 * 1000;
+  const limit = RL_CONTRACTOR_MAGIC_LINK_PER_IP_PER_HOUR;
+  const count = await inMemoryStore.incr(key, windowMs);
+  const remaining = Math.max(0, limit - count);
+  const success = count <= limit;
+
+  if (!success) {
+    log.warn(
+      { clientKey },
+      "Contractor magic-link rate limit exceeded (in-memory)",
+    );
+    recordRateLimitBlocked({
+      kind: "contractor-magic-link",
+      clientKey,
+    });
   }
 
   return {

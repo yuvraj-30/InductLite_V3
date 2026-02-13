@@ -6,7 +6,6 @@
 
 import Link from "next/link";
 import { checkAuthReadOnly, checkPermissionReadOnly } from "@/lib/auth";
-import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import { listTemplates } from "@/lib/repository";
 import {
   PublishTemplateForm,
@@ -68,16 +67,11 @@ export default async function TemplatesPage() {
     );
   }
 
-  const context = await requireAuthenticatedContextReadOnly();
-  const canManage = await checkPermissionReadOnly("template:manage");
+  const [canManage, result] = await Promise.all([
+    checkPermissionReadOnly("template:manage"),
+    listTemplates(guard.user.companyId, { isArchived: false }, { pageSize: 100 }),
+  ]);
   const canManageTemplates = canManage.success;
-
-  // Fetch templates (non-archived first, then by version)
-  const result = await listTemplates(
-    context.companyId,
-    { isArchived: false },
-    { pageSize: 100 },
-  );
 
   const templates = result.items;
 

@@ -39,6 +39,8 @@ describe("Export worker CSV generation", () => {
         visitor_email: "a@x.com",
         employer_name: "Acme",
         visitor_type: "VISITOR" as const,
+        hasAcceptedTerms: false,
+        termsAcceptedAt: null,
         sign_in_ts: new Date("2024-01-01T10:00:00Z"),
         sign_out_ts: null,
         signed_out_by: null,

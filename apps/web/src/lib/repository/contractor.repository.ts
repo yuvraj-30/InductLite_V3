@@ -111,6 +111,29 @@ export async function findContractorDocumentById(
 }
 
 /**
+ * Find a contractor document by ID scoped to a specific contractor and company.
+ */
+export async function findContractorDocumentForContractor(
+  companyId: string,
+  contractorId: string,
+  documentId: string,
+): Promise<ContractorDocument | null> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+    return await db.contractorDocument.findFirst({
+      where: {
+        id: documentId,
+        contractor: { is: { id: contractorId, company_id: companyId } },
+      },
+    });
+  } catch (error) {
+    handlePrismaError(error, "ContractorDocument");
+  }
+}
+
+/**
  * Find contractor by ID within a company
  */
 export async function findContractorById(

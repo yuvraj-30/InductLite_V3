@@ -6,6 +6,7 @@
 
 import { getIronSession, IronSession } from "iron-session";
 import { cookies } from "next/headers";
+import { unstable_cache } from "next/cache";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import {
@@ -29,6 +30,33 @@ export const getSession = cache(async (): Promise<IronSession<SessionData>> => {
   return getIronSession<SessionData>(cookieStore, sessionOptions);
 });
 
+const getCachedSessionUserState = unstable_cache(
+  async (companyId: string, userId: string) => {
+    const db = scopedDb(companyId);
+    return db.user.findFirst({
+      where: { id: userId, company_id: companyId },
+      select: {
+        id: true,
+        is_active: true,
+        locked_until: true,
+      },
+    });
+  },
+  ["session-user-state"],
+  { revalidate: 60 },
+);
+
+async function isSessionUserStillValid(user: SessionUser): Promise<boolean> {
+  const dbState = await getCachedSessionUserState(user.companyId, user.id);
+  if (!dbState || !dbState.is_active) {
+    return false;
+  }
+  if (dbState.locked_until && dbState.locked_until > new Date()) {
+    return false;
+  }
+  return true;
+}
+
 /**
  * Get current session user (read-only version for Server Components)
  * Does NOT update lastActivity to avoid cookie modification.
@@ -49,6 +77,10 @@ export async function getSessionUserReadOnly(): Promise<SessionUser | null> {
       // Session expired - return null (can't destroy in Server Component)
       return null;
     }
+  }
+
+  if (!(await isSessionUserStillValid(session.user))) {
+    return null;
   }
 
   return session.user;
@@ -74,6 +106,11 @@ export async function getSessionUser(): Promise<SessionUser | null> {
       await destroySession();
       return null;
     }
+  }
+
+  if (!(await isSessionUserStillValid(session.user))) {
+    await session.destroy();
+    return null;
   }
 
   // Update last activity

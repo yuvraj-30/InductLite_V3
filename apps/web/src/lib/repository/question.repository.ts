@@ -202,30 +202,31 @@ export async function createQuestion(
     );
   }
 
-  // Get max display_order if not provided
-  let displayOrder = input.display_order;
-  if (displayOrder === undefined) {
-    const maxOrder = await publicDb.inductionQuestion.findFirst({
-      where: { template_id: templateId },
-      orderBy: { display_order: "desc" },
-      select: { display_order: true },
-    });
-    displayOrder = (maxOrder?.display_order ?? 0) + 1;
-  }
-
   try {
-    const question = await publicDb.inductionQuestion.create({
-      data: {
-        template_id: templateId,
-        question_text: input.question_text,
-        question_type: input.question_type,
-        options: input.options ?? Prisma.JsonNull,
-        is_required: input.is_required ?? true,
-        display_order: displayOrder,
-        correct_answer:
-          (input.correct_answer as Prisma.InputJsonValue) ?? Prisma.JsonNull,
-        logic: (input.logic as Prisma.InputJsonValue) ?? Prisma.JsonNull,
-      } as unknown as Prisma.InductionQuestionCreateInput,
+    const question = await publicDb.$transaction(async (tx) => {
+      let displayOrder = input.display_order;
+      if (displayOrder === undefined) {
+        const maxOrder = await tx.inductionQuestion.findFirst({
+          where: { template_id: templateId },
+          orderBy: { display_order: "desc" },
+          select: { display_order: true },
+        });
+        displayOrder = (maxOrder?.display_order ?? 0) + 1;
+      }
+
+      return tx.inductionQuestion.create({
+        data: {
+          template_id: templateId,
+          question_text: input.question_text,
+          question_type: input.question_type,
+          options: input.options ?? Prisma.JsonNull,
+          is_required: input.is_required ?? true,
+          display_order: displayOrder,
+          correct_answer:
+            (input.correct_answer as Prisma.InputJsonValue) ?? Prisma.JsonNull,
+          logic: (input.logic as Prisma.InputJsonValue) ?? Prisma.JsonNull,
+        } as unknown as Prisma.InductionQuestionCreateInput,
+      });
     });
 
     return question as Question;

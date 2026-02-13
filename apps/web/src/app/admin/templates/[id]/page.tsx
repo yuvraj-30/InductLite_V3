@@ -8,7 +8,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { checkAuthReadOnly, checkPermissionReadOnly } from "@/lib/auth";
-import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import { findTemplateWithQuestions } from "@/lib/repository";
 import { QuestionBuilder } from "./question-builder";
 import { TemplateHeader } from "./template-header";
@@ -38,11 +37,11 @@ export default async function TemplateEditorPage({ params }: Props) {
     );
   }
 
-  const context = await requireAuthenticatedContextReadOnly();
-  const canManage = await checkPermissionReadOnly("template:manage");
+  const [canManage, template] = await Promise.all([
+    checkPermissionReadOnly("template:manage"),
+    findTemplateWithQuestions(guard.user.companyId, id),
+  ]);
   const canManageTemplates = canManage.success;
-
-  const template = await findTemplateWithQuestions(context.companyId, id);
 
   if (!template) {
     notFound();

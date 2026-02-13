@@ -32,9 +32,11 @@ export async function getDashboardMetrics(
 
   const db = scopedDb(companyId);
   const now = opts.now ?? new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const sevenDaysAgo = new Date(todayStart);
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const todayStartUtc = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
+  const sevenDaysAgoUtc = new Date(todayStartUtc);
+  sevenDaysAgoUtc.setUTCDate(sevenDaysAgoUtc.getUTCDate() - 7);
   const thirtyDaysFromNow = new Date(now);
   thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
 
@@ -55,10 +57,10 @@ export async function getDashboardMetrics(
         where: { company_id: companyId, sign_out_ts: null },
       }),
       db.signInRecord.count({
-        where: { company_id: companyId, sign_in_ts: { gte: todayStart } },
+        where: { company_id: companyId, sign_in_ts: { gte: todayStartUtc } },
       }),
       db.signInRecord.count({
-        where: { company_id: companyId, sign_in_ts: { gte: sevenDaysAgo } },
+        where: { company_id: companyId, sign_in_ts: { gte: sevenDaysAgoUtc } },
       }),
       db.contractorDocument.count({
         where: {

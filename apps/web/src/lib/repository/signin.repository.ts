@@ -114,6 +114,7 @@ export async function findSignInById(
 export async function listCurrentlyOnSite(
   companyId: string,
   siteId?: string,
+  limit: number = 100,
 ): Promise<SignInRecordWithDetails[]> {
   requireCompanyId(companyId);
 
@@ -129,6 +130,8 @@ export async function listCurrentlyOnSite(
       where.site_id = siteId;
     }
 
+    const safeLimit = Math.max(1, Math.min(limit, 100));
+
     return await db.signInRecord.findMany({
       where,
       include: {
@@ -137,6 +140,7 @@ export async function listCurrentlyOnSite(
         },
       },
       orderBy: { sign_in_ts: "desc" },
+      take: safeLimit,
     });
   } catch (error) {
     handlePrismaError(error, "SignInRecord");

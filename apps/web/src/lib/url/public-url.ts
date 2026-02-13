@@ -1,22 +1,14 @@
-export function getPublicBaseUrl(requestUrl?: string): string {
+export function getPublicBaseUrl(_requestUrl?: string): string {
   const envUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (envUrl) {
-    try {
-      return new URL(envUrl).origin;
-    } catch {
-      // Fall through to request URL parsing.
-    }
+  if (!envUrl) {
+    throw new Error("NEXT_PUBLIC_APP_URL is not defined");
   }
 
-  if (requestUrl) {
-    try {
-      return new URL(requestUrl).origin;
-    } catch {
-      // Fall through to localhost fallback.
-    }
+  try {
+    return new URL(envUrl).origin;
+  } catch {
+    throw new Error("NEXT_PUBLIC_APP_URL is invalid");
   }
-
-  return "http://localhost:3000";
 }
 
 export function buildPublicUrl(path: string, requestUrl?: string): URL {

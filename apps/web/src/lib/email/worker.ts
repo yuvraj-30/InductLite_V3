@@ -1,4 +1,4 @@
-import { publicDb } from "@/lib/db/public-db";
+﻿import { publicDb } from "@/lib/db/public-db";
 import { sendEmail } from "@/lib/email/resend";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
@@ -12,91 +12,114 @@ export async function processEmailQueue() {
 
   try {
     // 1. Process Red Flags (High Priority)
-    // Find recent sign-ins with red flags that haven't been notified
-    const pendingRedFlags = await publicDb.inductionResponse.findMany({
-      where: {
-        passed: true, // They finished, but we need to check answers
-        sign_in_record: {
-          created_at: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+    // Process recent responses in chunks to keep memory bounded.
+    const redFlagBatchSize = 100;
+    const redFlagWindowStart = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    let redFlagCursor: string | undefined;
+
+    while (true) {
+      const pendingRedFlags = await publicDb.inductionResponse.findMany({
+        where: {
+          passed: true, // They finished, but we need to check answers
+          sign_in_record: {
+            created_at: { gte: redFlagWindowStart },
+          },
         },
-      },
-      include: {
-        sign_in_record: {
-          include: {
-            site: {
-              include: {
-                site_managers: {
-                  include: {
-                    user: true,
+        select: {
+          id: true,
+          answers: true,
+          sign_in_record: {
+            select: {
+              company_id: true,
+              site_id: true,
+              visitor_name: true,
+              site: {
+                select: {
+                  name: true,
+                  site_managers: {
+                    select: {
+                      user: {
+                        select: { email: true },
+                      },
+                    },
                   },
                 },
               },
             },
           },
-        },
-        template: {
-          include: {
-            questions: true,
+          template: {
+            select: {
+              questions: true,
+            },
           },
         },
-      },
-    });
+        orderBy: { id: "asc" },
+        take: redFlagBatchSize,
+        ...(redFlagCursor ? { skip: 1, cursor: { id: redFlagCursor } } : {}),
+      });
 
-    for (const response of pendingRedFlags) {
-      const answers = response.answers as unknown as Array<{
-        questionId: string;
-        answer: unknown;
-      }>;
-      const redFlagQuestions = (
-        response.template.questions as unknown as Array<{
-          red_flag: boolean;
-          id: string;
-          question_text: string;
-        }>
-      ).filter((q) => q.red_flag);
+      if (pendingRedFlags.length === 0) break;
 
-      let hasRedFlag = false;
-      const flagsFound: string[] = [];
+      const existingAlerts = await publicDb.auditLog.findMany({
+        where: {
+          action: "email.red_flag_alert",
+          entity_id: { in: pendingRedFlags.map((response) => response.id) },
+        },
+        select: { entity_id: true },
+      });
+      const alertedResponseIds = new Set(
+        existingAlerts
+          .map((logRow) => logRow.entity_id)
+          .filter((id): id is string => Boolean(id)),
+      );
 
-      for (const q of redFlagQuestions) {
-        const answer = answers.find((a) => a.questionId === q.id);
+      for (const response of pendingRedFlags) {
+        const answers = response.answers as unknown as Array<{
+          questionId: string;
+          answer: unknown;
+        }>;
+        const redFlagQuestions = (
+          response.template.questions as unknown as Array<{
+            red_flag: boolean;
+            id: string;
+            question_text: string;
+          }>
+        ).filter((q) => q.red_flag);
 
-        // Logic: Check if the answer is a truthy value for a red flag question.
-        // We treat 'yes' (string), true (boolean), or a string that's not 'no'/'false' as a trigger.
-        // This is a safety/logic engine fix that was likely in 'feat/logic-engine'.
-        const isTruthyAnswer =
-          answer &&
-          (String(answer.answer).toLowerCase() === "yes" ||
-            answer.answer === true ||
-            (typeof answer.answer === "string" &&
-              answer.answer.toLowerCase() !== "no" &&
-              answer.answer.toLowerCase() !== "false" &&
-              answer.answer.toLowerCase() !== "false")); // Redundant 'false' check is harmless but included for completeness.
+        let hasRedFlag = false;
+        const flagsFound: string[] = [];
 
-        if (isTruthyAnswer) {
-          hasRedFlag = true;
-          flagsFound.push(q.question_text);
+        for (const q of redFlagQuestions) {
+          const answer = answers.find((a) => a.questionId === q.id);
+
+          // Logic: Check if the answer is a truthy value for a red flag question.
+          // We treat 'yes' (string), true (boolean), or a string that's not 'no'/'false' as a trigger.
+          const isTruthyAnswer =
+            answer &&
+            (String(answer.answer).toLowerCase() === "yes" ||
+              answer.answer === true ||
+              (typeof answer.answer === "string" &&
+                answer.answer.toLowerCase() !== "no" &&
+                answer.answer.toLowerCase() !== "false"));
+
+          if (isTruthyAnswer) {
+            hasRedFlag = true;
+            flagsFound.push(q.question_text);
+          }
         }
-      }
 
-      if (hasRedFlag) {
-        // Check if we already sent this one (idempotency via AuditLog)
-        const existingLog = await publicDb.auditLog.findFirst({
-          where: {
-            action: "email.red_flag_alert",
-            entity_id: response.id,
-          },
-        });
+        if (!hasRedFlag || alertedResponseIds.has(response.id)) {
+          continue;
+        }
 
-        if (!existingLog) {
-          const managers = response.sign_in_record.site.site_managers;
-          for (const assignment of managers) {
-            const manager = assignment.user;
-            if (manager.email) {
-              await sendEmail({
-                to: manager.email,
-                subject: `⚠️ RED FLAG ALERT: ${response.sign_in_record.visitor_name} at ${response.sign_in_record.site.name}`,
-                html: `
+        const managers = response.sign_in_record.site.site_managers;
+        for (const assignment of managers) {
+          const manager = assignment.user;
+          if (manager.email) {
+            await sendEmail({
+              to: manager.email,
+              subject: `RED FLAG ALERT: ${response.sign_in_record.visitor_name} at ${response.sign_in_record.site.name}`,
+              html: `
                   <h1>Safety Alert</h1>
                   <p>A visitor has answered "YES" to one or more red-flag safety questions.</p>
                   <p><strong>Visitor:</strong> ${response.sign_in_record.visitor_name}</p>
@@ -107,22 +130,24 @@ export async function processEmailQueue() {
                   </ul>
                   <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/sites/${response.sign_in_record.site_id}">View Site Dashboard</a></p>
                 `,
-              });
-            }
+            });
           }
-
-          // Record that we sent it
-          await publicDb.auditLog.create({
-            data: {
-              company_id: response.sign_in_record.company_id,
-              action: "email.red_flag_alert",
-              entity_type: "InductionResponse",
-              entity_id: response.id,
-              details: { manager_count: managers.length },
-            },
-          });
         }
+
+        // Record that we sent it
+        await publicDb.auditLog.create({
+          data: {
+            company_id: response.sign_in_record.company_id,
+            action: "email.red_flag_alert",
+            entity_type: "InductionResponse",
+            entity_id: response.id,
+            details: { manager_count: managers.length },
+          },
+        });
+        alertedResponseIds.add(response.id);
       }
+
+      redFlagCursor = pendingRedFlags[pendingRedFlags.length - 1]?.id;
     }
 
     // 2. Process Pending Notifications from EmailNotification table
@@ -193,80 +218,127 @@ export async function processWeeklyDigest() {
   const log = createRequestLogger(requestId);
 
   try {
-    const companies = await publicDb.company.findMany({
-      include: {
-        users: {
-          where: { role: "ADMIN", is_active: true },
-        },
-      },
-    });
-
+    const batchSize = 50;
+    let cursor: string | undefined;
     const lastWeek = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const now = new Date();
+    const thirtyDaysFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
-    for (const company of companies) {
-      if (company.users.length === 0) continue;
+    while (true) {
+      const companies = await publicDb.company.findMany({
+        take: batchSize,
+        ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+        orderBy: { id: "asc" },
+        select: {
+          id: true,
+          name: true,
+          users: {
+            where: { role: "ADMIN", is_active: true },
+            select: { email: true },
+          },
+        },
+      });
 
-      const [inductionCount, redFlagCount, expiringDocuments] =
+      if (companies.length === 0) break;
+
+      const companyIds = companies.map((company) => company.id);
+
+      const [inductionCounts, redFlagCounts, expiringDocuments] =
         await Promise.all([
-          publicDb.signInRecord.count({
+          publicDb.signInRecord.groupBy({
+            by: ["company_id"],
             where: {
-              company_id: company.id,
+              company_id: { in: companyIds },
               sign_in_ts: { gte: lastWeek },
             },
+            _count: { id: true },
           }),
-          publicDb.auditLog.count({
+          publicDb.auditLog.groupBy({
+            by: ["company_id"],
             where: {
-              company_id: company.id,
+              company_id: { in: companyIds },
               action: "email.red_flag_alert",
               created_at: { gte: lastWeek },
             },
+            _count: { id: true },
           }),
-          publicDb.contractorDocument.count({
+          publicDb.contractorDocument.findMany({
             where: {
-              contractor: { company_id: company.id },
+              contractor: { company_id: { in: companyIds } },
               expires_at: {
-                gt: new Date(),
-                lt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Next 30 days
+                gt: now,
+                lt: thirtyDaysFromNow,
+              },
+            },
+            select: {
+              contractor: {
+                select: { company_id: true },
               },
             },
           }),
         ]);
 
-      const html = `
-        <h1>Weekly Site Safety Digest</h1>
-        <p>Here is the summary for <strong>${company.name}</strong> for the last 7 days:</p>
-        <ul>
-          <li><strong>Total Inductions/Sign-ins:</strong> ${inductionCount}</li>
-          <li><strong>Red Flags Detected:</strong> ${redFlagCount}</li>
-          <li><strong>Documents Expiring (Next 30 days):</strong> ${expiringDocuments}</li>
-        </ul>
-        <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/admin">View Full Dashboard</a></p>
-      `;
+      const inductionCountByCompany = new Map<string, number>(
+        inductionCounts.map((row) => [row.company_id, row._count.id]),
+      );
+      const redFlagCountByCompany = new Map<string, number>(
+        redFlagCounts.map((row) => [row.company_id, row._count.id]),
+      );
+      const expiringDocumentCountByCompany = new Map<string, number>();
+      for (const row of expiringDocuments) {
+        const key = row.contractor.company_id;
+        expiringDocumentCountByCompany.set(
+          key,
+          (expiringDocumentCountByCompany.get(key) ?? 0) + 1,
+        );
+      }
 
-      for (const admin of company.users) {
-        await sendEmail({
-          to: admin.email,
-          subject: `📊 Weekly Safety Digest: ${company.name}`,
-          html,
+      for (const company of companies) {
+        if (company.users.length === 0) continue;
+        const inductionCount = inductionCountByCompany.get(company.id) ?? 0;
+        const redFlagCount = redFlagCountByCompany.get(company.id) ?? 0;
+        const expiringDocumentsCount =
+          expiringDocumentCountByCompany.get(company.id) ?? 0;
+
+        const html = `
+          <h1>Weekly Site Safety Digest</h1>
+          <p>Here is the summary for <strong>${company.name}</strong> for the last 7 days:</p>
+          <ul>
+            <li><strong>Total Inductions/Sign-ins:</strong> ${inductionCount}</li>
+            <li><strong>Red Flags Detected:</strong> ${redFlagCount}</li>
+            <li><strong>Documents Expiring (Next 30 days):</strong> ${expiringDocumentsCount}</li>
+          </ul>
+          <p><a href="${process.env.NEXT_PUBLIC_APP_URL}/admin">View Full Dashboard</a></p>
+        `;
+
+        for (const admin of company.users) {
+          await sendEmail({
+            to: admin.email,
+            subject: `Weekly Safety Digest: ${company.name}`,
+            html,
+          });
+        }
+
+        await publicDb.auditLog.create({
+          data: {
+            company_id: company.id,
+            action: "email.weekly_digest",
+            details: {
+              inductionCount,
+              redFlagCount,
+              expiringDocuments: expiringDocumentsCount,
+              recipient_count: company.users.length,
+            },
+          },
         });
       }
 
-      await publicDb.auditLog.create({
-        data: {
-          company_id: company.id,
-          action: "email.weekly_digest",
-          details: {
-            inductionCount,
-            redFlagCount,
-            expiringDocuments,
-            recipient_count: company.users.length,
-          },
-        },
-      });
+      cursor = companies[companies.length - 1]?.id;
     }
 
     log.info({}, "Weekly digest processing completed");
   } catch (err) {
     log.error({ err: String(err) }, "Weekly digest error");
+    throw err;
   }
 }

@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { cookies } from "next/headers";
+import { scopedDb } from "@/lib/db/scoped-db";
 
 const COOKIE_NAME = "contractor_magic";
 const SESSION_TTL_HOURS = 12;
@@ -96,5 +97,17 @@ export async function getContractorSession(): Promise<{
   if (!token) return null;
   const payload = verifyPayload(token);
   if (!payload) return null;
+
+  const db = scopedDb(payload.companyId);
+  const contractor = await db.contractor.findFirst({
+    where: {
+      id: payload.contractorId,
+      company_id: payload.companyId,
+      is_active: true,
+    },
+    select: { id: true },
+  });
+  if (!contractor) return null;
+
   return { contractorId: payload.contractorId, companyId: payload.companyId };
 }

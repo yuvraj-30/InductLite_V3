@@ -6,7 +6,6 @@
 
 import Link from "next/link";
 import { checkAuthReadOnly, checkPermissionReadOnly } from "@/lib/auth";
-import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import { findAllSites, findSitesByIds } from "@/lib/repository";
 import { listManagedSiteIds } from "@/lib/repository/site-manager.repository";
 import { listActivePublicLinksForSites } from "@/lib/repository/site.repository";
@@ -29,24 +28,24 @@ export default async function SitesPage() {
     );
   }
 
-  // Get tenant context
-  const context = await requireAuthenticatedContextReadOnly();
+  const companyId = guard.user.companyId;
+  const canManagePromise = checkPermissionReadOnly("site:manage");
 
   // Fetch sites for this company (site managers only see assigned sites)
   let sites = [] as Awaited<ReturnType<typeof findAllSites>>;
   if (guard.user.role === "SITE_MANAGER") {
     const managedIds = await listManagedSiteIds(
-      context.companyId,
+      companyId,
       guard.user.id,
     );
-    sites = await findSitesByIds(context.companyId, managedIds);
+    sites = await findSitesByIds(companyId, managedIds);
   } else {
-    sites = await findAllSites(context.companyId);
+    sites = await findAllSites(companyId);
   }
 
   // Get active public links for each site
   const sitePublicLinks = await listActivePublicLinksForSites(
-    context.companyId,
+    companyId,
     sites.map((s) => s.id),
   );
 
@@ -55,7 +54,7 @@ export default async function SitesPage() {
   );
 
   // Check if user can manage sites
-  const canManage = await checkPermissionReadOnly("site:manage");
+  const canManage = await canManagePromise;
   const canManageSites = canManage.success;
 
   return (

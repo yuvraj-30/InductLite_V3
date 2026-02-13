@@ -24,6 +24,14 @@ import {
 // Re-export for consumers
 export type { HistoryFilters } from "@/lib/validation/schemas";
 
+function parseUtcDayStart(dateString: string): Date {
+  return new Date(`${dateString}T00:00:00.000Z`);
+}
+
+function parseUtcDayEnd(dateString: string): Date {
+  return new Date(`${dateString}T23:59:59.999Z`);
+}
+
 /**
  * Get paginated sign-in history with filters
  *
@@ -60,10 +68,10 @@ export async function getSignInHistoryAction(
   // Parse date range with validated inputs
   if (validFilters.dateFrom || validFilters.dateTo) {
     signInFilter.dateRange = {
-      from: validFilters.dateFrom ? new Date(validFilters.dateFrom) : undefined,
-      to: validFilters.dateTo
-        ? new Date(validFilters.dateTo + "T23:59:59.999Z")
+      from: validFilters.dateFrom
+        ? parseUtcDayStart(validFilters.dateFrom)
         : undefined,
+      to: validFilters.dateTo ? parseUtcDayEnd(validFilters.dateTo) : undefined,
     };
   }
 

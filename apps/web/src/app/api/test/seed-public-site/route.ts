@@ -12,6 +12,10 @@ function allowed() {
 }
 
 export async function POST(req: Request) {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'NotFound' }, { status: 404 });
+  }
+
   if (!allowed()) {
     return NextResponse.json({ error: "Not allowed" }, { status: 403 });
   }
@@ -106,6 +110,10 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'NotFound' }, { status: 404 });
+  }
+
   if (!allowed()) {
     return NextResponse.json({ error: "Not allowed" }, { status: 403 });
   }

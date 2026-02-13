@@ -17,10 +17,10 @@ import {
 } from "@/lib/auth";
 import { createRequestLogger, logAuthEvent } from "@/lib/logger";
 import {
+  assertOrigin,
   generateRequestId,
   getClientIp,
   getUserAgent,
-  validateOrigin,
 } from "@/lib/auth/csrf";
 import { checkLoginRateLimit } from "@/lib/rate-limit";
 
@@ -141,6 +141,8 @@ export async function logoutAction(): Promise<never> {
   const log = createRequestLogger(requestId);
 
   try {
+    await assertOrigin();
+
     const [ipAddress, userAgent] = await Promise.all([
       getClientIp(),
       getUserAgent(),
@@ -177,7 +179,7 @@ const changePasswordSchema = z
 
 /**
  * Change password action
- * Note: Uses validateOrigin() for CSRF protection.
+ * Note: Uses assertOrigin() for CSRF protection.
  */
  
 export async function changePasswordAction(
@@ -187,9 +189,9 @@ export async function changePasswordAction(
   const requestId = generateRequestId();
   const log = createRequestLogger(requestId);
 
-  // Validate origin for CSRF protection on sensitive operation
-  const isValidOrigin = await validateOrigin();
-  if (!isValidOrigin) {
+  try {
+    await assertOrigin();
+  } catch {
     log.warn({ action: "auth.password_change", error: "invalid_origin" });
     return { success: false, error: "Invalid request origin" };
   }

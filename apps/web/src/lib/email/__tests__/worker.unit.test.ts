@@ -18,6 +18,20 @@ vi.mock("@/lib/logger", () => ({
 describe("processEmailQueue", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    const dbAny = publicDb as any;
+    dbAny.inductionResponse = {
+      findMany: vi.fn().mockResolvedValue([]),
+      updateMany: vi.fn(),
+    };
+    dbAny.auditLog = {
+      findMany: vi.fn().mockResolvedValue([]),
+      create: vi.fn().mockResolvedValue({}),
+    };
+    dbAny.emailNotification = {
+      findMany: vi.fn().mockResolvedValue([]),
+      update: vi.fn().mockResolvedValue({}),
+    };
   });
 
   it("should detect red flags and queue emails to site managers", async () => {
@@ -52,10 +66,6 @@ describe("processEmailQueue", () => {
     };
 
     const dbAny = publicDb as any;
-    // Ensure inductionResponse mock exists (late-bound on publicDb in worker)
-    if (!dbAny.inductionResponse) {
-      dbAny.inductionResponse = { findMany: vi.fn(), updateMany: vi.fn() };
-    }
 
     // Directly stub the method (vi.spyOn may fail on late-bound props in some envs)
     dbAny.inductionResponse.findMany = vi
@@ -63,12 +73,7 @@ describe("processEmailQueue", () => {
       .mockResolvedValueOnce([mockResponse as any])
       .mockResolvedValue([]); // Ensure only runs once
 
-    // Ensure auditLog mock exists and stub methods
-    if (!publicDb.auditLog) {
-      (publicDb as any).auditLog = { findFirst: vi.fn(), create: vi.fn() };
-    }
-    (publicDb as any).auditLog.findFirst = vi.fn().mockResolvedValue(null);
-
+    (publicDb as any).auditLog.findMany = vi.fn().mockResolvedValue([]);
     const auditSpy = ((publicDb as any).auditLog.create = vi
       .fn()
       .mockResolvedValue({} as any));

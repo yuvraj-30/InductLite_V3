@@ -7,6 +7,7 @@ export {
   getSignedDownloadUrl,
   getSignedUploadUrl,
   deleteObject as deleteS3Object,
+  readObjectBytes as readS3ObjectBytes,
 } from "./s3";
 
 export async function writeExportFile(

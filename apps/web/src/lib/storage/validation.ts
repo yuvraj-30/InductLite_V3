@@ -25,6 +25,19 @@ export const ALLOWED_FILE_TYPES = {
 export type AllowedExtension = keyof typeof ALLOWED_FILE_TYPES;
 
 /**
+ * Resolve a supported file extension from a MIME type.
+ */
+export function extensionFromMimeType(
+  mimeType: string,
+): AllowedExtension | null {
+  const normalized = mimeType.trim().toLowerCase();
+  const entry = Object.entries(ALLOWED_FILE_TYPES).find(
+    ([, config]) => config.mime === normalized,
+  );
+  return (entry?.[0] as AllowedExtension | undefined) ?? null;
+}
+
+/**
  * Validates a file buffer against its expected extension magic number.
  */
 export async function validateFileMagicNumber(

@@ -13,6 +13,25 @@ import { z } from "zod";
 
 export const MAX_PAGE_SIZE = 100;
 export const MAX_STRING_LENGTH = 200;
+export const MAX_SIGNIN_ANSWERS = 50;
+export const MAX_SIGNIN_ANSWER_STRING_LENGTH = 5000;
+
+const answerValueSchema = z.union([
+  z.string().max(MAX_SIGNIN_ANSWER_STRING_LENGTH, "Answer is too long"),
+  z.number(),
+  z.boolean(),
+  z.null(),
+  z
+    .array(
+      z.union([
+        z.string().max(MAX_SIGNIN_ANSWER_STRING_LENGTH, "Answer is too long"),
+        z.number(),
+        z.boolean(),
+        z.null(),
+      ]),
+    )
+    .max(MAX_SIGNIN_ANSWERS, `Too many answer selections (max ${MAX_SIGNIN_ANSWERS})`),
+]);
 
 // ============================================================================
 // PUBLIC SIGN-IN SCHEMAS
@@ -48,15 +67,15 @@ export const signInSchema = z.object({
   employerName: z.string().max(100, "Employer name is too long").optional(),
   visitorType: visitorTypeSchema,
   roleOnSite: z.string().max(100, "Role description is too long").optional(),
-  // Induction answers - answer can be any type but must be present
-  answers: z.array(
-    z
-      .object({
+  // Induction answers - bounded to prevent payload-amplification abuse
+  answers: z
+    .array(
+      z.object({
         questionId: z.string().cuid("Invalid question ID"),
-        answer: z.unknown().transform((val) => val as unknown),
-      })
-      .transform((obj) => ({ questionId: obj.questionId, answer: obj.answer })),
-  ),
+        answer: answerValueSchema,
+      }),
+    )
+    .max(MAX_SIGNIN_ANSWERS, `Too many answers (max ${MAX_SIGNIN_ANSWERS})`),
   signatureData: z.string().optional(),
 });
 

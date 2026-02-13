@@ -67,19 +67,9 @@ export async function countRunningExportJobs(
 
 export async function countRunningExportJobsGlobal(): Promise<number> {
   try {
-    const companies = await publicDb.company.findMany({
-      select: { id: true },
+    return await publicDb.exportJob.count({
+      where: { status: "RUNNING" },
     });
-
-    const counts = await Promise.all(
-      companies.map((company) =>
-        scopedDb(company.id).exportJob.count({
-          where: { company_id: company.id, status: "RUNNING" },
-        }),
-      ),
-    );
-
-    return counts.reduce((sum, value) => sum + value, 0);
   } catch (error) {
     handlePrismaError(error, "ExportJob");
   }
@@ -177,26 +167,14 @@ export async function claimNextQueuedExportJob(): Promise<
     return null;
   }
 
-  const companies = await publicDb.company.findMany({
-    select: { id: true },
+  // eslint-disable-next-line security-guardrails/require-company-id -- global queue claim intentionally scans across companies
+  const job = await publicDb.exportJob.findFirst({
+    where: {
+      status: "QUEUED",
+      run_at: { lte: now },
+    },
+    orderBy: { queued_at: "asc" },
   });
-
-  const candidates = await Promise.all(
-    companies.map((company) =>
-      scopedDb(company.id).exportJob.findFirst({
-        where: {
-          company_id: company.id,
-          status: "QUEUED",
-          run_at: { lte: now },
-        },
-        orderBy: { queued_at: "asc" },
-      }),
-    ),
-  );
-
-  const job = candidates
-    .filter((j): j is ExportJob => Boolean(j))
-    .sort((a, b) => a.queued_at.getTime() - b.queued_at.getTime())[0];
 
   if (!job) return null;
 
@@ -223,31 +201,22 @@ export async function claimNextQueuedExportJob(): Promise<
 export async function requeueStaleExportJobs(): Promise<number> {
   const runtimeMs = GUARDRAILS.MAX_EXPORT_RUNTIME_SECONDS * 1000;
   const staleBefore = new Date(Date.now() - runtimeMs * 2);
-
-  const companies = await publicDb.company.findMany({
-    select: { id: true },
+  // eslint-disable-next-line security-guardrails/require-company-id -- global stale-job recovery intentionally operates across companies
+  const result = await publicDb.exportJob.updateMany({
+    where: {
+      status: "RUNNING",
+      started_at: { lt: staleBefore },
+      attempts: { lt: GUARDRAILS.MAX_EXPORT_ATTEMPTS },
+    },
+    data: {
+      status: "QUEUED",
+      run_at: new Date(),
+      locked_at: null,
+      lock_token: null,
+    },
   });
 
-  const results = await Promise.all(
-    companies.map((company) =>
-      scopedDb(company.id).exportJob.updateMany({
-        where: {
-          company_id: company.id,
-          status: "RUNNING",
-          started_at: { lt: staleBefore },
-          attempts: { lt: GUARDRAILS.MAX_EXPORT_ATTEMPTS },
-        },
-        data: {
-          status: "QUEUED",
-          run_at: new Date(),
-          locked_at: null,
-          lock_token: null,
-        },
-      }),
-    ),
-  );
-
-  return results.reduce((sum, result) => sum + result.count, 0);
+  return result.count;
 }
 
 /**

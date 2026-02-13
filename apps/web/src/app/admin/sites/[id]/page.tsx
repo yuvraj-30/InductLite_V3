@@ -7,7 +7,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { checkAuthReadOnly, checkPermissionReadOnly } from "@/lib/auth";
-import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 import { findSiteById } from "@/lib/repository";
 import { isUserSiteManagerForSite } from "@/lib/repository/site-manager.repository";
 import { findActivePublicLinkForSite } from "@/lib/repository/site.repository";
@@ -28,6 +27,20 @@ interface SiteDetailPageProps {
   params: Promise<{ id: string }>;
 }
 
+const NZ_TIMEZONE = "Pacific/Auckland";
+
+function formatNzDate(value: Date | string): string {
+  return new Date(value).toLocaleDateString("en-NZ", {
+    timeZone: NZ_TIMEZONE,
+  });
+}
+
+function formatNzDateTime(value: Date | string): string {
+  return new Date(value).toLocaleString("en-NZ", {
+    timeZone: NZ_TIMEZONE,
+  });
+}
+
 export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
   const { id: siteId } = await params;
 
@@ -43,12 +56,11 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
     );
   }
 
-  // Get tenant context
-  const context = await requireAuthenticatedContextReadOnly();
+  const companyId = guard.user.companyId;
 
   if (guard.user.role === "SITE_MANAGER") {
     const allowed = await isUserSiteManagerForSite(
-      context.companyId,
+      companyId,
       guard.user.id,
       siteId,
     );
@@ -58,34 +70,27 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
   }
 
   // Fetch the site
-  const site = await findSiteById(context.companyId, siteId);
+  const site = await findSiteById(companyId, siteId);
   if (!site) {
     notFound();
   }
 
-  // Fetch active public link
-  const publicLink = await findActivePublicLinkForSite(
-    context.companyId,
-    siteId,
-  );
-
-  // Fetch recent sign-ins for this site
-  const recentSignIns = await listRecentSignInsForSite(
-    context.companyId,
-    siteId,
-    10,
-  );
-
-  // Get currently on-site count
-  const currentlyOnSite = await countCurrentlyOnSite(context.companyId, siteId);
-
-  // Check if user can manage sites
-  const canManage = await checkPermissionReadOnly("site:manage");
+  const [publicLink, recentSignIns, currentlyOnSite, canManage] =
+    await Promise.all([
+      findActivePublicLinkForSite(companyId, siteId),
+      listRecentSignInsForSite(companyId, siteId, 10),
+      countCurrentlyOnSite(companyId, siteId),
+      checkPermissionReadOnly("site:manage"),
+    ]);
   const canManageSites = canManage.success;
 
   // Build the public sign-in URL
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const publicUrl = publicLink ? `${baseUrl}/s/${publicLink.slug}` : null;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (!appUrl) {
+    throw new Error("NEXT_PUBLIC_APP_URL is not defined");
+  }
+  const publicBaseUrl = new URL(appUrl).origin;
+  const publicUrl = publicLink ? `${publicBaseUrl}/s/${publicLink.slug}` : null;
 
   return (
     <div className="p-6">
@@ -154,7 +159,7 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
               </p>
             )}
             <p className="text-sm text-gray-400 mt-4">
-              Created: {new Date(site.created_at).toLocaleDateString()}
+              Created: {formatNzDate(site.created_at)}
             </p>
           </div>
 
@@ -204,11 +209,11 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
                           {record.employer_name || "-"}
                         </td>
                         <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
-                          {new Date(record.sign_in_ts).toLocaleString()}
+                          {formatNzDateTime(record.sign_in_ts)}
                         </td>
                         <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
                           {record.sign_out_ts ? (
-                            new Date(record.sign_out_ts).toLocaleString()
+                            formatNzDateTime(record.sign_out_ts)
                           ) : (
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
                               On site

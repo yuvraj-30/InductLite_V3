@@ -1,24 +1,24 @@
 import { NextResponse } from "next/server";
 import { processWeeklyDigest } from "@/lib/email/worker";
-import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
+import { requireCronSecret } from "@/lib/cron";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   const requestId = generateRequestId();
-  const log = createRequestLogger(requestId);
-
-  // Security check for CRON_SECRET
-  const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const auth = await requireCronSecret(req, "/api/cron/digest");
+  if (!auth.ok) return auth.response;
 
   try {
     await processWeeklyDigest();
     return NextResponse.json({ success: true });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err);
-    log.error({ err: message }, "Weekly digest cron failed");
-    return NextResponse.json({ error: message }, { status: 500 });
+  } catch (err) {
+    auth.log.error({ requestId, err: String(err) }, "Weekly digest cron failed");
+    return NextResponse.json(
+      { error: "Internal Server Error", requestId },
+      { status: 500 },
+    );
   }
 }

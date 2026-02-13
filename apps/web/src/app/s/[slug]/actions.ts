@@ -24,7 +24,12 @@ import {
   checkSignOutRateLimit,
 } from "@/lib/rate-limit";
 import { createRequestLogger } from "@/lib/logger";
-import { generateRequestId, getClientIp, getUserAgent } from "@/lib/auth/csrf";
+import {
+  assertOrigin,
+  generateRequestId,
+  getClientIp,
+  getUserAgent,
+} from "@/lib/auth/csrf";
 import {
   type ApiResponse,
   successResponse,
@@ -206,6 +211,12 @@ export async function submitSignIn(
 ): Promise<ApiResponse<SignInResult>> {
   const requestId = generateRequestId();
   const log = createRequestLogger(requestId);
+
+  try {
+    await assertOrigin();
+  } catch {
+    return errorResponse("FORBIDDEN", "Invalid request origin");
+  }
 
   // Validate input
   const parsed = signInSchema.safeParse(input);
@@ -392,6 +403,12 @@ export async function submitSignOut(
 ): Promise<ApiResponse<{ visitorName: string }>> {
   const requestId = generateRequestId();
   const log = createRequestLogger(requestId);
+
+  try {
+    await assertOrigin();
+  } catch {
+    return errorResponse("FORBIDDEN", "Invalid request origin");
+  }
 
   // Validate input
   const parsed = signOutSchema.safeParse(input);

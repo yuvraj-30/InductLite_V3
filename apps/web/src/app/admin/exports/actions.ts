@@ -4,11 +4,8 @@ import { z } from "zod";
 import { assertOrigin, checkAdmin } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 import { createAuditLog } from "@/lib/repository/audit.repository";
-import {
-  createExportJob,
-  countExportJobsSince,
-  countRunningExportJobs,
-} from "@/lib/repository/export.repository";
+import { publicDb } from "@/lib/db/public-db";
+import { scopedDb } from "@/lib/db/scoped-db";
 import { createExportSchema } from "@inductlite/shared";
 import {
   type ApiResponse,
@@ -22,6 +19,13 @@ import { createRequestLogger } from "@/lib/logger";
 import { revalidatePath } from "next/cache";
 import { GUARDRAILS, isOffPeakNow } from "@/lib/guardrails";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+
+class ExportLimitReachedError extends Error {
+  constructor() {
+    super("Export limits reached");
+    this.name = "ExportLimitReachedError";
+  }
+}
 
 export async function createExportAction(
   input: z.infer<typeof createExportSchema>,
@@ -63,27 +67,40 @@ export async function createExportAction(
     );
   }
 
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const [exportsToday, runningNow] = await Promise.all([
-    countExportJobsSince(context.companyId, since),
-    countRunningExportJobs(context.companyId),
-  ]);
-
-  if (
-    exportsToday >= GUARDRAILS.MAX_EXPORTS_PER_COMPANY_PER_DAY ||
-    runningNow >= GUARDRAILS.MAX_CONCURRENT_EXPORTS_PER_COMPANY
-  ) {
-    return errorResponse(
-      "RATE_LIMITED",
-      "Export limits reached for your company. Please try later.",
-    );
-  }
-
   try {
-    const job = await createExportJob(context.companyId, {
-      export_type: parsed.data.exportType,
-      parameters: parsed.data,
-      requested_by: context.userId,
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const job = await publicDb.$transaction(async (tx) => {
+      const db = scopedDb(context.companyId, tx);
+      const [exportsToday, runningNow] = await Promise.all([
+        db.exportJob.count({
+          where: {
+            company_id: context.companyId,
+            queued_at: { gte: since },
+          },
+        }),
+        db.exportJob.count({
+          where: {
+            company_id: context.companyId,
+            status: "RUNNING",
+          },
+        }),
+      ]);
+
+      if (
+        exportsToday >= GUARDRAILS.MAX_EXPORTS_PER_COMPANY_PER_DAY ||
+        runningNow >= GUARDRAILS.MAX_CONCURRENT_EXPORTS_PER_COMPANY
+      ) {
+        throw new ExportLimitReachedError();
+      }
+
+      return db.exportJob.create({
+        data: {
+          export_type: parsed.data.exportType,
+          parameters: parsed.data,
+          requested_by: context.userId,
+          status: "QUEUED",
+        },
+      });
     });
 
     await createAuditLog(context.companyId, {
@@ -106,6 +123,12 @@ export async function createExportAction(
 
     return successResponse({ exportJobId: job.id }, "Export queued");
   } catch (error) {
+    if (error instanceof ExportLimitReachedError) {
+      return errorResponse(
+        "RATE_LIMITED",
+        "Export limits reached for your company. Please try later.",
+      );
+    }
     log.error({ error: String(error) }, "Failed to queue export job");
     return errorResponse("INTERNAL_ERROR", "Failed to queue export job");
   }

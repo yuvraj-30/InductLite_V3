@@ -714,31 +714,28 @@ export async function createNewVersion(
 ): Promise<TemplateWithQuestions> {
   requireCompanyId(companyId);
 
-  const db = scopedDb(companyId);
-  const source = await db.inductionTemplate.findFirst({
-    where: { id: sourceTemplateId, company_id: companyId },
-    include: { questions: { orderBy: { display_order: "asc" } } },
-  });
-
-  if (!source) {
-    throw new RepositoryError("Template not found", "NOT_FOUND");
-  }
-
-  // Get highest version number for this template
-  const latestVersion = await db.inductionTemplate.findFirst({
-    where: {
-      company_id: companyId,
-      name: source.name,
-      site_id: source.site_id,
-    },
-    orderBy: { version: "desc" },
-    select: { version: true },
-  });
-
-  const newVersion = (latestVersion?.version ?? 0) + 1;
-
   return await publicDb.$transaction(async (tx) => {
     const db = scopedDb(companyId, tx);
+    const source = await db.inductionTemplate.findFirst({
+      where: { id: sourceTemplateId, company_id: companyId },
+      include: { questions: { orderBy: { display_order: "asc" } } },
+    });
+
+    if (!source) {
+      throw new RepositoryError("Template not found", "NOT_FOUND");
+    }
+
+    // Generate version inside the transaction to prevent concurrent duplicates.
+    const latestVersion = await db.inductionTemplate.findFirst({
+      where: {
+        company_id: companyId,
+        name: source.name,
+        site_id: source.site_id,
+      },
+      orderBy: { version: "desc" },
+      select: { version: true },
+    });
+    const newVersion = (latestVersion?.version ?? 0) + 1;
 
     // Create new template version
     const newTemplate = await db.inductionTemplate.create({

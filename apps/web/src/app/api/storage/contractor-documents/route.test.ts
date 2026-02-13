@@ -4,6 +4,16 @@ vi.mock("@/lib/auth", () => ({
   checkPermission: vi.fn().mockResolvedValue({ success: true }),
 }));
 
+vi.mock("@/lib/auth/csrf", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/auth/csrf")>(
+    "@/lib/auth/csrf",
+  );
+  return {
+    ...actual,
+    assertOrigin: vi.fn().mockResolvedValue(undefined),
+  };
+});
+
 vi.mock("@/lib/tenant", () => ({
   requireAuthenticatedContextReadOnly: vi
     .fn()
@@ -39,7 +49,11 @@ describe("Contractor document upload guardrails", () => {
   it("rejects unsupported mime types during presign", async () => {
     const req = new Request("http://localhost", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        origin: "https://localhost",
+        host: "localhost",
+      },
       body: JSON.stringify({
         contractorId: "contractor-1",
         fileName: "malware.exe",
@@ -58,7 +72,11 @@ describe("Contractor document upload guardrails", () => {
   it("rejects files larger than MAX_UPLOAD_MB during presign", async () => {
     const req = new Request("http://localhost", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        origin: "https://localhost",
+        host: "localhost",
+      },
       body: JSON.stringify({
         contractorId: "contractor-1",
         fileName: "large.pdf",
@@ -79,10 +97,14 @@ describe("Contractor document upload guardrails", () => {
 
     const req = new Request("http://localhost", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        origin: "https://localhost",
+        host: "localhost",
+      },
       body: JSON.stringify({
         contractorId: "contractor-1",
-        key: "uploads/company-1/contractor-1/doc.pdf",
+        key: "contractors/company-1/contractor-1/doc-1.pdf",
         fileName: "doc.pdf",
         mimeType: "pdf",
         fileSize: 1024,

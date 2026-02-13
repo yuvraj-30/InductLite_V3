@@ -2,10 +2,11 @@
 
 import { z } from "zod";
 import { createRequestLogger } from "@/lib/logger";
-import { generateRequestId } from "@/lib/auth/csrf";
+import { assertOrigin, generateRequestId } from "@/lib/auth/csrf";
 import { findSiteByPublicSlug, findContractorByEmail } from "@/lib/repository";
 import { createMagicLinkForContractor } from "@/lib/auth/magic-link";
 import { sendEmail } from "@/lib/email/resend";
+import { checkContractorMagicLinkRateLimit } from "@/lib/rate-limit";
 
 const magicLinkSchema = z.object({
   siteSlug: z.string().min(1, "Site link is required"),
@@ -14,7 +15,11 @@ const magicLinkSchema = z.object({
 
 export type MagicLinkResult =
   | { success: true; message: string }
-  | { success: false; message: string };
+  | {
+      success: false;
+      message: string;
+      error: "INVALID_ORIGIN" | "INVALID_INPUT" | "PROVIDER_ERROR";
+    };
 
 function extractSlug(input: string): string {
   const trimmed = input.trim();
@@ -27,6 +32,22 @@ export async function requestContractorMagicLinkAction(
   _prevState: MagicLinkResult | null,
   formData: FormData,
 ): Promise<MagicLinkResult> {
+  try {
+    await assertOrigin();
+  } catch {
+    return {
+      success: false,
+      message: "Invalid request origin",
+      error: "INVALID_ORIGIN",
+    };
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (!appUrl) {
+    throw new Error("NEXT_PUBLIC_APP_URL is not defined");
+  }
+  const baseUrl = new URL(appUrl).origin;
+
   const requestId = generateRequestId();
   const log = createRequestLogger(requestId);
 
@@ -40,11 +61,21 @@ export async function requestContractorMagicLinkAction(
     return {
       success: false,
       message: parsed.error.errors[0]?.message || "Invalid input",
+      error: "INVALID_INPUT",
     };
   }
 
   const siteSlug = extractSlug(parsed.data.siteSlug);
   const email = parsed.data.email.toLowerCase();
+
+  const rateLimit = await checkContractorMagicLinkRateLimit({ requestId });
+  if (!rateLimit.success) {
+    log.warn({}, "Contractor magic-link rate limit exceeded");
+    return {
+      success: true,
+      message: "If the details match, you will receive a login link shortly.",
+    };
+  }
 
   try {
     const site = await findSiteByPublicSlug(siteSlug);
@@ -67,7 +98,6 @@ export async function requestContractorMagicLinkAction(
       site.company.id,
       contractor.id,
     );
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
     const link = `${baseUrl}/verify?token=${token}`;
 
     await sendEmail({
@@ -83,6 +113,11 @@ export async function requestContractorMagicLinkAction(
     log.info({ contractorId: contractor.id }, "Magic link email sent");
   } catch (error) {
     log.error({ error: String(error) }, "Magic link request failed");
+    return {
+      success: false,
+      message: "We couldn't send the email right now. Please try again.",
+      error: "PROVIDER_ERROR",
+    };
   }
 
   return {

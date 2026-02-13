@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { checkPermissionReadOnly } from "@/lib/auth";
-import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import { createExportActionFromForm } from "./actions";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
@@ -25,16 +24,15 @@ export default async function AdminExportsPage() {
     redirect("/unauthorized");
   }
 
-  const context = await requireAuthenticatedContextReadOnly();
   const jobs = await listExportJobs(
-    context.companyId,
+    guard.user.companyId,
     {},
     { page: 1, pageSize: 50 },
   );
 
   const log = createRequestLogger(generateRequestId());
   log.info(
-    { companyId: context.companyId, jobsCount: jobs.items.length },
+    { companyId: guard.user.companyId, jobsCount: jobs.items.length },
     "Viewed admin exports page",
   );
 

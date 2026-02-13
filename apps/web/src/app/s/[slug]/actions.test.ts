@@ -43,6 +43,7 @@ vi.mock("@/lib/logger", () => ({
 }));
 
 vi.mock("@/lib/auth/csrf", () => ({
+  assertOrigin: vi.fn().mockResolvedValue(undefined),
   generateRequestId: vi.fn().mockReturnValue("test-request-id-123"),
   getClientIp: vi.fn().mockResolvedValue("127.0.0.1"),
   getUserAgent: vi.fn().mockResolvedValue("test-agent"),

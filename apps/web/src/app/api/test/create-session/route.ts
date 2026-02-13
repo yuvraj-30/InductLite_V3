@@ -20,6 +20,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
+  if (process.env.NODE_ENV !== 'test') {
+    return new Response(null, { status: 404 });
+  }
+
   // Allow runtime override via header (useful in CI where build-time inlining prevents env checks)
   const allowHeader = req.headers.get("x-allow-test-runner");
 

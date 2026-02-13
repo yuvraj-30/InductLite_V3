@@ -13,6 +13,7 @@ export async function GET(_req: NextRequest) {
     const siteLinks = await prisma.sitePublicLink.findMany({
       where: { is_active: true },
       select: { slug: true, created_at: true },
+      take: 5000,
     });
 
     const siteUrls = siteLinks

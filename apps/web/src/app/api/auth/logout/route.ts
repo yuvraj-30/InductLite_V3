@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import { logout } from "@/lib/auth";
-import { getClientIp, getUserAgent } from "@/lib/auth/csrf";
+import { assertOrigin, getClientIp, getUserAgent } from "@/lib/auth/csrf";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
 import { buildPublicUrl } from "@/lib/url/public-url";
 
 export async function POST(request: Request) {
+  try {
+    await assertOrigin();
+  } catch {
+    return new Response("CSRF Blocked", { status: 403 });
+  }
+
   const requestId = generateRequestId();
   const log = createRequestLogger(requestId);
 

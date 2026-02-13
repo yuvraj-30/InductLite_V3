@@ -64,14 +64,23 @@ export async function consumeMagicLinkToken(tokenHash: string): Promise<
   | null
 > {
   try {
-    // allowlisted public lookup by unique token hash
-    // eslint-disable-next-line security-guardrails/require-company-id -- public lookup by token hash
-    const token = await publicDb.magicLinkToken.findFirst({
+    const now = new Date();
+    // eslint-disable-next-line security-guardrails/require-company-id -- public token consumption by unique token hash
+    const consumeResult = await publicDb.magicLinkToken.updateMany({
       where: {
         token_hash: tokenHash,
         used_at: null,
-        expires_at: { gt: new Date() },
+        expires_at: { gt: now },
       },
+      data: { used_at: now },
+    });
+
+    if (consumeResult.count === 0) return null;
+
+    // allowlisted public lookup by unique token hash after successful consume
+    // eslint-disable-next-line security-guardrails/require-company-id -- public lookup by token hash
+    const token = await publicDb.magicLinkToken.findFirst({
+      where: { token_hash: tokenHash },
       include: {
         contractor: {
           select: { id: true, name: true, contact_email: true },
@@ -83,13 +92,6 @@ export async function consumeMagicLinkToken(tokenHash: string): Promise<
     });
 
     if (!token) return null;
-
-    const db = scopedDb(token.company_id);
-    await db.magicLinkToken.updateMany({
-      where: { company_id: token.company_id, id: token.id },
-      data: { used_at: new Date() },
-    });
-
     return token;
   } catch (error) {
     handlePrismaError(error, "MagicLinkToken");

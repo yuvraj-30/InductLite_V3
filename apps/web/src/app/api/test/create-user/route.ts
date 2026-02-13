@@ -6,6 +6,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  if (process.env.NODE_ENV !== 'test') {
+    return new Response(null, { status: 404 });
+  }
+
   if (
     process.env.NODE_ENV !== "test" &&
     process.env.ALLOW_TEST_RUNNER !== "1"

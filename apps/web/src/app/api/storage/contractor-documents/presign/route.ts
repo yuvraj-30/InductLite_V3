@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { checkPermission } from "@/lib/auth";
+import { assertOrigin } from "@/lib/auth/csrf";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { GUARDRAILS, isAllowedMimeType } from "@/lib/guardrails";
@@ -16,6 +17,12 @@ const schema = z.object({
 });
 
 export async function POST(req: Request) {
+  try {
+    await assertOrigin();
+  } catch {
+    return new Response("CSRF Blocked", { status: 403 });
+  }
+
   const guard = await checkPermission("contractor:manage");
   if (!guard.success) {
     return NextResponse.json(
