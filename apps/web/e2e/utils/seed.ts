@@ -1,4 +1,5 @@
 import type { APIRequestContext } from "@playwright/test";
+import { getTestRouteHeaders } from "./test-route-auth";
 
 export type SeedPublicSiteResult = {
   success: boolean;
@@ -18,6 +19,7 @@ export async function seedPublicSite(
   try {
     const res = await request.post(`/api/test/seed-public-site`, {
       data: opts ?? {},
+      headers: getTestRouteHeaders(),
     });
     const body = await res.json().catch(() => null);
     return { ok: res.ok(), body };
@@ -36,6 +38,7 @@ export async function deletePublicSite(
   try {
     const res = await request.delete(
       `/api/test/seed-public-site?slug=${encodeURIComponent(slug)}`,
+      { headers: getTestRouteHeaders() },
     );
     const body = await res.json().catch(() => null);
     return { ok: res.ok(), body };

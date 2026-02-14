@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
+import { ensureTestRouteAccess } from "../_guard";
 
 const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
-  if (
-    process.env.NODE_ENV !== "test" &&
-    process.env.ALLOW_TEST_RUNNER !== "1"
-  ) {
-    return NextResponse.json({ error: "Not allowed" }, { status: 403 });
-  }
+  const accessDenied = ensureTestRouteAccess(req);
+  if (accessDenied) return accessDenied;
 
   try {
     const body = await req.json().catch(() => ({}) as Record<string, unknown>);

@@ -1,4 +1,5 @@
 import type { BrowserContext, Page } from "@playwright/test";
+import { getTestRouteHeaders } from "./test-route-auth";
 
 /**
  * Programmatic login helper for Playwright tests.
@@ -14,7 +15,7 @@ export async function programmaticLogin(
   // Diagnostics: query server runtime endpoint first
   try {
     const rt = await context.request.get(`${base}/api/test/runtime`, {
-      headers: { "x-allow-test-runner": "1" },
+      headers: getTestRouteHeaders(),
       timeout: 3000,
     });
     try {
@@ -32,7 +33,7 @@ export async function programmaticLogin(
 
   const res = await context.request.get(
     `${base}/api/test/create-session?email=${encodeURIComponent(email)}&json=1`,
-    { headers: { "x-allow-test-runner": "1" }, timeout: 10000 },
+    { headers: getTestRouteHeaders(), timeout: 10000 },
   );
 
   if (res.status() !== 200) {

@@ -1,17 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { hashPassword } from "@/lib/auth/password";
+import { ensureTestRouteAccess } from "../_guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  if (
-    process.env.NODE_ENV !== "test" &&
-    process.env.ALLOW_TEST_RUNNER !== "1"
-  ) {
-    return NextResponse.json({ error: "Not allowed" }, { status: 403 });
-  }
+  const accessDenied = ensureTestRouteAccess(req);
+  if (accessDenied) return accessDenied;
 
   try {
     // Runtime diagnostics: log masked DB URL and current schema + table count

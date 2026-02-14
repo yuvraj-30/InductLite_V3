@@ -1,7 +1,12 @@
+import { ensureTestRouteAccess } from "../_guard";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: Request) {
+  const accessDenied = ensureTestRouteAccess(req);
+  if (accessDenied) return accessDenied;
+
   // Access process.env at request-time using an eval-based access so that
   // Next/Turbopack cannot inline the values at build time. This is deliberate
   // for CI diagnostics only and does NOT return any secrets.

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { generateCsrfToken } from "@/lib/auth/csrf";
+import { ensureTestRouteAccess } from "../_guard";
 
 const E2E_QUIET = (() => {
   const v = process.env.E2E_QUIET;
@@ -20,8 +21,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
-  // Allow runtime override via header (useful in CI where build-time inlining prevents env checks)
-  const allowHeader = req.headers.get("x-allow-test-runner");
+  const accessDenied = ensureTestRouteAccess(req);
+  if (accessDenied) return accessDenied;
 
   // Use runtime env access to avoid build-time snapshotting
   const getEnv = () => {
@@ -33,24 +34,6 @@ export async function GET(req: Request) {
   };
 
   const env = getEnv();
-
-  if (
-    allowHeader !== "1" &&
-    env.NODE_ENV !== "test" &&
-    env.ALLOW_TEST_RUNNER !== "1"
-  ) {
-    // Return diagnostics to help CI determine why the test runner endpoint is blocked.
-    // Note: only emitted in test runs and contains no secrets.
-    return NextResponse.json(
-      {
-        error: "Not allowed",
-        nodeEnv: env.NODE_ENV ?? null,
-        allowTestRunner: env.ALLOW_TEST_RUNNER ?? null,
-        allowHeader: allowHeader ?? null,
-      },
-      { status: 403 },
-    );
-  }
 
   // Fail fast with a clear 503 if the server process does not have DATABASE_URL at runtime
   if (!env.DATABASE_URL) {

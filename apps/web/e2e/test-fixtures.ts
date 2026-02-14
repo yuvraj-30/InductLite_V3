@@ -13,6 +13,7 @@ import {
   deletePublicSite as _deletePublicSite,
   type SeedPublicSiteResult,
 } from "./utils/seed";
+import { getTestRouteHeaders } from "./utils/test-route-auth";
 
 type MyFixtures = {
   /** Programmatic login helper available in test fixtures */
@@ -183,7 +184,10 @@ export const test = base.extend<MyFixtures>({
       const start = Date.now();
       while (Date.now() - start < timeout) {
         try {
-          const res = await fetch(url, { method: "POST" });
+          const res = await fetch(url, {
+            method: "POST",
+            headers: getTestRouteHeaders(),
+          });
           if (res && res.ok) return;
           if (res && (res.status === 401 || res.status === 403)) {
             const body = await res.text().catch(() => "");
@@ -224,7 +228,9 @@ export const test = base.extend<MyFixtures>({
 
         while (Date.now() - started < 120000) {
           try {
-            const runtimeRes = await fetch(`${baseUrl}/api/test/runtime`);
+            const runtimeRes = await fetch(`${baseUrl}/api/test/runtime`, {
+              headers: getTestRouteHeaders(),
+            });
             lastStatus = runtimeRes.status;
             const txt = await runtimeRes.text().catch(() => "");
             lastBody = txt;
@@ -1051,10 +1057,10 @@ export const test = base.extend<MyFixtures>({
     const base = workerServer.baseUrl;
     const res = await fetch(`${base}/api/test/create-user`, {
       method: "POST",
-      headers: {
+      headers: getTestRouteHeaders({
         "content-type": "application/json",
         "x-e2e-client": clientKey,
-      },
+      }),
       body: JSON.stringify({
         email,
         password,
@@ -1084,6 +1090,7 @@ export const test = base.extend<MyFixtures>({
     try {
       const lookup = await fetch(
         `${base}/api/test/lookup?email=${encodeURIComponent(email)}`,
+        { headers: getTestRouteHeaders() },
       );
       const lookupText = await lookup.text();
       console.log(

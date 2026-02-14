@@ -34,7 +34,7 @@ test.beforeEach(async ({ loginAs, workerUser }) => {
 });
 ```
 
-- The test-only API `/api/test/create-user` is used under the hood to create a per-worker company and user. This endpoint is gated by `ALLOW_TEST_RUNNER`.
+- The test-only API `/api/test/create-user` is used under the hood to create a per-worker company and user. In non-test runtimes it requires both `ALLOW_TEST_RUNNER=1` and `x-test-secret` matching `TEST_RUNNER_SECRET_KEY`.
 
 - To clear rate-limit state for a specific worker or client, call `/api/test/clear-rate-limit?clientKey=<clientKey>`.
 

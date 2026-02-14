@@ -1,20 +1,13 @@
 import { NextResponse } from "next/server";
 import { PrismaClient, QuestionType } from "@prisma/client";
 import { __test_clearInMemoryStore } from "@/lib/rate-limit";
+import { ensureTestRouteAccess } from "../_guard";
 
 const prisma = new PrismaClient();
 
-// Only allow in test or when ALLOW_TEST_RUNNER is explicitly enabled
-function allowed() {
-  return (
-    process.env.NODE_ENV === "test" || process.env.ALLOW_TEST_RUNNER === "1"
-  );
-}
-
 export async function POST(req: Request) {
-  if (!allowed()) {
-    return NextResponse.json({ error: "Not allowed" }, { status: 403 });
-  }
+  const accessDenied = ensureTestRouteAccess(req);
+  if (accessDenied) return accessDenied;
 
   try {
     const body = await req.json().catch(() => ({}) as Record<string, unknown>);
@@ -106,9 +99,8 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  if (!allowed()) {
-    return NextResponse.json({ error: "Not allowed" }, { status: 403 });
-  }
+  const accessDenied = ensureTestRouteAccess(req);
+  if (accessDenied) return accessDenied;
 
   try {
     const url = new URL(req.url);

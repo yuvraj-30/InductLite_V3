@@ -10,6 +10,7 @@
 
 import { test, expect } from "./test-fixtures";
 import type { Page } from "@playwright/test";
+import { getTestRouteHeaders } from "./utils/test-route-auth";
 
 const E2E_QUIET = (() => {
   const v = process.env.E2E_QUIET;
@@ -29,7 +30,9 @@ test.beforeEach(async ({ context, request }) => {
 
   // Clear in-memory rate-limiter state via test-only endpoint
   try {
-    await request.post(`/api/test/clear-rate-limit`);
+    await request.post(`/api/test/clear-rate-limit`, {
+      headers: getTestRouteHeaders(),
+    });
   } catch (err) {
     // Non-fatal - proceed with test. In CI the endpoint should be allowed.
     if (!E2E_QUIET) {

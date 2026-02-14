@@ -10,6 +10,7 @@
  */
 
 import { test, expect } from "./test-fixtures";
+import { getTestRouteHeaders } from "./utils/test-route-auth";
 
 test.describe.serial("Admin Authentication", () => {
   // Test credentials - use a per-worker test user created by fixtures
@@ -80,6 +81,7 @@ test.describe.serial("Admin Authentication", () => {
     try {
       await request.post(
         `${BASE_URL}/api/test/clear-rate-limit?clientKey=${encodeURIComponent(workerUser.clientKey)}`,
+        { headers: getTestRouteHeaders() },
       );
     } catch (err) {
       // Non-fatal: continue even if clearing rate limit fails
@@ -192,6 +194,7 @@ test.describe.serial("Admin Authentication", () => {
     try {
       await request.post(
         `${BASE_URL}/api/test/clear-rate-limit?clientKey=${encodeURIComponent(workerUser.clientKey)}`,
+        { headers: getTestRouteHeaders() },
       );
     } catch (err) {
       console.warn("clear-rate-limit failed:", String(err));
@@ -208,6 +211,7 @@ test.describe.serial("Admin Authentication", () => {
     // For determinism, set the user's failed login state directly via test endpoint
     try {
       await request.post(`${BASE_URL}/api/test/set-user-lock`, {
+        headers: getTestRouteHeaders(),
         data: { email: workerUser.email, failed_logins: 5, lock: true },
       });
     } catch (err) {
@@ -240,6 +244,7 @@ test.describe.serial("Admin Authentication", () => {
         // Fallback: verify server state for failed_logins
         const lookup = await request.get(
           `${BASE_URL}/api/test/lookup?email=${encodeURIComponent(workerUser.email)}`,
+          { headers: getTestRouteHeaders() },
         );
         const body = await lookup.json();
         const failedLogins = body?.user?.failed_logins ?? 0;
@@ -254,6 +259,7 @@ test.describe.serial("Admin Authentication", () => {
     try {
       await request.post(
         `${BASE_URL}/api/test/clear-rate-limit?clientKey=${encodeURIComponent(workerUser.clientKey)}`,
+        { headers: getTestRouteHeaders() },
       );
     } catch (err) {
       console.warn("clear-rate-limit failed during cleanup:", String(err));

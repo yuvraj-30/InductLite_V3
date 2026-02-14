@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
+import { ensureTestRouteAccess } from "../_guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
+  const accessDenied = ensureTestRouteAccess(req);
+  if (accessDenied) return accessDenied;
+
   // Allow quick checks from tests; no secrets returned.
   const url = new URL(req.url);
   const email = url.searchParams.get("email");

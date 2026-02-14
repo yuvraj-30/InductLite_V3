@@ -1,4 +1,5 @@
 import { test, expect } from "./test-fixtures";
+import { getTestRouteHeaders } from "./utils/test-route-auth";
 
 test.describe("Admin Export UI & Processing", () => {
   test.beforeEach(async ({ page, loginAs, workerUser }) => {
@@ -35,7 +36,7 @@ test.describe("Admin Export UI & Processing", () => {
     while (attempts < 30) {
       const res = await fetch(endpoint, {
         method: "POST",
-        headers: { "x-test-runner": "1" },
+        headers: getTestRouteHeaders(),
       });
       const json = await res.json();
       if (json?.res?.id === jobId && json?.res?.status === "SUCCEEDED") {

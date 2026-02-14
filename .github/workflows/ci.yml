@@ -27,6 +27,7 @@ env:
   CRON_SECRET: ci-test-cron-secret-at-least-16
   TRUST_PROXY: "0"
   ALLOW_TEST_RUNNER: "1"
+  TEST_RUNNER_SECRET_KEY: ${{ secrets.TEST_RUNNER_SECRET_KEY }}
 
 jobs:
   quality:
