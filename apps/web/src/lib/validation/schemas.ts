@@ -67,6 +67,9 @@ export const signInSchema = z.object({
   employerName: z.string().max(100, "Employer name is too long").optional(),
   visitorType: visitorTypeSchema,
   roleOnSite: z.string().max(100, "Role description is too long").optional(),
+  hasAcceptedTerms: z
+    .boolean()
+    .refine((accepted) => accepted === true, "You must accept the terms to sign in"),
   // Induction answers - bounded to prevent payload-amplification abuse
   answers: z
     .array(

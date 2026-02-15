@@ -47,6 +47,14 @@ interface Site {
   is_active: boolean;
 }
 
+function parseUtcDayStart(dateString: string): Date {
+  return new Date(`${dateString}T00:00:00.000Z`);
+}
+
+function parseUtcDayEnd(dateString: string): Date {
+  return new Date(`${dateString}T23:59:59.999Z`);
+}
+
 async function HistoryContent({
   filters,
 }: {
@@ -76,10 +84,10 @@ async function HistoryContent({
         dateRange:
           filters.dateFrom || filters.dateTo
             ? {
-                from: filters.dateFrom ? new Date(filters.dateFrom) : undefined,
-                to: filters.dateTo
-                  ? new Date(filters.dateTo + "T23:59:59.999Z")
+                from: filters.dateFrom
+                  ? parseUtcDayStart(filters.dateFrom)
                   : undefined,
+                to: filters.dateTo ? parseUtcDayEnd(filters.dateTo) : undefined,
               }
             : undefined,
       },

@@ -233,26 +233,14 @@ jobs:
       - name: Install Playwright browsers
         run: cd apps/web && npx playwright install --with-deps chromium
 
-      - name: Build (workspace via turbo)
-        env:
-          NODE_ENV: production
-          ALLOW_TEST_RUNNER: "1"
-        run: npm run build
-
-      - name: Start server
+      - name: Start dev server
         run: |
           set -euo pipefail
           cd apps/web
-          # Use the standalone server when build output is 'standalone' (avoids Next.js warning)
-          if [ -f .next/standalone/server.js ]; then
-            node .next/standalone/server.js &
-          else
-            npm start &
-          fi
+          npm run dev -- -p 3000 &
           echo $! > /tmp/web.pid
         env:
-          PORT: "3000"
-          NODE_ENV: test
+          NODE_ENV: development
           ALLOW_TEST_RUNNER: "1"
           DATABASE_URL: ${{ env.DATABASE_URL }}
           # Test-only stubs for services not required in CI e2e runs

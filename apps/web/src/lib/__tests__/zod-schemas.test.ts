@@ -27,6 +27,7 @@ describe("Public Sign-In Schema Validation", () => {
       visitorName: "John Doe",
       visitorPhone: "+64412345678",
       visitorType: "CONTRACTOR" as const,
+      hasAcceptedTerms: true,
       answers: [{ questionId: "clxxxxxxxxxxxxxxxxxxxxxxxxx", answer: "yes" }],
     };
 
@@ -155,6 +156,19 @@ describe("Public Sign-In Schema Validation", () => {
         answers: [{ questionId: "not-a-cuid", answer: "yes" }],
       });
       expect(result.success).toBe(false);
+    });
+
+    it("should reject sign-in when terms are not accepted", () => {
+      const result = signInSchema.safeParse({
+        ...validInput,
+        hasAcceptedTerms: false,
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.issues[0]?.message).toBe(
+          "You must accept the terms to sign in",
+        );
+      }
     });
   });
 

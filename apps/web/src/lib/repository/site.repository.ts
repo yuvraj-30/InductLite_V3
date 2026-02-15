@@ -27,6 +27,18 @@ export interface SiteWithCounts extends Site {
   };
 }
 
+export type SiteListItem = Pick<
+  Site,
+  "id" | "name" | "address" | "description" | "is_active"
+>;
+
+export type SiteListWithCounts = SiteListItem & {
+  _count: {
+    sign_in_records: number;
+    public_links: number;
+  };
+};
+
 /**
  * Site filter options
  */
@@ -150,7 +162,7 @@ export async function listSites(
   companyId: string,
   filter?: SiteFilter,
   pagination?: PaginationParams,
-): Promise<PaginatedResult<Site>> {
+): Promise<PaginatedResult<SiteListItem>> {
   requireCompanyId(companyId);
 
   const { skip, take, page, pageSize } = normalizePagination(pagination ?? {});
@@ -175,6 +187,13 @@ export async function listSites(
         skip,
         take,
         orderBy: { name: "asc" },
+        select: {
+          id: true,
+          name: true,
+          address: true,
+          description: true,
+          is_active: true,
+        },
       }),
       db.site.count({ where }),
     ]);
@@ -192,7 +211,7 @@ export async function listSitesWithCounts(
   companyId: string,
   filter?: SiteFilter,
   pagination?: PaginationParams,
-): Promise<PaginatedResult<SiteWithCounts>> {
+): Promise<PaginatedResult<SiteListWithCounts>> {
   requireCompanyId(companyId);
 
   const { skip, take, page, pageSize } = normalizePagination(pagination ?? {});
@@ -217,7 +236,12 @@ export async function listSitesWithCounts(
         skip,
         take,
         orderBy: { name: "asc" },
-        include: {
+        select: {
+          id: true,
+          name: true,
+          address: true,
+          description: true,
+          is_active: true,
           _count: {
             select: {
               sign_in_records: true,
@@ -466,13 +490,20 @@ export async function getAllSiteIds(companyId: string): Promise<string[]> {
 /**
  * Find all sites for a company (no pagination, for admin lists)
  */
-export async function findAllSites(companyId: string): Promise<Site[]> {
+export async function findAllSites(companyId: string): Promise<SiteListItem[]> {
   requireCompanyId(companyId);
 
   try {
     const db = scopedDb(companyId);
     return await db.site.findMany({
       where: { company_id: companyId },
+      select: {
+        id: true,
+        name: true,
+        address: true,
+        description: true,
+        is_active: true,
+      },
       orderBy: [{ is_active: "desc" }, { name: "asc" }],
     });
   } catch (error) {
@@ -486,7 +517,7 @@ export async function findAllSites(companyId: string): Promise<Site[]> {
 export async function findSitesByIds(
   companyId: string,
   siteIds: string[],
-): Promise<Site[]> {
+): Promise<SiteListItem[]> {
   requireCompanyId(companyId);
   if (siteIds.length === 0) return [];
 
@@ -494,6 +525,13 @@ export async function findSitesByIds(
     const db = scopedDb(companyId);
     return await db.site.findMany({
       where: { company_id: companyId, id: { in: siteIds } },
+      select: {
+        id: true,
+        name: true,
+        address: true,
+        description: true,
+        is_active: true,
+      },
       orderBy: [{ is_active: "desc" }, { name: "asc" }],
     });
   } catch (error) {

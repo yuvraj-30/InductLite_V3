@@ -66,6 +66,8 @@ export {
 
 export type {
   SiteWithCounts,
+  SiteListItem,
+  SiteListWithCounts,
   SiteFilter,
   CreateSiteInput,
   UpdateSiteInput,

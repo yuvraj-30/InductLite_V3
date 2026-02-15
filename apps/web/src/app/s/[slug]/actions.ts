@@ -320,6 +320,7 @@ export async function submitSignIn(
       employerName: parsed.data.employerName,
       visitorType: parsed.data.visitorType,
       roleOnSite: parsed.data.roleOnSite,
+      hasAcceptedTerms: parsed.data.hasAcceptedTerms,
       templateId: template.id,
       templateVersion: template.version,
       answers: parsed.data.answers,

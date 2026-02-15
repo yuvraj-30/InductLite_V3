@@ -296,6 +296,7 @@ model Contractor {
 
   @@unique([company_id, name])
   @@index([company_id])
+  @@index([company_id, contact_email])
   @@index([company_id, is_active])
 }
 

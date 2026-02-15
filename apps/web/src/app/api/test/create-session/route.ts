@@ -3,24 +3,35 @@ import { prisma } from "@/lib/db/prisma";
 import { generateCsrfToken } from "@/lib/auth/csrf";
 import { ensureTestRouteAccess } from "../_guard";
 
-const E2E_QUIET = (() => {
-  const v = process.env.E2E_QUIET;
+const E2E_DEBUG_TEST_ROUTES = (() => {
+  const v = process.env.E2E_DEBUG_TEST_ROUTES;
   return v === "1" || v?.toLowerCase() === "true";
 })();
 
 const e2eLog = (...args: unknown[]) => {
-  if (!E2E_QUIET) console.log(...args);
+  if (E2E_DEBUG_TEST_ROUTES) console.log(...args);
 };
 
 const e2eWarn = (...args: unknown[]) => {
-  if (!E2E_QUIET) console.warn(...args);
+  if (E2E_DEBUG_TEST_ROUTES) console.warn(...args);
 };
 
 // Force Node runtime and dynamic evaluation so env values are read at request-time
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+function isProductionRuntime(): boolean {
+  try {
+    return (eval("process").env?.NODE_ENV ?? "").toLowerCase() === "production";
+  } catch {
+    return false;
+  }
+}
+
 export async function GET(req: Request) {
+  // Defense in depth: keep test session helpers disabled in production.
+  if (isProductionRuntime()) return new Response("Not Found", { status: 404 });
+
   const accessDenied = ensureTestRouteAccess(req);
   if (accessDenied) return accessDenied;
 
@@ -76,12 +87,10 @@ export async function GET(req: Request) {
               datasources: { db: { url: dbUrl } },
             });
             await diag.$connect();
-            const res: any = await diag.$queryRawUnsafe(
-              `SELECT current_schema() AS schema_name, (SELECT COUNT(*)::int FROM information_schema.tables WHERE table_schema = current_schema()) AS tables_count`,
-            );
+            const res = await diag.user.count();
             e2eLog(
-              "E2E: create-session runtime diagnostic:",
-              JSON.stringify(res),
+              "E2E: create-session runtime diagnostic user_count=",
+              res,
             );
             await diag.$disconnect();
           } catch (e) {
@@ -158,13 +167,6 @@ export async function GET(req: Request) {
               email,
               "count=",
               count,
-            );
-            const res = await diag.$queryRawUnsafe(
-              "select current_schema() as schema, (select count(*) from information_schema.tables where table_schema = current_schema()) as tables_count;",
-            );
-            e2eWarn(
-              "E2E: create-session diag schema/tables:",
-              JSON.stringify(res),
             );
             await diag.$disconnect();
           } catch (e) {

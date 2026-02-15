@@ -37,9 +37,9 @@ export async function GET(req: Request) {
       });
       await diag.$connect();
       const count = await diag.user.count({ where: { email } });
-      const res: any = await diag.$queryRawUnsafe(
-        `SELECT current_schema() AS schema_name, (SELECT COUNT(*)::int FROM information_schema.tables WHERE table_schema = current_schema()) AS tables_count`,
-      );
+      const res = await diag.$queryRaw<
+        Array<{ schema_name: string; tables_count: number }>
+      >`SELECT current_schema() AS schema_name, (SELECT COUNT(*)::int FROM information_schema.tables WHERE table_schema = current_schema()) AS tables_count`;
       await diag.$disconnect();
       return NextResponse.json({
         email,

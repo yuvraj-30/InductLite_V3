@@ -36,6 +36,7 @@ export interface PublicSignInInput {
   employerName?: string;
   visitorType: VisitorType;
   roleOnSite?: string;
+  hasAcceptedTerms: boolean;
   // Induction response
   templateId: string;
   templateVersion: number;
@@ -91,6 +92,13 @@ export async function createPublicSignIn(
     );
   }
 
+  if (!input.hasAcceptedTerms) {
+    throw new RepositoryError(
+      "Terms must be accepted before sign-in",
+      "VALIDATION",
+    );
+  }
+
   // Validate templateVersion is a positive integer
   if (
     typeof input.templateVersion !== "number" ||
@@ -121,6 +129,8 @@ export async function createPublicSignIn(
           visitor_email: input.visitorEmail?.trim() || null,
           employer_name: input.employerName?.trim() || null,
           visitor_type: input.visitorType,
+          hasAcceptedTerms: true,
+          termsAcceptedAt: new Date(),
           notes: input.roleOnSite ? `Role: ${input.roleOnSite}` : null,
           // Token fields will be set after transaction
           sign_out_token: null,

@@ -564,6 +564,11 @@ test.describe.serial("Public Sign-In Flow", () => {
         }
       }
 
+      const termsCheckbox = page.locator("#hasAcceptedTerms");
+      if ((await termsCheckbox.count()) > 0) {
+        await termsCheckbox.check().catch(() => null);
+      }
+
       await expect(page.getByText("Please provide a signature")).not.toBeVisible({
         timeout: 3000,
       });

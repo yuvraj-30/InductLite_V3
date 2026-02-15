@@ -74,6 +74,7 @@ describe("Public Actions Error Handling", () => {
       visitorName: "John Doe",
       visitorPhone: "+64211234567",
       visitorType: "CONTRACTOR" as const,
+      hasAcceptedTerms: true,
       answers: [],
     };
 
@@ -114,6 +115,18 @@ describe("Public Actions Error Handling", () => {
         expect(result.error.message).toBe(
           "An unexpected error occurred. Please try again.",
         );
+      }
+    });
+
+    it("should return validation error when terms are not accepted", async () => {
+      const result = await submitSignIn({
+        ...validInput,
+        hasAcceptedTerms: false,
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe("VALIDATION_ERROR");
       }
     });
 

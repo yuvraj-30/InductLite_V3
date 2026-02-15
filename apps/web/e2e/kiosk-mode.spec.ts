@@ -180,6 +180,10 @@ test.describe("Kiosk Mode", () => {
 
     // Submit
     const signBtn = page.getByRole("button", { name: /confirm & sign in/i });
+    const termsCheckbox = page.locator("#hasAcceptedTerms");
+    if ((await termsCheckbox.count()) > 0) {
+      await termsCheckbox.check().catch(() => null);
+    }
     await signBtn.waitFor({ state: "visible" });
     await signBtn.click();
 

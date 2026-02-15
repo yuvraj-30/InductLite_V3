@@ -32,6 +32,7 @@ interface VisitorDetails {
   employerName: string;
   visitorType: "CONTRACTOR" | "VISITOR" | "EMPLOYEE" | "DELIVERY";
   roleOnSite: string;
+  hasAcceptedTerms: boolean;
 }
 
 interface SignInResult {
@@ -58,6 +59,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
     employerName: "",
     visitorType: "CONTRACTOR",
     roleOnSite: "",
+    hasAcceptedTerms: false,
   });
 
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
@@ -107,6 +109,11 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
   };
 
   const handleSignatureSubmit = () => {
+    if (!details.hasAcceptedTerms) {
+      setFieldErrors({ hasAcceptedTerms: ["You must accept the terms"] });
+      return;
+    }
+
     const isEmpty = sigCanvas.current?.isEmpty() ?? true;
     if (isEmpty) {
       setHasSignature(false);
@@ -129,6 +136,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
         employerName: details.employerName || undefined,
         visitorType: details.visitorType,
         roleOnSite: details.roleOnSite || undefined,
+        hasAcceptedTerms: details.hasAcceptedTerms,
         answers: Object.entries(answers).map(([questionId, answer]) => ({
           questionId,
           answer,
@@ -431,6 +439,32 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
                 className: "sigCanvas w-full h-40 rounded-lg touch-none",
               }}
             />
+          </div>
+
+          <div>
+            <label className="flex items-start gap-2 text-sm text-gray-700">
+              <input
+                id="hasAcceptedTerms"
+                type="checkbox"
+                checked={details.hasAcceptedTerms}
+                onChange={(e) =>
+                  setDetails({
+                    ...details,
+                    hasAcceptedTerms: e.target.checked,
+                  })
+                }
+                className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span>
+                I acknowledge the site safety terms and conditions.
+                <span className="text-red-500"> *</span>
+              </span>
+            </label>
+            {fieldErrors.hasAcceptedTerms && (
+              <p className="mt-1 text-sm text-red-600">
+                {fieldErrors.hasAcceptedTerms[0]}
+              </p>
+            )}
           </div>
 
           <div className="flex gap-2">

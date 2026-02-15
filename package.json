@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "dev": "turbo run dev",
-    "build": "turbo run build",
+    "build": "npm run lint && npm run typecheck && turbo run build",
+    "build:strict": "npm run build",
     "start": "turbo run start",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",

@@ -10,24 +10,17 @@ function getRuntimeEnv(): RuntimeEnv {
   }
 }
 
-export function ensureTestRouteAccess(req: Request): Response | null {
+export function ensureTestRouteAccess(_req: Request): Response | null {
   const env = getRuntimeEnv();
-  const nodeEnv = env.NODE_ENV ?? "";
+  const nodeEnv = (env.NODE_ENV ?? "").toLowerCase();
   const isTestEnv = nodeEnv === "test";
+  const isProductionEnv = nodeEnv === "production";
   const allowTestRunner = env.ALLOW_TEST_RUNNER === "1";
 
-  if (!isTestEnv && !allowTestRunner) {
-    return NextResponse.json({ error: "Not allowed" }, { status: 403 });
-  }
+  // Never allow test routes in production, regardless of headers/secrets.
+  if (isProductionEnv) return new Response("Not Found", { status: 404 });
+  if (isTestEnv) return null;
+  if (allowTestRunner) return null;
 
-  // Non-test runtimes (including production builds) require a matching secret header.
-  if (!isTestEnv) {
-    const testSecret = env.TEST_RUNNER_SECRET_KEY;
-    const authHeader = req.headers.get("x-test-secret");
-    if (!testSecret || authHeader !== testSecret) {
-      return new Response("Unauthorized", { status: 403 });
-    }
-  }
-
-  return null;
+  return NextResponse.json({ error: "Not found" }, { status: 404 });
 }

@@ -6,7 +6,31 @@ import { ensureTestRouteAccess } from "../_guard";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+const E2E_DEBUG_TEST_ROUTES = (() => {
+  const v = process.env.E2E_DEBUG_TEST_ROUTES;
+  return v === "1" || v?.toLowerCase() === "true";
+})();
+
+const e2eLog = (...args: unknown[]) => {
+  if (E2E_DEBUG_TEST_ROUTES) console.log(...args);
+};
+
+const e2eWarn = (...args: unknown[]) => {
+  if (E2E_DEBUG_TEST_ROUTES) console.warn(...args);
+};
+
+function isProductionRuntime(): boolean {
+  try {
+    return (eval("process").env?.NODE_ENV ?? "").toLowerCase() === "production";
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(req: Request) {
+  // Defense in depth: keep test user creation helpers disabled in production.
+  if (isProductionRuntime()) return new Response("Not Found", { status: 404 });
+
   const accessDenied = ensureTestRouteAccess(req);
   if (accessDenied) return accessDenied;
 
@@ -27,7 +51,7 @@ export async function POST(req: Request) {
         try {
           const u = new URL(dbUrl);
           const masked = `${u.protocol}//${u.username}:****@${u.hostname}${u.port ? `:${u.port}` : ""}${u.pathname}${u.search}`;
-          console.log("E2E: create-user called; masked DATABASE_URL:", masked);
+          e2eLog("E2E: create-user called; masked DATABASE_URL:", masked);
           // Quick schema and table diagnostic using Prisma
           try {
             const { PrismaClient } = await import("@prisma/client");
@@ -35,16 +59,14 @@ export async function POST(req: Request) {
               datasources: { db: { url: dbUrl } },
             });
             await diag.$connect();
-            const res: any = await diag.$queryRawUnsafe(
-              `SELECT current_schema() AS schema_name, (SELECT COUNT(*)::int FROM information_schema.tables WHERE table_schema = current_schema()) AS tables_count`,
-            );
-            console.log(
-              "E2E: create-user runtime diagnostic:",
-              JSON.stringify(res),
+            const res = await diag.user.count();
+            e2eLog(
+              "E2E: create-user runtime diagnostic user_count=",
+              res,
             );
             await diag.$disconnect();
           } catch (e) {
-            console.warn(
+            e2eWarn(
               "E2E: create-user diagnostic query failed:",
               String(e),
             );
@@ -54,7 +76,7 @@ export async function POST(req: Request) {
         }
       }
     } catch (e) {
-      console.warn("E2E: create-user diag read failed:", String(e));
+      e2eWarn("E2E: create-user diag read failed:", String(e));
     }
 
     const body = await req.json().catch(() => ({}) as Record<string, unknown>);
@@ -141,7 +163,7 @@ export async function POST(req: Request) {
         });
       }
     } catch (e) {
-      console.warn(
+      e2eWarn(
         "E2E: create-user runtime write failed, falling back to global prisma:",
         String(e),
       );
@@ -158,7 +180,7 @@ export async function POST(req: Request) {
     }
 
     // Log created user id for diagnostics
-    console.log("E2E: create-user created id=", created?.id);
+    e2eLog("E2E: create-user created id=", created?.id);
 
     // Confirm visibility of created user from the same runtime DB URL (diagnostic)
     try {
@@ -178,17 +200,17 @@ export async function POST(req: Request) {
           });
           await diag.$connect();
           const u = await diag.user.findUnique({ where: { email: safeEmail } });
-          console.log(
+          e2eLog(
             "E2E: create-user confirm lookup user=",
             u ? { id: u.id, email: u.email, company_id: u.company_id } : null,
           );
           await diag.$disconnect();
         } catch (e) {
-          console.warn("E2E: create-user confirm lookup failed:", String(e));
+          e2eWarn("E2E: create-user confirm lookup failed:", String(e));
         }
       }
     } catch (e) {
-      console.warn("E2E: create-user confirm diag read failed:", String(e));
+      e2eWarn("E2E: create-user confirm diag read failed:", String(e));
     }
 
     return NextResponse.json({ success: true, email, password, companySlug });
