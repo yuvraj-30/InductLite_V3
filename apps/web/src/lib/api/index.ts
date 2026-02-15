@@ -12,6 +12,7 @@ export {
   unauthorizedResponse,
   permissionDeniedResponse,
   rateLimitedResponse,
+  guardrailDeniedResponse,
 } from "./response";
 
 export type {
@@ -21,4 +22,6 @@ export type {
   ApiSuccessResponse,
   ApiErrorResponse,
   ApiResponse,
+  GuardrailScope,
+  GuardrailViolation,
 } from "./response";

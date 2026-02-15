@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://inductlite.local/schemas/guardrail-exceptions.schema.json",
+  "title": "Guardrail Exceptions Schema",
+  "type": "object",
+  "required": ["version", "updated_at_utc", "exceptions"],
+  "properties": {
+    "version": { "type": "string", "minLength": 1 },
+    "updated_at_utc": { "type": "string", "format": "date-time" },
+    "exceptions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "exception_id",
+          "control_id",
+          "scope_hash",
+          "reason",
+          "owner",
+          "approvers",
+          "created_at_utc",
+          "expires_at_utc",
+          "renewal_count",
+          "rollback_plan"
+        ],
+        "properties": {
+          "exception_id": { "type": "string", "minLength": 1 },
+          "control_id": { "type": "string", "minLength": 1 },
+          "scope_hash": { "type": "string", "minLength": 1 },
+          "reason": { "type": "string", "minLength": 1 },
+          "owner": { "type": "string", "minLength": 1 },
+          "approvers": {
+            "type": "array",
+            "minItems": 1,
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "created_at_utc": { "type": "string", "format": "date-time" },
+          "expires_at_utc": { "type": "string", "format": "date-time" },
+          "renewal_count": { "type": "integer", "minimum": 0, "maximum": 1 },
+          "rollback_plan": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

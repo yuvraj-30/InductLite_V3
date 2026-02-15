@@ -8,6 +8,8 @@
 import { scopedDb } from "@/lib/db/scoped-db";
 import { publicDb } from "@/lib/db/public-db";
 import type { AuditLog, Prisma } from "@prisma/client";
+import { createRequestLogger } from "@/lib/logger";
+import { generateRequestId } from "@/lib/auth/csrf";
 import {
   requireCompanyId,
   handlePrismaError,
@@ -351,7 +353,11 @@ export async function getFailedLoginAttempts(
     });
   } catch (error) {
     // Don't throw on count failure - return 0 to allow login
-    console.error("Failed to count login attempts:", error);
+    const log = createRequestLogger(generateRequestId());
+    log.warn(
+      { companyId, userId, error: String(error) },
+      "Failed to count login attempts",
+    );
     return 0;
   }
 }

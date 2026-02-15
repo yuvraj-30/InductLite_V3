@@ -22,12 +22,35 @@ import {
   RepositoryError,
 } from "./base";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import {
+  decryptNullableString,
+  encryptNullableString,
+  encryptString,
+  isDataEncryptionEnabled,
+} from "@/lib/security/data-protection";
 
 /**
  * Contractor with documents
  */
 export interface ContractorWithDocuments extends Contractor {
   documents: ContractorDocument[];
+}
+
+type ContractorSensitive = {
+  contact_email: string | null;
+  contact_phone: string | null;
+};
+
+function decryptContractor<T extends ContractorSensitive>(contractor: T): T {
+  return {
+    ...contractor,
+    contact_email: decryptNullableString(contractor.contact_email),
+    contact_phone: decryptNullableString(contractor.contact_phone),
+  };
+}
+
+function decryptContractors<T extends ContractorSensitive>(contractors: T[]): T[] {
+  return contractors.map((contractor) => decryptContractor(contractor));
 }
 
 /**
@@ -147,7 +170,7 @@ export async function findContractorById(
     const contractor = await db.contractor.findFirst({
       where: { id: contractorId, company_id: companyId },
     });
-    return contractor;
+    return contractor ? decryptContractor(contractor) : null;
   } catch (error) {
     handlePrismaError(error, "Contractor");
   }
@@ -164,7 +187,7 @@ export async function findContractorByIdWithDocuments(
 
   try {
     const db = scopedDb(companyId);
-    return await db.contractor.findFirst({
+    const contractor = await db.contractor.findFirst({
       where: { id: contractorId, company_id: companyId },
       include: {
         documents: {
@@ -172,6 +195,7 @@ export async function findContractorByIdWithDocuments(
         },
       },
     });
+    return contractor ? decryptContractor(contractor) : null;
   } catch (error) {
     handlePrismaError(error, "Contractor");
   }
@@ -188,10 +212,26 @@ export async function findContractorByEmail(
 
   try {
     const db = scopedDb(companyId);
+    const normalizedEmail = email.toLowerCase();
+
+    // Fast path for legacy/plaintext rows.
     const contractor = await db.contractor.findFirst({
-      where: { contact_email: email.toLowerCase(), company_id: companyId },
+      where: { contact_email: normalizedEmail, company_id: companyId },
     });
-    return contractor;
+    if (contractor) return decryptContractor(contractor);
+
+    // Encryption-safe fallback for ciphertext rows.
+    if (isDataEncryptionEnabled()) {
+      const candidates = await db.contractor.findMany({
+        where: { company_id: companyId, contact_email: { not: null } },
+      });
+      const match = decryptContractors(candidates).find(
+        (row) => row.contact_email?.toLowerCase() === normalizedEmail,
+      );
+      return match ?? null;
+    }
+
+    return null;
   } catch (error) {
     handlePrismaError(error, "Contractor");
   }
@@ -214,12 +254,6 @@ export async function listContractors(
     ...(filter?.name && {
       name: { contains: filter.name, mode: "insensitive" },
     }),
-    ...(filter?.contactEmail && {
-      contact_email: { contains: filter.contactEmail, mode: "insensitive" },
-    }),
-    ...(filter?.contactPhone && {
-      contact_phone: { contains: filter.contactPhone },
-    }),
     ...(filter?.trade && {
       trade: { contains: filter.trade, mode: "insensitive" },
     }),
@@ -228,18 +262,60 @@ export async function listContractors(
 
   try {
     const db = scopedDb(companyId);
+    const requiresContactPostFilter =
+      isDataEncryptionEnabled() &&
+      Boolean(filter?.contactEmail || filter?.contactPhone);
+
+    if (requiresContactPostFilter) {
+      const all = decryptContractors(
+        await db.contractor.findMany({
+          where,
+          orderBy: { name: "asc" },
+        }),
+      );
+
+      const filtered = all.filter((contractor) => {
+        if (filter?.contactEmail) {
+          const value = contractor.contact_email?.toLowerCase() ?? "";
+          if (!value.includes(filter.contactEmail.toLowerCase())) return false;
+        }
+        if (filter?.contactPhone) {
+          const value = contractor.contact_phone ?? "";
+          if (!value.includes(filter.contactPhone)) return false;
+        }
+        return true;
+      });
+
+      const items = filtered.slice(skip, skip + take);
+      return paginatedResult(items, filtered.length, page, pageSize);
+    }
+
+    const whereWithContactFilters: Prisma.ContractorWhereInput = {
+      ...where,
+      ...(filter?.contactEmail && {
+        contact_email: { contains: filter.contactEmail, mode: "insensitive" },
+      }),
+      ...(filter?.contactPhone && {
+        contact_phone: { contains: filter.contactPhone },
+      }),
+    };
 
     const [contractors, total] = await Promise.all([
       db.contractor.findMany({
-        where,
+        where: whereWithContactFilters,
         skip,
         take,
         orderBy: { name: "asc" },
       }),
-      db.contractor.count({ where }),
+      db.contractor.count({ where: whereWithContactFilters }),
     ]);
 
-    return paginatedResult(contractors, total, page, pageSize);
+    return paginatedResult(
+      decryptContractors(contractors),
+      total,
+      page,
+      pageSize,
+    );
   } catch (error) {
     handlePrismaError(error, "Contractor");
   }
@@ -262,18 +338,48 @@ export async function listContractorsWithDocuments(
     ...(filter?.name && {
       name: { contains: filter.name, mode: "insensitive" },
     }),
-    ...(filter?.contactEmail && {
-      contact_email: { contains: filter.contactEmail, mode: "insensitive" },
-    }),
     ...(filter?.isActive !== undefined && { is_active: filter.isActive }),
   };
 
   try {
     const db = scopedDb(companyId);
+    const requiresEmailPostFilter =
+      isDataEncryptionEnabled() && Boolean(filter?.contactEmail);
+
+    if (requiresEmailPostFilter) {
+      const all = decryptContractors(
+        await db.contractor.findMany({
+          where,
+          orderBy: { name: "asc" },
+          include: {
+            documents: {
+              orderBy: { uploaded_at: "desc" },
+            },
+          },
+        }),
+      );
+
+      const filtered = all.filter((contractor) => {
+        if (!filter?.contactEmail) return true;
+        return (contractor.contact_email?.toLowerCase() ?? "").includes(
+          filter.contactEmail.toLowerCase(),
+        );
+      });
+
+      const items = filtered.slice(skip, skip + take);
+      return paginatedResult(items, filtered.length, page, pageSize);
+    }
+
+    const whereWithContactFilter: Prisma.ContractorWhereInput = {
+      ...where,
+      ...(filter?.contactEmail && {
+        contact_email: { contains: filter.contactEmail, mode: "insensitive" },
+      }),
+    };
 
     const [contractors, total] = await Promise.all([
       db.contractor.findMany({
-        where,
+        where: whereWithContactFilter,
         skip,
         take,
         orderBy: { name: "asc" },
@@ -283,10 +389,15 @@ export async function listContractorsWithDocuments(
           },
         },
       }),
-      db.contractor.count({ where }),
+      db.contractor.count({ where: whereWithContactFilter }),
     ]);
 
-    return paginatedResult(contractors, total, page, pageSize);
+    return paginatedResult(
+      decryptContractors(contractors),
+      total,
+      page,
+      pageSize,
+    );
   } catch (error) {
     handlePrismaError(error, "Contractor");
   }
@@ -321,18 +432,19 @@ export async function createContractor(
       }
     }
 
-    return await db.contractor.create({
+    const created = await db.contractor.create({
       data: {
         company_id: companyId,
         name: input.name,
         contact_name: input.contact_name,
-        contact_email: input.contact_email?.toLowerCase(),
-        contact_phone: formattedPhone,
+        contact_email: encryptNullableString(input.contact_email?.toLowerCase()),
+        contact_phone: formattedPhone ? encryptString(formattedPhone) : null,
         trade: input.trade,
         notes: input.notes,
         is_active: input.is_active ?? true,
       },
     });
+    return decryptContractor(created);
   } catch (error) {
     handlePrismaError(error, "Contractor");
   }
@@ -368,12 +480,15 @@ export async function updateContractor(
           contact_name: input.contact_name,
         }),
         ...(input.contact_email !== undefined && {
-          contact_email: input.contact_email?.toLowerCase(),
+          contact_email: encryptNullableString(input.contact_email?.toLowerCase()),
         }),
         ...(input.contact_phone !== undefined && {
           // Validate & normalize phone if provided
-          contact_phone: ((): string | undefined => {
+          contact_phone: ((): string | null | undefined => {
             if (input.contact_phone === undefined) return undefined;
+            if (input.contact_phone === null || input.contact_phone === "") {
+              return null;
+            }
             // Validate & normalize phone using libphonenumber-js
             try {
               const pn = parsePhoneNumberFromString(
@@ -383,7 +498,7 @@ export async function updateContractor(
               if (!pn || !pn.isValid()) {
                 throw new RepositoryError("Invalid phone number", "VALIDATION");
               }
-              return pn.number;
+              return encryptString(pn.number);
             } catch {
               throw new RepositoryError("Invalid phone number", "VALIDATION");
             }
@@ -398,7 +513,11 @@ export async function updateContractor(
     const updated = await db.contractor.findFirst({
       where: { id: contractorId, company_id: companyId },
     });
-    return updated as Contractor;
+    if (!updated) {
+      throw new RepositoryError("Contractor not found", "NOT_FOUND");
+    }
+
+    return decryptContractor(updated);
   } catch (error) {
     handlePrismaError(error, "Contractor");
   }
@@ -544,7 +663,7 @@ export async function findContractorsWithExpiringDocuments(
 
   try {
     const db = scopedDb(companyId);
-    return await db.contractor.findMany({
+    const contractors = await db.contractor.findMany({
       where: {
         company_id: companyId,
         is_active: true,
@@ -570,6 +689,7 @@ export async function findContractorsWithExpiringDocuments(
       },
       orderBy: { name: "asc" },
     });
+    return decryptContractors(contractors);
   } catch (error) {
     handlePrismaError(error, "Contractor");
   }
@@ -585,7 +705,7 @@ export async function findContractorsWithExpiredDocuments(
 
   try {
     const db = scopedDb(companyId);
-    return await db.contractor.findMany({
+    const contractors = await db.contractor.findMany({
       where: {
         company_id: companyId,
         is_active: true,
@@ -609,6 +729,7 @@ export async function findContractorsWithExpiredDocuments(
       },
       orderBy: { name: "asc" },
     });
+    return decryptContractors(contractors);
   } catch (error) {
     handlePrismaError(error, "Contractor");
   }

@@ -20,6 +20,12 @@ import {
   compareTokenHashes,
 } from "@/lib/auth/sign-out-token";
 import { formatToE164 } from "@inductlite/shared";
+import {
+  decryptString,
+  encryptJsonValue,
+  encryptNullableString,
+  encryptString,
+} from "@/lib/security/data-protection";
 
 // Types from Prisma schema
 type VisitorType = "CONTRACTOR" | "VISITOR" | "EMPLOYEE" | "DELIVERY";
@@ -30,6 +36,7 @@ type VisitorType = "CONTRACTOR" | "VISITOR" | "EMPLOYEE" | "DELIVERY";
 export interface PublicSignInInput {
   companyId: string;
   siteId: string;
+  idempotencyKey: string;
   visitorName: string;
   visitorPhone: string;
   visitorEmail?: string;
@@ -85,6 +92,10 @@ export async function createPublicSignIn(
     throw new RepositoryError("Phone number is required", "VALIDATION");
   }
 
+  if (!input.idempotencyKey?.trim()) {
+    throw new RepositoryError("Idempotency key is required", "VALIDATION");
+  }
+
   if (!input.templateId || !input.answers) {
     throw new RepositoryError(
       "Induction template and answers are required",
@@ -116,17 +127,52 @@ export async function createPublicSignIn(
   }
 
   try {
-    // Use transaction for atomicity - create sign-in record without token first
-    const result = await publicDb.$transaction(async (tx) => {
+    type SignInWithSite = Prisma.SignInRecordGetPayload<{
+      include: { site: { select: { name: true } } };
+    }>;
+
+    const findByIdempotencyKey = async (): Promise<SignInWithSite | null> => {
+      return publicDb.signInRecord.findFirst({
+        where: {
+          company_id: input.companyId,
+          idempotency_key: input.idempotencyKey,
+        },
+        include: {
+          site: {
+            select: { name: true },
+          },
+        },
+      });
+    };
+
+    // Use transaction for atomicity - create sign-in record without token first.
+    let result = await publicDb.$transaction(async (tx) => {
       const db = scopedDb(input.companyId, tx);
+
+      const existing = await db.signInRecord.findFirst({
+        where: {
+          company_id: input.companyId,
+          idempotency_key: input.idempotencyKey,
+        },
+        include: {
+          site: {
+            select: { name: true },
+          },
+        },
+      });
+
+      if (existing) {
+        return existing;
+      }
 
       // 1. Create sign-in record (token will be added after we have the ID)
       const signInRecord = await db.signInRecord.create({
         data: {
           site_id: input.siteId,
+          idempotency_key: input.idempotencyKey,
           visitor_name: input.visitorName.trim(),
-          visitor_phone: formattedPhone,
-          visitor_email: input.visitorEmail?.trim() || null,
+          visitor_phone: encryptString(formattedPhone),
+          visitor_email: encryptNullableString(input.visitorEmail?.trim() || null),
           employer_name: input.employerName?.trim() || null,
           visitor_type: input.visitorType,
           hasAcceptedTerms: true,
@@ -188,13 +234,21 @@ export async function createPublicSignIn(
           sign_in_record_id: signInRecord.id,
           template_id: input.templateId,
           template_version: input.templateVersion,
-          answers: input.answers as unknown as Prisma.InputJsonValue,
+          answers: encryptJsonValue(input.answers) as Prisma.InputJsonValue,
           passed: true, // All required fields validated before this point
         },
       });
 
       return signInRecord;
     });
+
+    // Handle concurrent duplicate submissions racing on the unique key.
+    if (!result) {
+      const existing = await findByIdempotencyKey();
+      if (existing) {
+        result = existing;
+      }
+    }
 
     // 3. Generate the sign-out token once with the real record ID
     const { token: signOutToken, expiresAt } = generateSignOutToken(
@@ -223,6 +277,44 @@ export async function createPublicSignIn(
       signInTime: result.sign_in_ts,
     };
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        // Unique race on (company_id, idempotency_key): return existing record result.
+        const existing = await publicDb.signInRecord.findFirst({
+          where: {
+            company_id: input.companyId,
+            idempotency_key: input.idempotencyKey,
+          },
+          include: { site: { select: { name: true } } },
+        });
+
+        if (existing) {
+          const { token: signOutToken, expiresAt } = generateSignOutToken(
+            existing.id,
+            input.visitorPhone,
+          );
+          const tokenHash = hashSignOutToken(signOutToken);
+
+          await publicDb.signInRecord.updateMany({
+            where: { id: existing.id, company_id: input.companyId },
+            data: {
+              sign_out_token: tokenHash,
+              sign_out_token_exp: expiresAt,
+            },
+          });
+
+          return {
+            signInRecordId: existing.id,
+            signOutToken,
+            signOutTokenExpiresAt: expiresAt,
+            visitorName: existing.visitor_name,
+            siteName: existing.site.name,
+            signInTime: existing.sign_in_ts,
+          };
+        }
+      }
+    }
+
     if (error instanceof RepositoryError) {
       throw error;
     }
@@ -324,8 +416,9 @@ export async function signOutWithToken(
       }
 
       // Verify phone matches (prefer E.164 comparison when available)
-      const recordE164 = formatToE164(signInRecord.visitor_phone, "NZ");
-      const recordDigits = signInRecord.visitor_phone.replace(/\D/g, "");
+      const decryptedPhone = decryptString(signInRecord.visitor_phone);
+      const recordE164 = formatToE164(decryptedPhone, "NZ");
+      const recordDigits = decryptedPhone.replace(/\D/g, "");
 
       if (inputE164 && recordE164) {
         if (inputE164 !== recordE164) {

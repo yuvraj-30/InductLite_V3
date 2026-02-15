@@ -2,6 +2,7 @@
 import { sendEmail } from "@/lib/email/resend";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
+import { decryptJsonValue } from "@/lib/security/data-protection";
 
 /**
  * Email Queue Processor
@@ -74,10 +75,12 @@ export async function processEmailQueue() {
       );
 
       for (const response of pendingRedFlags) {
-        const answers = response.answers as unknown as Array<{
-          questionId: string;
-          answer: unknown;
-        }>;
+        const answers = decryptJsonValue<
+          Array<{
+            questionId: string;
+            answer: unknown;
+          }>
+        >(response.answers);
         const redFlagQuestions = (
           response.template.questions as unknown as Array<{
             red_flag: boolean;

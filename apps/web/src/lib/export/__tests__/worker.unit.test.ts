@@ -23,6 +23,7 @@ describe("Export worker CSV generation", () => {
         id: "s1",
         company_id: "c1",
         site_id: "site-1",
+        idempotency_key: null,
         site: {
           id: "site-1",
           company_id: "c1",

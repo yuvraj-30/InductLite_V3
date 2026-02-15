@@ -25,6 +25,12 @@ import {
   type DateRangeFilter,
 } from "./base";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
+import {
+  decryptNullableString,
+  decryptString,
+  encryptNullableString,
+  encryptString,
+} from "@/lib/security/data-protection";
 
 // Infer types from Prisma schema
 type SignInRecord = Prisma.SignInRecordGetPayload<object>;
@@ -57,6 +63,23 @@ export interface SignInRecordWithDetails {
 
 // Re-export VisitorType for use in other files
 export type { VisitorType };
+
+type SignInRecordSensitive = {
+  visitor_phone: string;
+  visitor_email: string | null;
+};
+
+function decryptSignInRecord<T extends SignInRecordSensitive>(record: T): T {
+  return {
+    ...record,
+    visitor_phone: decryptString(record.visitor_phone),
+    visitor_email: decryptNullableString(record.visitor_email),
+  };
+}
+
+function decryptSignInRecords<T extends SignInRecordSensitive>(records: T[]): T[] {
+  return records.map((record) => decryptSignInRecord(record));
+}
 
 /**
  * Filter options for sign-in history queries
@@ -94,7 +117,7 @@ export async function findSignInById(
 
   try {
     const db = scopedDb(companyId);
-    return await db.signInRecord.findFirst({
+    const record = await db.signInRecord.findFirst({
       where: { id: signInId, company_id: companyId },
       include: {
         site: {
@@ -102,6 +125,8 @@ export async function findSignInById(
         },
       },
     });
+
+    return record ? decryptSignInRecord(record) : null;
   } catch (error) {
     handlePrismaError(error, "SignInRecord");
   }
@@ -132,7 +157,7 @@ export async function listCurrentlyOnSite(
 
     const safeLimit = Math.max(1, Math.min(limit, 100));
 
-    return await db.signInRecord.findMany({
+    const records = await db.signInRecord.findMany({
       where,
       include: {
         site: {
@@ -142,6 +167,8 @@ export async function listCurrentlyOnSite(
       orderBy: { sign_in_ts: "desc" },
       take: safeLimit,
     });
+
+    return decryptSignInRecords(records);
   } catch (error) {
     handlePrismaError(error, "SignInRecord");
   }
@@ -159,11 +186,13 @@ export async function listRecentSignInsForSite(
 
   try {
     const db = scopedDb(companyId);
-    return await db.signInRecord.findMany({
+    const records = await db.signInRecord.findMany({
       where: { company_id: companyId, site_id: siteId },
       orderBy: { sign_in_ts: "desc" },
       take: limit,
     });
+
+    return decryptSignInRecords(records);
   } catch (error) {
     handlePrismaError(error, "SignInRecord");
   }
@@ -270,7 +299,12 @@ export async function listSignInHistory(
       db.signInRecord.count({ where }),
     ]);
 
-    return paginatedResult(items, total, page, pageSize);
+    return paginatedResult(
+      decryptSignInRecords(items),
+      total,
+      page,
+      pageSize,
+    );
   } catch (error) {
     handlePrismaError(error, "SignInRecord");
   }
@@ -300,17 +334,19 @@ export async function createSignIn(
       throw new RepositoryError("Invalid phone number", "VALIDATION");
     }
 
-    return await db.signInRecord.create({
+    const created = await db.signInRecord.create({
       data: {
         site_id: input.site_id,
         visitor_name: input.visitor_name,
-        visitor_phone: formattedPhone,
-        visitor_email: input.visitor_email,
+        visitor_phone: encryptString(formattedPhone),
+        visitor_email: encryptNullableString(input.visitor_email ?? null),
         employer_name: input.employer_name,
         visitor_type: input.visitor_type ?? "CONTRACTOR",
         notes: input.notes,
       },
     });
+
+    return decryptSignInRecord(created);
   } catch (error) {
     handlePrismaError(error, "SignInRecord");
   }
@@ -378,7 +414,7 @@ export async function signOutVisitor(
       throw new RepositoryError("SignInRecord not found", "NOT_FOUND");
     }
 
-    return updated;
+    return decryptSignInRecord(updated);
   } catch (error) {
     if (error instanceof RepositoryError) {
       throw error;

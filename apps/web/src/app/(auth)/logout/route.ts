@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { logout } from "@/lib/auth";
-import { generateRequestId, getClientIp, getUserAgent } from "@/lib/auth/csrf";
+import {
+  assertOrigin,
+  generateRequestId,
+  getClientIp,
+  getUserAgent,
+} from "@/lib/auth/csrf";
 import { createRequestLogger } from "@/lib/logger";
 import { buildPublicUrl } from "@/lib/url/public-url";
 
@@ -30,5 +35,11 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  try {
+    await assertOrigin();
+  } catch {
+    return new Response("CSRF Blocked", { status: 403 });
+  }
+
   return handleLogout(request);
 }

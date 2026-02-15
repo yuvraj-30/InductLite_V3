@@ -187,6 +187,7 @@ model SignInRecord {
   id                 String      @id @default(cuid())
   company_id         String
   site_id            String
+  idempotency_key    String? // Public sign-in dedupe key (client generated)
   visitor_name       String
   visitor_phone      String
   visitor_email      String?
@@ -215,6 +216,7 @@ model SignInRecord {
   @@index([site_id, sign_in_ts])
   @@index([signed_out_by])
   @@index([sign_out_token])
+  @@unique([company_id, idempotency_key])
 }
 
 enum VisitorType {
@@ -392,6 +394,8 @@ model ExportJob {
 
   @@index([company_id])
   @@index([company_id, status])
+  @@index([company_id, queued_at])
+  @@index([company_id, status, run_at])
   @@index([status])
   @@index([status, run_at])
   @@index([locked_at])
@@ -437,6 +441,7 @@ model AuditLog {
   @@index([company_id])
   @@index([company_id, created_at])
   @@index([company_id, action])
+  @@index([created_at])
   @@index([user_id])
   @@index([entity_type, entity_id])
   @@index([request_id])

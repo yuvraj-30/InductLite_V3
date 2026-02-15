@@ -9,8 +9,15 @@
  * 3. Success confirmation with sign-out link
  */
 
-import { useState, useTransition, useRef } from "react";
-import SignatureCanvas from "react-signature-canvas";
+import {
+  useState,
+  useTransition,
+  useRef,
+  useEffect,
+  type ComponentClass,
+} from "react";
+import type SignatureCanvas from "react-signature-canvas";
+import type { SignatureCanvasProps } from "react-signature-canvas";
 import { submitSignIn, type SiteInfo, type TemplateInfo } from "../actions";
 import { InductionQuestions } from "./InductionQuestions";
 import { SuccessScreen } from "./SuccessScreen";
@@ -44,13 +51,22 @@ interface SignInResult {
   signInTime: Date;
 }
 
+function createClientIdempotencyKey(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
 export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
   const [step, setStep] = useState<Step>("details");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
-  const [hasSignature, setHasSignature] = useState(false);
   const sigCanvas = useRef<SignatureCanvas>(null);
+  const [SignatureCanvasComponent, setSignatureCanvasComponent] =
+    useState<ComponentClass<SignatureCanvasProps> | null>(null);
 
   const [details, setDetails] = useState<VisitorDetails>({
     visitorName: "",
@@ -64,6 +80,24 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
 
   const [answers, setAnswers] = useState<Record<string, unknown>>({});
   const [signInResult, setSignInResult] = useState<SignInResult | null>(null);
+  const [idempotencyKey] = useState<string>(() => createClientIdempotencyKey());
+
+  useEffect(() => {
+    if (SignatureCanvasComponent) return;
+
+    let cancelled = false;
+    void import("react-signature-canvas").then((mod) => {
+      if (!cancelled) {
+        setSignatureCanvasComponent(
+          () => mod.default as ComponentClass<SignatureCanvasProps>,
+        );
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [SignatureCanvasComponent]);
 
   const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,7 +150,6 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
 
     const isEmpty = sigCanvas.current?.isEmpty() ?? true;
     if (isEmpty) {
-      setHasSignature(false);
       setError("Please provide a signature");
       return;
     }
@@ -142,6 +175,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
           answer,
         })),
         signatureData,
+        idempotencyKey,
       } as unknown as Parameters<typeof submitSignIn>[0]);
 
       if (!result.success) {
@@ -429,16 +463,21 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
           </div>
 
           <div className="border-2 border-gray-200 rounded-lg bg-gray-50">
-            <SignatureCanvas
-              ref={sigCanvas}
-              penColor="black"
-              onBegin={() => setError(null)}
-              onEnd={() => setHasSignature(!(sigCanvas.current?.isEmpty() ?? true))}
-              canvasProps={{
-                id: "signature-canvas",
-                className: "sigCanvas w-full h-40 rounded-lg touch-none",
-              }}
-            />
+            {SignatureCanvasComponent ? (
+              <SignatureCanvasComponent
+                ref={sigCanvas}
+                penColor="black"
+                onBegin={() => {
+                  setError(null);
+                }}
+                canvasProps={{
+                  id: "signature-canvas",
+                  className: "sigCanvas w-full h-40 rounded-lg touch-none",
+                }}
+              />
+            ) : (
+              <div className="h-40 w-full rounded-lg bg-gray-100 animate-pulse" />
+            )}
           </div>
 
           <div>
@@ -472,7 +511,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
               type="button"
               onClick={() => {
                 sigCanvas.current?.clear();
-                setHasSignature(false);
+                setError(null);
               }}
               className="flex-1 py-2 px-4 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50"
             >
@@ -481,7 +520,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
             <button
               type="button"
               onClick={handleSignatureSubmit}
-              disabled={isPending || !hasSignature}
+              disabled={isPending || !details.hasAcceptedTerms}
               className="flex-2 py-2 px-8 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 disabled:opacity-50"
             >
               {isPending ? "Signing in..." : "Confirm & Sign In ✓"}

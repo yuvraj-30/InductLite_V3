@@ -37,12 +37,14 @@ Repo root uses Turborepo:
 - Dev (all): `npm run dev`
 - Web app only: `cd apps/web && npm run dev`
 - Lint / typecheck: `npm run lint` / `npm run typecheck`
+- Guardrail checks: `npm run guardrails-lint && npm run guardrails-tests && npm run policy-check`
 - Unit tests: `npm run test` (or `cd apps/web && npm run test`)
 - Integration tests (Testcontainers + real Postgres): `cd apps/web && npm run test:integration`
 - E2E tests (Playwright): `cd apps/web && npm run test:e2e`
 - Visual regression (Playwright snapshot suite): `cd apps/web && npm run test:visual`
 - DB: `npm run db:migrate` / `npm run db:seed` (root forwards to `apps/web`)
 - Prisma generate: `npm run db:generate`
+- Sensitive data backfill (post-encryption rollout): `npm run -w apps/web db:backfill-encryption`
 
 ---
 
@@ -217,4 +219,3 @@ If a change touches **auth, session, tenant scoping, exports, uploads, rate limi
 - stop and re-check `ARCHITECTURE_GUARDRAILS.md`,
 - find an existing pattern in `apps/web/src/`,
 - then implement + add tests.
-

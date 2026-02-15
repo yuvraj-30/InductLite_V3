@@ -24,6 +24,7 @@
     "db:migrate:dev": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "db:backfill-encryption": "tsx scripts/backfill-sensitive-data-encryption.ts",
     "db:studio": "prisma studio",
     "run:export-scheduler": "tsx scripts/run-export-scheduler.ts",
     "run:maintenance": "tsx scripts/run-maintenance.ts",

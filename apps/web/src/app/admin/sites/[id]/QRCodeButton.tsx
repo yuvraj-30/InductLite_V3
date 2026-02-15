@@ -1,7 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { QRCodeSVG } from "qrcode.react";
+import { useEffect, useState, type ComponentType, type SVGAttributes } from "react";
+
+type QRCodeSvgProps = {
+  value: string | string[];
+  size?: number;
+  level?: "L" | "M" | "Q" | "H";
+  includeMargin?: boolean;
+} & SVGAttributes<SVGSVGElement>;
 
 interface QRCodeButtonProps {
   url: string;
@@ -10,6 +16,24 @@ interface QRCodeButtonProps {
 
 export function QRCodeButton({ url, siteName }: QRCodeButtonProps) {
   const [showQR, setShowQR] = useState(false);
+  const [QRCodeSVGComponent, setQRCodeSVGComponent] = useState<
+    ComponentType<QRCodeSvgProps> | null
+  >(null);
+
+  useEffect(() => {
+    if (!showQR || QRCodeSVGComponent) return;
+
+    let cancelled = false;
+    void import("qrcode.react").then((mod) => {
+      if (!cancelled) {
+        setQRCodeSVGComponent(() => mod.QRCodeSVG as ComponentType<QRCodeSvgProps>);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [QRCodeSVGComponent, showQR]);
 
   const downloadQR = () => {
     const svg = document.getElementById("site-qr-code");
@@ -77,13 +101,17 @@ export function QRCodeButton({ url, siteName }: QRCodeButtonProps) {
           <div className="bg-white rounded-lg p-8 max-w-sm w-full text-center">
             <h3 className="text-xl font-bold mb-4">{siteName}</h3>
             <div className="flex justify-center mb-6">
-              <QRCodeSVG
-                id="site-qr-code"
-                value={url}
-                size={256}
-                level="H"
-                includeMargin={true}
-              />
+              {QRCodeSVGComponent ? (
+                <QRCodeSVGComponent
+                  id="site-qr-code"
+                  value={url}
+                  size={256}
+                  level="H"
+                  includeMargin={true}
+                />
+              ) : (
+                <div className="h-[256px] w-[256px] rounded bg-gray-100 animate-pulse" />
+              )}
             </div>
             <div className="space-y-3">
               <button

@@ -56,6 +56,7 @@ describe("CSRF Origin Validation", () => {
       mockHeaders.mockResolvedValue({
         get: (name: string) => {
           if (name === "origin") return "http://localhost:3000";
+          if (name === "host") return "localhost:3000";
           return null;
         },
       });
@@ -69,6 +70,7 @@ describe("CSRF Origin Validation", () => {
       mockHeaders.mockResolvedValue({
         get: (name: string) => {
           if (name === "origin") return "http://127.0.0.1:3000";
+          if (name === "host") return "127.0.0.1:3000";
           return null;
         },
       });

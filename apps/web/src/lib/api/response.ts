@@ -24,6 +24,14 @@ export type ApiErrorCode =
  */
 export type FieldErrors = Record<string, string[]>;
 
+export type GuardrailScope = "tenant" | "environment";
+
+export interface GuardrailViolation {
+  controlId: string;
+  violatedLimit: string;
+  scope: GuardrailScope;
+}
+
 /**
  * Typed API error
  */
@@ -31,6 +39,7 @@ export interface ApiError {
   code: ApiErrorCode;
   message: string;
   fieldErrors?: FieldErrors;
+  guardrail?: GuardrailViolation;
 }
 
 /**
@@ -76,6 +85,7 @@ export function errorResponse(
   code: ApiErrorCode,
   message: string,
   fieldErrors?: FieldErrors,
+  guardrail?: GuardrailViolation,
 ): ApiErrorResponse {
   return {
     success: false,
@@ -83,6 +93,7 @@ export function errorResponse(
       code,
       message,
       fieldErrors,
+      guardrail,
     },
   };
 }
@@ -150,4 +161,20 @@ export function rateLimitedResponse(
     ? `Too many requests. Please try again in ${retryAfterSeconds} seconds.`
     : "Too many requests. Please try again later.";
   return errorResponse("RATE_LIMITED", message);
+}
+
+/**
+ * Create deterministic guardrail denial payloads required by policy.
+ */
+export function guardrailDeniedResponse(
+  controlId: string,
+  violatedLimit: string,
+  scope: GuardrailScope,
+  message = "Guardrail limit reached",
+): ApiErrorResponse {
+  return errorResponse("RATE_LIMITED", message, undefined, {
+    controlId,
+    violatedLimit,
+    scope,
+  });
 }

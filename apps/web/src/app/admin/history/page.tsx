@@ -20,6 +20,7 @@ import {
   getDistinctEmployers,
   type VisitorType,
 } from "@/lib/repository";
+import { getUtcDayRangeForTimeZone } from "@/lib/time/day-range";
 import { HistoryFiltersForm } from "./history-filters";
 import { Pagination } from "./pagination";
 import { SignOutButton } from "../live-register/sign-out-button";
@@ -47,13 +48,7 @@ interface Site {
   is_active: boolean;
 }
 
-function parseUtcDayStart(dateString: string): Date {
-  return new Date(`${dateString}T00:00:00.000Z`);
-}
-
-function parseUtcDayEnd(dateString: string): Date {
-  return new Date(`${dateString}T23:59:59.999Z`);
-}
+const DEFAULT_COMPANY_TIMEZONE = "Pacific/Auckland";
 
 async function HistoryContent({
   filters,
@@ -85,9 +80,17 @@ async function HistoryContent({
           filters.dateFrom || filters.dateTo
             ? {
                 from: filters.dateFrom
-                  ? parseUtcDayStart(filters.dateFrom)
+                  ? getUtcDayRangeForTimeZone(
+                      filters.dateFrom,
+                      DEFAULT_COMPANY_TIMEZONE,
+                    ).from
                   : undefined,
-                to: filters.dateTo ? parseUtcDayEnd(filters.dateTo) : undefined,
+                to: filters.dateTo
+                  ? getUtcDayRangeForTimeZone(
+                      filters.dateTo,
+                      DEFAULT_COMPANY_TIMEZONE,
+                    ).to
+                  : undefined,
               }
             : undefined,
       },

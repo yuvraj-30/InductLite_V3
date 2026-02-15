@@ -57,6 +57,13 @@ const ENV_CONFIG: EnvConfig[] = [
     description: "Base64 32-byte key for MFA secret encryption",
   },
   {
+    name: "DATA_ENCRYPTION_KEY",
+    required: false,
+    production: true,
+    minLength: 32,
+    description: "Encryption key for sensitive data at rest",
+  },
+  {
     name: "MAGIC_LINK_SECRET",
     required: false,
     production: true,
@@ -188,6 +195,24 @@ const ENV_CONFIG: EnvConfig[] = [
   },
   // Guardrails
   {
+    name: "ENV_BUDGET_TIER",
+    required: false,
+    production: false,
+    description: "Environment budget tier (MVP|EARLY|GROWTH)",
+  },
+  {
+    name: "MAX_MONTHLY_COMPUTE_INVOCATIONS",
+    required: false,
+    production: false,
+    description: "Max monthly compute invocations",
+  },
+  {
+    name: "MAX_MONTHLY_COMPUTE_RUNTIME_MINUTES",
+    required: false,
+    production: false,
+    description: "Max monthly compute runtime minutes",
+  },
+  {
     name: "MAX_UPLOAD_MB",
     required: false,
     production: false,
@@ -198,6 +223,24 @@ const ENV_CONFIG: EnvConfig[] = [
     required: false,
     production: false,
     description: "Allowed upload MIME types",
+  },
+  {
+    name: "UPLOAD_ALLOWED_EXTENSIONS",
+    required: false,
+    production: false,
+    description: "Allowed upload file extensions",
+  },
+  {
+    name: "UPLOAD_REQUIRE_SERVER_MIME_SNIFF",
+    required: false,
+    production: false,
+    description: "Require server-side MIME sniffing",
+  },
+  {
+    name: "UPLOAD_REQUIRE_MAGIC_BYTES",
+    required: false,
+    production: false,
+    description: "Require magic-byte validation for uploads",
   },
   {
     name: "FILES_RETENTION_DAYS",
@@ -248,6 +291,24 @@ const ENV_CONFIG: EnvConfig[] = [
     description: "Max export runtime seconds",
   },
   {
+    name: "MAX_EXPORT_BYTES_GLOBAL_PER_DAY",
+    required: false,
+    production: false,
+    description: "Max generated export bytes globally per day",
+  },
+  {
+    name: "MAX_EXPORT_DOWNLOAD_BYTES_PER_COMPANY_PER_DAY",
+    required: false,
+    production: false,
+    description: "Max export download bytes per company per day",
+  },
+  {
+    name: "MAX_EXPORT_DOWNLOAD_BYTES_GLOBAL_PER_DAY",
+    required: false,
+    production: false,
+    description: "Max export download bytes globally per day",
+  },
+  {
     name: "MAX_CONCURRENT_EXPORTS_GLOBAL",
     required: false,
     production: false,
@@ -266,10 +327,52 @@ const ENV_CONFIG: EnvConfig[] = [
     description: "Restrict exports to off-peak",
   },
   {
+    name: "EXPORT_OFFPEAK_AUTO_ENABLE_THRESHOLD_PERCENT",
+    required: false,
+    production: false,
+    description: "Auto-enable off-peak export threshold percent",
+  },
+  {
+    name: "EXPORT_OFFPEAK_AUTO_ENABLE_QUEUE_DELAY_SECONDS",
+    required: false,
+    production: false,
+    description: "Auto-enable off-peak export queue delay in seconds",
+  },
+  {
+    name: "EXPORT_OFFPEAK_AUTO_ENABLE_DAYS",
+    required: false,
+    production: false,
+    description: "Auto-enable off-peak export rolling window days",
+  },
+  {
     name: "MAX_EXPORT_ATTEMPTS",
     required: false,
     production: false,
     description: "Max export retry attempts",
+  },
+  {
+    name: "MAX_TENANT_STORAGE_GB",
+    required: false,
+    production: false,
+    description: "Max tenant storage GB per month",
+  },
+  {
+    name: "MAX_TENANT_EGRESS_GB_PER_MONTH",
+    required: false,
+    production: false,
+    description: "Max tenant egress GB per month",
+  },
+  {
+    name: "MAX_TENANT_JOB_MINUTES_PER_MONTH",
+    required: false,
+    production: false,
+    description: "Max tenant job minutes per month",
+  },
+  {
+    name: "MAX_TENANT_COMPUTE_INVOCATIONS_PER_MONTH",
+    required: false,
+    production: false,
+    description: "Max tenant compute invocations per month",
   },
   // Rate limit guardrails
   {

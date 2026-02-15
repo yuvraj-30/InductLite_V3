@@ -240,6 +240,8 @@ export async function submitSignIn(
     );
   }
 
+  const idempotencyKey = parsed.data.idempotencyKey ?? `legacy-${requestId}`;
+
   try {
     // Get site and template
     const site = await findSiteByPublicSlug(parsed.data.slug);
@@ -314,6 +316,7 @@ export async function submitSignIn(
     const result = await createPublicSignIn({
       companyId: site.company.id,
       siteId: site.id,
+      idempotencyKey,
       visitorName: parsed.data.visitorName,
       visitorPhone: formattedPhone,
       visitorEmail: parsed.data.visitorEmail || undefined,

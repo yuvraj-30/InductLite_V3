@@ -8,6 +8,9 @@ import {
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_SIGNIN_RETENTION_DAYS = 365;
+
 async function runWithConcurrency<T>(
   items: T[],
   concurrency: number,
@@ -27,6 +30,11 @@ async function runWithConcurrency<T>(
       }
     }),
   );
+}
+
+function getRetentionCutoff(days: number, now: Date): Date {
+  const safeDays = Number.isFinite(days) && days > 0 ? Math.floor(days) : 1;
+  return new Date(now.getTime() - safeDays * DAY_MS);
 }
 
 export async function runRetentionTasks(): Promise<void> {
@@ -96,6 +104,49 @@ export async function runRetentionTasks(): Promise<void> {
           err: String(err),
         },
         "Document cleanup failed",
+      );
+    }
+  });
+
+  // Purge signed-out sign-in records based on per-company retention policy.
+  // InductionResponse rows are cascaded by FK when SignInRecord is deleted.
+  const companies = await publicDb.company.findMany({
+    select: { id: true, retention_days: true },
+  });
+
+  await runWithConcurrency(companies, 10, async (company) => {
+    const retentionDays =
+      company.retention_days > 0
+        ? company.retention_days
+        : DEFAULT_SIGNIN_RETENTION_DAYS;
+    const cutoff = getRetentionCutoff(retentionDays, now);
+
+    try {
+      const deleted = await publicDb.signInRecord.deleteMany({
+        where: {
+          company_id: company.id,
+          sign_out_ts: { lt: cutoff },
+        },
+      });
+
+      if (deleted.count > 0) {
+        log.info(
+          {
+            companyId: company.id,
+            retention_days: retentionDays,
+            deleted_count: deleted.count,
+          },
+          "Sign-in retention cleanup completed",
+        );
+      }
+    } catch (err) {
+      log.warn(
+        {
+          companyId: company.id,
+          retention_days: retentionDays,
+          err: String(err),
+        },
+        "Sign-in retention cleanup failed",
       );
     }
   });

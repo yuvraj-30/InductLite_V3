@@ -7,6 +7,7 @@
 import { publicDb } from "@/lib/db/public-db";
 import { scopedDb } from "@/lib/db/scoped-db";
 import { handlePrismaError, requireCompanyId } from "./base";
+import { decryptNullableString } from "@/lib/security/data-protection";
 
 export interface MagicLinkTokenRecord {
   id: string;
@@ -92,7 +93,13 @@ export async function consumeMagicLinkToken(tokenHash: string): Promise<
     });
 
     if (!token) return null;
-    return token;
+    return {
+      ...token,
+      contractor: {
+        ...token.contractor,
+        contact_email: decryptNullableString(token.contractor.contact_email),
+      },
+    };
   } catch (error) {
     handlePrismaError(error, "MagicLinkToken");
   }

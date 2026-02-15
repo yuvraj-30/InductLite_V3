@@ -1,5 +1,9 @@
 import { formatToE164 } from "@inductlite/shared";
 import type { ContractorWithDocuments } from "@/lib/repository/contractor.repository";
+import {
+  decryptNullableString,
+  decryptString,
+} from "@/lib/security/data-protection";
 
 export type SignInRecordForCsvInput = {
   id: string;
@@ -16,8 +20,10 @@ export type SignInRecordForCsvInput = {
 };
 
 export function formatSignInRecordForCsv(record: SignInRecordForCsvInput) {
+  const visitorPhone = decryptString(record.visitor_phone);
+  const visitorEmail = decryptNullableString(record.visitor_email);
   const phone =
-    formatToE164(record.visitor_phone, "NZ") ?? record.visitor_phone;
+    formatToE164(visitorPhone, "NZ") ?? visitorPhone;
 
   return {
     id: record.id,
@@ -25,7 +31,7 @@ export function formatSignInRecordForCsv(record: SignInRecordForCsvInput) {
     site_name: record.site?.name ?? "",
     visitor_name: record.visitor_name,
     visitor_phone: phone,
-    visitor_email: record.visitor_email ?? "",
+    visitor_email: visitorEmail ?? "",
     employer_name: record.employer_name ?? "",
     visitor_type: record.visitor_type,
     sign_in_ts: record.sign_in_ts.toISOString(),
@@ -35,15 +41,17 @@ export function formatSignInRecordForCsv(record: SignInRecordForCsvInput) {
 }
 
 export function formatContractorForCsv(contractor: ContractorWithDocuments) {
-  const phone = contractor.contact_phone
-    ? (formatToE164(contractor.contact_phone, "NZ") ?? contractor.contact_phone)
+  const contactPhone = decryptNullableString(contractor.contact_phone);
+  const contactEmail = decryptNullableString(contractor.contact_email);
+  const phone = contactPhone
+    ? (formatToE164(contactPhone, "NZ") ?? contactPhone)
     : "";
 
   return {
     id: contractor.id,
     name: contractor.name,
     contact_name: contractor.contact_name ?? "",
-    contact_email: contractor.contact_email ?? "",
+    contact_email: contactEmail ?? "",
     contact_phone: phone,
     trade: contractor.trade ?? "",
     is_active: contractor.is_active ? "yes" : "no",

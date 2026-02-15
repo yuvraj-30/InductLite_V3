@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://inductlite.local/schemas/guardrail-control-matrix.schema.json",
+  "title": "Guardrail Control Matrix Schema",
+  "type": "object",
+  "required": ["version", "updated_at_utc", "controls"],
+  "properties": {
+    "version": { "type": "string", "minLength": 1 },
+    "updated_at_utc": { "type": "string", "format": "date-time" },
+    "controls": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "control_id",
+          "env_var",
+          "default",
+          "bounds",
+          "enforcement_path",
+          "test_id",
+          "owner"
+        ],
+        "properties": {
+          "control_id": { "type": "string", "minLength": 1 },
+          "env_var": { "type": "string", "minLength": 1 },
+          "default": { "type": "string", "minLength": 1 },
+          "bounds": { "type": "string", "minLength": 1 },
+          "enforcement_path": { "type": "string", "minLength": 1 },
+          "test_id": { "type": "string", "minLength": 1 },
+          "owner": { "type": "string", "minLength": 1 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

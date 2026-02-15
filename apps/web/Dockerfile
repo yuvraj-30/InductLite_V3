@@ -42,8 +42,8 @@ RUN npm run db:generate --workspace=@inductlite/web && \
     if [ -d apps/web/node_modules/prisma ]; then mkdir -p node_modules && cp -R apps/web/node_modules/prisma node_modules/prisma || true; fi && \
     if [ -d apps/web/node_modules/.prisma ]; then mkdir -p apps/web/node_modules && cp -R apps/web/node_modules/.prisma apps/web/node_modules/.prisma || true; fi
 
-# Build application
-RUN npm run build --workspace=@inductlite/web
+# Build application with full workspace quality gates (lint + typecheck + build)
+RUN npm run build
 
 # Production stage
 FROM node:24-bookworm-slim AS runner

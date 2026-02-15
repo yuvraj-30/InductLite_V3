@@ -6,6 +6,7 @@ import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 import { createAuditLog } from "@/lib/repository/audit.repository";
 import { publicDb } from "@/lib/db/public-db";
 import { scopedDb } from "@/lib/db/scoped-db";
+import { Prisma } from "@prisma/client";
 import { createExportSchema } from "@inductlite/shared";
 import {
   type ApiResponse,
@@ -13,6 +14,7 @@ import {
   errorResponse,
   validationErrorResponse,
   permissionDeniedResponse,
+  guardrailDeniedResponse,
 } from "@/lib/api";
 import { generateRequestId } from "@/lib/auth/csrf";
 import { createRequestLogger } from "@/lib/logger";
@@ -26,6 +28,8 @@ class ExportLimitReachedError extends Error {
     this.name = "ExportLimitReachedError";
   }
 }
+
+const MAX_SERIALIZABLE_RETRIES = 3;
 
 export async function createExportAction(
   input: z.infer<typeof createExportSchema>,
@@ -69,39 +73,64 @@ export async function createExportAction(
 
   try {
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const job = await publicDb.$transaction(async (tx) => {
-      const db = scopedDb(context.companyId, tx);
-      const [exportsToday, runningNow] = await Promise.all([
-        db.exportJob.count({
-          where: {
-            company_id: context.companyId,
-            queued_at: { gte: since },
-          },
-        }),
-        db.exportJob.count({
-          where: {
-            company_id: context.companyId,
-            status: "RUNNING",
-          },
-        }),
-      ]);
+    let job: { id: string } | null = null;
 
-      if (
-        exportsToday >= GUARDRAILS.MAX_EXPORTS_PER_COMPANY_PER_DAY ||
-        runningNow >= GUARDRAILS.MAX_CONCURRENT_EXPORTS_PER_COMPANY
-      ) {
-        throw new ExportLimitReachedError();
+    for (let attempt = 1; attempt <= MAX_SERIALIZABLE_RETRIES; attempt++) {
+      try {
+        job = await publicDb.$transaction(
+          async (tx) => {
+            const db = scopedDb(context.companyId, tx);
+            const [exportsToday, runningNow] = await Promise.all([
+              db.exportJob.count({
+                where: {
+                  company_id: context.companyId,
+                  queued_at: { gte: since },
+                },
+              }),
+              db.exportJob.count({
+                where: {
+                  company_id: context.companyId,
+                  status: "RUNNING",
+                },
+              }),
+            ]);
+
+            if (
+              exportsToday >= GUARDRAILS.MAX_EXPORTS_PER_COMPANY_PER_DAY ||
+              runningNow >= GUARDRAILS.MAX_CONCURRENT_EXPORTS_PER_COMPANY
+            ) {
+              throw new ExportLimitReachedError();
+            }
+
+            return db.exportJob.create({
+              data: {
+                export_type: parsed.data.exportType,
+                parameters: parsed.data,
+                requested_by: context.userId,
+                status: "QUEUED",
+              },
+              select: { id: true },
+            });
+          },
+          {
+            isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+          },
+        );
+        break;
+      } catch (error) {
+        const isSerializationConflict =
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2034";
+        if (isSerializationConflict && attempt < MAX_SERIALIZABLE_RETRIES) {
+          continue;
+        }
+        throw error;
       }
+    }
 
-      return db.exportJob.create({
-        data: {
-          export_type: parsed.data.exportType,
-          parameters: parsed.data,
-          requested_by: context.userId,
-          status: "QUEUED",
-        },
-      });
-    });
+    if (!job) {
+      throw new Error("Failed to queue export job");
+    }
 
     await createAuditLog(context.companyId, {
       action: "export.create",
@@ -124,8 +153,10 @@ export async function createExportAction(
     return successResponse({ exportJobId: job.id }, "Export queued");
   } catch (error) {
     if (error instanceof ExportLimitReachedError) {
-      return errorResponse(
-        "RATE_LIMITED",
+      return guardrailDeniedResponse(
+        "EXPT-008",
+        `MAX_EXPORTS_PER_COMPANY_PER_DAY=${GUARDRAILS.MAX_EXPORTS_PER_COMPANY_PER_DAY}|MAX_CONCURRENT_EXPORTS_PER_COMPANY=${GUARDRAILS.MAX_CONCURRENT_EXPORTS_PER_COMPANY}`,
+        "tenant",
         "Export limits reached for your company. Please try later.",
       );
     }

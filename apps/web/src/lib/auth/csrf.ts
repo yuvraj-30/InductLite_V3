@@ -41,16 +41,18 @@ export function generateCsrfToken(): string {
  * Get allowed origins for CSRF validation
  */
 function getAllowedOrigins(): string[] {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  const origins = [new URL(appUrl).origin];
+  const origins: string[] = [];
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
 
-  // In development, also allow localhost variants
-  if (process.env.NODE_ENV !== "production") {
-    origins.push("http://localhost:3000");
-    origins.push("http://127.0.0.1:3000");
+  if (appUrl) {
+    try {
+      origins.push(new URL(appUrl).origin);
+    } catch {
+      // Ignore invalid env URL here; startup validation handles hard failures.
+    }
   }
 
-  return origins;
+  return Array.from(new Set(origins));
 }
 
 /**
@@ -61,19 +63,29 @@ export async function validateOrigin(): Promise<boolean> {
   const headersList = await headers();
   const origin = headersList.get("origin");
   const referer = headersList.get("referer");
+  const allowedOrigins = new Set(getAllowedOrigins());
 
-  const allowedOrigins = getAllowedOrigins();
+  // Also trust the request's own host/proto as a same-origin baseline.
+  const forwardedHost = headersList.get("x-forwarded-host");
+  const host = forwardedHost ?? headersList.get("host");
+  const forwardedProto = headersList.get("x-forwarded-proto");
+  const protocol =
+    forwardedProto ??
+    (process.env.NODE_ENV === "production" ? "https" : "http");
+  if (host) {
+    allowedOrigins.add(`${protocol}://${host}`);
+  }
 
   // Check Origin header first (preferred)
   if (origin) {
-    return allowedOrigins.includes(origin);
+    return allowedOrigins.has(origin);
   }
 
   // Fall back to Referer header
   if (referer) {
     try {
       const refererOrigin = new URL(referer).origin;
-      return allowedOrigins.includes(refererOrigin);
+      return allowedOrigins.has(refererOrigin);
     } catch {
       return false;
     }

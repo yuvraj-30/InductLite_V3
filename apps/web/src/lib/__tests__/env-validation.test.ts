@@ -80,6 +80,8 @@ describe("validateEnv", () => {
       process.env.CRON_SECRET = "cron-secret-at-least-16";
       process.env.DATABASE_DIRECT_URL = "postgresql://test@localhost/test";
       process.env.MAGIC_LINK_SECRET = "magic-link-secret-at-least-32-chars";
+      process.env.DATA_ENCRYPTION_KEY =
+        "production-data-encryption-key-at-least-32";
       process.env.RESEND_API_KEY = "re_test_key";
       process.env.RESEND_FROM = "no-reply@example.com";
     });
@@ -113,6 +115,21 @@ describe("validateEnv", () => {
             e.error.includes("development value"),
         ),
       ).toBe(true);
+    });
+
+    it("should fail when DATA_ENCRYPTION_KEY is missing", () => {
+      process.env.DATABASE_URL = "postgresql://test@localhost/test";
+      process.env.SESSION_SECRET =
+        "production-secret-at-least-32-characters-long";
+      process.env.NEXT_PUBLIC_APP_URL = "https://example.com";
+      delete process.env.DATA_ENCRYPTION_KEY;
+
+      const result = validateEnv();
+
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.name === "DATA_ENCRYPTION_KEY")).toBe(
+        true,
+      );
     });
 
     it("should require S3 config when STORAGE_MODE is s3", () => {

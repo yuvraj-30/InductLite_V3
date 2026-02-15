@@ -42,7 +42,7 @@ export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 1,
+  retries: process.env.CI ? 2 : 0,
   // Run more workers locally by default for faster full-suite feedback.
   workers: process.env.CI ? 1 : Number(process.env.E2E_WORKERS || 8),
   reporter: [["html", { open: "never" }], ["list"]],

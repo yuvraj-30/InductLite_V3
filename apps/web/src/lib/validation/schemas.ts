@@ -32,6 +32,28 @@ const answerValueSchema = z.union([
     )
     .max(MAX_SIGNIN_ANSWERS, `Too many answer selections (max ${MAX_SIGNIN_ANSWERS})`),
 ]);
+const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+const historyDateSchema = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") return value;
+    const trimmed = value.trim();
+
+    if (!trimmed) return undefined;
+    if (DATE_ONLY_REGEX.test(trimmed)) return trimmed;
+
+    const parsedTs = Date.parse(trimmed);
+    if (!Number.isNaN(parsedTs)) {
+      return new Date(parsedTs).toISOString().slice(0, 10);
+    }
+
+    return trimmed;
+  },
+  z
+    .string()
+    .regex(DATE_ONLY_REGEX, "Invalid date format (YYYY-MM-DD required)")
+    .optional(),
+);
 
 // ============================================================================
 // PUBLIC SIGN-IN SCHEMAS
@@ -80,6 +102,11 @@ export const signInSchema = z.object({
     )
     .max(MAX_SIGNIN_ANSWERS, `Too many answers (max ${MAX_SIGNIN_ANSWERS})`),
   signatureData: z.string().optional(),
+  idempotencyKey: z
+    .string()
+    .min(16, "Invalid idempotency key")
+    .max(128, "Invalid idempotency key")
+    .optional(),
 });
 
 export type SignInInput = z.infer<typeof signInSchema>;
@@ -120,14 +147,8 @@ export const historyFiltersSchema = z.object({
     .enum(["CONTRACTOR", "VISITOR", "EMPLOYEE", "DELIVERY"])
     .optional(),
   status: z.enum(["on_site", "signed_out", "all"]).optional(),
-  dateFrom: z
-    .string()
-    .refine((val) => !val || !isNaN(Date.parse(val)), "Invalid date format")
-    .optional(),
-  dateTo: z
-    .string()
-    .refine((val) => !val || !isNaN(Date.parse(val)), "Invalid date format")
-    .optional(),
+  dateFrom: historyDateSchema,
+  dateTo: historyDateSchema,
   search: z.string().max(MAX_STRING_LENGTH, "Search term too long").optional(),
   page: z.number().int().positive().optional().default(1),
   pageSize: z

@@ -115,6 +115,7 @@ describe("Token Replay Attack Prevention", () => {
       const created = await publicSigninRepo.createPublicSignIn({
         companyId: company.id,
         siteId: site.id,
+        idempotencyKey: "token-replay-e2e",
         visitorName: "E2E User",
         visitorPhone: phone,
         hasAcceptedTerms: true,
@@ -146,6 +147,58 @@ describe("Token Replay Attack Prevention", () => {
       expect(rec?.sign_out_token).toBeNull();
     });
 
+    it("createPublicSignIn should dedupe concurrent retries by idempotency key", async () => {
+      const phone = "+64211234567";
+      const template = await createTestTemplate(prisma, company.id, site.id);
+      const idempotencyKey = "token-replay-idempotency";
+
+      const [first, second] = await Promise.all([
+        publicSigninRepo.createPublicSignIn({
+          companyId: company.id,
+          siteId: site.id,
+          idempotencyKey,
+          visitorName: "Idempotent User",
+          visitorPhone: phone,
+          hasAcceptedTerms: true,
+          templateId: template.id,
+          templateVersion: template.version,
+          answers: [{ questionId: "q1", answer: "yes" }],
+          visitorType: "VISITOR",
+        }),
+        publicSigninRepo.createPublicSignIn({
+          companyId: company.id,
+          siteId: site.id,
+          idempotencyKey,
+          visitorName: "Idempotent User",
+          visitorPhone: phone,
+          hasAcceptedTerms: true,
+          templateId: template.id,
+          templateVersion: template.version,
+          answers: [{ questionId: "q1", answer: "yes" }],
+          visitorType: "VISITOR",
+        }),
+      ]);
+
+      expect(first.signInRecordId).toBe(second.signInRecordId);
+
+      const [recordCount, responseCount] = await Promise.all([
+        prisma.signInRecord.count({
+          where: { company_id: company.id, idempotency_key: idempotencyKey },
+        }),
+        prisma.inductionResponse.count({
+          where: {
+            sign_in_record: {
+              company_id: company.id,
+              idempotency_key: idempotencyKey,
+            },
+          },
+        }),
+      ]);
+
+      expect(recordCount).toBe(1);
+      expect(responseCount).toBe(1);
+    });
+
     it("createPublicSignIn should fail when template does not exist (FK)", async () => {
       const phone = "+64211234567";
 
@@ -153,6 +206,7 @@ describe("Token Replay Attack Prevention", () => {
         publicSigninRepo.createPublicSignIn({
           companyId: company.id,
           siteId: site.id,
+          idempotencyKey: "token-replay-fk",
           visitorName: "Bad Template",
           visitorPhone: phone,
           hasAcceptedTerms: true,
@@ -172,6 +226,7 @@ describe("Token Replay Attack Prevention", () => {
         publicSigninRepo.createPublicSignIn({
           companyId: company.id,
           siteId: site.id,
+          idempotencyKey: "token-replay-version",
           visitorName: "Bad Version",
           visitorPhone: phone,
           hasAcceptedTerms: true,
@@ -199,6 +254,7 @@ describe("Token Replay Attack Prevention", () => {
         publicSigninRepo.createPublicSignIn({
           companyId: company.id, // NOTE: using original company, but template belongs to otherCompany
           siteId: site.id,
+          idempotencyKey: "token-replay-cross-tenant-1",
           visitorName: "Cross Tenant",
           visitorPhone: phone,
           hasAcceptedTerms: true,
@@ -218,6 +274,7 @@ describe("Token Replay Attack Prevention", () => {
         publicSigninRepo.createPublicSignIn({
           companyId: company.id,
           siteId: site.id,
+          idempotencyKey: "token-replay-phone",
           visitorName: "Bad Phone",
           visitorPhone: phone,
           hasAcceptedTerms: true,
@@ -244,6 +301,7 @@ describe("Token Replay Attack Prevention", () => {
         publicSigninRepo.createPublicSignIn({
           companyId: company.id, // NOT otherCompany
           siteId: site.id,
+          idempotencyKey: "token-replay-cross-tenant-2",
           visitorName: "Cross Tenant",
           visitorPhone: phone,
           hasAcceptedTerms: true,
@@ -268,6 +326,7 @@ describe("Token Replay Attack Prevention", () => {
         publicSigninRepo.createPublicSignIn({
           companyId: company.id,
           siteId: site.id,
+          idempotencyKey: "token-replay-json",
           visitorName: "Bad JSON",
           visitorPhone: phone,
           hasAcceptedTerms: true,

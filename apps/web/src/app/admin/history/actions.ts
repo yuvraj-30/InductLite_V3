@@ -20,17 +20,12 @@ import {
   historyFiltersSchema,
   type HistoryFilters,
 } from "@/lib/validation/schemas";
+import { getUtcDayRangeForTimeZone } from "@/lib/time/day-range";
 
 // Re-export for consumers
 export type { HistoryFilters } from "@/lib/validation/schemas";
 
-function parseUtcDayStart(dateString: string): Date {
-  return new Date(`${dateString}T00:00:00.000Z`);
-}
-
-function parseUtcDayEnd(dateString: string): Date {
-  return new Date(`${dateString}T23:59:59.999Z`);
-}
+const DEFAULT_COMPANY_TIMEZONE = "Pacific/Auckland";
 
 /**
  * Get paginated sign-in history with filters
@@ -67,11 +62,22 @@ export async function getSignInHistoryAction(
 
   // Parse date range with validated inputs
   if (validFilters.dateFrom || validFilters.dateTo) {
+    const from = validFilters.dateFrom
+      ? getUtcDayRangeForTimeZone(
+          validFilters.dateFrom,
+          DEFAULT_COMPANY_TIMEZONE,
+        ).from
+      : undefined;
+    const to = validFilters.dateTo
+      ? getUtcDayRangeForTimeZone(
+          validFilters.dateTo,
+          DEFAULT_COMPANY_TIMEZONE,
+        ).to
+      : undefined;
+
     signInFilter.dateRange = {
-      from: validFilters.dateFrom
-        ? parseUtcDayStart(validFilters.dateFrom)
-        : undefined,
-      to: validFilters.dateTo ? parseUtcDayEnd(validFilters.dateTo) : undefined,
+      from,
+      to,
     };
   }
 
