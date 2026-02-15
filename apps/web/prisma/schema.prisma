@@ -209,6 +209,7 @@ model SignInRecord {
   signed_out_user    User?              @relation("signed_out_by", fields: [signed_out_by], references: [id], onDelete: SetNull)
   induction_response InductionResponse?
 
+  @@unique([company_id, idempotency_key])
   @@index([company_id])
   @@index([company_id, site_id])
   @@index([company_id, sign_in_ts])
@@ -216,7 +217,6 @@ model SignInRecord {
   @@index([site_id, sign_in_ts])
   @@index([signed_out_by])
   @@index([sign_out_token])
-  @@unique([company_id, idempotency_key])
 }
 
 enum VisitorType {
