@@ -564,9 +564,18 @@ test.describe.serial("Public Sign-In Flow", () => {
         }
       }
 
-      const termsCheckbox = page.locator("#hasAcceptedTerms");
-      if ((await termsCheckbox.count()) > 0) {
-        await termsCheckbox.check().catch(() => null);
+      const termsCheckboxByLabel = page
+        .getByLabel(
+          /I acknowledge the site safety terms and conditions|I accept|terms and conditions/i,
+        )
+        .first();
+      if ((await termsCheckboxByLabel.count()) > 0) {
+        await termsCheckboxByLabel.check().catch(() => null);
+      } else {
+        const termsCheckbox = page.locator("#hasAcceptedTerms");
+        if ((await termsCheckbox.count()) > 0) {
+          await termsCheckbox.check().catch(() => null);
+        }
       }
 
       await expect(page.getByText("Please provide a signature")).not.toBeVisible({

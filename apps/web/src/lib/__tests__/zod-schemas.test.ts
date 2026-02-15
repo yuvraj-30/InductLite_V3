@@ -170,6 +170,19 @@ describe("Public Sign-In Schema Validation", () => {
         );
       }
     });
+
+    it("should reject sign-in when consent is missing", () => {
+      const { hasAcceptedTerms: _ignored, ...withoutConsent } = validInput;
+      const result = signInSchema.safeParse(withoutConsent);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(
+          result.error.issues.some(
+            (issue) => issue.path.join(".") === "hasAcceptedTerms",
+          ),
+        ).toBe(true);
+      }
+    });
   });
 
   describe("signOutSchema", () => {

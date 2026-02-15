@@ -147,6 +147,65 @@ describe("Token Replay Attack Prevention", () => {
       expect(rec?.sign_out_token).toBeNull();
     });
 
+    it("createPublicSignIn should fail when hasAcceptedTerms is false", async () => {
+      const phone = "+64211234567";
+      const template = await createTestTemplate(prisma, company.id, site.id);
+
+      await expect(
+        publicSigninRepo.createPublicSignIn({
+          companyId: company.id,
+          siteId: site.id,
+          idempotencyKey: "token-replay-no-consent",
+          visitorName: "No Consent User",
+          visitorPhone: phone,
+          hasAcceptedTerms: false,
+          templateId: template.id,
+          templateVersion: template.version,
+          answers: [{ questionId: "q1", answer: "yes" }],
+          visitorType: "VISITOR",
+        }),
+      ).rejects.toThrow(/Terms must be accepted before sign-in/);
+    });
+
+    it("createPublicSignIn should persist termsAcceptedAt timestamp on success", async () => {
+      const phone = "+64211234567";
+      const template = await createTestTemplate(prisma, company.id, site.id);
+
+      const beforeCreate = new Date();
+      const created = await publicSigninRepo.createPublicSignIn({
+        companyId: company.id,
+        siteId: site.id,
+        idempotencyKey: "token-replay-consent-timestamp",
+        visitorName: "Consent Timestamp User",
+        visitorPhone: phone,
+        hasAcceptedTerms: true,
+        templateId: template.id,
+        templateVersion: template.version,
+        answers: [{ questionId: "q1", answer: "yes" }],
+        visitorType: "VISITOR",
+      });
+      const afterCreate = new Date();
+
+      const persisted = await prisma.signInRecord.findUnique({
+        where: { id: created.signInRecordId },
+        select: {
+          hasAcceptedTerms: true,
+          termsAcceptedAt: true,
+        },
+      });
+
+      expect(persisted).not.toBeNull();
+      expect(persisted?.hasAcceptedTerms).toBe(true);
+      expect(persisted?.termsAcceptedAt).toBeInstanceOf(Date);
+      expect(persisted?.termsAcceptedAt).not.toBeNull();
+      expect(persisted!.termsAcceptedAt!.getTime()).toBeGreaterThanOrEqual(
+        beforeCreate.getTime(),
+      );
+      expect(persisted!.termsAcceptedAt!.getTime()).toBeLessThanOrEqual(
+        afterCreate.getTime(),
+      );
+    });
+
     it("createPublicSignIn should dedupe concurrent retries by idempotency key", async () => {
       const phone = "+64211234567";
       const template = await createTestTemplate(prisma, company.id, site.id);

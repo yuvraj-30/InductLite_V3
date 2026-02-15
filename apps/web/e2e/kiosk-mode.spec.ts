@@ -180,9 +180,18 @@ test.describe("Kiosk Mode", () => {
 
     // Submit
     const signBtn = page.getByRole("button", { name: /confirm & sign in/i });
-    const termsCheckbox = page.locator("#hasAcceptedTerms");
-    if ((await termsCheckbox.count()) > 0) {
-      await termsCheckbox.check().catch(() => null);
+    const termsCheckboxByLabel = page
+      .getByLabel(
+        /I acknowledge the site safety terms and conditions|I accept|terms and conditions/i,
+      )
+      .first();
+    if ((await termsCheckboxByLabel.count()) > 0) {
+      await termsCheckboxByLabel.check().catch(() => null);
+    } else {
+      const termsCheckbox = page.locator("#hasAcceptedTerms");
+      if ((await termsCheckbox.count()) > 0) {
+        await termsCheckbox.check().catch(() => null);
+      }
     }
     await signBtn.waitFor({ state: "visible" });
     await signBtn.click();
