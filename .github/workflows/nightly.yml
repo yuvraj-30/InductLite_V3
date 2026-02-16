@@ -16,6 +16,7 @@ env:
   NODE_ENV: test
   NEXT_TELEMETRY_DISABLED: "1"
   SESSION_SECRET: ci-test-secret-at-least-32-characters-long
+  DATA_ENCRYPTION_KEY: ci-test-data-encryption-key-at-least-32-characters
   SIGN_OUT_TOKEN_SECRET: ci-test-signout-secret-at-least-32-characters
   NEXT_PUBLIC_APP_URL: http://localhost:3000
   CRON_SECRET: ci-test-cron-secret-at-least-16
