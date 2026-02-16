@@ -36,47 +36,49 @@ export async function POST(req: Request) {
 
   try {
     // Runtime diagnostics: log masked DB URL and current schema + table count
-    try {
-      // Read runtime env safely
+    if (E2E_DEBUG_TEST_ROUTES) {
+      try {
+        // Read runtime env safely
 
-      const env = (function getEnv() {
-        try {
-          return eval("process").env ?? {};
-        } catch {
-          return {};
-        }
-      })();
-      const dbUrl = env.DATABASE_URL ?? null;
-      if (dbUrl) {
-        try {
-          const u = new URL(dbUrl);
-          const masked = `${u.protocol}//${u.username}:****@${u.hostname}${u.port ? `:${u.port}` : ""}${u.pathname}${u.search}`;
-          e2eLog("E2E: create-user called; masked DATABASE_URL:", masked);
-          // Quick schema and table diagnostic using Prisma
+        const env = (function getEnv() {
           try {
-            const { PrismaClient } = await import("@prisma/client");
-            const diag = new PrismaClient({
-              datasources: { db: { url: dbUrl } },
-            });
-            await diag.$connect();
-            const res = await diag.user.count();
-            e2eLog(
-              "E2E: create-user runtime diagnostic user_count=",
-              res,
-            );
-            await diag.$disconnect();
-          } catch (e) {
-            e2eWarn(
-              "E2E: create-user diagnostic query failed:",
-              String(e),
-            );
+            return eval("process").env ?? {};
+          } catch {
+            return {};
           }
-        } catch (_) {
-          // ignore parsing
+        })();
+        const dbUrl = env.DATABASE_URL ?? null;
+        if (dbUrl) {
+          try {
+            const u = new URL(dbUrl);
+            const masked = `${u.protocol}//${u.username}:****@${u.hostname}${u.port ? `:${u.port}` : ""}${u.pathname}${u.search}`;
+            e2eLog("E2E: create-user called; masked DATABASE_URL:", masked);
+            // Quick schema and table diagnostic using Prisma
+            try {
+              const { PrismaClient } = await import("@prisma/client");
+              const diag = new PrismaClient({
+                datasources: { db: { url: dbUrl } },
+              });
+              await diag.$connect();
+              const res = await diag.user.count();
+              e2eLog(
+                "E2E: create-user runtime diagnostic user_count=",
+                res,
+              );
+              await diag.$disconnect();
+            } catch (e) {
+              e2eWarn(
+                "E2E: create-user diagnostic query failed:",
+                String(e),
+              );
+            }
+          } catch (_) {
+            // ignore parsing
+          }
         }
+      } catch (e) {
+        e2eWarn("E2E: create-user diag read failed:", String(e));
       }
-    } catch (e) {
-      e2eWarn("E2E: create-user diag read failed:", String(e));
     }
 
     const body = await req.json().catch(() => ({}) as Record<string, unknown>);
@@ -123,6 +125,9 @@ export async function POST(req: Request) {
     const safeName = (safeEmail.split("@")[0] ?? safeEmail) as string;
     // Use a runtime-bound Prisma client so we write to the same DB the server process sees
     let created: any = null;
+    let runtimeClient:
+      | import("@prisma/client").PrismaClient
+      | null = null;
     try {
       const env = (function getEnv() {
         try {
@@ -134,7 +139,7 @@ export async function POST(req: Request) {
       const dbUrl = env.DATABASE_URL ?? null;
       if (dbUrl) {
         const { PrismaClient } = await import("@prisma/client");
-        const runtimeClient = new PrismaClient({
+        runtimeClient = new PrismaClient({
           datasources: { db: { url: dbUrl } },
         });
         await runtimeClient.$connect();
@@ -148,7 +153,6 @@ export async function POST(req: Request) {
             is_active: true,
           },
         });
-        await runtimeClient.$disconnect();
       } else {
         // Fallback to existing global prisma if DATABASE_URL is not present at runtime
         created = await prisma.user.create({
@@ -177,40 +181,46 @@ export async function POST(req: Request) {
           is_active: true,
         },
       });
+    } finally {
+      if (runtimeClient) {
+        await runtimeClient.$disconnect().catch(() => undefined);
+      }
     }
 
     // Log created user id for diagnostics
     e2eLog("E2E: create-user created id=", created?.id);
 
     // Confirm visibility of created user from the same runtime DB URL (diagnostic)
-    try {
-      const env = (function getEnv() {
-        try {
-          return eval("process").env ?? {};
-        } catch {
-          return {};
+    if (E2E_DEBUG_TEST_ROUTES) {
+      try {
+        const env = (function getEnv() {
+          try {
+            return eval("process").env ?? {};
+          } catch {
+            return {};
+          }
+        })();
+        const dbUrl = env.DATABASE_URL ?? null;
+        if (dbUrl) {
+          try {
+            const { PrismaClient } = await import("@prisma/client");
+            const diag = new PrismaClient({
+              datasources: { db: { url: dbUrl } },
+            });
+            await diag.$connect();
+            const u = await diag.user.findUnique({ where: { email: safeEmail } });
+            e2eLog(
+              "E2E: create-user confirm lookup user=",
+              u ? { id: u.id, email: u.email, company_id: u.company_id } : null,
+            );
+            await diag.$disconnect();
+          } catch (e) {
+            e2eWarn("E2E: create-user confirm lookup failed:", String(e));
+          }
         }
-      })();
-      const dbUrl = env.DATABASE_URL ?? null;
-      if (dbUrl) {
-        try {
-          const { PrismaClient } = await import("@prisma/client");
-          const diag = new PrismaClient({
-            datasources: { db: { url: dbUrl } },
-          });
-          await diag.$connect();
-          const u = await diag.user.findUnique({ where: { email: safeEmail } });
-          e2eLog(
-            "E2E: create-user confirm lookup user=",
-            u ? { id: u.id, email: u.email, company_id: u.company_id } : null,
-          );
-          await diag.$disconnect();
-        } catch (e) {
-          e2eWarn("E2E: create-user confirm lookup failed:", String(e));
-        }
+      } catch (e) {
+        e2eWarn("E2E: create-user confirm diag read failed:", String(e));
       }
-    } catch (e) {
-      e2eWarn("E2E: create-user confirm diag read failed:", String(e));
     }
 
     return NextResponse.json({ success: true, email, password, companySlug });

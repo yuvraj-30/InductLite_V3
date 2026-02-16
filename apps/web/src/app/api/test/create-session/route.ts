@@ -65,47 +65,52 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "email required" }, { status: 400 });
 
     // Runtime diagnostics to help debug worker schema visibility issues
-    try {
-      // read runtime env
+    if (E2E_DEBUG_TEST_ROUTES) {
+      try {
+        // read runtime env
 
-      const env = (function getEnv() {
-        try {
-          return eval("process").env ?? {};
-        } catch {
-          return {};
-        }
-      })();
-      const dbUrl = env.DATABASE_URL ?? null;
-      if (dbUrl) {
-        try {
-          const u = new URL(dbUrl);
-          const masked = `${u.protocol}//${u.username}:****@${u.hostname}${u.port ? `:${u.port}` : ""}${u.pathname}${u.search}`;
-          e2eLog("E2E: create-session lookup; masked DATABASE_URL:", masked);
+        const env = (function getEnv() {
           try {
-            const { PrismaClient } = await import("@prisma/client");
-            const diag = new PrismaClient({
-              datasources: { db: { url: dbUrl } },
-            });
-            await diag.$connect();
-            const res = await diag.user.count();
-            e2eLog(
-              "E2E: create-session runtime diagnostic user_count=",
-              res,
-            );
-            await diag.$disconnect();
-          } catch (e) {
-            e2eWarn("E2E: create-session diagnostic query failed:", String(e));
+            return eval("process").env ?? {};
+          } catch {
+            return {};
           }
-        } catch (_) {
-          // ignore
+        })();
+        const dbUrl = env.DATABASE_URL ?? null;
+        if (dbUrl) {
+          try {
+            const u = new URL(dbUrl);
+            const masked = `${u.protocol}//${u.username}:****@${u.hostname}${u.port ? `:${u.port}` : ""}${u.pathname}${u.search}`;
+            e2eLog("E2E: create-session lookup; masked DATABASE_URL:", masked);
+            try {
+              const { PrismaClient } = await import("@prisma/client");
+              const diag = new PrismaClient({
+                datasources: { db: { url: dbUrl } },
+              });
+              await diag.$connect();
+              const res = await diag.user.count();
+              e2eLog(
+                "E2E: create-session runtime diagnostic user_count=",
+                res,
+              );
+              await diag.$disconnect();
+            } catch (e) {
+              e2eWarn("E2E: create-session diagnostic query failed:", String(e));
+            }
+          } catch (_) {
+            // ignore
+          }
         }
+      } catch (e) {
+        e2eWarn("E2E: create-session diag read failed:", String(e));
       }
-    } catch (e) {
-      e2eWarn("E2E: create-session diag read failed:", String(e));
     }
 
     // Use a runtime-bound Prisma client for consistent visibility with request-time DATABASE_URL
     let user: any = null;
+    let runtimeClient:
+      | import("@prisma/client").PrismaClient
+      | null = null;
     try {
       const env = (function getEnv() {
         try {
@@ -117,7 +122,7 @@ export async function GET(req: Request) {
       const dbUrl = env.DATABASE_URL ?? null;
       if (dbUrl) {
         const { PrismaClient } = await import("@prisma/client");
-        const runtimeClient = new PrismaClient({
+        runtimeClient = new PrismaClient({
           datasources: { db: { url: dbUrl } },
         });
         await runtimeClient.$connect();
@@ -125,7 +130,6 @@ export async function GET(req: Request) {
           where: { email },
           include: { company: true },
         });
-        await runtimeClient.$disconnect();
       } else {
         user = await prisma.user.findUnique({
           where: { email },
@@ -141,40 +145,46 @@ export async function GET(req: Request) {
         where: { email },
         include: { company: true },
       });
+    } finally {
+      if (runtimeClient) {
+        await runtimeClient.$disconnect().catch(() => undefined);
+      }
     }
 
     if (!user) {
       // Diagnostic: report counts and schema for current runtime DB to help debug visibility
-      try {
-        const env = (function getEnv() {
-          try {
-            return eval("process").env ?? {};
-          } catch {
-            return {};
+      if (E2E_DEBUG_TEST_ROUTES) {
+        try {
+          const env = (function getEnv() {
+            try {
+              return eval("process").env ?? {};
+            } catch {
+              return {};
+            }
+          })();
+          const dbUrl = env.DATABASE_URL ?? null;
+          if (dbUrl) {
+            try {
+              const { PrismaClient } = await import("@prisma/client");
+              const diag = new PrismaClient({
+                datasources: { db: { url: dbUrl } },
+              });
+              await diag.$connect();
+              const count = await diag.user.count({ where: { email } });
+              e2eWarn(
+                "E2E: create-session user not found; diag count for email=",
+                email,
+                "count=",
+                count,
+              );
+              await diag.$disconnect();
+            } catch (e) {
+              e2eWarn("E2E: create-session diag lookup failed:", String(e));
+            }
           }
-        })();
-        const dbUrl = env.DATABASE_URL ?? null;
-        if (dbUrl) {
-          try {
-            const { PrismaClient } = await import("@prisma/client");
-            const diag = new PrismaClient({
-              datasources: { db: { url: dbUrl } },
-            });
-            await diag.$connect();
-            const count = await diag.user.count({ where: { email } });
-            e2eWarn(
-              "E2E: create-session user not found; diag count for email=",
-              email,
-              "count=",
-              count,
-            );
-            await diag.$disconnect();
-          } catch (e) {
-            e2eWarn("E2E: create-session diag lookup failed:", String(e));
-          }
+        } catch (e) {
+          e2eWarn("E2E: create-session diag outer failed:", String(e));
         }
-      } catch (e) {
-        e2eWarn("E2E: create-session diag outer failed:", String(e));
       }
 
       return NextResponse.json({ error: "user not found" }, { status: 404 });

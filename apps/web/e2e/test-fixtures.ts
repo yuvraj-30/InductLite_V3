@@ -178,16 +178,33 @@ export const test = base.extend<MyFixtures>({
   workerServer: async ({}, playUse, testInfo) => {
     const { spawn } = await import("child_process");
     const path = await import("path");
+    const fetchWithTimeout = async (
+      url: string,
+      init: RequestInit,
+      requestTimeoutMs = 5000,
+    ) => {
+      const controller = new AbortController();
+      const timeoutHandle = setTimeout(() => controller.abort(), requestTimeoutMs);
+      try {
+        return await fetch(url, { ...init, signal: controller.signal });
+      } finally {
+        clearTimeout(timeoutHandle);
+      }
+    };
 
     // Wait for server to be ready by polling the test endpoint
     const waitForUrl = async (url: string, timeout = 120000) => {
       const start = Date.now();
       while (Date.now() - start < timeout) {
         try {
-          const res = await fetch(url, {
+          const res = await fetchWithTimeout(
+            url,
+            {
             method: "POST",
             headers: getTestRouteHeaders(),
-          });
+            },
+            5000,
+          );
           if (res && res.ok) return;
           if (res && (res.status === 401 || res.status === 403)) {
             const body = await res.text().catch(() => "");
@@ -228,9 +245,13 @@ export const test = base.extend<MyFixtures>({
 
         while (Date.now() - started < 120000) {
           try {
-            const runtimeRes = await fetch(`${baseUrl}/api/test/runtime`, {
-              headers: getTestRouteHeaders(),
-            });
+            const runtimeRes = await fetchWithTimeout(
+              `${baseUrl}/api/test/runtime`,
+              {
+                headers: getTestRouteHeaders(),
+              },
+              5000,
+            );
             lastStatus = runtimeRes.status;
             const txt = await runtimeRes.text().catch(() => "");
             lastBody = txt;
@@ -287,64 +308,69 @@ export const test = base.extend<MyFixtures>({
         );
       }
 
-      // Ensure the main DB schema is applied once for shared-server mode
+      // Shared-server mode in CI relies on the DB being prepared by workflow steps.
+      // Optional local fallback: set E2E_SHARED_SERVER_SYNC_DB=1 to force a one-time sync.
       if (!mainDbPushDone) {
-        try {
-          const baseDb = process.env.DATABASE_URL;
-          if (baseDb) {
-            const { spawnSync } = await import("child_process");
-            const isWin = (process.platform as string) === "win32";
-            const run = (args: string[]) =>
-              spawnSync(isWin ? "npx.cmd" : "npx", args, {
-                cwd: process.cwd(),
-                env: {
-                  ...process.env,
-                  DATABASE_URL: baseDb,
-                  DATABASE_DIRECT_URL: baseDb,
-                },
-                stdio: "inherit",
-                shell: false,
-              });
+        if (process.env.E2E_SHARED_SERVER_SYNC_DB === "1") {
+          try {
+            const baseDb = process.env.DATABASE_URL;
+            if (baseDb) {
+              const { spawnSync } = await import("child_process");
+              const isWin = (process.platform as string) === "win32";
+              const run = (args: string[]) =>
+                spawnSync(isWin ? "npx.cmd" : "npx", args, {
+                  cwd: process.cwd(),
+                  env: {
+                    ...process.env,
+                    DATABASE_URL: baseDb,
+                    DATABASE_DIRECT_URL: baseDb,
+                  },
+                  stdio: "inherit",
+                  shell: false,
+                });
 
-                    let res = run([
-                      "prisma",
-                      "migrate",
-                      "deploy",
-                      "--schema",
-                      "prisma/schema.prisma",
-                    ]);
+              let res = run([
+                "prisma",
+                "migrate",
+                "deploy",
+                "--schema",
+                "prisma/schema.prisma",
+              ]);
 
-                    if (res && res.status !== 0) {
-                      console.warn(
-                        "E2E: main DB prisma migrate deploy failed; continuing with db push",
-                        res.status,
-                      );
-                    }
+              if (res && res.status !== 0) {
+                console.warn(
+                  "E2E: main DB prisma migrate deploy failed; continuing with db push",
+                  res.status,
+                );
+              }
 
-                    res = run([
-                      "prisma",
-                      "db",
-                      "push",
-                      "--accept-data-loss",
-                      "--skip-generate",
-                      "--schema",
-                      "prisma/schema.prisma",
-                    ]);
+              res = run([
+                "prisma",
+                "db",
+                "push",
+                "--accept-data-loss",
+                "--skip-generate",
+                "--schema",
+                "prisma/schema.prisma",
+              ]);
 
-                    if (res && res.status === 0) {
-                      mainDbPushDone = true;
-                      console.log("E2E: main DB schema sync succeeded");
-                    } else {
-                      console.warn(
-                        "E2E: main DB schema sync failed or returned non-zero status",
-                        res && res.status,
-                      );
-                    }
-          } else {
-            console.warn("E2E: DATABASE_URL missing; cannot db push");
+              if (res && res.status === 0) {
+                mainDbPushDone = true;
+                console.log("E2E: main DB schema sync succeeded");
+              } else {
+                console.warn(
+                  "E2E: main DB schema sync failed or returned non-zero status",
+                  res && res.status,
+                );
+              }
+            } else {
+              console.warn("E2E: DATABASE_URL missing; cannot db push");
+            }
+          } catch (e) {
+            console.warn("E2E: main DB prisma db push threw:", String(e));
           }
-        } catch (e) {
-          console.warn("E2E: main DB prisma db push threw:", String(e));
+        } else {
+          mainDbPushDone = true;
         }
       }
 
@@ -1086,21 +1112,26 @@ export const test = base.extend<MyFixtures>({
       throw new Error(`create-user failed: ${res.status} ${txt}`);
     }
 
-    // Verify via test-only lookup endpoint that the server runtime can see the created user
-    try {
-      const lookup = await fetch(
-        `${base}/api/test/lookup?email=${encodeURIComponent(email)}`,
-        { headers: getTestRouteHeaders() },
-      );
-      const lookupText = await lookup.text();
-      console.log(
-        "E2E: create-user lookup status=",
-        lookup.status,
-        "body=",
-        lookupText,
-      );
-    } catch (e) {
-      console.warn("E2E: create-user lookup failed:", String(e));
+    // Optional deep diagnostics only when explicitly enabled.
+    if (
+      process.env.E2E_DEBUG_TEST_ROUTES === "1" ||
+      process.env.E2E_DEBUG_TEST_ROUTES?.toLowerCase() === "true"
+    ) {
+      try {
+        const lookup = await fetch(
+          `${base}/api/test/lookup?email=${encodeURIComponent(email)}`,
+          { headers: getTestRouteHeaders() },
+        );
+        const lookupText = await lookup.text();
+        console.log(
+          "E2E: create-user lookup status=",
+          lookup.status,
+          "body=",
+          lookupText,
+        );
+      } catch (e) {
+        console.warn("E2E: create-user lookup failed:", String(e));
+      }
     }
 
     await playUse({ email, password, clientKey });

@@ -109,6 +109,9 @@ jobs:
         run: npm run build
 
       - name: Start standalone server
+        env:
+          TRUST_PROXY: "1"
+          ALLOW_TEST_RUNNER: "1"
         run: |
           set -euo pipefail
           cd apps/web
@@ -144,6 +147,7 @@ jobs:
           TRUST_PROXY: "1"
           ALLOW_TEST_RUNNER: "1"
           E2E_USE_SHARED_SERVER: "1"
+          E2E_TEST_TIMEOUT_MS: "60000"
         run: >
           cd apps/web &&
           npx playwright test e2e
