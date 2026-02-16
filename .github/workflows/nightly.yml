@@ -22,6 +22,7 @@ env:
   CRON_SECRET: ci-test-cron-secret-at-least-16
   TRUST_PROXY: "0"
   ALLOW_TEST_RUNNER: "1"
+  TEST_RUNNER_SECRET_KEY: ci-nightly-test-runner-secret
   MAGIC_LINK_SECRET: ci-magic-link-secret
   RESEND_API_KEY: ci-resend-key
   RESEND_FROM: ci@example.com
@@ -141,11 +142,20 @@ jobs:
           echo "App did not become ready in time"
           exit 1
 
+      - name: Verify E2E test-route gate
+        run: |
+          set -euo pipefail
+          runtime_payload="$(curl -fsS -H "x-test-secret: ${TEST_RUNNER_SECRET_KEY}" http://localhost:3000/api/test/runtime)"
+          echo "$runtime_payload"
+          echo "$runtime_payload" | grep -q '"allowTestRunner":true'
+          curl -fsS -X POST -H "x-test-secret: ${TEST_RUNNER_SECRET_KEY}" http://localhost:3000/api/test/clear-rate-limit >/dev/null
+
       - name: E2E full (desktop browsers)
         env:
           BASE_URL: http://localhost:3000
           TRUST_PROXY: "1"
           ALLOW_TEST_RUNNER: "1"
+          TEST_RUNNER_SECRET_KEY: ci-nightly-test-runner-secret
           E2E_USE_SHARED_SERVER: "1"
           E2E_TEST_TIMEOUT_MS: "60000"
         run: >

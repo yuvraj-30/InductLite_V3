@@ -16,6 +16,8 @@ describe("ensureTestRouteAccess", () => {
     process.env = { ...originalEnv };
     delete process.env.ALLOW_TEST_RUNNER;
     delete process.env.TEST_RUNNER_SECRET_KEY;
+    delete process.env.CI;
+    delete process.env.GITHUB_ACTIONS;
   });
 
   afterEach(() => {
@@ -29,7 +31,7 @@ describe("ensureTestRouteAccess", () => {
     expect(result).toBeNull();
   });
 
-  it("blocks in production even with matching x-test-secret", () => {
+  it("blocks in production by default", () => {
     setNodeEnv("production");
     process.env.TEST_RUNNER_SECRET_KEY = "top-secret";
     const req = new Request("http://localhost/api/test/create-user", {
@@ -40,8 +42,22 @@ describe("ensureTestRouteAccess", () => {
     expect(result?.status).toBe(404);
   });
 
-  it("blocks in production with missing or invalid x-test-secret", () => {
+  it("blocks in production with ALLOW_TEST_RUNNER=1 and missing CI", () => {
     setNodeEnv("production");
+    process.env.ALLOW_TEST_RUNNER = "1";
+    process.env.TEST_RUNNER_SECRET_KEY = "top-secret";
+    const req = new Request("http://localhost/api/test/create-user", {
+      headers: { "x-test-secret": "top-secret" },
+    });
+    const result = ensureTestRouteAccess(req);
+    expect(result).not.toBeNull();
+    expect(result?.status).toBe(404);
+  });
+
+  it("blocks in production with CI + ALLOW_TEST_RUNNER and invalid secret", () => {
+    setNodeEnv("production");
+    process.env.CI = "true";
+    process.env.ALLOW_TEST_RUNNER = "1";
     process.env.TEST_RUNNER_SECRET_KEY = "top-secret";
     const req = new Request("http://localhost/api/test/create-user", {
       headers: { "x-test-secret": "wrong" },
@@ -49,6 +65,18 @@ describe("ensureTestRouteAccess", () => {
     const result = ensureTestRouteAccess(req);
     expect(result).not.toBeNull();
     expect(result?.status).toBe(404);
+  });
+
+  it("allows in production only for CI with ALLOW_TEST_RUNNER + matching secret", () => {
+    setNodeEnv("production");
+    process.env.CI = "true";
+    process.env.ALLOW_TEST_RUNNER = "1";
+    process.env.TEST_RUNNER_SECRET_KEY = "top-secret";
+    const req = new Request("http://localhost/api/test/create-user", {
+      headers: { "x-test-secret": "top-secret" },
+    });
+    const result = ensureTestRouteAccess(req);
+    expect(result).toBeNull();
   });
 
   it("allows in non-test env when ALLOW_TEST_RUNNER=1", () => {

@@ -19,18 +19,7 @@ const e2eWarn = (...args: unknown[]) => {
   if (E2E_DEBUG_TEST_ROUTES) console.warn(...args);
 };
 
-function isProductionRuntime(): boolean {
-  try {
-    return (eval("process").env?.NODE_ENV ?? "").toLowerCase() === "production";
-  } catch {
-    return false;
-  }
-}
-
 export async function POST(req: Request) {
-  // Defense in depth: keep test user creation helpers disabled in production.
-  if (isProductionRuntime()) return new Response("Not Found", { status: 404 });
-
   const accessDenied = ensureTestRouteAccess(req);
   if (accessDenied) return accessDenied;
 

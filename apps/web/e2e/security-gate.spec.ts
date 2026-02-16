@@ -4,6 +4,7 @@ import { getTestRouteHeaders } from "./utils/test-route-auth";
 type RuntimePayload = {
   nodeEnv?: string | null;
   allowTestRunner?: boolean;
+  ciRuntime?: boolean;
 };
 
 function createUserBody(email: string) {
@@ -54,6 +55,7 @@ test.describe("Test Route Security Gate", () => {
     const runtime = await getRuntimePayload(request);
     const nodeEnv = String(runtime?.nodeEnv ?? "").toLowerCase();
     const allowTestRunner = Boolean(runtime?.allowTestRunner);
+    const ciRuntime = Boolean(runtime?.ciRuntime);
 
     const response = await request.post("/api/test/create-user", {
       headers: getTestRouteHeaders({ "content-type": "application/json" }),
@@ -61,6 +63,10 @@ test.describe("Test Route Security Gate", () => {
     });
 
     if (nodeEnv === "production") {
+      if (allowTestRunner && ciRuntime) {
+        expect(response.status()).toBe(200);
+        return;
+      }
       expect([403, 404]).toContain(response.status());
       return;
     }

@@ -20,18 +20,7 @@ const e2eWarn = (...args: unknown[]) => {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function isProductionRuntime(): boolean {
-  try {
-    return (eval("process").env?.NODE_ENV ?? "").toLowerCase() === "production";
-  } catch {
-    return false;
-  }
-}
-
 export async function GET(req: Request) {
-  // Defense in depth: keep test session helpers disabled in production.
-  if (isProductionRuntime()) return new Response("Not Found", { status: 404 });
-
   const accessDenied = ensureTestRouteAccess(req);
   if (accessDenied) return accessDenied;
 

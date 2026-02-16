@@ -12,7 +12,6 @@ export async function GET(req: Request) {
   // for CI diagnostics only and does NOT return any secrets.
   const getEnv = () => {
     try {
-       
       return eval("process").env ?? {};
     } catch {
       return {};
@@ -24,6 +23,7 @@ export async function GET(req: Request) {
     dbPresent: !!env.DATABASE_URL,
     nodeEnv: env.NODE_ENV ?? null,
     allowTestRunner: !!env.ALLOW_TEST_RUNNER,
+    ciRuntime: env.CI === "true" || env.GITHUB_ACTIONS === "true",
   };
 
   return new Response(JSON.stringify(payload), {
