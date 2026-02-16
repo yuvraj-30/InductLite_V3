@@ -8,6 +8,7 @@ import { GUARDRAILS, isAllowedMimeType } from "@/lib/guardrails";
 import { addContractorDocument } from "@/lib/repository/contractor.repository";
 import { createAuditLog } from "@/lib/repository/audit.repository";
 import { readS3ObjectBytes } from "@/lib/storage";
+import { isContractorDocumentKeyForTenant } from "@/lib/storage/keys";
 import {
   extensionFromMimeType,
   validateFileMagicNumber,
@@ -26,10 +27,6 @@ const schema = z.object({
   expiresAt: z.string().datetime().optional(),
   notes: z.string().optional(),
 });
-
-function isValidContractorDocumentKey(key: string): boolean {
-  return key.startsWith("contractors/") && !key.includes("..");
-}
 
 async function readUploadedHeader(key: string, maxBytes: number): Promise<Buffer> {
   const mode = (process.env.STORAGE_MODE || "local").toLowerCase();
@@ -80,7 +77,9 @@ export async function POST(req: Request) {
     parsed.data;
   const maxBytes = GUARDRAILS.MAX_UPLOAD_MB * 1024 * 1024;
 
-  if (!isValidContractorDocumentKey(key)) {
+  if (
+    !isContractorDocumentKeyForTenant(key, context.companyId, contractorId)
+  ) {
     return NextResponse.json({ error: "Invalid storage key" }, { status: 400 });
   }
 

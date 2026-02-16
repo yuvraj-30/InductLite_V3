@@ -28,6 +28,7 @@ import {
   encryptString,
   isDataEncryptionEnabled,
 } from "@/lib/security/data-protection";
+import { isContractorDocumentKeyForTenant } from "@/lib/storage/keys";
 
 /**
  * Contractor with documents
@@ -544,6 +545,12 @@ export async function addContractorDocument(
   requireCompanyId(companyId);
 
   try {
+    if (
+      !isContractorDocumentKeyForTenant(input.file_path, companyId, contractorId)
+    ) {
+      throw new RepositoryError("Invalid document storage key", "VALIDATION");
+    }
+
     const db = scopedDb(companyId);
     // First verify the contractor belongs to this company
     const contractor = await db.contractor.findFirst({

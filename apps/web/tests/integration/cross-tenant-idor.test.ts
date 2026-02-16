@@ -60,6 +60,8 @@ describe("Cross-Tenant IDOR Prevention", () => {
 
   let contractorDocA: { id: string };
   let contractorDocB: { id: string };
+  let contractorAId: string;
+  let contractorBId: string;
   let exportJobA: { id: string };
   let exportJobB: { id: string };
   let magicLinkTokenA: { id: string };
@@ -137,6 +139,7 @@ describe("Cross-Tenant IDOR Prevention", () => {
         is_active: true,
       },
     });
+    contractorAId = contractorA.id;
     contractorDocA = await prisma.contractorDocument.create({
       data: {
         contractor_id: contractorA.id,
@@ -155,6 +158,7 @@ describe("Cross-Tenant IDOR Prevention", () => {
         is_active: true,
       },
     });
+    contractorBId = contractorB.id;
     contractorDocB = await prisma.contractorDocument.create({
       data: {
         contractor_id: contractorB.id,
@@ -364,6 +368,30 @@ describe("Cross-Tenant IDOR Prevention", () => {
 
       expect(result).not.toBeNull();
       expect(result?.id).toBe(contractorDocA.id);
+    });
+
+    it("should reject adding a document when storage key company prefix mismatches", async () => {
+      await expect(
+        contractorRepo.addContractorDocument(companyA.id, contractorAId, {
+          document_type: "INSURANCE",
+          file_name: "doc-a.pdf",
+          file_path: `contractors/${companyB.id}/${contractorAId}/doc-a.pdf`,
+          file_size: 1234,
+          mime_type: "pdf",
+        }),
+      ).rejects.toThrow(/Invalid document storage key/);
+    });
+
+    it("should reject adding a document when storage key contractor prefix mismatches", async () => {
+      await expect(
+        contractorRepo.addContractorDocument(companyA.id, contractorAId, {
+          document_type: "INSURANCE",
+          file_name: "doc-a.pdf",
+          file_path: `contractors/${companyA.id}/${contractorBId}/doc-a.pdf`,
+          file_size: 1234,
+          mime_type: "pdf",
+        }),
+      ).rejects.toThrow(/Invalid document storage key/);
     });
   });
 

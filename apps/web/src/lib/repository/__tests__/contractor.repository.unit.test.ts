@@ -145,7 +145,7 @@ describe("Contractor Repository (unit)", () => {
     );
     vi.mocked(prisma.contractorDocument.create).mockResolvedValue({
       id: "d1",
-      file_path: "/tmp/f.pdf",
+      file_path: "contractors/company-123/c1/doc-1-f.pdf",
       file_name: "f.pdf",
       file_size: 123,
       expires_at: null,
@@ -159,7 +159,7 @@ describe("Contractor Repository (unit)", () => {
     const res = await addContractorDocument("company-123", "c1", {
       document_type: DocumentType.INSURANCE,
       file_name: "f.pdf",
-      file_path: "/tmp/f.pdf",
+      file_path: "contractors/company-123/c1/doc-1-f.pdf",
       file_size: 123,
       mime_type: "application/pdf",
     });

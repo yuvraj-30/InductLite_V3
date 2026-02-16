@@ -80,7 +80,7 @@ describe("Contractor document upload guardrails", () => {
       body: JSON.stringify({
         contractorId: "contractor-1",
         fileName: "large.pdf",
-        mimeType: "pdf",
+        mimeType: "application/pdf",
         fileSize: 6 * 1024 * 1024,
       }),
     });
@@ -117,5 +117,55 @@ describe("Contractor document upload guardrails", () => {
 
     expect(res.status).toBe(403);
     expect(data.error).toBe("Uploads are currently disabled");
+  });
+
+  it("rejects commit with storage key from another company", async () => {
+    const req = new Request("http://localhost", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: "https://localhost",
+        host: "localhost",
+      },
+      body: JSON.stringify({
+        contractorId: "contractor-1",
+        key: "contractors/company-2/contractor-1/doc-1.pdf",
+        fileName: "doc.pdf",
+        mimeType: "pdf",
+        fileSize: 1024,
+        documentType: "INSURANCE",
+      }),
+    });
+
+    const res = await commitPost(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toBe("Invalid storage key");
+  });
+
+  it("rejects commit with storage key for a different contractor", async () => {
+    const req = new Request("http://localhost", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: "https://localhost",
+        host: "localhost",
+      },
+      body: JSON.stringify({
+        contractorId: "contractor-1",
+        key: "contractors/company-1/contractor-2/doc-1.pdf",
+        fileName: "doc.pdf",
+        mimeType: "pdf",
+        fileSize: 1024,
+        documentType: "INSURANCE",
+      }),
+    });
+
+    const res = await commitPost(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toBe("Invalid storage key");
   });
 });
