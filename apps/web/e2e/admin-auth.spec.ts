@@ -204,14 +204,15 @@ test.describe.serial("Admin Authentication", () => {
     // Assuming limit is 5, we try 6 times
 
     // For determinism, set the user's failed login state directly via test endpoint
-    try {
-      await request.post(`${BASE_URL}/api/test/set-user-lock`, {
-        headers: getTestRouteHeaders(),
-        data: { email: workerUser.email, failed_logins: 5, lock: true },
-      });
-    } catch (err) {
-      console.warn("set-user-lock failed:", String(err));
-    }
+    const lockResp = await request.post(`${BASE_URL}/api/test/set-user-lock`, {
+      headers: getTestRouteHeaders(),
+      data: { email: workerUser.email, failed_logins: 5, lock: true },
+    });
+    expect(lockResp.ok()).toBeTruthy();
+    const lockBody = await lockResp.json();
+    expect(lockBody?.updated ?? 0).toBeGreaterThanOrEqual(1);
+    expect(lockBody?.user?.failed_logins ?? 0).toBeGreaterThanOrEqual(5);
+    expect(lockBody?.user?.locked_until).toBeTruthy();
 
     // Now visit the login page, submit the form, and assert the lockout message is shown
     await page.goto("/login");
@@ -221,8 +222,10 @@ test.describe.serial("Admin Authentication", () => {
     await page.getByLabel(/password/i).fill("wrong");
     await page.getByRole("button", { name: /sign in|log in/i }).click();
 
-    // Be tolerant: either explicit rate limit/lock text, or any alert, or verify via test lookup
-    // Prefer a tolerant, non-throwing check to avoid Playwright expect flakiness
+    await expect(page).toHaveURL(/\/login/, { timeout: 10000 });
+
+    // Be tolerant: either explicit lock/rate text, a generic form alert, or
+    // a deterministic test-route lookup confirming lock state.
     const rateLimitTextVisible = await page
       .getByText(/too many|rate limit|locked|try again/i)
       .first()
@@ -230,20 +233,23 @@ test.describe.serial("Admin Authentication", () => {
       .catch(() => false);
 
     if (rateLimitTextVisible) {
-      // OK - explicit rate limit text shown
+      // OK - explicit lock/rate text shown.
     } else {
-      const alertVisible = await page.getByRole("alert").first().isVisible().catch(() => false);
-      if (alertVisible) {
-        // OK - an alert is visible (content may be empty due to rendering timing)
-      } else {
-        // Fallback: verify server state for failed_logins
+      const alertVisible = await page
+        .locator("form [role='alert']")
+        .first()
+        .isVisible()
+        .catch(() => false);
+      if (!alertVisible) {
         const lookup = await request.get(
           `${BASE_URL}/api/test/lookup?email=${encodeURIComponent(workerUser.email)}`,
           { headers: getTestRouteHeaders() },
         );
+        expect(lookup.ok()).toBeTruthy();
         const body = await lookup.json();
         const failedLogins = body?.user?.failed_logins ?? 0;
         expect(failedLogins).toBeGreaterThanOrEqual(5);
+        expect(body?.user?.locked_until).toBeTruthy();
       }
     }
 

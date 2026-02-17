@@ -19,15 +19,30 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing email" }, { status: 400 });
     }
 
-    await prisma.user.updateMany({
-      where: { email: email.toLowerCase().trim() },
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const updated = await prisma.user.updateMany({
+      where: { email: normalizedEmail },
       data: {
         failed_logins: failedLogins,
         locked_until: lock ? new Date(Date.now() + 15 * 60 * 1000) : null,
       },
     });
 
-    return NextResponse.json({ success: true });
+    const user = await prisma.user.findFirst({
+      where: { email: normalizedEmail },
+      select: {
+        email: true,
+        failed_logins: true,
+        locked_until: true,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      updated: updated.count,
+      user,
+    });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err ?? "");
     return NextResponse.json(

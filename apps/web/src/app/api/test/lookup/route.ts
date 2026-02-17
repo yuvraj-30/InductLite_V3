@@ -30,20 +30,31 @@ export async function GET(req: Request) {
     if (!email)
       return NextResponse.json({ error: "email required" }, { status: 400 });
 
+    const normalizedEmail = email.toLowerCase().trim();
+
     try {
       const { PrismaClient } = await import("@prisma/client");
       const diag = new PrismaClient({
         datasources: { db: { url: env.DATABASE_URL } },
       });
       await diag.$connect();
-      const count = await diag.user.count({ where: { email } });
+      const count = await diag.user.count({ where: { email: normalizedEmail } });
+      const user = await diag.user.findFirst({
+        where: { email: normalizedEmail },
+        select: {
+          email: true,
+          failed_logins: true,
+          locked_until: true,
+        },
+      });
       const res = await diag.$queryRaw<
         Array<{ schema_name: string; tables_count: number }>
       >`SELECT current_schema() AS schema_name, (SELECT COUNT(*)::int FROM information_schema.tables WHERE table_schema = current_schema()) AS tables_count`;
       await diag.$disconnect();
       return NextResponse.json({
-        email,
+        email: normalizedEmail,
         count,
+        user,
         schema: res?.[0]?.schema_name ?? null,
         tables_count: res?.[0]?.tables_count ?? null,
       });

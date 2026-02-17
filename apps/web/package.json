@@ -10,7 +10,7 @@
     "build": "next build --webpack",
     "start": "node scripts/start-standalone.js",
     "lint": "eslint . --max-warnings=0",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

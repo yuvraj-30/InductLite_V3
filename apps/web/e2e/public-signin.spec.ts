@@ -289,9 +289,24 @@ test.describe.serial("Public Sign-In Flow", () => {
     });
     await submitButton.click();
 
-    await expect(page.getByText(/name is required/i)).toBeVisible({
-      timeout: 5000,
-    });
+    // Different browsers can surface required-field validation either via
+    // inline app copy or native input validity UI.
+    const inlineNameErrorVisible = await page
+      .getByText(/name is required/i)
+      .first()
+      .isVisible()
+      .catch(() => false);
+    if (!inlineNameErrorVisible) {
+      const nameFieldInvalid = await page.getByLabel(/full name/i).evaluate((el) => {
+        const input = el as HTMLInputElement;
+        return (
+          !input.checkValidity() ||
+          input.matches(":invalid") ||
+          input.validationMessage.trim().length > 0
+        );
+      });
+      expect(nameFieldInvalid).toBe(true);
+    }
     await expect(
       page.getByRole("heading", { level: 2, name: /site induction/i }),
     ).toHaveCount(0);
