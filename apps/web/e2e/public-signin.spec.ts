@@ -114,6 +114,45 @@ async function openSite(page: Page, slug: string): Promise<boolean> {
   return true;
 }
 
+async function fillAndAssertInput(
+  page: Page,
+  selector: string,
+  value: string,
+): Promise<void> {
+  const input = page.locator(selector);
+  await input.fill(value);
+  await expect(input).toHaveValue(value);
+}
+
+async function resetDetailsForm(page: Page): Promise<void> {
+  await fillAndAssertInput(page, "#visitorName", "");
+  await fillAndAssertInput(page, "#visitorPhone", "");
+  await fillAndAssertInput(page, "#visitorEmail", "");
+  await fillAndAssertInput(page, "#employerName", "");
+  await fillAndAssertInput(page, "#roleOnSite", "");
+}
+
+async function fillDetailsForm(
+  page: Page,
+  {
+    name,
+    phone,
+    email = "e2e@test.com",
+    visitorType = "CONTRACTOR",
+  }: {
+    name: string;
+    phone: string;
+    email?: string;
+    visitorType?: "CONTRACTOR" | "VISITOR" | "EMPLOYEE" | "DELIVERY";
+  },
+): Promise<void> {
+  await resetDetailsForm(page);
+  await fillAndAssertInput(page, "#visitorName", name);
+  await fillAndAssertInput(page, "#visitorPhone", phone);
+  await fillAndAssertInput(page, "#visitorEmail", email);
+  await page.locator("#visitorType").selectOption(visitorType);
+}
+
 test.describe.serial("Public Sign-In Flow", () => {
   // Test site slug - may be created dynamically for E2E runs
   let TEST_SITE_SLUG = "test-site";
@@ -236,25 +275,13 @@ test.describe.serial("Public Sign-In Flow", () => {
   });
 
   test("should validate required fields", async ({ page }) => {
-    if (process.env.CI) {
-      test.skip(
-        true,
-        "Required-fields UI path is nondeterministic in CI due browser-restored input state",
-      );
-      return;
-    }
-
     const ok = await openSite(page, TEST_SITE_SLUG);
     if (!ok) {
       test.skip(true, "Public site not seeded in this environment");
       return;
     }
     await expect(page.getByLabel(/full name/i)).toBeVisible({ timeout: 5000 });
-
-    // Set one valid field and leave name empty so validation is deterministic even with autofill.
-    await page.getByLabel(/phone number/i).fill(uniqueNzPhone());
-    // Whitespace-only should still fail because validation trims name.
-    await page.getByLabel(/full name/i).fill("   ");
+    await fillDetailsForm(page, { name: "", phone: "" });
 
     // Try to submit without filling required fields
     const submitButton = page.getByRole("button", {
@@ -262,28 +289,18 @@ test.describe.serial("Public Sign-In Flow", () => {
     });
     await submitButton.click();
 
-    // Depending on browser autofill/restored state, either field validation appears
-    // or the form proceeds to induction with restored values.
-    const hasNameRequired = await page
-      .getByText(/name is required/i)
-      .isVisible()
-      .catch(() => false);
-    const movedToInduction = await page
-      .getByRole("heading", { level: 2, name: /site induction/i })
-      .isVisible()
-      .catch(() => false);
-    expect(hasNameRequired || movedToInduction).toBe(true);
+    await expect(page.getByText(/name is required/i)).toBeVisible({
+      timeout: 5000,
+    });
+    await expect(
+      page.getByRole("heading", { level: 2, name: /site induction/i }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: /continue to induction/i }),
+    ).toBeVisible();
   });
 
   test("should validate phone number format", async ({ page }) => {
-    if (process.env.CI) {
-      test.skip(
-        true,
-        "Phone-format UI path is nondeterministic in CI due browser-restored input state",
-      );
-      return;
-    }
-
     const ok = await openSite(page, TEST_SITE_SLUG);
     if (!ok) {
       test.skip(true, "Public site not seeded in this environment");
@@ -291,8 +308,10 @@ test.describe.serial("Public Sign-In Flow", () => {
     }
     await expect(page.getByLabel(/full name/i)).toBeVisible({ timeout: 5000 });
 
-    await page.getByLabel(/name/i).fill("Test Visitor");
-    await page.getByLabel(/phone/i).fill("123"); // Too short
+    await fillDetailsForm(page, {
+      name: "Test Visitor",
+      phone: "123", // Too short / invalid E.164
+    });
 
     const submitButton = page.getByRole("button", {
       name: /sign in|continue|submit/i,
@@ -300,20 +319,15 @@ test.describe.serial("Public Sign-In Flow", () => {
     await submitButton.click();
 
     // Should show phone validation error message
+    await expect(page.getByText(/invalid phone number/i)).toBeVisible({
+      timeout: 5000,
+    });
     await expect(
-      page.getByText(/invalid phone number|phone number is too short/i),
-    ).toBeVisible();
+      page.getByRole("heading", { level: 2, name: /site induction/i }),
+    ).toHaveCount(0);
   });
 
   test("should complete sign-in flow", async ({ page }) => {
-    if (process.env.CI) {
-      test.skip(
-        true,
-        "Full sign-in UI path is nondeterministic in CI due browser-restored input state",
-      );
-      return;
-    }
-
     const ok = await openSite(page, TEST_SITE_SLUG);
     if (!ok) {
       test.skip(true, "Public site not seeded in this environment");
@@ -324,18 +338,14 @@ test.describe.serial("Public Sign-In Flow", () => {
     // Fill in visitor details
     const nameField = page.getByLabel(/full name/i);
     const phoneField = page.getByLabel(/phone number/i);
-
-    await nameField.fill("E2E Test Visitor");
-    await phoneField.fill(uniqueNzPhone());
+    await fillDetailsForm(page, {
+      name: "E2E Test Visitor",
+      phone: uniqueNzPhone(),
+      email: "e2e@test.com",
+    });
 
     await expect(nameField).toHaveValue("E2E Test Visitor");
     await expect(phoneField).toHaveValue(/^\+64/);
-
-    // Fill email if present
-    const emailField = page.getByLabel(/email/i);
-    if (await emailField.isVisible()) {
-      await emailField.fill("e2e@test.com");
-    }
 
     // Select visitor type if present
     //const visitorType = page.getByLabel(/type|role/i);
@@ -379,14 +389,6 @@ test.describe.serial("Public Sign-In Flow", () => {
   test("should complete induction and show sign-out token", async ({
     page,
   }) => {
-    if (process.env.CI) {
-      test.skip(
-        true,
-        "Full induction completion path remains nondeterministic in CI across browsers",
-      );
-      return;
-    }
-
     const ok = await openSite(page, TEST_SITE_SLUG);
     if (!ok) {
       test.skip(true, "Public site not seeded in this environment");
@@ -398,8 +400,11 @@ test.describe.serial("Public Sign-In Flow", () => {
     const nameField = page.getByLabel(/full name/i);
     const phoneField = page.getByLabel(/phone number/i);
 
-    await nameField.fill("E2E Test Visitor");
-    await phoneField.fill(uniqueNzPhone());
+    await fillDetailsForm(page, {
+      name: "E2E Test Visitor",
+      phone: uniqueNzPhone(),
+      email: "e2e@test.com",
+    });
 
     await expect(nameField).toHaveValue("E2E Test Visitor");
     await expect(phoneField).toHaveValue(/^\+64/);
@@ -522,10 +527,6 @@ test.describe.serial("Public Sign-In Flow", () => {
       // Submit induction - support multiple label variants (some templates use different button text)
       await submitInductionButton.first().click();
     } else if (!reachedValidState) {
-      if (process.env.CI) {
-        test.skip(true, "Post-submit public sign-in state did not stabilize in CI");
-        return;
-      }
       expect(reachedValidState).toBe(true);
     }
 
