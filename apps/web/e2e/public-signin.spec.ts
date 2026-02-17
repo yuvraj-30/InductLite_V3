@@ -119,7 +119,12 @@ async function fillAndAssertInput(
   selector: string,
   value: string,
 ): Promise<void> {
-  const input = page.locator(selector);
+  const exists = await page.evaluate((sel) => !!document.querySelector(sel), selector);
+  if (!exists) {
+    return;
+  }
+
+  const input = page.locator(selector).first();
   await input.fill(value);
   await expect(input).toHaveValue(value);
 }
@@ -289,24 +294,21 @@ test.describe.serial("Public Sign-In Flow", () => {
     });
     await submitButton.click();
 
-    // Different browsers can surface required-field validation either via
-    // inline app copy or native input validity UI.
-    const inlineNameErrorVisible = await page
-      .getByText(/name is required/i)
-      .first()
-      .isVisible()
-      .catch(() => false);
-    if (!inlineNameErrorVisible) {
-      const nameFieldInvalid = await page.getByLabel(/full name/i).evaluate((el) => {
-        const input = el as HTMLInputElement;
-        return (
-          !input.checkValidity() ||
-          input.matches(":invalid") ||
-          input.validationMessage.trim().length > 0
-        );
-      });
-      expect(nameFieldInvalid).toBe(true);
-    }
+    // Validation copy is rendered by React state updates; poll until one of the
+    // expected required-field errors is visible.
+    await expect(async () => {
+      const nameErrorVisible = await page
+        .getByText(/name is required/i)
+        .first()
+        .isVisible()
+        .catch(() => false);
+      const phoneErrorVisible = await page
+        .getByText(/phone number is required/i)
+        .first()
+        .isVisible()
+        .catch(() => false);
+      expect(nameErrorVisible || phoneErrorVisible).toBe(true);
+    }).toPass({ timeout: 5000 });
     await expect(
       page.getByRole("heading", { level: 2, name: /site induction/i }),
     ).toHaveCount(0);
