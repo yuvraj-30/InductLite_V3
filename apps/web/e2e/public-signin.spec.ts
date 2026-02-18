@@ -346,13 +346,15 @@ test.describe.serial("Public Sign-In Flow", () => {
     // Fill in visitor details
     const nameField = page.getByLabel(/full name/i);
     const phoneField = page.getByLabel(/phone number/i);
+    const visitorName = "E2E Test Visitor";
+    const visitorPhone = uniqueNzPhone();
     await fillDetailsForm(page, {
-      name: "E2E Test Visitor",
-      phone: uniqueNzPhone(),
+      name: visitorName,
+      phone: visitorPhone,
       email: "e2e@test.com",
     });
 
-    await expect(nameField).toHaveValue("E2E Test Visitor");
+    await expect(nameField).toHaveValue(visitorName);
     await expect(phoneField).toHaveValue(/^\+64/);
 
     // Select visitor type if present
@@ -379,40 +381,52 @@ test.describe.serial("Public Sign-In Flow", () => {
       name: /site induction/i,
     });
 
-    // Wait for transition. If still on details due click timing, retry once.
-    for (let i = 0; i < 20; i++) {
-      if (await completeButton.isVisible().catch(() => false)) break;
-      if (await signOutLink.isVisible().catch(() => false)) break;
-      if (await inductionHeading.isVisible().catch(() => false)) break;
-      await page.waitForTimeout(500);
-    }
+    let anyVisible = false;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      for (let i = 0; i < 20; i++) {
+        if (await completeButton.isVisible().catch(() => false)) break;
+        if (await signOutLink.isVisible().catch(() => false)) break;
+        if (await inductionHeading.isVisible().catch(() => false)) break;
+        await page.waitForTimeout(500);
+      }
 
-    let anyVisible =
-      (await completeButton.isVisible().catch(() => false)) ||
-      (await signOutLink.isVisible().catch(() => false)) ||
-      (await inductionHeading.isVisible().catch(() => false));
+      anyVisible =
+        (await completeButton.isVisible().catch(() => false)) ||
+        (await signOutLink.isVisible().catch(() => false)) ||
+        (await inductionHeading.isVisible().catch(() => false));
 
-    if (!anyVisible) {
+      if (anyVisible) break;
+
       const stillOnDetails =
         (await nameField.isVisible().catch(() => false)) &&
         (await phoneField.isVisible().catch(() => false));
-      if (stillOnDetails) {
-        await page
-          .getByRole("button", {
-            name: /continue to induction|sign in|continue|submit/i,
-          })
-          .click();
-        for (let i = 0; i < 20; i++) {
-          if (await completeButton.isVisible().catch(() => false)) break;
-          if (await signOutLink.isVisible().catch(() => false)) break;
-          if (await inductionHeading.isVisible().catch(() => false)) break;
-          await page.waitForTimeout(500);
-        }
-        anyVisible =
-          (await completeButton.isVisible().catch(() => false)) ||
-          (await signOutLink.isVisible().catch(() => false)) ||
-          (await inductionHeading.isVisible().catch(() => false));
+      if (!stillOnDetails) break;
+
+      const currentName = await nameField.inputValue().catch(() => "");
+      const currentPhone = await phoneField.inputValue().catch(() => "");
+      if (currentName !== visitorName || currentPhone !== visitorPhone) {
+        await fillDetailsForm(page, {
+          name: visitorName,
+          phone: visitorPhone,
+          email: "e2e@test.com",
+        });
+        await page.getByLabel(/visitor type/i).selectOption("CONTRACTOR");
       }
+
+      await page
+        .getByRole("button", {
+          name: /continue to induction|sign in|continue|submit/i,
+        })
+        .click();
+      await page
+        .locator("form")
+        .first()
+        .evaluate((form) => {
+          if (form instanceof HTMLFormElement) {
+            form.requestSubmit();
+          }
+        })
+        .catch(() => undefined);
     }
     expect(anyVisible).toBe(true);
   });

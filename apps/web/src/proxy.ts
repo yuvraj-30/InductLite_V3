@@ -43,8 +43,12 @@ function safeOriginFromUrl(urlStr: string | undefined): string | null {
   }
 }
 
-function buildEnforcedCsp(opts: { nonce: string; isProd: boolean }): string {
-  const { nonce, isProd } = opts;
+function buildEnforcedCsp(opts: {
+  nonce: string;
+  isProd: boolean;
+  requestProtocol: string;
+}): string {
+  const { nonce, isProd, requestProtocol } = opts;
 
   // Note: Avoid `strict-dynamic` unless you have strong coverage; it can break
   // third-party scripts and some tooling. This policy is deliberately conservative.
@@ -65,7 +69,7 @@ function buildEnforcedCsp(opts: { nonce: string; isProd: boolean }): string {
     `style-src 'self' 'nonce-${nonce}'${isProd ? "" : " 'unsafe-inline'"}`,
   ];
 
-  if (isProd) {
+  if (isProd && requestProtocol === "https:") {
     directives.push("upgrade-insecure-requests");
   }
 
@@ -141,7 +145,11 @@ export function proxy(req: NextRequest) {
   const reportPath = process.env.CSP_REPORT_ENDPOINT || "/api/csp-report";
   const reportEndpointAbs = new URL(reportPath, url.origin).toString();
 
-  const csp = buildEnforcedCsp({ nonce, isProd });
+  const csp = buildEnforcedCsp({
+    nonce,
+    isProd,
+    requestProtocol: url.protocol,
+  });
   const reportOnlyEnabled = process.env.CSP_REPORT_ONLY === "1";
   const cspReportOnly = reportOnlyEnabled
     ? buildReportOnlyCsp({ nonce, isProd, reportEndpointAbs })

@@ -118,6 +118,21 @@ jobs:
           cd apps/web
           export PORT=3000
           export NODE_ENV=test
+          # Next standalone output excludes client static assets/public files by default.
+          # Copy them into the traced standalone tree so browser bundles can load.
+          if [ -f .next/standalone/server.js ]; then
+            mkdir -p .next/standalone/.next
+            rm -rf .next/standalone/.next/static
+            cp -R .next/static .next/standalone/.next/static
+            rm -rf .next/standalone/public
+            cp -R public .next/standalone/public
+          elif [ -f .next/standalone/apps/web/server.js ]; then
+            mkdir -p .next/standalone/apps/web/.next
+            rm -rf .next/standalone/apps/web/.next/static
+            cp -R .next/static .next/standalone/apps/web/.next/static
+            rm -rf .next/standalone/apps/web/public
+            cp -R public .next/standalone/apps/web/public
+          fi
           if [ -f .next/standalone/server.js ]; then
             node .next/standalone/server.js &
           elif [ -f .next/standalone/apps/web/server.js ]; then
