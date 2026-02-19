@@ -26,7 +26,7 @@
 - CRON_ALLOW_GITHUB_ACTIONS=1
 - CRON_ALLOW_PRIVATE_IPS=0
 
-Note: IP allowlist matching is IPv4/CIDR only.
+Note: IP allowlist matching supports IPv4 and IPv6 CIDR entries.
 
 ### Storage (R2/S3)
 

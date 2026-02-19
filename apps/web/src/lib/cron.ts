@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
+import { BlockList, isIP } from "node:net";
 
 const GITHUB_META_URL = "https://api.github.com/meta";
 const GITHUB_ACTIONS_CACHE_TTL_MS = 60 * 60 * 1000;
@@ -19,12 +20,40 @@ function normalizeIp(input: string | null | undefined): string | null {
   if (!input) return null;
   const trimmed = input.trim();
   if (!trimmed) return null;
-  if (trimmed.startsWith("[")) {
-    const end = trimmed.indexOf("]");
-    if (end > 0) return trimmed.slice(1, end);
+
+  const firstValue = trimmed.split(",")[0]?.trim() ?? trimmed;
+  let candidate = firstValue;
+
+  if (candidate.startsWith("for=")) {
+    candidate = candidate.slice(4);
   }
-  const first = trimmed.split(":")[0];
-  return first || null;
+
+  // Remove surrounding quotes in forwarded header values.
+  candidate = candidate.replace(/^"|"$/g, "");
+
+  // IPv6 with brackets, e.g. [2603:1020::1]:443
+  if (candidate.startsWith("[")) {
+    const end = candidate.indexOf("]");
+    if (end > 0) {
+      candidate = candidate.slice(1, end);
+    }
+  }
+
+  // Direct IP value (IPv4 or IPv6).
+  if (isIP(candidate)) {
+    return candidate;
+  }
+
+  // IPv4 with port, e.g. 203.0.113.10:443
+  const lastColon = candidate.lastIndexOf(":");
+  if (lastColon > 0 && candidate.indexOf(":") === lastColon) {
+    const noPort = candidate.slice(0, lastColon);
+    if (isIP(noPort) === 4) {
+      return noPort;
+    }
+  }
+
+  return null;
 }
 
 function ipToInt(ip: string): number | null {
@@ -43,36 +72,56 @@ function ipToInt(ip: string): number | null {
   );
 }
 
-function isIpv4InCidr(ip: string, cidr: string): boolean {
+function isIpInCidr(ip: string, cidr: string): boolean {
   if (!cidr.includes("/")) return ip === cidr;
+
   const [range, bitsRaw] = cidr.split("/");
   const bits = Number(bitsRaw);
   if (!range || Number.isNaN(bits)) return false;
-  const ipInt = ipToInt(ip);
-  const rangeInt = ipToInt(range);
-  if (ipInt === null || rangeInt === null) return false;
-  const mask = bits === 0 ? 0 : (~0 << (32 - bits)) >>> 0;
-  return (ipInt & mask) === (rangeInt & mask);
+
+  const ipVersion = isIP(ip);
+  const rangeVersion = isIP(range);
+  if (!ipVersion || !rangeVersion || ipVersion !== rangeVersion) {
+    return false;
+  }
+
+  const maxBits = ipVersion === 4 ? 32 : 128;
+  if (bits < 0 || bits > maxBits) return false;
+
+  const blockList = new BlockList();
+  blockList.addSubnet(range, bits, ipVersion === 4 ? "ipv4" : "ipv6");
+  return blockList.check(ip, ipVersion === 4 ? "ipv4" : "ipv6");
 }
 
 function isPrivateIpv4(ip: string): boolean {
+  if (isIP(ip) !== 4) return false;
+
   const ipInt = ipToInt(ip);
   if (ipInt === null) return false;
-  const ranges: Array<[string, number]> = [
-    ["10.0.0.0", 8],
-    ["172.16.0.0", 12],
-    ["192.168.0.0", 16],
-  ];
-  return ranges.some(([range, bits]) => isIpv4InCidr(ip, `${range}/${bits}`));
+  return (
+    // 10.0.0.0/8
+    (ipInt & 0xff000000) === 0x0a000000 ||
+    // 172.16.0.0/12
+    (ipInt & 0xfff00000) === 0xac100000 ||
+    // 192.168.0.0/16
+    (ipInt & 0xffff0000) === 0xc0a80000
+  );
 }
 
 function getClientIp(req: Request): string | null {
   const trustProxy = process.env.TRUST_PROXY === "1";
   if (trustProxy) {
     const forwardedFor = req.headers.get("x-forwarded-for");
-    const first = forwardedFor?.split(",")[0];
-    const normalized = normalizeIp(first);
+    const normalized = normalizeIp(forwardedFor);
     if (normalized) return normalized;
+
+    const cfConnectingIp = normalizeIp(req.headers.get("cf-connecting-ip"));
+    if (cfConnectingIp) return cfConnectingIp;
+
+    const proxyIp = normalizeIp(
+      req.headers.get("x-real-ip") ?? req.headers.get("x-client-ip"),
+    );
+    if (proxyIp) return proxyIp;
   }
   return normalizeIp(
     req.headers.get("x-real-ip") ?? req.headers.get("x-client-ip"),
@@ -106,7 +155,7 @@ async function getGithubActionsRanges(): Promise<string[]> {
 
 function isIpAllowed(ip: string, allowlist: string[]): boolean {
   if (allowlist.length === 0) return false;
-  return allowlist.some((entry) => isIpv4InCidr(ip, entry));
+  return allowlist.some((entry) => isIpInCidr(ip, entry));
 }
 
 export async function requireCronSecret(
