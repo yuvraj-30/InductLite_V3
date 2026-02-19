@@ -475,12 +475,30 @@ export function validateEnv(): {
       });
     }
 
+    let hasFormatError = false;
+
     // Check pattern
     if (config.pattern && !config.pattern.test(value)) {
       errors.push({
         name: config.name,
         error: `${config.name} has invalid format`,
       });
+      hasFormatError = true;
+    }
+
+    // URL sanity check for app URL to catch values like "https://"
+    if (config.name === "NEXT_PUBLIC_APP_URL" && !hasFormatError) {
+      try {
+        const parsed = new URL(value);
+        if (!parsed.hostname) {
+          throw new Error("missing hostname");
+        }
+      } catch {
+        errors.push({
+          name: config.name,
+          error: `${config.name} has invalid format`,
+        });
+      }
     }
   }
 

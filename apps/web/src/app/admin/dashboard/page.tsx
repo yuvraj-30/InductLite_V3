@@ -31,6 +31,26 @@ export default async function AdminDashboardPage() {
 
   const context = await requireAuthenticatedContextReadOnly();
   const companyId = context.companyId;
+
+  let metricsLoadFailed = false;
+  const metricsFallback: Awaited<ReturnType<typeof getDashboardMetrics>> = {
+    activeSitesCount: 0,
+    totalSitesCount: 0,
+    currentlyOnSiteCount: 0,
+    signInsToday: 0,
+    signInsSevenDays: 0,
+    documentsExpiringSoon: 0,
+    recentSignIns: [],
+    recentAuditLogs: [],
+  };
+
+  const metrics: Awaited<ReturnType<typeof getDashboardMetrics>> =
+    await getDashboardMetrics(companyId).catch((error) => {
+    metricsLoadFailed = true;
+    console.error("[dashboard] failed to load metrics", error);
+    return metricsFallback;
+    });
+
   const {
     activeSitesCount,
     totalSitesCount,
@@ -40,7 +60,7 @@ export default async function AdminDashboardPage() {
     documentsExpiringSoon,
     recentSignIns,
     recentAuditLogs,
-  } = await getDashboardMetrics(companyId);
+  } = metrics;
 
   return (
     <div className="p-6">
@@ -50,6 +70,12 @@ export default async function AdminDashboardPage() {
           Overview of your sites and contractors
         </p>
       </div>
+
+      {metricsLoadFailed && (
+        <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Dashboard data could not be loaded. Please refresh and try again.
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">

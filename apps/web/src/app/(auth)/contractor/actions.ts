@@ -7,6 +7,8 @@ import { findSiteByPublicSlug, findContractorByEmail } from "@/lib/repository";
 import { createMagicLinkForContractor } from "@/lib/auth/magic-link";
 import { sendEmail } from "@/lib/email/resend";
 import { checkContractorMagicLinkRateLimit } from "@/lib/rate-limit";
+import { headers } from "next/headers";
+import { getPublicBaseUrl } from "@/lib/url/public-url";
 
 const magicLinkSchema = z.object({
   siteSlug: z.string().min(1, "Site link is required"),
@@ -42,11 +44,24 @@ export async function requestContractorMagicLinkAction(
     };
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-  if (!appUrl) {
-    throw new Error("NEXT_PUBLIC_APP_URL is not defined");
+  let baseUrl: string;
+  try {
+    const requestHeaders = await headers();
+    const host =
+      requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
+    const proto = requestHeaders.get("x-forwarded-proto") ?? "https";
+    const requestOrigin = host
+      ? `${proto.split(",")[0]!.trim()}://${host.split(",")[0]!.trim()}`
+      : undefined;
+
+    baseUrl = getPublicBaseUrl(requestOrigin);
+  } catch {
+    return {
+      success: false,
+      message: "Service configuration error. Please contact support.",
+      error: "PROVIDER_ERROR",
+    };
   }
-  const baseUrl = new URL(appUrl).origin;
 
   const requestId = generateRequestId();
   const log = createRequestLogger(requestId);

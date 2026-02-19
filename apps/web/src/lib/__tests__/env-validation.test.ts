@@ -71,6 +71,20 @@ describe("validateEnv", () => {
         true,
       );
     });
+
+    it("should fail if NEXT_PUBLIC_APP_URL is missing a hostname", () => {
+      process.env.DATABASE_URL = "postgresql://test@localhost/test";
+      process.env.SESSION_SECRET =
+        "dev-secret-at-least-32-characters-long-here";
+      process.env.NEXT_PUBLIC_APP_URL = "https://";
+
+      const result = validateEnv();
+
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.name === "NEXT_PUBLIC_APP_URL")).toBe(
+        true,
+      );
+    });
   });
 
   describe("in production mode", () => {

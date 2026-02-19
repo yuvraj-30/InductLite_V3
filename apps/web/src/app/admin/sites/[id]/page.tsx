@@ -18,6 +18,8 @@ import { EditSiteForm } from "./edit-site-form";
 import { RotateLinkButton } from "../site-buttons";
 import { CopyLinkButton } from "./CopyLinkButton";
 import { QRCodeButton } from "./QRCodeButton";
+import { headers } from "next/headers";
+import { getPublicBaseUrl } from "@/lib/url/public-url";
 
 export const metadata = {
   title: "Site Details | InductLite",
@@ -84,13 +86,27 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
     ]);
   const canManageSites = canManage.success;
 
-  // Build the public sign-in URL
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-  if (!appUrl) {
-    throw new Error("NEXT_PUBLIC_APP_URL is not defined");
+  // Build the public sign-in URL (env URL preferred, request-origin fallback).
+  const requestHeaders = await headers();
+  const host =
+    requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
+  const proto = requestHeaders.get("x-forwarded-proto") ?? "https";
+  const requestOrigin = host
+    ? `${proto.split(",")[0]!.trim()}://${host.split(",")[0]!.trim()}`
+    : undefined;
+
+  let publicBaseUrl: string | null = null;
+  try {
+    publicBaseUrl = getPublicBaseUrl(requestOrigin);
+  } catch (error) {
+    console.error("[site-detail] failed to resolve public base URL", error);
   }
-  const publicBaseUrl = new URL(appUrl).origin;
-  const publicUrl = publicLink ? `${publicBaseUrl}/s/${publicLink.slug}` : null;
+
+  const publicUrl = publicLink
+    ? publicBaseUrl
+      ? new URL(`/s/${publicLink.slug}`, publicBaseUrl).toString()
+      : `/s/${publicLink.slug}`
+    : null;
 
   return (
     <div className="p-6">
