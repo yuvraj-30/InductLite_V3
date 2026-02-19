@@ -177,7 +177,7 @@ jobs:
           cd apps/web &&
           npx playwright test e2e
           --project=chromium --project=firefox --project=webkit
-          --workers=1 --reporter=line
+          --workers=1 --reporter=line,html
           --grep-invert "Visual Regression|Kiosk Mode|Accessibility Checks|Admin Export UI & Processing|VRT -"
 
       - name: Detect Linux visual baselines
@@ -208,5 +208,8 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: nightly-playwright-report
-          path: apps/web/playwright-report/
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+          if-no-files-found: ignore
           retention-days: 14
