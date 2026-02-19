@@ -72,13 +72,25 @@ export async function getDashboardMetrics(
         where: { company_id: companyId },
         orderBy: { sign_in_ts: "desc" },
         take: 5,
-        include: { site: { select: { name: true } } },
+        select: {
+          id: true,
+          visitor_name: true,
+          visitor_type: true,
+          sign_in_ts: true,
+          sign_out_ts: true,
+          site: { select: { name: true } },
+        },
       }),
       db.auditLog.findMany({
         where: { company_id: companyId },
         orderBy: { created_at: "desc" },
         take: 5,
-        include: { user: { select: { name: true } } },
+        select: {
+          id: true,
+          action: true,
+          created_at: true,
+          user: { select: { name: true } },
+        },
       }),
     ]);
 

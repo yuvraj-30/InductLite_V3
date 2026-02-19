@@ -9,6 +9,10 @@
   ```bash
   openssl rand -base64 32
   ```
+- [ ] **DATA_ENCRYPTION_KEY**: Cryptographically secure random string (>=32 chars)
+  ```bash
+  openssl rand -base64 32
+  ```
 - [ ] **NEXT_PUBLIC_APP_URL**: Production URL with HTTPS
 - [ ] **STORAGE_MODE**: Set to `s3` (not `local`)
 - [ ] **S3_BUCKET**, **S3_REGION**, **S3_ACCESS_KEY_ID**, **S3_SECRET_ACCESS_KEY**: Configured
@@ -82,9 +86,10 @@ docker compose run --rm migrate
 
 1. Connect repository
 2. Set environment variables in platform dashboard
-3. Set build command: `npm run build`
-4. Set start command: `npm run start`
-5. Configure health check endpoint: `/health`
+3. Run migrations once against production DB: `cd apps/web && npm run db:migrate`
+4. Set build command: `npm run build`
+5. Set start command: `npm run start`
+6. Configure health check endpoint: `/health`
 
 ---
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { validateEnv } from "@/lib/env-validation";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -27,6 +28,11 @@ export async function GET(): Promise<NextResponse<ReadinessStatus>> {
   };
 
   try {
+    const envResult = validateEnv();
+    if (!envResult.valid) {
+      return NextResponse.json(status, { status: 503 });
+    }
+
     // Quick database ping - if this fails, app isn't ready
     // eslint-disable-next-line security-guardrails/no-raw-sql -- Readiness check requires raw SQL for minimal overhead
     await prisma.$queryRaw`SELECT 1`;

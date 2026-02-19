@@ -18,6 +18,7 @@
 - DATABASE_DIRECT_URL (Neon direct endpoint, port 5432, for migrations)
 - SESSION_SECRET
 - SESSION_SECRET_PREVIOUS (optional)
+- DATA_ENCRYPTION_KEY (required in production, minimum 32 characters)
 - NEXT_PUBLIC_APP_URL
 - TRUST_PROXY=1
 - CRON_SECRET
@@ -50,6 +51,8 @@ Note: IP allowlist matching is IPv4/CIDR only.
 - Keep R2 buckets private; use signed URLs only.
 - Single Render service keeps free-tier hours under control.
 - GitHub Actions cron triggers export + maintenance via API routes.
+- Apply schema migrations before first traffic after deploy:
+  - One-off command: `cd apps/web && npm run db:migrate`
 
 ## Keep-Alive + Cron (Free Tier)
 
