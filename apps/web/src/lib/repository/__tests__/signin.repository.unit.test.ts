@@ -3,6 +3,9 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
+    site: {
+      findMany: vi.fn(),
+    },
     signInRecord: {
       findFirst: vi.fn(),
       findMany: vi.fn(),
@@ -52,7 +55,10 @@ function createMockSignIn(overrides: Partial<SignInRecord> = {}): SignInRecord {
 }
 
 describe("SignIn Repository (unit)", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(prisma.site.findMany).mockResolvedValue([]);
+  });
 
   it("findSignInById should include company guard via scopedDb", async () => {
     vi.mocked(prisma.signInRecord.findFirst).mockResolvedValue(
