@@ -36,11 +36,24 @@ async function LiveRegisterContent({
   siteFilter: string | undefined;
 }) {
   const context = await requireAuthenticatedContextReadOnly();
+  let records: SignInRecordWithDetails[] = [];
+  let sites: Site[] = [];
+  let dataLoadFailed = false;
 
-  const [records, sites] = (await Promise.all([
-    listCurrentlyOnSite(context.companyId, siteFilter),
-    findAllSites(context.companyId),
-  ])) as [SignInRecordWithDetails[], Site[]];
+  try {
+    [records, sites] = (await Promise.all([
+      listCurrentlyOnSite(context.companyId, siteFilter),
+      findAllSites(context.companyId),
+    ])) as [SignInRecordWithDetails[], Site[]];
+  } catch (error) {
+    dataLoadFailed = true;
+    console.error("[live-register] failed to load records", error);
+    try {
+      sites = (await findAllSites(context.companyId)) as Site[];
+    } catch (siteError) {
+      console.error("[live-register] failed to load sites", siteError);
+    }
+  }
 
   // Group by site
   const groupedBySite = records.reduce<
@@ -83,6 +96,12 @@ async function LiveRegisterContent({
           <SiteFilterSelect sites={sites} siteFilter={siteFilter} />
         </form>
       </div>
+
+      {dataLoadFailed && (
+        <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Live register data could not be loaded. Please try again.
+        </div>
+      )}
 
       {records.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-8 text-center">
@@ -150,14 +169,8 @@ async function LiveRegisterContent({
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {siteRecords.map((record) => {
-                        const duration = Math.round(
-                          (Date.now() - record.sign_in_ts.getTime()) /
-                            (1000 * 60),
-                        );
-                        const hours = Math.floor(duration / 60);
-                        const minutes = duration % 60;
-                        const durationStr =
-                          hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+                        const duration = 0;
+                        const durationStr = "On site";
 
                         return (
                           <tr key={record.id} className="hover:bg-gray-50">
@@ -178,7 +191,7 @@ async function LiveRegisterContent({
                                     {record.visitor_name}
                                   </div>
                                   <div className="text-sm text-gray-500">
-                                    {record.visitor_phone}
+                                    {record.visitor_phone || "Unavailable"}
                                   </div>
                                 </div>
                               </div>

@@ -36,6 +36,28 @@ import {
 type SignInRecord = Prisma.SignInRecordGetPayload<object>;
 type VisitorType = SignInRecord["visitor_type"];
 
+const SIGN_IN_RECORD_DETAILS_SELECT = {
+  id: true,
+  company_id: true,
+  site_id: true,
+  visitor_name: true,
+  visitor_phone: true,
+  visitor_email: true,
+  employer_name: true,
+  visitor_type: true,
+  sign_in_ts: true,
+  sign_out_ts: true,
+  signed_out_by: true,
+  sign_out_token: true,
+  sign_out_token_exp: true,
+  notes: true,
+  created_at: true,
+} satisfies Prisma.SignInRecordSelect;
+
+type SignInRecordDetailsRow = Prisma.SignInRecordGetPayload<{
+  select: typeof SIGN_IN_RECORD_DETAILS_SELECT;
+}>;
+
 /**
  * Sign-in record with related data
  */
@@ -81,6 +103,35 @@ function decryptSignInRecords<T extends SignInRecordSensitive>(records: T[]): T[
   return records.map((record) => decryptSignInRecord(record));
 }
 
+async function hydrateSiteDetails(
+  companyId: string,
+  records: SignInRecordDetailsRow[],
+): Promise<SignInRecordWithDetails[]> {
+  if (records.length === 0) return [];
+
+  const siteIds = [...new Set(records.map((record) => record.site_id))];
+  const db = scopedDb(companyId);
+  const sites = await db.site.findMany({
+    where: {
+      company_id: companyId,
+      id: { in: siteIds },
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+  const siteNames = new Map(sites.map((site) => [site.id, site.name]));
+
+  return decryptSignInRecords(records).map((record) => ({
+    ...record,
+    site: {
+      id: record.site_id,
+      name: siteNames.get(record.site_id) ?? "Unknown site",
+    },
+  }));
+}
+
 /**
  * Filter options for sign-in history queries
  */
@@ -119,14 +170,12 @@ export async function findSignInById(
     const db = scopedDb(companyId);
     const record = await db.signInRecord.findFirst({
       where: { id: signInId, company_id: companyId },
-      include: {
-        site: {
-          select: { id: true, name: true },
-        },
-      },
+      select: SIGN_IN_RECORD_DETAILS_SELECT,
     });
 
-    return record ? decryptSignInRecord(record) : null;
+    if (!record) return null;
+    const withSite = await hydrateSiteDetails(companyId, [record]);
+    return withSite[0] ?? null;
   } catch (error) {
     handlePrismaError(error, "SignInRecord");
   }
@@ -159,16 +208,12 @@ export async function listCurrentlyOnSite(
 
     const records = await db.signInRecord.findMany({
       where,
-      include: {
-        site: {
-          select: { id: true, name: true },
-        },
-      },
+      select: SIGN_IN_RECORD_DETAILS_SELECT,
       orderBy: { sign_in_ts: "desc" },
       take: safeLimit,
     });
 
-    return decryptSignInRecords(records);
+    return await hydrateSiteDetails(companyId, records);
   } catch (error) {
     handlePrismaError(error, "SignInRecord");
   }
@@ -287,11 +332,7 @@ export async function listSignInHistory(
     const [items, total] = await Promise.all([
       db.signInRecord.findMany({
         where,
-        include: {
-          site: {
-            select: { id: true, name: true },
-          },
-        },
+        select: SIGN_IN_RECORD_DETAILS_SELECT,
         orderBy: { sign_in_ts: "desc" },
         skip,
         take,
@@ -299,8 +340,10 @@ export async function listSignInHistory(
       db.signInRecord.count({ where }),
     ]);
 
+    const hydratedItems = await hydrateSiteDetails(companyId, items);
+
     return paginatedResult(
-      decryptSignInRecords(items),
+      hydratedItems,
       total,
       page,
       pageSize,

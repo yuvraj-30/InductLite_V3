@@ -65,40 +65,73 @@ async function HistoryContent({
   };
 }) {
   const context = await requireAuthenticatedContextReadOnly();
+  let historyResult: Awaited<ReturnType<typeof listSignInHistory>> = {
+    items: [],
+    total: 0,
+    page: filters.page,
+    pageSize: 20,
+    totalPages: 0,
+  };
+  let sites: Site[] = [];
+  let employers: string[] = [];
+  let dataLoadFailed = false;
 
-  // Fetch data in parallel
-  const [historyResult, sites, employers] = (await Promise.all([
-    listSignInHistory(
-      context.companyId,
-      {
-        siteId: filters.siteId,
-        status: filters.status,
-        visitorType: filters.visitorType,
-        employerName: filters.employerName,
-        search: filters.search,
-        dateRange:
-          filters.dateFrom || filters.dateTo
-            ? {
-                from: filters.dateFrom
-                  ? getUtcDayRangeForTimeZone(
-                      filters.dateFrom,
-                      DEFAULT_COMPANY_TIMEZONE,
-                    ).from
-                  : undefined,
-                to: filters.dateTo
-                  ? getUtcDayRangeForTimeZone(
-                      filters.dateTo,
-                      DEFAULT_COMPANY_TIMEZONE,
-                    ).to
-                  : undefined,
-              }
-            : undefined,
-      },
-      { page: filters.page, pageSize: 20 },
-    ),
-    findAllSites(context.companyId),
-    getDistinctEmployers(context.companyId),
-  ])) as [Awaited<ReturnType<typeof listSignInHistory>>, Site[], string[]];
+  const historyRequest = listSignInHistory(
+    context.companyId,
+    {
+      siteId: filters.siteId,
+      status: filters.status,
+      visitorType: filters.visitorType,
+      employerName: filters.employerName,
+      search: filters.search,
+      dateRange:
+        filters.dateFrom || filters.dateTo
+          ? {
+              from: filters.dateFrom
+                ? getUtcDayRangeForTimeZone(
+                    filters.dateFrom,
+                    DEFAULT_COMPANY_TIMEZONE,
+                  ).from
+                : undefined,
+              to: filters.dateTo
+                ? getUtcDayRangeForTimeZone(
+                    filters.dateTo,
+                    DEFAULT_COMPANY_TIMEZONE,
+                  ).to
+                : undefined,
+            }
+          : undefined,
+    },
+    { page: filters.page, pageSize: 20 },
+  );
+
+  try {
+    [historyResult, sites, employers] = (await Promise.all([
+      historyRequest,
+      findAllSites(context.companyId),
+      getDistinctEmployers(context.companyId),
+    ])) as [Awaited<ReturnType<typeof listSignInHistory>>, Site[], string[]];
+  } catch (error) {
+    dataLoadFailed = true;
+    console.error("[history] failed to load records", error);
+    const [sitesResult, employersResult] = await Promise.allSettled([
+      findAllSites(context.companyId),
+      getDistinctEmployers(context.companyId),
+    ]);
+    if (sitesResult.status === "fulfilled") {
+      sites = sitesResult.value as Site[];
+    } else {
+      console.error("[history] failed to load sites", sitesResult.reason);
+    }
+    if (employersResult.status === "fulfilled") {
+      employers = employersResult.value;
+    } else {
+      console.error(
+        "[history] failed to load employer suggestions",
+        employersResult.reason,
+      );
+    }
+  }
 
   return (
     <div className="p-6">
@@ -122,6 +155,12 @@ async function HistoryContent({
         sites={sites.map((s) => ({ id: s.id, name: s.name }))}
         employers={employers}
       />
+
+      {dataLoadFailed && (
+        <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Sign-in history data could not be loaded. Please try again.
+        </div>
+      )}
 
       {/* Results */}
       {historyResult.items.length === 0 ? (
@@ -221,7 +260,7 @@ async function HistoryContent({
                                 {record.visitor_name}
                               </div>
                               <div className="text-xs text-gray-500">
-                                {record.visitor_phone}
+                                {record.visitor_phone || "Unavailable"}
                               </div>
                             </div>
                           </div>
