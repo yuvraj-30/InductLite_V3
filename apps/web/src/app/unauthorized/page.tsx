@@ -5,6 +5,8 @@ import Link from "next/link";
  *
  * Shown when a user tries to access a resource they don't have permission for.
  */
+export const dynamic = "force-dynamic";
+
 export default function UnauthorizedPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">

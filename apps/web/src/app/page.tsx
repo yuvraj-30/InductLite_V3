@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+// Nonce-based CSP requires runtime rendering so Next can attach per-request nonce
+// attributes to inline hydration scripts.
+export const dynamic = "force-dynamic";
+
 export default function HomePage() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4">
