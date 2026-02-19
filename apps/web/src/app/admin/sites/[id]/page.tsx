@@ -72,19 +72,63 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
   }
 
   // Fetch the site
-  const site = await findSiteById(companyId, siteId);
+  let siteLoadFailed = false;
+  let site = await findSiteById(companyId, siteId).catch((error) => {
+    siteLoadFailed = true;
+    console.error("[site-detail] failed to load site", error);
+    return null;
+  });
   if (!site) {
+    if (siteLoadFailed) {
+      return (
+        <div className="p-6">
+          <div className="mb-4">
+            <Link
+              href="/admin/sites"
+              className="text-sm text-gray-500 hover:text-gray-700"
+            >
+              Back to Sites
+            </Link>
+          </div>
+          <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            Site data could not be loaded. Please refresh and try again.
+          </div>
+        </div>
+      );
+    }
     notFound();
   }
 
-  const [publicLink, recentSignIns, currentlyOnSite, canManage] =
-    await Promise.all([
-      findActivePublicLinkForSite(companyId, siteId),
-      listRecentSignInsForSite(companyId, siteId, 10),
-      countCurrentlyOnSite(companyId, siteId),
-      checkPermissionReadOnly("site:manage"),
-    ]);
-  const canManageSites = canManage.success;
+  let dataLoadFailed = false;
+  let publicLink: Awaited<ReturnType<typeof findActivePublicLinkForSite>> =
+    null;
+  let recentSignIns: Awaited<ReturnType<typeof listRecentSignInsForSite>> = [];
+  let currentlyOnSite = 0;
+  let canManageSites = false;
+
+  try {
+    const [loadedPublicLink, loadedRecentSignIns, loadedCurrentlyOnSite, canManage] =
+      await Promise.all([
+        findActivePublicLinkForSite(companyId, siteId),
+        listRecentSignInsForSite(companyId, siteId, 10),
+        countCurrentlyOnSite(companyId, siteId),
+        checkPermissionReadOnly("site:manage"),
+      ]);
+
+    publicLink = loadedPublicLink;
+    recentSignIns = loadedRecentSignIns;
+    currentlyOnSite = loadedCurrentlyOnSite;
+    canManageSites = canManage.success;
+  } catch (error) {
+    dataLoadFailed = true;
+    console.error("[site-detail] failed to load related data", error);
+    const canManage = await checkPermissionReadOnly("site:manage").catch(() => ({
+      success: false,
+      error: "Permission check failed",
+      code: "FORBIDDEN" as const,
+    }));
+    canManageSites = canManage.success;
+  }
 
   // Build the public sign-in URL (env URL preferred, request-origin fallback).
   const requestHeaders = await headers();
@@ -141,6 +185,12 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
           </ol>
         </nav>
       </div>
+
+      {dataLoadFailed && (
+        <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Some site details could not be loaded. Please refresh and try again.
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Content */}

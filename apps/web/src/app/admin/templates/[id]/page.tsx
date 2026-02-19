@@ -37,11 +37,47 @@ export default async function TemplateEditorPage({ params }: Props) {
     );
   }
 
-  const [canManage, template] = await Promise.all([
-    checkPermissionReadOnly("template:manage"),
-    findTemplateWithQuestions(guard.user.companyId, id),
-  ]);
-  const canManageTemplates = canManage.success;
+  let dataLoadFailed = false;
+  let canManageTemplates = false;
+  let template: Awaited<ReturnType<typeof findTemplateWithQuestions>> = null;
+
+  try {
+    const [canManage, loadedTemplate] = await Promise.all([
+      checkPermissionReadOnly("template:manage"),
+      findTemplateWithQuestions(guard.user.companyId, id),
+    ]);
+    canManageTemplates = canManage.success;
+    template = loadedTemplate;
+  } catch (error) {
+    dataLoadFailed = true;
+    console.error("[template-editor] failed to load template", error);
+    const canManage = await checkPermissionReadOnly("template:manage").catch(
+      () => ({
+        success: false,
+        error: "Permission check failed",
+        code: "FORBIDDEN" as const,
+      }),
+    );
+    canManageTemplates = canManage.success;
+  }
+
+  if (dataLoadFailed) {
+    return (
+      <div className="p-6 max-w-4xl mx-auto">
+        <div className="mb-6">
+          <Link
+            href="/admin/templates"
+            className="text-sm text-gray-500 hover:text-gray-700"
+          >
+            Back to Templates
+          </Link>
+        </div>
+        <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          Template data could not be loaded. Please refresh and try again.
+        </div>
+      </div>
+    );
+  }
 
   if (!template) {
     notFound();
