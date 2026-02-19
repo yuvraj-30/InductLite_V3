@@ -5,6 +5,11 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    # minimatch advisories currently fail with security_update_not_possible
+    # because several transitive toolchain dependencies are pinned to 3.x
+    # and no patched 3.x release exists.
+    ignore:
+      - dependency-name: "minimatch"
     groups:
       production-deps:
         dependency-type: "production"
