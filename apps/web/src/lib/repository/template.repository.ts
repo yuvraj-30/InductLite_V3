@@ -167,6 +167,36 @@ type QuestionType =
   | "YES_NO"
   | "ACKNOWLEDGMENT";
 
+const QUICK_START_TEMPLATE_NAME = "Quick Start Site Induction";
+const QUICK_START_TEMPLATE_DESCRIPTION =
+  "Default induction template created automatically to get your first sign-in live.";
+const QUICK_START_QUESTIONS: Array<{
+  question_text: string;
+  question_type: QuestionType;
+  is_required: boolean;
+}> = [
+  {
+    question_text: "I will follow all site instructions from the foreman.",
+    question_type: "ACKNOWLEDGMENT",
+    is_required: true,
+  },
+  {
+    question_text: "I know where the emergency assembly point is.",
+    question_type: "YES_NO",
+    is_required: true,
+  },
+  {
+    question_text: "I am wearing the required PPE for this site.",
+    question_type: "YES_NO",
+    is_required: true,
+  },
+  {
+    question_text: "Any hazards to report before starting work?",
+    question_type: "TEXT",
+    is_required: false,
+  },
+];
+
 /**
  * Filter options for templates
  */
@@ -469,6 +499,111 @@ export async function createTemplate(
       },
     });
     return created as TemplateWithCounts;
+  } catch (error) {
+    handlePrismaError(error, "InductionTemplate");
+  }
+}
+
+/**
+ * Ensure a company has a published default template with at least one question.
+ * Used by first-run onboarding flows to remove hidden "template missing" friction.
+ */
+export async function ensureDefaultPublishedTemplate(
+  companyId: string,
+): Promise<{ templateId: string; created: boolean }> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+    const existing = await db.inductionTemplate.findFirst({
+      where: {
+        company_id: companyId,
+        site_id: null,
+        is_default: true,
+        is_published: true,
+        is_archived: false,
+      },
+      include: {
+        questions: { select: { id: true } },
+      },
+      orderBy: { updated_at: "desc" },
+    });
+
+    if (existing && existing.questions.length > 0) {
+      return { templateId: existing.id, created: false };
+    }
+
+    return await publicDb.$transaction(async (tx) => {
+      const txDb = scopedDb(companyId, tx);
+      let created = false;
+
+      let template = await txDb.inductionTemplate.findFirst({
+        where: {
+          company_id: companyId,
+          site_id: null,
+          is_default: true,
+          is_archived: false,
+        },
+        include: {
+          questions: { select: { id: true } },
+        },
+        orderBy: { updated_at: "desc" },
+      });
+
+      if (!template) {
+        template = await txDb.inductionTemplate.create({
+          data: {
+            company_id: companyId,
+            site_id: null,
+            name: QUICK_START_TEMPLATE_NAME,
+            description: QUICK_START_TEMPLATE_DESCRIPTION,
+            version: 1,
+            is_default: true,
+            is_published: true,
+            is_archived: false,
+            published_at: new Date(),
+          },
+          include: {
+            questions: { select: { id: true } },
+          },
+        });
+        created = true;
+      }
+
+      if (template.questions.length === 0) {
+        await tx.inductionQuestion.createMany({
+          data: QUICK_START_QUESTIONS.map((question, index) => ({
+            template_id: template.id,
+            question_text: question.question_text,
+            question_type: question.question_type,
+            is_required: question.is_required,
+            display_order: index + 1,
+            options: Prisma.JsonNull,
+            correct_answer: Prisma.JsonNull,
+          })),
+        });
+        created = true;
+      }
+
+      if (
+        !template.is_published ||
+        !template.is_default ||
+        template.is_archived
+      ) {
+        await txDb.inductionTemplate.updateMany({
+          where: { id: template.id, company_id: companyId },
+          data: {
+            is_published: true,
+            is_default: true,
+            is_archived: false,
+            published_at: template.published_at ?? new Date(),
+          },
+        });
+        created = true;
+      }
+
+      return { templateId: template.id, created };
+    });
   } catch (error) {
     handlePrismaError(error, "InductionTemplate");
   }

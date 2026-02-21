@@ -18,6 +18,7 @@ interface InductionQuestionsProps {
   answers: Record<string, unknown>;
   onAnswerChange: (questionId: string, answer: unknown) => void;
   fieldErrors: Record<string, string[]>;
+  missingRequiredQuestionIds?: string[];
 }
 
 export function InductionQuestions({
@@ -25,6 +26,7 @@ export function InductionQuestions({
   answers,
   onAnswerChange,
   fieldErrors,
+  missingRequiredQuestionIds = [],
 }: InductionQuestionsProps) {
   return (
     <div className="space-y-6">
@@ -38,7 +40,7 @@ export function InductionQuestions({
       {template.questions.map((question, index) => (
         <div
           key={question.id}
-          className="border-b border-gray-100 pb-4 last:border-0"
+          className={`rounded-lg border p-3 ${missingRequiredQuestionIds.includes(question.id) ? "border-red-300 bg-red-50" : "border-gray-100"}`}
         >
           <label
             htmlFor={`q-${question.id}`}
@@ -60,7 +62,7 @@ export function InductionQuestions({
               value={(answers[question.id] as string) || ""}
               autoComplete="off"
               onChange={(e) => onAnswerChange(question.id, e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
               placeholder="Enter your answer"
               aria-required={question.isRequired}
             />
@@ -72,7 +74,7 @@ export function InductionQuestions({
               {question.options.map((option) => (
                 <label
                   key={option}
-                  className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                  className="flex min-h-[48px] items-center rounded-lg border border-gray-200 p-3 hover:bg-gray-50 cursor-pointer"
                 >
                   <input
                     type="radio"
@@ -80,9 +82,9 @@ export function InductionQuestions({
                     value={option}
                     checked={answers[question.id] === option}
                     onChange={() => onAnswerChange(question.id, option)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                    className="h-5 w-5 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="ml-3 text-gray-700">{option}</span>
+                  <span className="ml-3 text-base text-gray-700">{option}</span>
                 </label>
               ))}
             </div>
@@ -97,7 +99,7 @@ export function InductionQuestions({
                 return (
                   <label
                     key={option}
-                    className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                    className="flex min-h-[48px] items-center rounded-lg border border-gray-200 p-3 hover:bg-gray-50 cursor-pointer"
                   >
                     <input
                       type="checkbox"
@@ -108,9 +110,9 @@ export function InductionQuestions({
                           : [...currentAnswers, option];
                         onAnswerChange(question.id, newAnswers);
                       }}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 rounded"
+                      className="h-5 w-5 rounded text-blue-600 focus:ring-blue-500"
                     />
-                    <span className="ml-3 text-gray-700">{option}</span>
+                    <span className="ml-3 text-base text-gray-700">{option}</span>
                   </label>
                 );
               })}
@@ -120,43 +122,43 @@ export function InductionQuestions({
           {/* YES_NO question */}
           {question.questionType === "YES_NO" && (
             <div className="flex space-x-4">
-              <label className="flex-1 flex items-center justify-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer focus-within:ring-2 focus-within:ring-blue-500">
+              <label className="flex min-h-[48px] flex-1 cursor-pointer items-center justify-center rounded-lg border border-gray-200 p-3 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-blue-500">
                 <input
                   type="radio"
                   name={question.id}
                   value="yes"
                   checked={answers[question.id] === "yes"}
                   onChange={() => onAnswerChange(question.id, "yes")}
-                  className="h-4 w-4 text-green-600 focus:ring-green-500"
+                  className="h-5 w-5 text-green-600 focus:ring-green-500"
                   aria-required={question.isRequired}
                 />
-                <span className="ml-2 font-medium text-green-700">Yes</span>
+                <span className="ml-2 text-base font-medium text-green-700">Yes</span>
               </label>
-              <label className="flex-1 flex items-center justify-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer focus-within:ring-2 focus-within:ring-blue-500">
+              <label className="flex min-h-[48px] flex-1 cursor-pointer items-center justify-center rounded-lg border border-gray-200 p-3 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-blue-500">
                 <input
                   type="radio"
                   name={question.id}
                   value="no"
                   checked={answers[question.id] === "no"}
                   onChange={() => onAnswerChange(question.id, "no")}
-                  className="h-4 w-4 text-red-600 focus:ring-red-500"
+                  className="h-5 w-5 text-red-600 focus:ring-red-500"
                   aria-required={question.isRequired}
                 />
-                <span className="ml-2 font-medium text-red-700">No</span>
+                <span className="ml-2 text-base font-medium text-red-700">No</span>
               </label>
             </div>
           )}
 
           {/* ACKNOWLEDGMENT question */}
           {question.questionType === "ACKNOWLEDGMENT" && (
-            <label className="flex items-start p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+            <label className="flex min-h-[48px] cursor-pointer items-start rounded-lg border border-gray-200 p-3 hover:bg-gray-50">
               <input
                 type="checkbox"
                 checked={answers[question.id] === true}
                 onChange={(e) => onAnswerChange(question.id, e.target.checked)}
                 className="h-5 w-5 mt-0.5 text-blue-600 focus:ring-blue-500 rounded"
               />
-              <span className="ml-3 text-gray-700">
+              <span className="ml-3 text-base text-gray-700">
                 I acknowledge and agree to the above
               </span>
             </label>

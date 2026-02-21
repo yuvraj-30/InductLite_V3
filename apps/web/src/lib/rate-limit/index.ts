@@ -368,30 +368,39 @@ export async function checkLoginRateLimit(
 
   const redis = getRedisClient();
   if (redis) {
-    // Create a stricter limiter for login using memoized client
-    const loginLimiter = new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(5, "15 m"), // 5 attempts per 15 minutes
-      analytics: true,
-      prefix: "inductlite:login-ratelimit",
-    });
+    try {
+      // Create a stricter limiter for login using memoized client
+      const loginLimiter = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(5, "15 m"), // 5 attempts per 15 minutes
+        analytics: true,
+        prefix: "inductlite:login-ratelimit",
+      });
 
-    const result = await loginLimiter.limit(key);
+      const result = await loginLimiter.limit(key);
 
-    if (!result.success) {
+      if (!result.success) {
+        log.warn(
+          { clientKey, email: email.substring(0, 3) + "***" },
+          "Login rate limit exceeded",
+        );
+        recordRateLimitBlocked({ kind: "login", clientKey, meta: { email } });
+      }
+
+      return {
+        success: result.success,
+        limit: result.limit,
+        remaining: result.remaining,
+        reset: result.reset,
+      };
+    } catch (error) {
+      // Do not block authentication if external Redis is unreachable.
+      // Fall back to local in-memory limits for degraded-mode resilience.
       log.warn(
-        { clientKey, email: email.substring(0, 3) + "***" },
-        "Login rate limit exceeded",
+        { error: String(error) },
+        "Redis login rate limiter unavailable, falling back to in-memory",
       );
-      recordRateLimitBlocked({ kind: "login", clientKey, meta: { email } });
     }
-
-    return {
-      success: result.success,
-      limit: result.limit,
-      remaining: result.remaining,
-      reset: result.reset,
-    };
   }
 
   // In-memory fallback

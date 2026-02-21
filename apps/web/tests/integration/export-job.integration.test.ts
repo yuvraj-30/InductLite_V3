@@ -8,6 +8,7 @@ import {
   createTestSite,
   createTestSignInRecord,
   createTestUser,
+  createTestTemplate,
 } from "./setup";
 
 import * as fs from "fs/promises";
@@ -77,5 +78,62 @@ describe("Export Job Runner - end-to-end CSV export", () => {
 
     const data = await fs.readFile(path.resolve(filePath), "utf8");
     expect(data).toMatch(/\+64211234567/);
+  });
+
+  it("processes queued COMPLIANCE_ZIP job and writes zip bundle", async () => {
+    const template = await createTestTemplate(prisma, company.id, site.id);
+    const signIn = await createTestSignInRecord(prisma, company.id, site.id, {
+      visitorPhone: "021 123 4567",
+      visitorName: "Compliance Visitor",
+    });
+
+    await prisma.signInRecord.update({
+      where: { id: signIn.id },
+      data: {
+        hasAcceptedTerms: true,
+        termsAcceptedAt: new Date(),
+      },
+    });
+
+    await prisma.inductionResponse.create({
+      data: {
+        sign_in_record_id: signIn.id,
+        template_id: template.id,
+        template_version: template.version,
+        answers: [{ questionId: "q1", answer: "yes" }],
+        passed: true,
+      },
+    });
+
+    const job = await prisma.exportJob.create({
+      data: {
+        company_id: company.id,
+        export_type: "COMPLIANCE_ZIP",
+        parameters: {},
+        requested_by: user.id,
+      },
+    });
+
+    const res = await runner.processNextExportJob();
+    expect(res).not.toBeNull();
+
+    const updated = await prisma.exportJob.findFirst({
+      where: { id: job.id },
+    });
+    expect(updated).not.toBeNull();
+    expect(updated?.status).toBe("SUCCEEDED");
+    expect(updated?.file_name).toMatch(/\.zip$/);
+
+    const filePath = updated!.file_path as string;
+    const mode = (process.env.STORAGE_MODE || "local").toLowerCase();
+
+    if (mode === "s3") {
+      expect(filePath).toMatch(/^exports\/.+\.zip$/);
+      return;
+    }
+
+    const data = await fs.readFile(path.resolve(filePath));
+    expect(data.subarray(0, 4)).toEqual(Buffer.from([0x50, 0x4b, 0x03, 0x04]));
+    expect(data.toString("utf8")).toContain("summary.pdf");
   });
 });

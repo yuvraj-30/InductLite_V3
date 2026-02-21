@@ -49,6 +49,11 @@ function buildEnforcedCsp(opts: {
   requestProtocol: string;
 }): string {
   const { nonce, isProd, requestProtocol } = opts;
+  // In development, allow inline styles to prevent noisy CSP violations from
+  // hot-reload tooling and browser extensions. Keep nonce-only styles in prod.
+  const styleSrc = isProd
+    ? `style-src 'self' 'nonce-${nonce}'`
+    : "style-src 'self' 'unsafe-inline'";
 
   // Note: Avoid `strict-dynamic` unless you have strong coverage; it can break
   // third-party scripts and some tooling. This policy is deliberately conservative.
@@ -65,8 +70,7 @@ function buildEnforcedCsp(opts: {
     "connect-src 'self' https: wss:",
     // Production: no unsafe-eval. Dev: allow it for tooling.
     `script-src 'self' 'nonce-${nonce}'${isProd ? "" : " 'unsafe-eval'"}`,
-    // Style nonces work best when inline styles are nonce-tagged; keep fallback in dev only.
-    `style-src 'self' 'nonce-${nonce}'${isProd ? "" : " 'unsafe-inline'"}`,
+    styleSrc,
   ];
 
   if (isProd && requestProtocol === "https:") {
@@ -82,6 +86,9 @@ function buildReportOnlyCsp(opts: {
   reportEndpointAbs: string;
 }): string {
   const { nonce, isProd, reportEndpointAbs } = opts;
+  const styleSrc = isProd
+    ? `style-src 'self' 'nonce-${nonce}'`
+    : "style-src 'self' 'unsafe-inline'";
 
   // Strict allowlists by default; tune with env vars.
   const s3Origin = safeOriginFromUrl(process.env.S3_ENDPOINT);
@@ -117,7 +124,7 @@ function buildReportOnlyCsp(opts: {
     `font-src ${fontSrc.length ? fontSrc.join(" ") : "'self' data:"}`,
     `frame-src ${frameSrc.length ? frameSrc.join(" ") : "'self'"}`,
     `script-src 'self' 'nonce-${nonce}'${isProd ? "" : " 'unsafe-eval'"}`,
-    `style-src 'self' 'nonce-${nonce}'${isProd ? "" : " 'unsafe-inline'"}`,
+    styleSrc,
     `report-uri ${reportEndpointAbs}`,
   ];
 

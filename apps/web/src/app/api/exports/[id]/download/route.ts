@@ -6,6 +6,13 @@ import { getSignedDownloadUrl } from "@/lib/storage";
 import { generateRequestId } from "@/lib/auth/csrf";
 import fs from "fs/promises";
 
+function inferContentType(fileName?: string | null): string {
+  const lower = (fileName || "").toLowerCase();
+  if (lower.endsWith(".pdf")) return "application/pdf";
+  if (lower.endsWith(".zip")) return "application/zip";
+  return "text/csv";
+}
+
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -45,9 +52,10 @@ export async function GET(
   const storageMode = (process.env.STORAGE_MODE || "local").toLowerCase();
   if (storageMode === "local") {
     const data = await fs.readFile(job.file_path);
+    const contentType = inferContentType(job.file_name);
     return new NextResponse(data, {
       headers: {
-        "content-type": "text/csv",
+        "content-type": contentType,
         "content-disposition": `attachment; filename="${job.file_name ?? "export.csv"}"`,
       },
     });

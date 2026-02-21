@@ -68,7 +68,13 @@ export default async function AdminLayout({
               <NavLink href="/admin/live-register">Live Register</NavLink>
             </li>
             <li>
+              <NavLink href="/admin/command-mode">Command Mode</NavLink>
+            </li>
+            <li>
               <NavLink href="/admin/history">Sign-In History</NavLink>
+            </li>
+            <li>
+              <NavLink href="/admin/exports">Exports</NavLink>
             </li>
             <li>
               {canManageContractors ? (

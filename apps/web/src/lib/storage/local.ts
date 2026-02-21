@@ -4,12 +4,17 @@ import path from "path";
 export async function writeExportFile(
   companyId: string,
   filename: string,
-  data: string,
+  data: string | Buffer,
+  _contentType: string = "text/csv",
 ): Promise<{ filePath: string; size: number }> {
   const dir = path.join(process.cwd(), ".storage", "exports", companyId);
   await fs.mkdir(dir, { recursive: true });
   const filePath = path.join(dir, filename);
-  await fs.writeFile(filePath, data, "utf8");
+  if (typeof data === "string") {
+    await fs.writeFile(filePath, data, "utf8");
+  } else {
+    await fs.writeFile(filePath, data);
+  }
   const stats = await fs.stat(filePath);
   return { filePath, size: stats.size };
 }

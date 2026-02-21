@@ -20,13 +20,14 @@ function SubmitButton() {
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { createSiteAction, SiteActionResult } from "../actions";
 
 export default function CreateSiteForm() {
   const initialState: SiteActionResult | null = null;
   const router = useRouter();
   const [state, formAction] = useActionState(createSiteAction, initialState);
+  const [showOptionalFields, setShowOptionalFields] = useState(false);
 
   useEffect(() => {
     if (state?.success) {
@@ -79,48 +80,62 @@ export default function CreateSiteForm() {
       </div>
 
       <div>
-        <label
-          htmlFor="address"
-          className="block text-sm font-medium text-gray-700"
+        <button
+          type="button"
+          onClick={() => setShowOptionalFields((prev) => !prev)}
+          className="text-sm font-medium text-blue-600 hover:text-blue-700"
         >
-          Address
-        </label>
-        <input
-          type="text"
-          id="address"
-          name="address"
-          maxLength={200}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-          placeholder="e.g., 123 Main Street, Auckland 1010"
-        />
-        {getFieldError("address") && (
-          <p className="mt-1 text-sm text-red-600">
-            {getFieldError("address")}
-          </p>
-        )}
+          {showOptionalFields ? "Hide optional details" : "Add optional details"}
+        </button>
       </div>
 
-      <div>
-        <label
-          htmlFor="description"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Description
-        </label>
-        <textarea
-          id="description"
-          name="description"
-          rows={3}
-          maxLength={500}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-          placeholder="Optional description of the site or project"
-        />
-        {getFieldError("description") && (
-          <p className="mt-1 text-sm text-red-600">
-            {getFieldError("description")}
-          </p>
-        )}
-      </div>
+      {showOptionalFields && (
+        <>
+          <div>
+            <label
+              htmlFor="address"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Address
+            </label>
+            <input
+              type="text"
+              id="address"
+              name="address"
+              maxLength={200}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              placeholder="e.g., 123 Main Street, Auckland 1010"
+            />
+            {getFieldError("address") && (
+              <p className="mt-1 text-sm text-red-600">
+                {getFieldError("address")}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              rows={3}
+              maxLength={500}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              placeholder="Optional description of the site or project"
+            />
+            {getFieldError("description") && (
+              <p className="mt-1 text-sm text-red-600">
+                {getFieldError("description")}
+              </p>
+            )}
+          </div>
+        </>
+      )}
 
       <div className="flex items-center justify-end space-x-3 pt-4 border-t">
         <button

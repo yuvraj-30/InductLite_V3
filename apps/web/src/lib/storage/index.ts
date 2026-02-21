@@ -13,15 +13,16 @@ export {
 export async function writeExportFile(
   companyId: string,
   filename: string,
-  data: string,
+  data: string | Buffer,
+  contentType: string = "text/csv",
 ) {
   const mode = (process.env.STORAGE_MODE || "local").toLowerCase();
   if (mode === "s3") {
     const mod = await import("./s3");
-    return mod.writeExportFile(companyId, filename, data);
+    return mod.writeExportFile(companyId, filename, data, contentType);
   }
   const mod = await import("./local");
-  return mod.writeExportFile(companyId, filename, data);
+  return mod.writeExportFile(companyId, filename, data, contentType);
 }
 
 export async function deleteObject(filePathOrKey: string) {

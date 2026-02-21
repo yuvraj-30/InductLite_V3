@@ -3,6 +3,7 @@ import { checkPermissionReadOnly } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import { listContractors } from "@/lib/repository";
 import { redirect } from "next/navigation";
+import { ContractorActionButtons } from "./contractor-action-buttons";
 
 export const metadata = {
   title: "Contractors | InductLite",
@@ -84,11 +85,19 @@ export default async function ContractorsPage({
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Contractors</h1>
-        <p className="mt-1 text-gray-600">
-          Manage contractor companies and contacts for your sites.
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Contractors</h1>
+          <p className="mt-1 text-gray-600">
+            Manage contractor companies and contacts for your sites.
+          </p>
+        </div>
+        <Link
+          href="/admin/contractors/new"
+          className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        >
+          Add Contractor
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-6">
@@ -216,6 +225,9 @@ export default async function ContractorsPage({
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                   Added
                 </th>
+                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
@@ -249,6 +261,21 @@ export default async function ContractorsPage({
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500">
                     {contractor.created_at.toLocaleDateString("en-NZ")}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Link
+                        href={`/admin/contractors/${contractor.id}`}
+                        className="inline-flex items-center rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                      >
+                        Edit
+                      </Link>
+                      <ContractorActionButtons
+                        contractorId={contractor.id}
+                        contractorName={contractor.name}
+                        isActive={contractor.is_active}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -686,6 +686,126 @@ test.describe.serial("Public Sign-In Flow", () => {
     // Extra check: ensure token query parameter is present (small additional e2e check)
     expect(href).toMatch(/\btoken=[^&]+/);
   });
+
+  test("should support fast-pass last visit details with signature reuse consent", async ({
+    page,
+  }) => {
+    test.setTimeout(120000);
+
+    const ok = await openSite(page, TEST_SITE_SLUG);
+    if (!ok) {
+      test.skip(true, "Public site not seeded in this environment");
+      return;
+    }
+
+    await page.evaluate((slug) => {
+      const key = `inductlite:last-visit:${slug}`;
+      localStorage.setItem(
+        key,
+        JSON.stringify({
+          details: {
+            visitorName: "Repeat Worker",
+            visitorPhone: "+64211234567",
+            visitorEmail: "repeat.worker@example.test",
+            employerName: "Repeat Ltd",
+            visitorType: "CONTRACTOR",
+            roleOnSite: "Electrician",
+          },
+          signatureData: "data:image/png;base64,ZmFrZQ==",
+          savedAt: new Date().toISOString(),
+        }),
+      );
+    }, TEST_SITE_SLUG);
+
+    await page.reload();
+    await expect(
+      page.getByRole("button", { name: /Use Last Visit Details/i }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: /Use Last Visit Details/i }).click();
+
+    await expect(page.locator("#visitorName")).toHaveValue("Repeat Worker");
+    await expect(page.locator("#visitorPhone")).toHaveValue("+64211234567");
+
+    const employerVisible = await page
+      .locator("#employerName")
+      .isVisible()
+      .catch(() => false);
+    if (employerVisible) {
+      await expect(page.locator("#employerName")).toHaveValue("Repeat Ltd");
+    }
+    const roleVisible = await page
+      .locator("#roleOnSite")
+      .isVisible()
+      .catch(() => false);
+    if (roleVisible) {
+      await expect(page.locator("#roleOnSite")).toHaveValue("Electrician");
+    }
+
+    await page
+      .getByRole("button", { name: /continue to induction/i })
+      .click();
+
+    // Answer induction inputs in a template-agnostic way.
+    const acknowledgments = page.getByRole("checkbox");
+    const ackCount = await acknowledgments.count();
+    for (let i = 0; i < ackCount; i++) {
+      await acknowledgments.nth(i).check().catch(() => null);
+    }
+
+    const radioGroupNames = await page
+      .locator('input[type="radio"][name]')
+      .evaluateAll((nodes) => {
+        const names = nodes
+          .map((node) => node.getAttribute("name"))
+          .filter((name): name is string => !!name);
+        return Array.from(new Set(names));
+      });
+    for (const groupName of radioGroupNames) {
+      await page
+        .locator(`input[type="radio"][name="${groupName}"]`)
+        .first()
+        .check()
+        .catch(() => null);
+    }
+
+    await page
+      .getByRole("button", { name: /continue to sign off/i })
+      .click();
+
+    await expect(
+      page.getByText(/Use my previously saved signature for this visit/i),
+    ).toBeVisible();
+    await page
+      .getByRole("checkbox", {
+        name: /Use my previously saved signature for this visit/i,
+      })
+      .check();
+    await page.locator("#hasAcceptedTerms").check();
+
+    await page.getByRole("button", { name: /Confirm and Sign In/i }).click();
+
+    const signOutAnchor = page.locator('a[href*="/sign-out"]');
+    const successHeading = page.getByRole("heading", {
+      level: 2,
+      name: /signed in successfully/i,
+    });
+
+    await expect
+      .poll(
+        async () => {
+          const hasSignOutLink = await signOutAnchor
+            .first()
+            .isVisible()
+            .catch(() => false);
+          const hasSuccessHeading = await successHeading
+            .isVisible()
+            .catch(() => false);
+          return hasSignOutLink || hasSuccessHeading;
+        },
+        { timeout: 90000, message: "Expected sign-in to complete successfully" },
+      )
+      .toBe(true);
+  });
 });
 
 test.describe.serial("Sign-Out Flow", () => {

@@ -2,6 +2,8 @@ import { test, expect } from "./test-fixtures";
 import { getTestRouteHeaders } from "./utils/test-route-auth";
 
 test.describe("Admin Export UI & Processing", () => {
+  test.describe.configure({ timeout: 120000 });
+
   test.beforeEach(async ({ page, loginAs, workerUser }) => {
     // Use fixture helper to programmatically login the per-worker user
     await loginAs(workerUser.email);
@@ -18,7 +20,7 @@ test.describe("Admin Export UI & Processing", () => {
     await page.goto("/admin/exports");
 
     // Queue a SIGN_IN_CSV
-    await page.getByRole("button", { name: /Queue Export/i }).click();
+    await page.getByRole("button", { name: /Queue Sign-In CSV/i }).click();
 
     // Expect the job appears in the table (queued) and capture its ID
     const queuedRow = page.locator("tr", { hasText: "QUEUED" }).first();
@@ -59,5 +61,20 @@ test.describe("Admin Export UI & Processing", () => {
       `a[href*="/api/exports/${jobId}/download"]`,
     );
     await expect(downloadLink).toHaveCount(1, { timeout: 15000 });
+  });
+
+  test("queues compliance pack zip quick action", async ({ page }) => {
+    await page.goto("/admin/exports");
+
+    await page.getByRole("button", { name: /Compliance Pack ZIP \(24h\)/i }).click();
+
+    await expect(
+      page.getByText(/Export queued\. It will appear in the list below shortly\./i),
+    ).toBeVisible({ timeout: 5000 });
+
+    await page.reload();
+    await expect(page.getByText(/COMPLIANCE_ZIP/i).first()).toBeVisible({
+      timeout: 10000,
+    });
   });
 });

@@ -4,6 +4,7 @@ import { listUsers } from "@/lib/repository";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import type { UserRole } from "@prisma/client";
 import { redirect } from "next/navigation";
+import { UserActionButtons } from "./user-action-buttons";
 
 export const metadata = {
   title: "Users | InductLite",
@@ -106,11 +107,19 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-        <p className="mt-1 text-gray-600">
-          Manage authenticated users and role assignments.
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Users</h1>
+          <p className="mt-1 text-gray-600">
+            Manage authenticated users and role assignments.
+          </p>
+        </div>
+        <Link
+          href="/admin/users/new"
+          className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        >
+          Add User
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-6">
@@ -253,6 +262,9 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                   Created
                 </th>
+                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
@@ -294,6 +306,22 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">
                     {user.created_at.toLocaleDateString("en-NZ")}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex justify-end gap-2">
+                      <Link
+                        href={`/admin/users/${user.id}`}
+                        className="inline-flex items-center rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                      >
+                        Edit
+                      </Link>
+                      <UserActionButtons
+                        userId={user.id}
+                        userName={user.name}
+                        isActive={user.is_active}
+                        isCurrentUser={user.id === context.userId}
+                      />
+                    </div>
                   </td>
                 </tr>
               ))}

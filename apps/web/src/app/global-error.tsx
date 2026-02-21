@@ -23,7 +23,7 @@ export default function RootGlobalError({
   }, [error]);
 
   return (
-    <html lang="en">
+    <html lang="en" data-scroll-behavior="smooth">
       <body className="min-h-screen bg-gray-50 antialiased">
         <div className="flex min-h-screen flex-col items-center justify-center px-4">
           <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">

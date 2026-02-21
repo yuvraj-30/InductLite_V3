@@ -14,6 +14,7 @@ import {
   login as sessionLogin,
   logout as sessionLogout,
   changePassword,
+  hashPassword,
 } from "@/lib/auth";
 import { createRequestLogger, logAuthEvent } from "@/lib/logger";
 import {
@@ -23,6 +24,9 @@ import {
   getUserAgent,
 } from "@/lib/auth/csrf";
 import { checkLoginRateLimit } from "@/lib/rate-limit";
+import { publicDb } from "@/lib/db/public-db";
+import { ensureDefaultPublishedTemplate } from "@/lib/repository";
+import { randomBytes } from "crypto";
 
 /**
  * Login form schema
@@ -39,12 +43,72 @@ const loginSchema = z.object({
     }, z.string().optional()),
 });
 
+const registerSchema = z.object({
+  companyName: z
+    .string()
+    .min(2, "Company name is required")
+    .max(100, "Company name is too long"),
+  name: z.string().min(2, "Your name is required").max(100, "Name is too long"),
+  email: z.string().email("Invalid email address"),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
+  siteName: z
+    .string()
+    .min(2, "First site name is required")
+    .max(100, "Site name is too long"),
+});
+
 /**
  * Action result type
  */
 export type ActionResult =
   | { success: true; message?: string; requiresMfa?: boolean }
   | { success: false; error: string; requiresMfa?: boolean };
+
+export type RegisterActionResult =
+  | { success: true; message?: string }
+  | {
+      success: false;
+      error: string;
+      fieldErrors?: Record<string, string[]>;
+    };
+
+function slugifyCompanyName(companyName: string): string {
+  const base = companyName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 42);
+
+  return base || "company";
+}
+
+async function generateUniqueCompanySlug(companyName: string): Promise<string> {
+  const base = slugifyCompanyName(companyName);
+  let candidate = base;
+  let counter = 2;
+
+  while (true) {
+    const exists = await publicDb.company.findFirst({
+      where: { slug: candidate },
+      select: { id: true },
+    });
+
+    if (!exists) return candidate;
+
+    const suffix = `-${counter}`;
+    candidate = `${base.slice(0, Math.max(1, 48 - suffix.length))}${suffix}`;
+    counter += 1;
+  }
+}
+
+function generateSecurePublicSlug(): string {
+  return randomBytes(16).toString("base64url");
+}
 
 /**
  * Login action
@@ -128,6 +192,159 @@ export async function loginAction(
 
   // Redirect to admin dashboard on success
   redirect("/admin/dashboard");
+}
+
+/**
+ * Self-serve registration action:
+ * - creates company
+ * - creates admin user
+ * - creates first site + public link
+ * - provisions default template
+ * - signs user in
+ */
+export async function registerAction(
+  _prevState: RegisterActionResult | null,
+  formData: FormData,
+): Promise<RegisterActionResult> {
+  const requestId = generateRequestId();
+  const log = createRequestLogger(requestId);
+
+  const rawData = {
+    companyName: formData.get("companyName"),
+    name: formData.get("name"),
+    email: formData.get("email"),
+    password: formData.get("password"),
+    siteName: formData.get("siteName"),
+  };
+
+  const parsed = registerSchema.safeParse(rawData);
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string[]> = {};
+    parsed.error.errors.forEach((err) => {
+      const field = err.path[0]?.toString() || "form";
+      fieldErrors[field] = fieldErrors[field] || [];
+      fieldErrors[field].push(err.message);
+    });
+
+    return {
+      success: false,
+      error: parsed.error.errors[0]?.message || "Invalid input",
+      fieldErrors,
+    };
+  }
+
+  const { companyName, name, email, password, siteName } = parsed.data;
+  const normalizedEmail = email.toLowerCase().trim();
+
+  try {
+    const existingUser = await publicDb.user.findFirst({
+      where: { email: normalizedEmail },
+      select: { id: true },
+    });
+
+    if (existingUser) {
+      return {
+        success: false,
+        error: "An account with this email already exists",
+        fieldErrors: { email: ["An account with this email already exists"] },
+      };
+    }
+
+    const slug = await generateUniqueCompanySlug(companyName);
+    const passwordHash = await hashPassword(password);
+
+    const created = await publicDb.$transaction(async (tx) => {
+      const company = await tx.company.create({
+        data: {
+          name: companyName.trim(),
+          slug,
+          retention_days: 365,
+        },
+      });
+
+      const user = await tx.user.create({
+        data: {
+          company_id: company.id,
+          email: normalizedEmail,
+          password_hash: passwordHash,
+          name: name.trim(),
+          role: "ADMIN",
+          is_active: true,
+        },
+      });
+
+      const site = await tx.site.create({
+        data: {
+          company_id: company.id,
+          name: siteName.trim(),
+          is_active: true,
+        },
+      });
+
+      await tx.sitePublicLink.create({
+        data: {
+          site_id: site.id,
+          slug: generateSecurePublicSlug(),
+          is_active: true,
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          company_id: company.id,
+          user_id: user.id,
+          action: "company.signup",
+          entity_type: "Company",
+          entity_id: company.id,
+          details: {
+            company_name: company.name,
+            first_site_name: site.name,
+          },
+          request_id: requestId,
+        },
+      });
+
+      return { companyId: company.id };
+    });
+
+    try {
+      await ensureDefaultPublishedTemplate(created.companyId);
+    } catch (templateError) {
+      log.warn(
+        { error: String(templateError) },
+        "Could not auto-provision default template during registration",
+      );
+    }
+
+    const [ipAddress, userAgent] = await Promise.all([
+      getClientIp(),
+      getUserAgent(),
+    ]);
+
+    const loginResult = await sessionLogin(
+      normalizedEmail,
+      password,
+      ipAddress,
+      userAgent,
+    );
+
+    if (!loginResult.success) {
+      log.error(
+        { emailPrefix: normalizedEmail.slice(0, 3) + "***" },
+        "Registration succeeded but auto-login failed",
+      );
+      return {
+        success: false,
+        error:
+          "Account created, but sign-in failed. Please sign in from the login page.",
+      };
+    }
+  } catch (error) {
+    log.error({ error: String(error) }, "Registration failed");
+    return { success: false, error: "Failed to create account" };
+  }
+
+  redirect("/admin/dashboard?welcome=1");
 }
 
 /**

@@ -52,7 +52,8 @@ function getS3Client(): S3Client {
 export async function writeExportFile(
   companyId: string,
   filename: string,
-  data: string,
+  data: string | Buffer,
+  contentType: string = "text/csv",
 ): Promise<{ filePath: string; size: number }> {
   const bucket = getStorageBucket();
   if (!bucket) throw new Error("Storage bucket is not configured");
@@ -64,12 +65,14 @@ export async function writeExportFile(
     Bucket: bucket,
     Key: key,
     Body: data,
-    ContentType: "text/csv",
+    ContentType: contentType,
   });
 
   await client.send(cmd);
 
-  return { filePath: key, size: Buffer.byteLength(data) };
+  const size =
+    typeof data === "string" ? Buffer.byteLength(data) : data.byteLength;
+  return { filePath: key, size };
 }
 
 export async function getSignedDownloadUrl(

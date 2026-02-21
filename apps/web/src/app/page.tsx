@@ -19,6 +19,9 @@ export default function HomePage() {
           <Link href="/login" className="btn-primary w-full">
             Admin Login
           </Link>
+          <Link href="/register" className="btn-secondary w-full">
+            Start New Workspace
+          </Link>
 
           <p className="text-sm text-gray-700">
             Scan a site QR code to sign in as a visitor

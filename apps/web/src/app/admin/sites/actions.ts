@@ -13,6 +13,7 @@ import { checkAdmin, checkSitePermission, assertOrigin } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import {
   createSite,
+  ensureDefaultPublishedTemplate,
   updateSite,
   deactivateSite,
   reactivateSite,
@@ -136,6 +137,17 @@ export async function createSiteAction(
       address: parsed.data.address || undefined,
       description: parsed.data.description || undefined,
     });
+
+    // Ensure first-run companies are immediately usable in public sign-in flows.
+    // Do not block site creation if template bootstrap fails transiently.
+    try {
+      await ensureDefaultPublishedTemplate(context.companyId);
+    } catch (templateError) {
+      log.warn(
+        { error: String(templateError) },
+        "Default template bootstrap failed during site creation",
+      );
+    }
 
     // Create the initial public link with secure slug
     await createPublicLinkForSite(

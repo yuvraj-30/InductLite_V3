@@ -2,7 +2,10 @@ import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
 import {
   generateSignInCsvForCompany,
+  generateInductionCsvForCompany,
   generateContractorCsvForCompany,
+  generateSitePackPdfForCompany,
+  generateComplianceZipForCompany,
 } from "./worker";
 import { writeExportFile } from "@/lib/storage";
 import {
@@ -111,8 +114,32 @@ export async function processNextExportJob(): Promise<null | {
 
   try {
     const startTime = Date.now();
-    let content = "";
-    const filename = `${job.id}.csv`;
+    let content: string | Buffer = "";
+    let filename = `${String(job.export_type).toLowerCase()}-${job.id}.csv`;
+    let contentType = "text/csv";
+    const rawParameters =
+      job.parameters && typeof job.parameters === "object"
+        ? (job.parameters as {
+            siteId?: unknown;
+            dateFrom?: unknown;
+            dateTo?: unknown;
+          })
+        : {};
+    const siteId =
+      typeof rawParameters.siteId === "string" ? rawParameters.siteId : undefined;
+    const dateFrom =
+      typeof rawParameters.dateFrom === "string"
+        ? new Date(rawParameters.dateFrom)
+        : undefined;
+    const dateTo =
+      typeof rawParameters.dateTo === "string"
+        ? new Date(rawParameters.dateTo)
+        : undefined;
+    const exportFilters = {
+      siteId,
+      dateFrom: dateFrom && !Number.isNaN(dateFrom.getTime()) ? dateFrom : undefined,
+      dateTo: dateTo && !Number.isNaN(dateTo.getTime()) ? dateTo : undefined,
+    };
 
     // Special-case CONTRACTOR_CSV (P1): handle via runtime check so we can add the ExportType enum in a later migration
     if (String(job.export_type) === "CONTRACTOR_CSV") {
@@ -120,11 +147,26 @@ export async function processNextExportJob(): Promise<null | {
     } else {
       switch (job.export_type) {
         case "SIGN_IN_CSV":
-          content = await generateSignInCsvForCompany(job.company_id);
+          content = await generateSignInCsvForCompany(job.company_id, exportFilters);
           break;
         case "INDUCTION_CSV":
-          // Placeholder for other export types
-          content = "";
+          content = await generateInductionCsvForCompany(
+            job.company_id,
+            exportFilters,
+          );
+          break;
+        case "SITE_PACK_PDF":
+          content = await generateSitePackPdfForCompany(job.company_id, exportFilters);
+          filename = `site-pack-${job.id}.pdf`;
+          contentType = "application/pdf";
+          break;
+        case "COMPLIANCE_ZIP":
+          content = await generateComplianceZipForCompany(
+            job.company_id,
+            exportFilters,
+          );
+          filename = `compliance-pack-${job.id}.zip`;
+          contentType = "application/zip";
           break;
         default:
           throw new Error(`Unsupported export type: ${job.export_type}`);
@@ -135,6 +177,7 @@ export async function processNextExportJob(): Promise<null | {
       job.company_id,
       filename,
       content,
+      contentType,
     );
 
     const elapsedMs = Date.now() - startTime;

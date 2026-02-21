@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import { checkPermissionReadOnly } from "@/lib/auth";
-import { createExportActionFromForm } from "./actions";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
 import { listExportJobs } from "@/lib/repository/export.repository";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import { ExportQueuePanel } from "./ExportQueuePanel";
 
 export const metadata = {
   title: "Exports | InductLite",
@@ -41,31 +41,17 @@ export default async function AdminExportsPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Exports</h1>
         <p className="mt-1 text-gray-600">
-          Queue and download CSV export files for your company.
+          Queue and download CSV, PDF, and compliance-pack ZIP files.
         </p>
       </div>
 
-      <div className="mb-6 rounded-lg border bg-white p-4">
-        {isFeatureEnabled("EXPORTS") ? (
-          <form action={createExportActionFromForm} className="flex flex-wrap gap-2">
-            <select
-              name="exportType"
-              className="block rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-            >
-              <option value="SIGN_IN_CSV">Sign In CSV</option>
-              <option value="INDUCTION_CSV">Induction CSV</option>
-            </select>
-            <button
-              className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-              type="submit"
-            >
-              Queue Export
-            </button>
-          </form>
-        ) : (
-          <div className="text-sm text-gray-500">Exports are disabled</div>
-        )}
-      </div>
+      {isFeatureEnabled("EXPORTS") ? (
+        <ExportQueuePanel />
+      ) : (
+        <div className="mb-6 rounded-lg border bg-white p-4 text-sm text-gray-500">
+          Exports are disabled
+        </div>
+      )}
 
       {jobs.items.length === 0 ? (
         <div className="rounded-lg border bg-white p-8 text-center">

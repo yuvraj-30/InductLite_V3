@@ -25,7 +25,16 @@ export default async function LoginPage() {
       <LoginForm />
 
       {/* Help text */}
-      <div className="mt-6">
+      <div className="mt-6 space-y-2">
+        <p className="text-center text-sm text-gray-600">
+          New to InductLite?{" "}
+          <a
+            href="/register"
+            className="font-medium text-blue-600 hover:text-blue-500"
+          >
+            Create your workspace
+          </a>
+        </p>
         <p className="text-center text-sm text-gray-500">
           Forgot your password?{" "}
           <a
