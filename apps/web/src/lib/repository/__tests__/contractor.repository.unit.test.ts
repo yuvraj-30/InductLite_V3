@@ -28,6 +28,7 @@ import {
   findContractorById,
   createContractor,
   updateContractor,
+  purgeInactiveContractor,
   addContractorDocument,
   deleteContractorDocument,
   countActiveContractors,
@@ -227,5 +228,27 @@ describe("Contractor Repository (unit)", () => {
     );
 
     expect(n).toBe(2);
+  });
+
+  it("purgeInactiveContractor should delete only inactive contractor rows in company scope", async () => {
+    vi.mocked(prisma.contractor.deleteMany).mockResolvedValue({ count: 1 });
+
+    const deleted = await purgeInactiveContractor("company-123", "c1");
+
+    expect(prisma.contractor.deleteMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          AND: expect.arrayContaining([
+            expect.objectContaining({
+              id: "c1",
+              company_id: "company-123",
+              is_active: false,
+            }),
+            expect.objectContaining({ company_id: "company-123" }),
+          ]),
+        }),
+      }),
+    );
+    expect(deleted).toBe(true);
   });
 });

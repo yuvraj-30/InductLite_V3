@@ -83,11 +83,11 @@ export interface CreateContractorInput {
  */
 export interface UpdateContractorInput {
   name?: string;
-  contact_name?: string;
-  contact_email?: string;
-  contact_phone?: string;
-  trade?: string;
-  notes?: string;
+  contact_name?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  trade?: string | null;
+  notes?: string | null;
   is_active?: boolean;
 }
 
@@ -532,6 +532,32 @@ export async function deactivateContractor(
   contractorId: string,
 ): Promise<Contractor> {
   return updateContractor(companyId, contractorId, { is_active: false });
+}
+
+/**
+ * Permanently delete an inactive contractor.
+ * Returns true when a row was deleted, false when no matching inactive contractor exists.
+ */
+export async function purgeInactiveContractor(
+  companyId: string,
+  contractorId: string,
+): Promise<boolean> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+    const result = await db.contractor.deleteMany({
+      where: {
+        id: contractorId,
+        company_id: companyId,
+        is_active: false,
+      },
+    });
+
+    return result.count > 0;
+  } catch (error) {
+    handlePrismaError(error, "Contractor");
+  }
 }
 
 /**

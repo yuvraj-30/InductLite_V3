@@ -13,12 +13,17 @@ import { checkAuthReadOnly } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import { redirect } from "next/navigation";
 import { getDashboardMetrics } from "@/lib/repository/dashboard.repository";
+import { countTemplates } from "@/lib/repository";
 
 export const metadata = {
   title: "Dashboard | InductLite",
 };
 
-export default async function AdminDashboardPage() {
+export default async function AdminDashboardPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ welcome?: string }>;
+}) {
   // Check authentication only. Audit-specific sections remain role-gated below.
   const result = await checkAuthReadOnly();
   if (!result.success) {
@@ -31,6 +36,8 @@ export default async function AdminDashboardPage() {
 
   const context = await requireAuthenticatedContextReadOnly();
   const companyId = context.companyId;
+  const params = await searchParams;
+  const showWelcome = params?.welcome === "1";
 
   let metricsLoadFailed = false;
   const metricsFallback: Awaited<ReturnType<typeof getDashboardMetrics>> = {
@@ -44,12 +51,19 @@ export default async function AdminDashboardPage() {
     recentAuditLogs: [],
   };
 
-  const metrics: Awaited<ReturnType<typeof getDashboardMetrics>> =
-    await getDashboardMetrics(companyId).catch((error) => {
-    metricsLoadFailed = true;
-    console.error("[dashboard] failed to load metrics", error);
-    return metricsFallback;
-    });
+  const [metrics, publishedTemplatesCount] = await Promise.all([
+    getDashboardMetrics(companyId).catch((error) => {
+      metricsLoadFailed = true;
+      console.error("[dashboard] failed to load metrics", error);
+      return metricsFallback;
+    }),
+    countTemplates(companyId, { isPublished: true, isArchived: false }).catch(
+      (error) => {
+        console.error("[dashboard] failed to load template count", error);
+        return 0;
+      },
+    ),
+  ]);
 
   const {
     activeSitesCount,
@@ -61,6 +75,10 @@ export default async function AdminDashboardPage() {
     recentSignIns,
     recentAuditLogs,
   } = metrics;
+  const hasSites = totalSitesCount > 0;
+  const hasPublishedTemplate = publishedTemplatesCount > 0;
+  const hasFirstSignIn = signInsSevenDays > 0 || currentlyOnSiteCount > 0;
+  const onboardingComplete = hasSites && hasPublishedTemplate && hasFirstSignIn;
 
   return (
     <div className="p-6">
@@ -74,6 +92,37 @@ export default async function AdminDashboardPage() {
       {metricsLoadFailed && (
         <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           Dashboard data could not be loaded. Please refresh and try again.
+        </div>
+      )}
+
+      {(showWelcome || !onboardingComplete) && (
+        <div className="mb-8 rounded-lg border border-blue-200 bg-blue-50 p-5">
+          <h2 className="text-lg font-semibold text-blue-900">
+            Get Started Checklist
+          </h2>
+          <p className="mt-1 text-sm text-blue-800">
+            Complete these to get your first successful induction live.
+          </p>
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+            <ChecklistCard
+              done={hasSites}
+              title="Create Site"
+              href="/admin/sites/new"
+              actionLabel="Create Site"
+            />
+            <ChecklistCard
+              done={hasPublishedTemplate}
+              title="Publish Template"
+              href="/admin/templates"
+              actionLabel="Manage Templates"
+            />
+            <ChecklistCard
+              done={hasFirstSignIn}
+              title="Run First Induction"
+              href="/admin/sites"
+              actionLabel="Open Site QR"
+            />
+          </div>
         </div>
       )}
 
@@ -350,9 +399,46 @@ function formatAuditAction(action: string): string {
     "site.reactivate": "Site reactivated",
     "publiclink.create": "QR link rotated",
     "contractor.create": "Contractor registered",
+    "contractor.delete": "Contractor deleted",
     "signin.create": "Contractor signed in",
     "signin.signout": "Contractor signed out",
+    "user.delete": "User deleted",
   };
 
   return actionMap[action] || action.replace(".", " ").replace(/_/g, " ");
+}
+
+function ChecklistCard({
+  done,
+  title,
+  href,
+  actionLabel,
+}: {
+  done: boolean;
+  title: string;
+  href: string;
+  actionLabel: string;
+}) {
+  return (
+    <div className="rounded-md border border-blue-100 bg-white p-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-medium text-gray-900">{title}</p>
+        <span
+          className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+            done ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
+          }`}
+        >
+          {done ? "Done" : "Pending"}
+        </span>
+      </div>
+      {!done && (
+        <Link
+          href={href}
+          className="mt-3 inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800"
+        >
+          {actionLabel} →
+        </Link>
+      )}
+    </div>
+  );
 }

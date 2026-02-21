@@ -36,6 +36,7 @@ export type AuditAction =
   | "user.update"
   | "user.deactivate"
   | "user.reactivate"
+  | "user.delete"
   // Site actions
   | "site.create"
   | "site.update"
@@ -59,6 +60,7 @@ export type AuditAction =
   | "contractor.create"
   | "contractor.update"
   | "contractor.deactivate"
+  | "contractor.delete"
   | "contractor.document_upload"
   | "contractor.document_download"
   | "contractor.document_delete"

@@ -307,6 +307,32 @@ export async function reactivateUser(
 }
 
 /**
+ * Permanently delete an inactive user.
+ * Returns true when a row was deleted, false when no matching inactive user exists.
+ */
+export async function purgeInactiveUser(
+  companyId: string,
+  userId: string,
+): Promise<boolean> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+    const result = await db.user.deleteMany({
+      where: {
+        id: userId,
+        company_id: companyId,
+        is_active: false,
+      },
+    });
+
+    return result.count > 0;
+  } catch (error) {
+    handlePrismaError(error, "User");
+  }
+}
+
+/**
  * Update user's password hash
  */
 export async function updateUserPassword(
