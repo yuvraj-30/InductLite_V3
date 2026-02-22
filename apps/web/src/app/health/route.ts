@@ -45,8 +45,7 @@ export async function GET(): Promise<NextResponse<HealthStatus>> {
   } catch (error) {
     healthStatus.status = "error";
     healthStatus.checks.database.status = "error";
-    healthStatus.checks.database.error =
-      error instanceof Error ? error.message : "Unknown database error";
+    healthStatus.checks.database.error = "Database unavailable";
 
     log.error(
       { error, latency_ms: Date.now() - startTime },

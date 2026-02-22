@@ -20,6 +20,8 @@ import { CopyLinkButton } from "./CopyLinkButton";
 import { QRCodeButton } from "./QRCodeButton";
 import { headers } from "next/headers";
 import { getPublicBaseUrl } from "@/lib/url/public-url";
+import { createRequestLogger } from "@/lib/logger";
+import { generateRequestId } from "@/lib/auth/csrf";
 
 export const metadata = {
   title: "Site Details | InductLite",
@@ -45,6 +47,11 @@ function formatNzDateTime(value: Date | string): string {
 
 export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
   const { id: siteId } = await params;
+  const requestId = generateRequestId();
+  const log = createRequestLogger(requestId, {
+    path: `/admin/sites/${siteId}`,
+    method: "GET",
+  });
 
   // Check authentication (all authenticated users can view sites)
   const guard = await checkAuthReadOnly();
@@ -75,7 +82,7 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
   let siteLoadFailed = false;
   let site = await findSiteById(companyId, siteId).catch((error) => {
     siteLoadFailed = true;
-    console.error("[site-detail] failed to load site", error);
+    log.error({ company_id: companyId, error: String(error) }, "Site detail load failed");
     return null;
   });
   if (!site) {
@@ -121,7 +128,7 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
     canManageSites = canManage.success;
   } catch (error) {
     dataLoadFailed = true;
-    console.error("[site-detail] failed to load related data", error);
+    log.error({ company_id: companyId, error: String(error) }, "Site detail related data load failed");
     const canManage = await checkPermissionReadOnly("site:manage").catch(() => ({
       success: false,
       error: "Permission check failed",
@@ -143,7 +150,7 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
   try {
     publicBaseUrl = getPublicBaseUrl(requestOrigin);
   } catch (error) {
-    console.error("[site-detail] failed to resolve public base URL", error);
+    log.error({ error: String(error) }, "Site detail public base URL resolve failed");
   }
 
   const publicUrl = publicLink
@@ -380,6 +387,23 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
               </div>
             </dl>
           </div>
+
+          {canManageSites && (
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-3">
+                Emergency Setup
+              </h2>
+              <p className="text-sm text-gray-600">
+                Configure emergency contacts and procedures shown during induction.
+              </p>
+              <Link
+                href={`/admin/sites/${siteId}/emergency`}
+                className="mt-4 inline-flex min-h-[44px] items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                Manage Emergency Setup
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

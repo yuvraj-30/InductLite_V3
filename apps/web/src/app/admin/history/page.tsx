@@ -24,6 +24,8 @@ import { getUtcDayRangeForTimeZone } from "@/lib/time/day-range";
 import { HistoryFiltersForm } from "./history-filters";
 import { Pagination } from "./pagination";
 import { SignOutButton } from "../live-register/sign-out-button";
+import { createRequestLogger } from "@/lib/logger";
+import { generateRequestId } from "@/lib/auth/csrf";
 
 export const metadata = {
   title: "Sign-In History | InductLite",
@@ -64,6 +66,11 @@ async function HistoryContent({
     search?: string;
   };
 }) {
+  const requestId = generateRequestId();
+  const log = createRequestLogger(requestId, {
+    path: "/admin/history",
+    method: "GET",
+  });
   const context = await requireAuthenticatedContextReadOnly();
   let historyResult: Awaited<ReturnType<typeof listSignInHistory>> = {
     items: [],
@@ -113,7 +120,10 @@ async function HistoryContent({
     ])) as [Awaited<ReturnType<typeof listSignInHistory>>, Site[], string[]];
   } catch (error) {
     dataLoadFailed = true;
-    console.error("[history] failed to load records", error);
+    log.error(
+      { company_id: context.companyId, error: String(error) },
+      "History records load failed",
+    );
     const [sitesResult, employersResult] = await Promise.allSettled([
       findAllSites(context.companyId),
       getDistinctEmployers(context.companyId),
@@ -121,14 +131,20 @@ async function HistoryContent({
     if (sitesResult.status === "fulfilled") {
       sites = sitesResult.value as Site[];
     } else {
-      console.error("[history] failed to load sites", sitesResult.reason);
+      log.error(
+        { company_id: context.companyId, error: String(sitesResult.reason) },
+        "History sites load failed",
+      );
     }
     if (employersResult.status === "fulfilled") {
       employers = employersResult.value;
     } else {
-      console.error(
-        "[history] failed to load employer suggestions",
-        employersResult.reason,
+      log.error(
+        {
+          company_id: context.companyId,
+          error: String(employersResult.reason),
+        },
+        "History employer suggestions load failed",
       );
     }
   }

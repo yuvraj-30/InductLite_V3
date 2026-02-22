@@ -17,6 +17,14 @@ import {
   signOutWithToken,
   type SignInResult,
 } from "@/lib/repository/public-signin.repository";
+import {
+  listSiteEmergencyContacts,
+  listSiteEmergencyProcedures,
+} from "@/lib/repository/emergency.repository";
+import {
+  buildConsentStatement,
+  getOrCreateActiveLegalVersions,
+} from "@/lib/legal/consent-versioning";
 import { createAuditLog } from "@/lib/repository/audit.repository";
 import {
   checkPublicSlugRateLimit,
@@ -104,6 +112,23 @@ export interface SiteInfo {
   description: string | null;
   companyId: string;
   companyName: string;
+  emergencyContacts?: Array<{
+    id: string;
+    name: string;
+    role: string | null;
+    phone: string;
+    notes: string | null;
+  }>;
+  emergencyProcedures?: Array<{
+    id: string;
+    title: string;
+    instructions: string;
+  }>;
+  legal?: {
+    termsVersion: number;
+    privacyVersion: number;
+    consentStatement: string;
+  };
 }
 
 export interface TemplateInfo {
@@ -165,6 +190,18 @@ export async function getSiteForSignIn(
       );
     }
 
+    const [emergencyContacts, emergencyProcedures, legalVersions] =
+      await Promise.all([
+        listSiteEmergencyContacts(site.company.id, site.id),
+        listSiteEmergencyProcedures(site.company.id, site.id),
+        getOrCreateActiveLegalVersions(site.company.id),
+      ]);
+
+    const consentStatement = buildConsentStatement({
+      siteName: site.name,
+      includeEmergencyReminder: true,
+    });
+
     return successResponse({
       site: {
         id: site.id,
@@ -173,6 +210,23 @@ export async function getSiteForSignIn(
         description: site.description,
         companyId: site.company.id,
         companyName: site.company.name,
+        emergencyContacts: emergencyContacts.map((contact) => ({
+          id: contact.id,
+          name: contact.name,
+          role: contact.role,
+          phone: contact.phone,
+          notes: contact.notes,
+        })),
+        emergencyProcedures: emergencyProcedures.map((procedure) => ({
+          id: procedure.id,
+          title: procedure.title,
+          instructions: procedure.instructions,
+        })),
+        legal: {
+          termsVersion: legalVersions.terms.version,
+          privacyVersion: legalVersions.privacy.version,
+          consentStatement,
+        },
       },
       template: {
         id: template.id,
@@ -254,6 +308,12 @@ export async function submitSignIn(
       return errorResponse("NO_TEMPLATE", "No active induction template");
     }
 
+    const legalVersions = await getOrCreateActiveLegalVersions(site.company.id);
+    const consentStatement = buildConsentStatement({
+      siteName: site.name,
+      includeEmergencyReminder: true,
+    });
+
     // Validate required answers
     const requiredQuestionIds = new Set(
       template.questions.filter((q) => q.is_required).map((q) => q.id),
@@ -312,6 +372,13 @@ export async function submitSignIn(
       );
     }
 
+    if (!parsed.data.signatureData?.trim()) {
+      return validationErrorResponse(
+        { signatureData: ["Signature is required"] },
+        "Please provide your signature before signing in",
+      );
+    }
+
     // Create sign-in record
     const result = await createPublicSignIn({
       companyId: site.company.id,
@@ -327,6 +394,10 @@ export async function submitSignIn(
       templateId: template.id,
       templateVersion: template.version,
       answers: parsed.data.answers,
+      signatureData: parsed.data.signatureData,
+      termsVersionId: legalVersions.terms.id,
+      privacyVersionId: legalVersions.privacy.id,
+      consentStatement,
     });
 
     // Create audit log

@@ -110,9 +110,9 @@ export async function createSiteAction(
 
   // Parse and validate input
   const rawData = {
-    name: formData.get("name"),
-    address: formData.get("address"),
-    description: formData.get("description"),
+    name: formData.get("name")?.toString() ?? "",
+    address: formData.get("address")?.toString() ?? "",
+    description: formData.get("description")?.toString() ?? "",
   };
 
   const parsed = createSiteSchema.safeParse(rawData);
@@ -223,9 +223,9 @@ export async function updateSiteAction(
 
   // Parse and validate input
   const rawData = {
-    name: formData.get("name"),
-    address: formData.get("address"),
-    description: formData.get("description"),
+    name: formData.get("name")?.toString() ?? "",
+    address: formData.get("address")?.toString() ?? "",
+    description: formData.get("description")?.toString() ?? "",
   };
 
   const parsed = updateSiteSchema.safeParse(rawData);

@@ -6,12 +6,8 @@
 
 import { scopedDb } from "@/lib/db/scoped-db";
 import { publicDb } from "@/lib/db/public-db";
-import type {
-  ExportJob,
-  ExportStatus,
-  ExportType,
-  Prisma,
-} from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import type { ExportJob, ExportStatus, ExportType } from "@prisma/client";
 import { nanoid } from "nanoid";
 import { GUARDRAILS } from "@/lib/guardrails";
 import {
@@ -33,6 +29,15 @@ export interface CreateExportJobInput {
 export interface ExportJobFilter {
   status?: ExportStatus | ExportStatus[];
 }
+
+export class ExportLimitReachedError extends Error {
+  constructor() {
+    super("Export limits reached");
+    this.name = "ExportLimitReachedError";
+  }
+}
+
+const MAX_SERIALIZABLE_RETRIES = 3;
 
 export async function countExportJobsSince(
   companyId: string,
@@ -94,6 +99,75 @@ export async function createExportJob(
   } catch (error) {
     handlePrismaError(error, "ExportJob");
   }
+}
+
+/**
+ * Queue an export job while enforcing per-company limits atomically.
+ */
+export async function queueExportJobWithLimits(
+  companyId: string,
+  input: CreateExportJobInput,
+): Promise<ExportJob> {
+  requireCompanyId(companyId);
+
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  for (let attempt = 1; attempt <= MAX_SERIALIZABLE_RETRIES; attempt++) {
+    try {
+      return await publicDb.$transaction(
+        async (tx) => {
+          const db = scopedDb(companyId, tx);
+          const [exportsToday, runningNow] = await Promise.all([
+            db.exportJob.count({
+              where: {
+                company_id: companyId,
+                queued_at: { gte: since },
+              },
+            }),
+            db.exportJob.count({
+              where: {
+                company_id: companyId,
+                status: "RUNNING",
+              },
+            }),
+          ]);
+
+          if (
+            exportsToday >= GUARDRAILS.MAX_EXPORTS_PER_COMPANY_PER_DAY ||
+            runningNow >= GUARDRAILS.MAX_CONCURRENT_EXPORTS_PER_COMPANY
+          ) {
+            throw new ExportLimitReachedError();
+          }
+
+          return db.exportJob.create({
+            data: {
+              export_type: input.export_type,
+              parameters: input.parameters,
+              requested_by: input.requested_by,
+              status: "QUEUED",
+            },
+          });
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+      );
+    } catch (error) {
+      const isSerializationConflict =
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2034";
+
+      if (error instanceof ExportLimitReachedError) {
+        throw error;
+      }
+
+      if (isSerializationConflict && attempt < MAX_SERIALIZABLE_RETRIES) {
+        continue;
+      }
+
+      handlePrismaError(error, "ExportJob");
+    }
+  }
+
+  throw new RepositoryError("Failed to queue export job", "DATABASE_ERROR");
 }
 
 export async function listExportJobs(

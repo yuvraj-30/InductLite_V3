@@ -23,6 +23,12 @@ import { submitSignIn, type SiteInfo, type TemplateInfo } from "../actions";
 import { InductionQuestions } from "./InductionQuestions";
 import { SuccessScreen } from "./SuccessScreen";
 import { isValidPhoneE164, formatToE164 } from "@inductlite/shared";
+import {
+  clearQueuedSignIn,
+  hasQueuedSignIn,
+  saveQueuedSignIn,
+} from "@/lib/offline/signin-queue";
+import { syncQueuedSignIn } from "@/lib/offline/signin-sync";
 
 interface SignInFlowProps {
   slug: string;
@@ -148,6 +154,11 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
     () => `inductlite:last-visit:${slug}`,
     [slug],
   );
+  const emergencyContacts = site.emergencyContacts ?? [];
+  const emergencyProcedures = site.emergencyProcedures ?? [];
+  const legalConsentStatement =
+    site.legal?.consentStatement ??
+    "I acknowledge the site safety terms and privacy notice.";
 
   useEffect(() => {
     if (SignatureCanvasComponent) return;
@@ -187,31 +198,30 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
     if (typeof window === "undefined") return;
 
     const raw = window.localStorage.getItem(draftStorageKey);
-    if (!raw) return;
-
-    try {
-      const parsed = JSON.parse(raw) as DraftState;
-      if (parsed.step) setStep(parsed.step);
-      if (parsed.details) setDetails(parsed.details);
-      if (parsed.answers) setAnswers(parsed.answers);
-      if (typeof parsed.expressMode === "boolean") {
-        setExpressMode(parsed.expressMode);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw) as DraftState;
+        if (parsed.step) setStep(parsed.step);
+        if (parsed.details) setDetails(parsed.details);
+        if (parsed.answers) setAnswers(parsed.answers);
+        if (typeof parsed.expressMode === "boolean") {
+          setExpressMode(parsed.expressMode);
+        }
+        if (typeof parsed.rememberDetails === "boolean") {
+          setRememberDetails(parsed.rememberDetails);
+        }
+        if (typeof parsed.rememberSignature === "boolean") {
+          setRememberSignature(parsed.rememberSignature);
+        }
+        if (typeof parsed.reuseSavedSignature === "boolean") {
+          setReuseSavedSignature(parsed.reuseSavedSignature);
+        }
+      } catch {
+        window.localStorage.removeItem(draftStorageKey);
       }
-      if (typeof parsed.rememberDetails === "boolean") {
-        setRememberDetails(parsed.rememberDetails);
-      }
-      if (typeof parsed.rememberSignature === "boolean") {
-        setRememberSignature(parsed.rememberSignature);
-      }
-      if (typeof parsed.reuseSavedSignature === "boolean") {
-        setReuseSavedSignature(parsed.reuseSavedSignature);
-      }
-    } catch {
-      window.localStorage.removeItem(draftStorageKey);
     }
 
-    const queuedRaw = window.localStorage.getItem(queueStorageKey);
-    if (queuedRaw) {
+    if (hasQueuedSignIn(queueStorageKey)) {
       setPendingQueueMessage(
         "A previous sign-in is queued and ready to sync when online.",
       );
@@ -285,7 +295,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
 
     if (typeof window !== "undefined") {
       window.localStorage.removeItem(draftStorageKey);
-      window.localStorage.removeItem(queueStorageKey);
+      clearQueuedSignIn(queueStorageKey);
     }
   };
 
@@ -336,7 +346,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
     }
   };
 
-  const submitPayload = async (payload: PublicSignInPayload) => {
+  const submitPayload = async (payload: PublicSignInPayload): Promise<boolean> => {
     const result = await submitSignIn(payload);
 
     if (!result.success) {
@@ -347,7 +357,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
         setFieldErrors(result.error.fieldErrors);
       }
       setError(result.error.message || "Failed to sign in");
-      return;
+      return false;
     }
 
     rememberLastVisit(payload);
@@ -359,55 +369,34 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
       siteName: result.data.siteName,
       signInTime: new Date(result.data.signInTime),
     });
+    return true;
   };
 
   const queuePayloadForSync = (payload: PublicSignInPayload) => {
-    if (typeof window === "undefined") return;
-
-    window.localStorage.setItem(queueStorageKey, JSON.stringify(payload));
+    saveQueuedSignIn(queueStorageKey, payload);
     setPendingQueueMessage(
       "No internet connection. Sign-in saved and ready to sync when you are online.",
     );
   };
 
   const syncQueuedSubmission = () => {
-    if (typeof window === "undefined") return;
-
-    const queuedRaw = window.localStorage.getItem(queueStorageKey);
-    if (!queuedRaw) return;
-
-    let queuedPayload: PublicSignInPayload | null = null;
-    try {
-      queuedPayload = JSON.parse(queuedRaw) as PublicSignInPayload;
-    } catch {
-      window.localStorage.removeItem(queueStorageKey);
-      return;
-    }
-
     startTransition(async () => {
-      await submitPayload(queuedPayload!);
+      const status = await syncQueuedSignIn<PublicSignInPayload>({
+        storageKey: queueStorageKey,
+        submit: submitPayload,
+      });
+
+      if (status === "synced" || status === "missing" || status === "invalid") {
+        setPendingQueueMessage(null);
+      }
     });
   };
 
   useEffect(() => {
     if (!isOnline || step === "success") return;
-    if (typeof window === "undefined") return;
-
-    const queuedRaw = window.localStorage.getItem(queueStorageKey);
-    if (!queuedRaw) return;
-
-    let queuedPayload: PublicSignInPayload | null = null;
-    try {
-      queuedPayload = JSON.parse(queuedRaw) as PublicSignInPayload;
-    } catch {
-      window.localStorage.removeItem(queueStorageKey);
-      return;
-    }
-
-    startTransition(async () => {
-      await submitPayload(queuedPayload!);
-    });
-  }, [isOnline, queueStorageKey, startTransition, step]);
+    if (!hasQueuedSignIn(queueStorageKey)) return;
+    syncQueuedSubmission();
+  }, [isOnline, queueStorageKey, step]);
 
   const handleDetailsSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -799,6 +788,40 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
             </button>
           </div>
 
+          {(emergencyContacts.length > 0 || emergencyProcedures.length > 0) && (
+            <section className="mb-5 rounded-lg border border-red-200 bg-red-50 p-4">
+              <h3 className="text-base font-semibold text-red-900">
+                Emergency Information
+              </h3>
+              {emergencyContacts.length > 0 && (
+                <div className="mt-2">
+                  <p className="text-sm font-medium text-red-900">Emergency Contacts</p>
+                  <ul className="mt-1 space-y-1 text-sm text-red-800">
+                    {emergencyContacts.map((contact) => (
+                      <li key={contact.id} className="rounded bg-white/70 px-2 py-1">
+                        <span className="font-medium">{contact.name}</span>
+                        {contact.role ? ` (${contact.role})` : ""}: {contact.phone}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {emergencyProcedures.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-sm font-medium text-red-900">Emergency Procedures</p>
+                  <ol className="mt-1 list-decimal space-y-1 pl-5 text-sm text-red-800">
+                    {emergencyProcedures.map((procedure) => (
+                      <li key={procedure.id}>
+                        <span className="font-medium">{procedure.title}:</span>{" "}
+                        {procedure.instructions}
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+            </section>
+          )}
+
           <InductionQuestions
             template={template}
             answers={answers}
@@ -824,6 +847,12 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
             <p className="text-sm text-gray-600">
               Please sign below to confirm your induction completion.
             </p>
+            {site.legal && (
+              <p className="mt-1 text-xs text-gray-600">
+                Consent record: Terms v{site.legal.termsVersion}, Privacy v
+                {site.legal.privacyVersion}
+              </p>
+            )}
           </div>
 
           {lastVisitSnapshot?.signatureData && (
@@ -883,7 +912,25 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
                 className="mt-0.5 h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
               />
               <span>
-                I acknowledge the site safety terms and conditions.
+                {legalConsentStatement}{" "}
+                <a
+                  href="/terms"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium text-blue-700 hover:underline"
+                >
+                  Terms
+                </a>{" "}
+                and{" "}
+                <a
+                  href="/privacy"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-medium text-blue-700 hover:underline"
+                >
+                  Privacy
+                </a>
+                .
                 <span className="text-red-500"> *</span>
               </span>
             </label>

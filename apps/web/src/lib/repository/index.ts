@@ -115,6 +115,33 @@ export {
   consumeMagicLinkToken,
 } from "./magic-link.repository";
 
+// Export repository
+export {
+  countExportJobsSince,
+  countRunningExportJobs,
+  countRunningExportJobsGlobal,
+  createExportJob,
+  queueExportJobWithLimits,
+  listExportJobs,
+  findNextQueuedExportJob,
+  claimNextQueuedExportJob,
+  requeueStaleExportJobs,
+  listExpiredExportJobs,
+  deleteExportJob,
+  markExportJobRunning,
+  markExportJobSucceeded,
+  markExportJobFailed,
+  requeueExportJob,
+  findExportJobById,
+  ExportLimitReachedError,
+} from "./export.repository";
+
+export type { CreateExportJobInput, ExportJobFilter } from "./export.repository";
+
+// Sitemap repository
+export { listActiveSitemapPublicLinks } from "./sitemap.repository";
+export type { SitemapPublicLink } from "./sitemap.repository";
+
 // Audit repository
 export {
   createAuditLog,
@@ -195,6 +222,50 @@ export type {
   UpdateQuestionInput,
   ReorderQuestionsInput,
 } from "./question.repository";
+
+// Hazard repository
+export {
+  findHazardById,
+  listHazards,
+  createHazard,
+  updateHazard,
+  closeHazard,
+} from "./hazard.repository";
+
+export type {
+  HazardFilter,
+  CreateHazardInput,
+  UpdateHazardInput,
+} from "./hazard.repository";
+
+// Emergency repository
+export {
+  listSiteEmergencyContacts,
+  createSiteEmergencyContact,
+  updateSiteEmergencyContact,
+  deactivateSiteEmergencyContact,
+  listSiteEmergencyProcedures,
+  createSiteEmergencyProcedure,
+  updateSiteEmergencyProcedure,
+  deactivateSiteEmergencyProcedure,
+} from "./emergency.repository";
+
+export type {
+  CreateEmergencyContactInput,
+  UpdateEmergencyContactInput,
+  CreateEmergencyProcedureInput,
+  UpdateEmergencyProcedureInput,
+} from "./emergency.repository";
+
+// Incident repository
+export {
+  findIncidentReportById,
+  listIncidentReports,
+  createIncidentReport,
+  resolveIncidentReport,
+} from "./incident.repository";
+
+export type { IncidentFilter, CreateIncidentInput } from "./incident.repository";
 
 // Public sign-in repository (unauthenticated)
 export {

@@ -23,6 +23,21 @@ vi.mock("@/lib/repository/public-signin.repository", () => ({
   signOutWithToken: vi.fn(),
 }));
 
+vi.mock("@/lib/repository/emergency.repository", () => ({
+  listSiteEmergencyContacts: vi.fn().mockResolvedValue([]),
+  listSiteEmergencyProcedures: vi.fn().mockResolvedValue([]),
+}));
+
+vi.mock("@/lib/legal/consent-versioning", () => ({
+  getOrCreateActiveLegalVersions: vi.fn().mockResolvedValue({
+    terms: { id: "terms-v1", version: 1 },
+    privacy: { id: "privacy-v1", version: 1 },
+  }),
+  buildConsentStatement: vi
+    .fn()
+    .mockReturnValue("I acknowledge the site safety terms and privacy notice."),
+}));
+
 vi.mock("@/lib/repository/audit.repository", () => ({
   createAuditLog: vi.fn(),
 }));
@@ -76,6 +91,8 @@ describe("Public Actions Error Handling", () => {
       visitorType: "CONTRACTOR" as const,
       hasAcceptedTerms: true,
       answers: [],
+      signatureData:
+        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAgMBgJ0nYwAAAABJRU5ErkJggg==",
     };
 
     const mockSite = {

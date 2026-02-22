@@ -1,20 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db/prisma";
+import { listActiveSitemapPublicLinks } from "@/lib/repository/sitemap.repository";
+import { createRequestLogger } from "@/lib/logger";
+import { generateRequestId } from "@/lib/auth/csrf";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(_req: NextRequest) {
+  const requestId = generateRequestId();
+  const log = createRequestLogger(requestId, {
+    path: "/sitemap.xml",
+    method: "GET",
+  });
   const baseUrl = (
     process.env.NEXT_PUBLIC_APP_URL || "https://inductlite.com"
   ).replace(/\/$/, "");
 
   try {
-    const siteLinks = await prisma.sitePublicLink.findMany({
-      where: { is_active: true },
-      select: { slug: true, created_at: true },
-      take: 5000,
-    });
+    const siteLinks = await listActiveSitemapPublicLinks(5000);
 
     const siteUrls = siteLinks
       .map(
@@ -45,7 +48,7 @@ export async function GET(_req: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Sitemap generation error:", error);
+    log.error({ error: String(error) }, "Sitemap generation failed");
     return new NextResponse(
       `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

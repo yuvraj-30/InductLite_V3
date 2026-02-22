@@ -14,6 +14,8 @@ import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import { redirect } from "next/navigation";
 import { getDashboardMetrics } from "@/lib/repository/dashboard.repository";
 import { countTemplates } from "@/lib/repository";
+import { createRequestLogger } from "@/lib/logger";
+import { generateRequestId } from "@/lib/auth/csrf";
 
 export const metadata = {
   title: "Dashboard | InductLite",
@@ -24,6 +26,12 @@ export default async function AdminDashboardPage({
 }: {
   searchParams?: Promise<{ welcome?: string }>;
 }) {
+  const requestId = generateRequestId();
+  const log = createRequestLogger(requestId, {
+    path: "/admin/dashboard",
+    method: "GET",
+  });
+
   // Check authentication only. Audit-specific sections remain role-gated below.
   const result = await checkAuthReadOnly();
   if (!result.success) {
@@ -54,12 +62,18 @@ export default async function AdminDashboardPage({
   const [metrics, publishedTemplatesCount] = await Promise.all([
     getDashboardMetrics(companyId).catch((error) => {
       metricsLoadFailed = true;
-      console.error("[dashboard] failed to load metrics", error);
+      log.error(
+        { company_id: companyId, error: String(error) },
+        "Dashboard metrics load failed",
+      );
       return metricsFallback;
     }),
     countTemplates(companyId, { isPublished: true, isArchived: false }).catch(
       (error) => {
-        console.error("[dashboard] failed to load template count", error);
+        log.error(
+          { company_id: companyId, error: String(error) },
+          "Dashboard template count load failed",
+        );
         return 0;
       },
     ),
@@ -436,9 +450,10 @@ function ChecklistCard({
           href={href}
           className="mt-3 inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800"
         >
-          {actionLabel} →
+          {actionLabel} -&gt;
         </Link>
       )}
     </div>
   );
 }
+

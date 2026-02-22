@@ -4,6 +4,8 @@
  * - For tests we expose a simple in-memory counter and reset function.
  */
 
+import { logger } from "@/lib/logger";
+
 type BlockedEvent = {
   kind: string; // e.g., 'login' | 'signin' | 'public-slug' | 'signout'
   clientKey?: string;
@@ -18,9 +20,11 @@ export function recordRateLimitBlocked(event: BlockedEvent) {
 
   // Lightweight console logging for local debugging. Replace with analytics call in prod.
   if (process.env.NODE_ENV !== "test") {
-    console.warn("[rate-limit] blocked:", {
+    logger.warn({
+      action: "rate_limit.blocked",
       kind: event.kind,
       clientKey: event.clientKey,
+      meta: event.meta ?? {},
     });
   }
 

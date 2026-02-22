@@ -30,11 +30,23 @@ export default function HomePage() {
 
         <div className="mt-8 border-t pt-4">
           <p className="text-xs text-gray-600">
-            © {new Date().getFullYear()} InductLite. All rights reserved.
+            Copyright {new Date().getFullYear()} InductLite. All rights reserved.
+          </p>
+          <p className="mt-2 text-xs text-gray-600">
+            <Link href="/terms" className="text-blue-700 hover:underline">
+              Terms
+            </Link>{" "}
+            |{" "}
+            <Link href="/privacy" className="text-blue-700 hover:underline">
+              Privacy
+            </Link>{" "}
+            |{" "}
+            <a href="mailto:support@inductlite.nz" className="text-blue-700 hover:underline">
+              Support
+            </a>
           </p>
         </div>
       </div>
     </main>
   );
 }
-

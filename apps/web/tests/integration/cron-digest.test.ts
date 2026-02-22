@@ -8,9 +8,8 @@ import {
   beforeAll,
   afterAll,
 } from "vitest";
-import { publicDb } from "@/lib/db/public-db";
-import { processWeeklyDigest } from "../../src/lib/email/worker";
 import { sendEmail } from "../../src/lib/email/resend";
+import { PrismaClient } from "@prisma/client";
 import {
   setupTestDatabase,
   teardownTestDatabase,
@@ -23,9 +22,14 @@ vi.mock("@/lib/email/resend", () => ({
 
 describe("Weekly Digest Integration (Cron)", () => {
   const companyId = "test-company-digest";
+  let prisma: PrismaClient;
+  let processWeeklyDigest: typeof import("../../src/lib/email/worker")["processWeeklyDigest"];
+  const globalAny = globalThis as unknown as { prisma: PrismaClient };
 
   beforeAll(async () => {
     await setupTestDatabase();
+    prisma = globalAny.prisma;
+    ({ processWeeklyDigest } = await import("../../src/lib/email/worker"));
   }, 120000);
 
   afterAll(async () => {
@@ -34,27 +38,27 @@ describe("Weekly Digest Integration (Cron)", () => {
 
   beforeEach(async () => {
     // Clean the database before each test
-    await cleanDatabase(publicDb);
+    await cleanDatabase(prisma);
     vi.useFakeTimers();
     // Monday 2026-02-09 08:00:00
     const mockDate = new Date("2026-02-09T08:00:00Z");
     vi.setSystemTime(mockDate);
 
     // Setup Test Data
-    await publicDb.company.upsert({
+    await prisma.company.upsert({
       where: { id: companyId },
       create: { id: companyId, name: "Digest Co", slug: "digest-co" },
       update: {},
     });
 
     // Ensure a site exists for sign-in records (foreign key constraint)
-    await publicDb.site.upsert({
+    await prisma.site.upsert({
       where: { id: "site-1" },
       create: { id: "site-1", company_id: companyId, name: "Test Site" },
       update: {},
     });
 
-    await publicDb.user.create({
+    await prisma.user.create({
       data: {
         company_id: companyId,
         email: "admin@digest.com",
@@ -72,7 +76,7 @@ describe("Weekly Digest Integration (Cron)", () => {
 
   it("should trigger weekly digest and verify email queue for admins", async () => {
     // 1. Create some data for the last week
-    await publicDb.signInRecord.create({
+    await prisma.signInRecord.create({
       data: {
         company_id: companyId,
         site_id: "site-1", // Doesn't need to exist if we don't include it
@@ -96,7 +100,7 @@ describe("Weekly Digest Integration (Cron)", () => {
     );
 
     // 4. Verify Audit Log
-    const audit = await publicDb.auditLog.findFirst({
+    const audit = await prisma.auditLog.findFirst({
       where: { company_id: companyId, action: "email.weekly_digest" },
     });
     expect(audit).toBeDefined();

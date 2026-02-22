@@ -16,6 +16,8 @@ import {
 import { SignOutButton } from "./sign-out-button";
 import { SiteFilterSelect } from "./SiteFilterSelect";
 import { LiveRegisterAutoRefresh } from "./auto-refresh";
+import { createRequestLogger } from "@/lib/logger";
+import { generateRequestId } from "@/lib/auth/csrf";
 
 export const metadata = {
   title: "Live Register | InductLite",
@@ -43,6 +45,11 @@ async function LiveRegisterContent({
 }: {
   siteFilter: string | undefined;
 }) {
+  const requestId = generateRequestId();
+  const log = createRequestLogger(requestId, {
+    path: "/admin/live-register",
+    method: "GET",
+  });
   const context = await requireAuthenticatedContextReadOnly();
   let records: SignInRecordWithDetails[] = [];
   let sites: Site[] = [];
@@ -55,11 +62,17 @@ async function LiveRegisterContent({
     ])) as [SignInRecordWithDetails[], Site[]];
   } catch (error) {
     dataLoadFailed = true;
-    console.error("[live-register] failed to load records", error);
+    log.error(
+      { company_id: context.companyId, error: String(error) },
+      "Live register records load failed",
+    );
     try {
       sites = (await findAllSites(context.companyId)) as Site[];
     } catch (siteError) {
-      console.error("[live-register] failed to load sites", siteError);
+      log.error(
+        { company_id: context.companyId, error: String(siteError) },
+        "Live register sites load failed",
+      );
     }
   }
 
@@ -245,10 +258,18 @@ async function LiveRegisterContent({
                               </div>
                             </td>
                             <td className="whitespace-nowrap px-6 py-4 text-right">
-                              <SignOutButton
-                                signInId={record.id}
-                                visitorName={record.visitor_name}
-                              />
+                              <div className="flex flex-col items-end gap-2">
+                                <SignOutButton
+                                  signInId={record.id}
+                                  visitorName={record.visitor_name}
+                                />
+                                <Link
+                                  href={`/admin/incidents?site=${record.site_id}&signInId=${record.id}`}
+                                  className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                                >
+                                  Report Incident
+                                </Link>
+                              </div>
                             </td>
                           </tr>
                         );

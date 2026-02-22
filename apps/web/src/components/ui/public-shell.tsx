@@ -28,16 +28,31 @@ export function PublicShell({
       <main className="mx-auto max-w-lg px-4 py-6">{children}</main>
 
       <footer className="py-4 text-center text-sm text-gray-600">
-        <p>
-          {footerText || (
-            <>
-              Powered by{" "}
-              <Link href="/" className="font-medium text-blue-700 hover:underline">
-                InductLite
-              </Link>
-            </>
-          )}
-        </p>
+        {footerText ? (
+          <p>{footerText}</p>
+        ) : (
+          <p className="flex flex-wrap items-center justify-center gap-2">
+            <span>Powered by</span>
+            <Link href="/" className="font-medium text-blue-700 hover:underline">
+              InductLite
+            </Link>
+            <span aria-hidden="true">|</span>
+            <Link href="/terms" className="text-blue-700 hover:underline">
+              Terms
+            </Link>
+            <span aria-hidden="true">|</span>
+            <Link href="/privacy" className="text-blue-700 hover:underline">
+              Privacy
+            </Link>
+            <span aria-hidden="true">|</span>
+            <a
+              href="mailto:support@inductlite.nz"
+              className="text-blue-700 hover:underline"
+            >
+              Support
+            </a>
+          </p>
+        )}
       </footer>
     </div>
   );

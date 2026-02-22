@@ -15,6 +15,7 @@ export const MAX_PAGE_SIZE = 100;
 export const MAX_STRING_LENGTH = 200;
 export const MAX_SIGNIN_ANSWERS = 50;
 export const MAX_SIGNIN_ANSWER_STRING_LENGTH = 5000;
+export const MAX_SIGNATURE_DATA_LENGTH = 2_000_000;
 
 const answerValueSchema = z.union([
   z.string().max(MAX_SIGNIN_ANSWER_STRING_LENGTH, "Answer is too long"),
@@ -101,7 +102,13 @@ export const signInSchema = z.object({
       }),
     )
     .max(MAX_SIGNIN_ANSWERS, `Too many answers (max ${MAX_SIGNIN_ANSWERS})`),
-  signatureData: z.string().optional(),
+  signatureData: z
+    .string()
+    .max(
+      MAX_SIGNATURE_DATA_LENGTH,
+      `Signature payload exceeds ${MAX_SIGNATURE_DATA_LENGTH} characters`,
+    )
+    .optional(),
   idempotencyKey: z
     .string()
     .min(16, "Invalid idempotency key")

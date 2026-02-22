@@ -65,6 +65,12 @@ export default async function AdminLayout({
               <NavLink href="/admin/sites">Sites</NavLink>
             </li>
             <li>
+              <NavLink href="/admin/hazards">Hazard Register</NavLink>
+            </li>
+            <li>
+              <NavLink href="/admin/incidents">Incidents</NavLink>
+            </li>
+            <li>
               <NavLink href="/admin/live-register">Live Register</NavLink>
             </li>
             <li>

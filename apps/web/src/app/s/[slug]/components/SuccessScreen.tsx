@@ -1,14 +1,5 @@
 "use client";
 
-/**
- * Success Screen Component
- *
- * Displays after successful sign-in with:
- * - Confirmation message
- * - Sign-out link for later use
- * - QR code option for sign-out link
- */
-
 interface SignInResult {
   signInRecordId: string;
   signOutToken: string;
@@ -41,33 +32,30 @@ export function SuccessScreen({ result }: SuccessScreenProps) {
   const copySignOutLink = async () => {
     try {
       await navigator.clipboard.writeText(signOutUrl);
-      alert("Sign-out link copied to clipboard!");
+      alert("Sign-out link copied to clipboard.");
     } catch {
-      // Fallback for older browsers
       const textArea = document.createElement("textarea");
       textArea.value = signOutUrl;
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand("copy");
       document.body.removeChild(textArea);
-      alert("Sign-out link copied!");
+      alert("Sign-out link copied.");
     }
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-      {/* Success header */}
-      <div className="bg-green-600 text-white px-6 py-8 text-center">
-        <div className="text-5xl mb-4" aria-hidden="true">
-          ✓
+    <div className="overflow-hidden rounded-lg bg-white shadow-lg">
+      <div className="bg-green-600 px-6 py-8 text-center text-white">
+        <div className="mb-4 text-5xl" aria-hidden="true">
+          OK
         </div>
         <h2 className="text-2xl font-bold">Signed In Successfully</h2>
-        <p className="text-green-50 mt-2">Welcome to {result.siteName}</p>
+        <p className="mt-2 text-green-50">Welcome to {result.siteName}</p>
       </div>
 
-      {/* Details */}
-      <div className="px-6 py-6 space-y-4">
-        <div className="bg-gray-50 rounded-lg p-4">
+      <div className="space-y-4 px-6 py-6">
+        <div className="rounded-lg bg-gray-50 p-4">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-gray-500">Name</p>
@@ -80,52 +68,43 @@ export function SuccessScreen({ result }: SuccessScreenProps) {
           </div>
         </div>
 
-        {/* Sign-out instructions */}
-        <div className="border border-blue-200 bg-blue-50 rounded-lg p-4">
-          <h3 className="font-medium text-blue-900 mb-2">
-            📱 Sign Out When Leaving
-          </h3>
-          <p className="text-sm text-blue-700 mb-3">
-            When you leave the site, use the link below to sign out. This link
-            expires at <strong>{expiryTime}</strong>.
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+          <h3 className="mb-2 font-medium text-blue-900">Sign Out When Leaving</h3>
+          <p className="mb-3 text-sm text-blue-700">
+            Use the link below to sign out when you leave site. This link expires at{" "}
+            <strong>{expiryTime}</strong>.
           </p>
 
           <div className="flex flex-col gap-2">
             <button
               onClick={copySignOutLink}
-              className="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="w-full rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
-              📋 Copy Sign-Out Link
+              Copy Sign-Out Link
             </button>
 
             <a
               href={signOutUrl}
-              className="w-full py-2 px-4 bg-white text-blue-600 font-medium rounded-lg border border-blue-300 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 text-center"
+              className="w-full rounded-lg border border-blue-300 bg-white px-4 py-2 text-center font-medium text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Sign Out Now
             </a>
           </div>
         </div>
 
-        {/* Safety reminder */}
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <h3 className="font-medium text-yellow-900 mb-1">
-            ⚠️ Safety Reminder
-          </h3>
-          <ul className="text-sm text-yellow-700 list-disc list-inside space-y-1">
+        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
+          <h3 className="mb-1 font-medium text-yellow-900">Safety Reminder</h3>
+          <ul className="list-inside list-disc space-y-1 text-sm text-yellow-700">
             <li>Wear required PPE at all times</li>
-            <li>Report any hazards to site management</li>
+            <li>Report hazards to site management immediately</li>
             <li>Follow all site safety procedures</li>
             <li>Sign out when leaving the site</li>
           </ul>
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="px-6 py-4 bg-gray-50 border-t text-center">
-        <p className="text-sm text-gray-500">
-          Need help? Contact site reception.
-        </p>
+      <div className="border-t bg-gray-50 px-6 py-4 text-center">
+        <p className="text-sm text-gray-500">Need help? Contact site reception.</p>
       </div>
     </div>
   );

@@ -12,6 +12,7 @@
 import { publicDb } from "@/lib/db/public-db";
 import { scopedDb } from "@/lib/db/scoped-db";
 import { Prisma } from "@prisma/client";
+import { createHash } from "crypto";
 import { handlePrismaError, RepositoryError } from "./base";
 import {
   generateSignOutToken,
@@ -51,6 +52,10 @@ export interface PublicSignInInput {
     questionId: string;
     answer: unknown;
   }>;
+  signatureData?: string;
+  termsVersionId?: string;
+  privacyVersionId?: string;
+  consentStatement?: string;
 }
 
 /**
@@ -63,6 +68,47 @@ export interface SignInResult {
   visitorName: string;
   siteName: string;
   signInTime: Date;
+}
+
+const MAX_SIGNATURE_BYTES = 2_000_000;
+
+function extractSignatureMeta(signatureData: string): {
+  value: string;
+  hash: string;
+  mimeType: string | null;
+  sizeBytes: number;
+} {
+  const trimmed = signatureData.trim();
+  if (!trimmed) {
+    throw new RepositoryError("Signature is required", "VALIDATION");
+  }
+
+  const dataUrlMatch =
+    /^data:([^;]+);base64,([A-Za-z0-9+/=]+)$/i.exec(trimmed);
+
+  if (dataUrlMatch) {
+    const mimeType = (dataUrlMatch[1] ?? "application/octet-stream")
+      .toLowerCase()
+      .trim();
+    const payload = dataUrlMatch[2] ?? "";
+    const bytes = Buffer.from(payload, "base64");
+    const sizeBytes = bytes.byteLength;
+
+    return {
+      value: trimmed,
+      hash: createHash("sha256").update(bytes).digest("hex"),
+      mimeType,
+      sizeBytes,
+    };
+  }
+
+  const sizeBytes = Buffer.byteLength(trimmed, "utf8");
+  return {
+    value: trimmed,
+    hash: createHash("sha256").update(trimmed).digest("hex"),
+    mimeType: null,
+    sizeBytes,
+  };
 }
 
 /**
@@ -108,6 +154,14 @@ export async function createPublicSignIn(
       "Terms must be accepted before sign-in",
       "VALIDATION",
     );
+  }
+
+  const signatureMeta = input.signatureData
+    ? extractSignatureMeta(input.signatureData)
+    : null;
+
+  if (signatureMeta && signatureMeta.sizeBytes > MAX_SIGNATURE_BYTES) {
+    throw new RepositoryError("Signature is too large", "VALIDATION");
   }
 
   // Validate templateVersion is a positive integer
@@ -177,6 +231,11 @@ export async function createPublicSignIn(
           visitor_type: input.visitorType,
           hasAcceptedTerms: true,
           termsAcceptedAt: new Date(),
+          terms_version_id: input.termsVersionId ?? null,
+          privacy_version_id: input.privacyVersionId ?? null,
+          consent_statement:
+            input.consentStatement ??
+            "I acknowledge the site safety terms and conditions.",
           notes: input.roleOnSite ? `Role: ${input.roleOnSite}` : null,
           // Token fields will be set after transaction
           sign_out_token: null,
@@ -228,6 +287,42 @@ export async function createPublicSignIn(
         throw new RepositoryError("Unserializable answers", "VALIDATION");
       }
 
+      const templateQuestions = await tx.inductionQuestion.findMany({
+        where: { template_id: input.templateId },
+        select: {
+          id: true,
+          question_text: true,
+          question_type: true,
+          is_required: true,
+          display_order: true,
+        },
+        orderBy: { display_order: "asc" },
+      });
+
+      const signatureCapturedAt = signatureMeta ? new Date() : null;
+      const completionSnapshot = {
+        recorded_at: new Date().toISOString(),
+        template: {
+          id: input.templateId,
+          version: input.templateVersion,
+          questions: templateQuestions,
+        },
+        legal: {
+          has_accepted_terms: input.hasAcceptedTerms,
+          terms_version_id: input.termsVersionId ?? null,
+          privacy_version_id: input.privacyVersionId ?? null,
+          consent_statement:
+            input.consentStatement ??
+            "I acknowledge the site safety terms and conditions.",
+        },
+        signature: {
+          hash: signatureMeta?.hash ?? null,
+          mime_type: signatureMeta?.mimeType ?? null,
+          size_bytes: signatureMeta?.sizeBytes ?? null,
+          captured_at: signatureCapturedAt?.toISOString() ?? null,
+        },
+      };
+
       // 4. Create induction response
       await tx.inductionResponse.create({
         data: {
@@ -235,6 +330,14 @@ export async function createPublicSignIn(
           template_id: input.templateId,
           template_version: input.templateVersion,
           answers: encryptJsonValue(input.answers) as Prisma.InputJsonValue,
+          completion_snapshot: completionSnapshot as Prisma.InputJsonValue,
+          signature_url: signatureMeta
+            ? encryptString(signatureMeta.value)
+            : null,
+          signature_hash: signatureMeta?.hash ?? null,
+          signature_mime_type: signatureMeta?.mimeType ?? null,
+          signature_size_bytes: signatureMeta?.sizeBytes ?? null,
+          signature_captured_at: signatureCapturedAt,
           passed: true, // All required fields validated before this point
         },
       });

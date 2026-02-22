@@ -1,7 +1,7 @@
 # Tenant Owned Models
 
-Version: `v1`
-Updated: `2026-02-15`
+Version: `v2`
+Updated: `2026-02-21`
 Source: `apps/web/prisma/schema.prisma`
 
 This file is the canonical `TENANT_OWNED_MODELS` registry.
@@ -20,6 +20,11 @@ Manual edits are not allowed.
 - `MagicLinkToken`
 - `ExportJob`
 - `AuditLog`
+- `HazardRegisterEntry`
+- `SiteEmergencyContact`
+- `SiteEmergencyProcedure`
+- `IncidentReport`
+- `LegalDocumentVersion`
 
 ## Child Models Without `company_id` (Parent-Scoped Only)
 

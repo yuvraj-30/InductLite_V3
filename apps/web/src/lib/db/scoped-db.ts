@@ -9,6 +9,11 @@ const TENANT_MODELS = [
   "signInRecord",
   "contractor",
   "contractorDocument",
+  "hazardRegisterEntry",
+  "siteEmergencyContact",
+  "siteEmergencyProcedure",
+  "incidentReport",
+  "legalDocumentVersion",
   "siteManagerAssignment",
   "magicLinkToken",
   "exportJob",
@@ -235,6 +240,46 @@ export function scopedDb(
       deleteMany: (args?: any) => Promise<any>;
     };
     contractorDocument: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    hazardRegisterEntry: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    siteEmergencyContact: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    siteEmergencyProcedure: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    incidentReport: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    legalDocumentVersion: {
       findFirst: (args?: any) => Promise<any>;
       findMany: (args?: any) => Promise<any[]>;
       count: (args?: any) => Promise<number>;
