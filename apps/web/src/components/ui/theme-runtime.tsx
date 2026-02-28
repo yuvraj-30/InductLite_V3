@@ -40,11 +40,13 @@ export function ThemeRuntime() {
     }
 
     const applyMode = () => {
-      root.dataset.theme = resolveThemePreference(
+      const resolvedTheme = resolveThemePreference(
         preference,
         darkMode.matches,
         highContrast.matches,
       );
+      root.dataset.theme = resolvedTheme;
+      root.classList.toggle("dark", resolvedTheme === "high-contrast-dark");
     };
 
     const handlePreferenceChange = (event: Event) => {
