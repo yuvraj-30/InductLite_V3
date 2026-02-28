@@ -71,23 +71,23 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
               name="name"
               placeholder="Name"
               required
-              className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input"
             />
             <input
               name="role"
               placeholder="Role (e.g. Site Manager)"
-              className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input"
             />
             <input
               name="phone"
               placeholder="Phone"
               required
-              className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input"
             />
             <input
               name="email"
               placeholder="Email (optional)"
-              className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input"
             />
             <input
               name="priority"
@@ -95,7 +95,7 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
               min={0}
               max={100}
               defaultValue={0}
-              className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input"
             />
             <button
               type="submit"
@@ -150,14 +150,14 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
               name="title"
               placeholder="Procedure title"
               required
-              className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input"
             />
             <textarea
               name="instructions"
               placeholder="Procedure instructions"
               rows={4}
               required
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input"
             />
             <input
               name="sortOrder"
@@ -165,7 +165,7 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
               min={0}
               max={200}
               defaultValue={0}
-              className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input"
             />
             <button
               type="submit"
@@ -225,7 +225,7 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
             <select
               name="drillType"
               defaultValue="EVACUATION"
-              className="mt-1 block min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             >
               <option value="EVACUATION">Evacuation</option>
               <option value="FIRE">Fire</option>
@@ -240,7 +240,7 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
             <input
               name="conductedAt"
               type="datetime-local"
-              className="mt-1 block min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             />
           </label>
 
@@ -250,7 +250,7 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
               name="scenario"
               rows={3}
               required
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
               placeholder="What was tested and under which conditions?"
             />
           </label>
@@ -260,7 +260,7 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
             <textarea
               name="outcomeNotes"
               rows={2}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
               placeholder="What went well, what failed"
             />
           </label>
@@ -270,7 +270,7 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
             <textarea
               name="followUpActions"
               rows={2}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
               placeholder="Required corrective actions and owners"
             />
           </label>
@@ -280,7 +280,7 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
             <input
               name="nextDueAt"
               type="datetime-local"
-              className="mt-1 block min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             />
           </label>
 

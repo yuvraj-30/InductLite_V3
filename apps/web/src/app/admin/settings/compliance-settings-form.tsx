@@ -78,7 +78,7 @@ export default function ComplianceSettingsForm({
               max={36500}
               required
               defaultValue={initialSettings.retention_days}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             />
             {getFieldError("retentionDays") && (
               <p className="mt-1 text-xs text-red-600">
@@ -96,7 +96,7 @@ export default function ComplianceSettingsForm({
               max={36500}
               required
               defaultValue={initialSettings.induction_retention_days}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             />
             {getFieldError("inductionRetentionDays") && (
               <p className="mt-1 text-xs text-red-600">
@@ -114,7 +114,7 @@ export default function ComplianceSettingsForm({
               max={36500}
               required
               defaultValue={initialSettings.audit_retention_days}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             />
             <p className="mt-1 text-xs text-gray-500">
               System guardrails still enforce global minimum floors.
@@ -135,7 +135,7 @@ export default function ComplianceSettingsForm({
               max={36500}
               required
               defaultValue={initialSettings.incident_retention_days}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             />
             {getFieldError("incidentRetentionDays") && (
               <p className="mt-1 text-xs text-red-600">
@@ -153,7 +153,7 @@ export default function ComplianceSettingsForm({
               max={36500}
               required
               defaultValue={initialSettings.emergency_drill_retention_days}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             />
             {getFieldError("emergencyDrillRetentionDays") && (
               <p className="mt-1 text-xs text-red-600">
@@ -189,7 +189,7 @@ export default function ComplianceSettingsForm({
               rows={3}
               maxLength={500}
               defaultValue={initialSettings.compliance_legal_hold_reason ?? ""}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
               placeholder="Required when legal hold is enabled"
             />
             {getFieldError("complianceLegalHoldReason") && (

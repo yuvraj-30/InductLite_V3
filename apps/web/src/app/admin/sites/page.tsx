@@ -185,7 +185,7 @@ export default async function SitesPage() {
                           </p>
                         )}
                         {publicSlug && (
-                          <p className="mt-2 text-xs text-gray-400">
+                          <p className="mt-2 text-xs text-muted">
                             Public link: /s/{publicSlug.substring(0, 8)}...
                           </p>
                         )}

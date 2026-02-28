@@ -79,7 +79,7 @@ export default async function IncidentsPage({ searchParams }: IncidentsPageProps
               name="siteId"
               required
               defaultValue={defaultSiteId}
-              className="mt-1 block min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             >
               <option value="">Select site</option>
               {sites.map((site) => (
@@ -96,7 +96,7 @@ export default async function IncidentsPage({ searchParams }: IncidentsPageProps
               name="signInRecordId"
               type="text"
               defaultValue={params.signInId ?? ""}
-              className="mt-1 block min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
               placeholder="cuid from live register"
             />
           </label>
@@ -106,7 +106,7 @@ export default async function IncidentsPage({ searchParams }: IncidentsPageProps
             <select
               name="incidentType"
               defaultValue="INCIDENT"
-              className="mt-1 block min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             >
               <option value="INCIDENT">Incident</option>
               <option value="NEAR_MISS">Near miss</option>
@@ -118,7 +118,7 @@ export default async function IncidentsPage({ searchParams }: IncidentsPageProps
             <select
               name="severity"
               defaultValue="MEDIUM"
-              className="mt-1 block min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             >
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
@@ -133,7 +133,7 @@ export default async function IncidentsPage({ searchParams }: IncidentsPageProps
               name="occurredAt"
               type="datetime-local"
               defaultValue={formatDateTimeLocal(new Date())}
-              className="mt-1 block min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             />
           </label>
 
@@ -142,7 +142,7 @@ export default async function IncidentsPage({ searchParams }: IncidentsPageProps
             <input
               name="worksafeNotifiedAt"
               type="datetime-local"
-              className="mt-1 block min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             />
           </label>
 
@@ -153,7 +153,7 @@ export default async function IncidentsPage({ searchParams }: IncidentsPageProps
               type="text"
               required
               maxLength={160}
-              className="mt-1 block min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
               placeholder="Brief summary of what happened"
             />
           </label>
@@ -164,7 +164,7 @@ export default async function IncidentsPage({ searchParams }: IncidentsPageProps
               name="worksafeReferenceNumber"
               type="text"
               maxLength={120}
-              className="mt-1 block min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
               placeholder="e.g. WS-NOTIFY-2026-0001"
             />
           </label>
@@ -174,7 +174,7 @@ export default async function IncidentsPage({ searchParams }: IncidentsPageProps
             <textarea
               name="description"
               rows={3}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             />
           </label>
 
@@ -203,7 +203,7 @@ export default async function IncidentsPage({ searchParams }: IncidentsPageProps
             <textarea
               name="immediateActions"
               rows={2}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             />
           </label>
 

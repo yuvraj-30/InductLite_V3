@@ -57,7 +57,7 @@ export default async function HazardsPage() {
             Site
             <select
               name="siteId"
-              className="mt-1 block min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
               required
             >
               <option value="">Select site</option>
@@ -74,7 +74,7 @@ export default async function HazardsPage() {
             <select
               name="riskLevel"
               defaultValue="MEDIUM"
-              className="mt-1 block min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             >
               <option value="LOW">Low</option>
               <option value="MEDIUM">Medium</option>
@@ -90,7 +90,7 @@ export default async function HazardsPage() {
               type="text"
               maxLength={160}
               required
-              className="mt-1 block min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             />
           </label>
 
@@ -99,7 +99,7 @@ export default async function HazardsPage() {
             <textarea
               name="description"
               rows={3}
-              className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             />
           </label>
 
