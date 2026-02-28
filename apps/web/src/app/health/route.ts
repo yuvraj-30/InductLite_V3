@@ -1,23 +1,10 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
+import { performHealthCheck, type HealthStatus } from "@/lib/health";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-
-interface HealthStatus {
-  status: "ok" | "degraded" | "error";
-  timestamp: string;
-  version: string;
-  checks: {
-    database: {
-      status: "ok" | "error";
-      latency_ms?: number;
-      error?: string;
-    };
-  };
-}
 
 export async function GET(): Promise<NextResponse<HealthStatus>> {
   const log = createRequestLogger(generateRequestId(), {
@@ -25,37 +12,31 @@ export async function GET(): Promise<NextResponse<HealthStatus>> {
     method: "GET",
   });
   const startTime = Date.now();
-  const healthStatus: HealthStatus = {
-    status: "ok",
-    timestamp: new Date().toISOString(),
-    version: process.env.npm_package_version || "0.1.0",
-    checks: {
-      database: {
-        status: "ok",
-      },
-    },
-  };
+  const healthStatus = await performHealthCheck();
+  const isHealthy = healthStatus.status === "ok";
 
-  // Check database connectivity
-  try {
-    const dbStart = Date.now();
-    // eslint-disable-next-line security-guardrails/no-raw-sql -- Health check requires raw SQL for minimal overhead
-    await prisma.$queryRaw`SELECT 1`;
-    healthStatus.checks.database.latency_ms = Date.now() - dbStart;
-  } catch (error) {
-    healthStatus.status = "error";
-    healthStatus.checks.database.status = "error";
-    healthStatus.checks.database.error = "Database unavailable";
-
+  if (!isHealthy) {
     log.error(
-      { error, latency_ms: Date.now() - startTime },
+      {
+        database_error: healthStatus.checks.database.error,
+        latency_ms: Date.now() - startTime,
+      },
       "Health check failed - database error",
     );
-
-    return NextResponse.json(healthStatus, { status: 503 });
+    const safeResponse: HealthStatus = {
+      ...healthStatus,
+      checks: {
+        ...healthStatus.checks,
+        database: {
+          ...healthStatus.checks.database,
+          // Never expose low-level DB error details on public health responses.
+          error: "Database unavailable",
+        },
+      },
+    };
+    return NextResponse.json(safeResponse, { status: 503 });
   }
 
   log.debug({ latency_ms: Date.now() - startTime }, "Health check passed");
-
   return NextResponse.json(healthStatus, { status: 200 });
 }

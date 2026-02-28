@@ -12,20 +12,36 @@ export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({}) as Record<string, unknown>);
     const slugPrefix = (body.slugPrefix as string) ?? "test-site-e2e";
+    const companySlugParam = String(body.companySlug ?? "").trim();
+    const includeRedFlagQuestion =
+      body.includeRedFlagQuestion === true ||
+      body.includeRedFlagQuestion === "true" ||
+      body.includeRedFlagQuestion === 1 ||
+      body.includeRedFlagQuestion === "1";
     // Use a random suffix to avoid collisions when running tests in parallel locally
     const suffix = Math.random().toString(36).slice(2, 8);
     const slug = `${slugPrefix}-${suffix}`;
 
-    // Find or create a company to own the site (match seed company if present)
-    const company =
-      (await prisma.company.findFirst({ where: { slug: "buildright-nz" } })) ||
-      (await prisma.company.create({
-        data: {
-          name: "E2E Company",
-          slug: `e2e-${suffix}`,
-          retention_days: 365,
-        },
-      }));
+    // Find or create a company to own the site.
+    const company = companySlugParam
+      ? ((await prisma.company.findUnique({
+          where: { slug: companySlugParam },
+        })) ??
+        (await prisma.company.create({
+          data: {
+            name: `E2E Company ${companySlugParam}`,
+            slug: companySlugParam,
+            retention_days: 365,
+          },
+        })))
+      : ((await prisma.company.findFirst({ where: { slug: "buildright-nz" } })) ??
+        (await prisma.company.create({
+          data: {
+            name: "E2E Company",
+            slug: `e2e-${suffix}`,
+            retention_days: 365,
+          },
+        })));
 
     // Create site
     const site = await prisma.site.create({
@@ -71,6 +87,21 @@ export async function POST(req: Request) {
       },
     });
 
+    let redFlagQuestionId: string | undefined;
+    if (includeRedFlagQuestion) {
+      const redFlagQuestion = await prisma.inductionQuestion.create({
+        data: {
+          template_id: template.id,
+          question_text: "Do you feel unsafe or unwell to work on site today?",
+          question_type: QuestionType.YES_NO,
+          is_required: true,
+          red_flag: true,
+          display_order: 2,
+        },
+      });
+      redFlagQuestionId = redFlagQuestion.id;
+    }
+
     // Attempt to clear in-memory rate-limit state for deterministic tests
     let clearedRateLimit = false;
     try {
@@ -87,6 +118,7 @@ export async function POST(req: Request) {
       publicLinkId: publicLink.id,
       templateId: template.id,
       questionId: question.id,
+      redFlagQuestionId,
       clearedRateLimit,
     });
   } catch (err: unknown) {

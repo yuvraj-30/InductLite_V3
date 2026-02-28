@@ -37,7 +37,52 @@ export class ExportLimitReachedError extends Error {
   }
 }
 
+export class ExportGlobalBytesLimitReachedError extends Error {
+  constructor() {
+    super("Global export byte budget reached");
+    this.name = "ExportGlobalBytesLimitReachedError";
+  }
+}
+
+export type ExportDownloadGuardrailResult =
+  | {
+      allowed: true;
+    }
+  | {
+      allowed: false;
+      controlId: "EXPT-003" | "EXPT-004";
+      violatedLimit: string;
+      scope: "tenant" | "environment";
+      message: string;
+    };
+
 const MAX_SERIALIZABLE_RETRIES = 3;
+
+function utcDayStart(now: Date = new Date()): Date {
+  return new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+  );
+}
+
+function parseDownloadBytes(details: Prisma.JsonValue | null | undefined): number {
+  if (!details || typeof details !== "object" || Array.isArray(details)) {
+    return 0;
+  }
+
+  const raw = (details as Record<string, unknown>).download_bytes;
+  if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) {
+    return Math.floor(raw);
+  }
+
+  if (typeof raw === "string") {
+    const parsed = Number(raw);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      return Math.floor(parsed);
+    }
+  }
+
+  return 0;
+}
 
 export async function countExportJobsSince(
   companyId: string,
@@ -110,14 +155,15 @@ export async function queueExportJobWithLimits(
 ): Promise<ExportJob> {
   requireCompanyId(companyId);
 
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const since = utcDayStart();
 
   for (let attempt = 1; attempt <= MAX_SERIALIZABLE_RETRIES; attempt++) {
     try {
       return await publicDb.$transaction(
         async (tx) => {
           const db = scopedDb(companyId, tx);
-          const [exportsToday, runningNow] = await Promise.all([
+          const [exportsToday, runningNow, globalGeneratedBytesResult] =
+            await Promise.all([
             db.exportJob.count({
               where: {
                 company_id: companyId,
@@ -130,6 +176,13 @@ export async function queueExportJobWithLimits(
                 status: "RUNNING",
               },
             }),
+            tx.exportJob.aggregate({
+              _sum: { file_size: true },
+              where: {
+                status: "SUCCEEDED",
+                completed_at: { gte: since },
+              },
+            }),
           ]);
 
           if (
@@ -137,6 +190,16 @@ export async function queueExportJobWithLimits(
             runningNow >= GUARDRAILS.MAX_CONCURRENT_EXPORTS_PER_COMPANY
           ) {
             throw new ExportLimitReachedError();
+          }
+
+          const globalGeneratedBytes =
+            globalGeneratedBytesResult._sum.file_size ?? 0;
+          // Conservative admission check: each queued export can consume up to MAX_EXPORT_BYTES.
+          if (
+            globalGeneratedBytes + GUARDRAILS.MAX_EXPORT_BYTES >
+            GUARDRAILS.MAX_EXPORT_BYTES_GLOBAL_PER_DAY
+          ) {
+            throw new ExportGlobalBytesLimitReachedError();
           }
 
           return db.exportJob.create({
@@ -156,6 +219,9 @@ export async function queueExportJobWithLimits(
         error.code === "P2034";
 
       if (error instanceof ExportLimitReachedError) {
+        throw error;
+      }
+      if (error instanceof ExportGlobalBytesLimitReachedError) {
         throw error;
       }
 
@@ -443,4 +509,73 @@ export async function findExportJobById(
   } catch (error) {
     handlePrismaError(error, "ExportJob");
   }
+}
+
+export async function checkExportDownloadGuardrails(
+  companyId: string,
+  downloadBytes: number,
+): Promise<ExportDownloadGuardrailResult> {
+  requireCompanyId(companyId);
+
+  if (!Number.isFinite(downloadBytes) || downloadBytes <= 0) {
+    return { allowed: true };
+  }
+
+  const since = utcDayStart();
+  const db = scopedDb(companyId);
+
+  const [tenantLogs, globalLogs] = await Promise.all([
+    db.auditLog.findMany({
+      where: {
+        company_id: companyId,
+        action: "export.download",
+        created_at: { gte: since },
+      },
+      select: { details: true },
+    }),
+    // eslint-disable-next-line security-guardrails/require-company-id -- global download budget guardrail intentionally scans across companies
+    publicDb.auditLog.findMany({
+      where: {
+        action: "export.download",
+        created_at: { gte: since },
+      },
+      select: { details: true },
+    }),
+  ]);
+
+  const tenantUsed = tenantLogs.reduce(
+    (sum, item) => sum + parseDownloadBytes(item.details),
+    0,
+  );
+  if (
+    tenantUsed + downloadBytes >
+    GUARDRAILS.MAX_EXPORT_DOWNLOAD_BYTES_PER_COMPANY_PER_DAY
+  ) {
+    return {
+      allowed: false,
+      controlId: "EXPT-003",
+      violatedLimit: `MAX_EXPORT_DOWNLOAD_BYTES_PER_COMPANY_PER_DAY=${GUARDRAILS.MAX_EXPORT_DOWNLOAD_BYTES_PER_COMPANY_PER_DAY}`,
+      scope: "tenant",
+      message: "Daily company export download limit reached.",
+    };
+  }
+
+  const globalUsed = globalLogs.reduce(
+    (sum, item) => sum + parseDownloadBytes(item.details),
+    0,
+  );
+  if (
+    globalUsed + downloadBytes >
+    GUARDRAILS.MAX_EXPORT_DOWNLOAD_BYTES_GLOBAL_PER_DAY
+  ) {
+    return {
+      allowed: false,
+      controlId: "EXPT-004",
+      violatedLimit: `MAX_EXPORT_DOWNLOAD_BYTES_GLOBAL_PER_DAY=${GUARDRAILS.MAX_EXPORT_DOWNLOAD_BYTES_GLOBAL_PER_DAY}`,
+      scope: "environment",
+      message: "Global export download limit reached.",
+    };
+  }
+
+  return { allowed: true };
 }

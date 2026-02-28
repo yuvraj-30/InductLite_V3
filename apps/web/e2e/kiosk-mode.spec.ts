@@ -10,14 +10,20 @@ test.describe("Kiosk Mode", () => {
         TEST_SITE_SLUG = body.slug;
         return;
       }
-    } catch {
+    } catch (error) {
       // fallback to existing seed below
+      console.warn(
+        "kiosk seedPublicSite failed, trying fallback seeded slug:",
+        String(error),
+      );
     }
 
     const res = await request.get(`/s/${TEST_SITE_SLUG}`);
     const txt = await res.text();
     if (res.status() === 404 || /Site Not Found|No active template/i.test(txt)) {
-      test.skip(true, "Kiosk test site not seeded for this environment");
+      throw new Error(
+        "Kiosk test site not seeded. Ensure test runner endpoints are enabled and seeding succeeds.",
+      );
     }
   });
 
@@ -40,20 +46,18 @@ test.describe("Kiosk Mode", () => {
 
     // 1. Fill in visitor details
     const visitorNameInput = page.locator('input[id="visitorName"]');
-    await visitorNameInput.click();
-    await visitorNameInput.fill("Kiosk Tester");
-    const visitorNameValue = await visitorNameInput.inputValue();
-    if (!visitorNameValue) {
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      await visitorNameInput.click();
+      await visitorNameInput.fill("Kiosk Tester");
+      const retained = await visitorNameInput.inputValue();
+      if (retained) break;
       // WebKit can occasionally clear this field during hydration.
-      await visitorNameInput.type("Kiosk Tester");
+      await visitorNameInput.type("Kiosk Tester").catch(() => null);
+      if (attempt < 3) {
+        await page.waitForTimeout(250 * attempt);
+      }
     }
-    if (!(await visitorNameInput.inputValue())) {
-      test.skip(
-        true,
-        "visitorName input did not retain value on this browser run",
-      );
-      return;
-    }
+    await expect(visitorNameInput).toHaveValue("Kiosk Tester");
     await page.fill('input[id="visitorPhone"]', "+64211111111");
     const employerField = page.locator('input[id="employerName"]');
     if ((await employerField.count()) > 0) {
@@ -179,7 +183,9 @@ test.describe("Kiosk Mode", () => {
     });
 
     // Submit
-    const signBtn = page.getByRole("button", { name: /confirm & sign in/i });
+    const signBtn = page.getByRole("button", {
+      name: /confirm\s+(?:&|and)\s+sign in/i,
+    });
     const termsCheckboxByLabel = page
       .getByLabel(
         /I acknowledge the site safety terms and conditions|I accept|terms and conditions/i,
@@ -193,8 +199,9 @@ test.describe("Kiosk Mode", () => {
         await termsCheckbox.check().catch(() => null);
       }
     }
-    await signBtn.waitFor({ state: "visible" });
-    await signBtn.click();
+    await signBtn.scrollIntoViewIfNeeded();
+    await signBtn.waitFor({ state: "visible", timeout: 15000 });
+    await signBtn.click({ force: true });
 
     // Allow a short time for any requests to finish and then log them for debugging
     await page.waitForTimeout(1000);

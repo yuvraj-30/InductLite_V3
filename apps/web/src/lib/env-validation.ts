@@ -399,6 +399,24 @@ const ENV_CONFIG: EnvConfig[] = [
     production: false,
     description: "Sign-out rate limit per IP per minute",
   },
+  {
+    name: "RL_ADMIN_PER_USER_PER_MIN",
+    required: false,
+    production: false,
+    description: "Admin endpoint rate limit per user per minute",
+  },
+  {
+    name: "RL_ADMIN_PER_IP_PER_MIN",
+    required: false,
+    production: false,
+    description: "Admin endpoint rate limit per IP per minute",
+  },
+  {
+    name: "RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN",
+    required: false,
+    production: false,
+    description: "Admin mutation rate limit per company per minute",
+  },
   // Sentry
   {
     name: "SENTRY_DSN",
@@ -499,6 +517,25 @@ export function validateEnv(): {
           error: `${config.name} has invalid format`,
         });
       }
+    }
+  }
+
+  // Validate critical numeric guardrails for admin/auth abuse controls.
+  const positiveIntEnv = [
+    "RL_ADMIN_PER_USER_PER_MIN",
+    "RL_ADMIN_PER_IP_PER_MIN",
+    "RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN",
+  ];
+  for (const name of positiveIntEnv) {
+    const value = process.env[name];
+    if (value === undefined || value === "") continue;
+
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed <= 0 || !Number.isInteger(parsed)) {
+      errors.push({
+        name,
+        error: `${name} must be a positive integer`,
+      });
     }
   }
 

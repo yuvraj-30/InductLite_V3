@@ -52,6 +52,9 @@ function getRuntimeEnv(): Record<string, string | undefined> {
 // Helper to determine if we should use secure cookies at runtime
 function shouldUseSecureCookies(): boolean {
   const env = getRuntimeEnv();
+  const override = env.SESSION_COOKIE_SECURE?.trim().toLowerCase();
+  if (override === "1" || override === "true") return true;
+  if (override === "0" || override === "false") return false;
   return env.NODE_ENV === "production";
 }
 

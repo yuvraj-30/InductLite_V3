@@ -85,6 +85,21 @@ describe("validateEnv", () => {
         true,
       );
     });
+
+    it("should fail if RL_ADMIN guardrails are not positive integers", () => {
+      process.env.DATABASE_URL = "postgresql://test@localhost/test";
+      process.env.SESSION_SECRET =
+        "dev-secret-at-least-32-characters-long-here";
+      process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";
+      process.env.RL_ADMIN_PER_USER_PER_MIN = "-1";
+
+      const result = validateEnv();
+
+      expect(result.valid).toBe(false);
+      expect(
+        result.errors.some((e) => e.name === "RL_ADMIN_PER_USER_PER_MIN"),
+      ).toBe(true);
+    });
   });
 
   describe("in production mode", () => {

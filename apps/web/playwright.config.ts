@@ -25,9 +25,57 @@ function loadEnvFile(filePath: string): Record<string, string> {
 
 const rootEnvPath = path.resolve(__dirname, "..", "..", ".env");
 const rootEnv = loadEnvFile(rootEnvPath);
-Object.assign(process.env, rootEnv);
+// Never inherit NODE_ENV from .env here; Playwright and Next should control it explicitly.
+const { NODE_ENV: _ignoredNodeEnv, ...rootEnvWithoutNodeEnv } = rootEnv;
+Object.assign(process.env, rootEnvWithoutNodeEnv);
+const testRunnerSecret =
+  process.env.TEST_RUNNER_SECRET_KEY ||
+  "e2e-test-runner-secret-3b0f2cbf5de0416ebf958e8d";
+process.env.TEST_RUNNER_SECRET_KEY = testRunnerSecret;
 process.env.E2E_QUIET = process.env.E2E_QUIET || "1";
 process.env.E2E_SKIP_LOGIN_VERIFY = process.env.E2E_SKIP_LOGIN_VERIFY || "1";
+// E2E runs execute over HTTP localhost; secure cookies would be dropped in WebKit.
+process.env.SESSION_COOKIE_SECURE = process.env.SESSION_COOKIE_SECURE || "0";
+
+const e2eServerMode = process.env.E2E_SERVER_MODE ?? "dev";
+const useDevServer = e2eServerMode === "dev";
+const disableExternalRateLimit =
+  process.env.E2E_ALLOW_EXTERNAL_RATE_LIMIT !== "1";
+const productionSessionSecret =
+  process.env.E2E_PROD_SESSION_SECRET ||
+  "production-session-secret-8f2d4f819f1643648fa1d36c5a2b77db";
+const configuredSessionSecret = process.env.SESSION_SECRET;
+const isDevLikeSessionSecret = (value: string | undefined): boolean =>
+  !value || /dev-secret/i.test(value);
+const e2eRequiredSecrets = {
+  sessionSecret: useDevServer
+    ? (configuredSessionSecret ||
+      "test-session-secret-012345678901234567890123456")
+    : (isDevLikeSessionSecret(configuredSessionSecret)
+      ? productionSessionSecret
+      : (configuredSessionSecret || productionSessionSecret)),
+  dataEncryptionKey:
+    process.env.DATA_ENCRYPTION_KEY ||
+    "e2e-data-encryption-key-5f8a44c73a824c879bf77f9f329ce2a8",
+  magicLinkSecret:
+    process.env.MAGIC_LINK_SECRET ||
+    "e2e-magic-link-secret-0d42f5b7f8b14732a74b5d6f66ef4d9a",
+  cronSecret:
+    process.env.CRON_SECRET ||
+    "e2e-cron-secret-6c81b2d2b4f94f7db5f3d8e224e90d5b",
+  resendApiKey:
+    process.env.RESEND_API_KEY || "re_e2e_placeholder_key_1234567890",
+  resendFrom:
+    process.env.RESEND_FROM || "no-reply@inductlite.example.test",
+};
+
+if (disableExternalRateLimit) {
+  // E2E runs should be deterministic and avoid flaky external DNS/network hops.
+  process.env.UPSTASH_REDIS_REST_URL = "";
+  process.env.UPSTASH_REDIS_REST_TOKEN = "";
+  process.env.RATE_LIMIT_TELEMETRY_URL = "";
+  process.env.RATE_LIMIT_ANALYTICS = "0";
+}
 
 /**
  * Playwright E2E Test Configuration
@@ -43,8 +91,8 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  // Run more workers locally by default for faster full-suite feedback.
-  workers: process.env.CI ? 1 : Number(process.env.E2E_WORKERS || 8),
+  // Keep local defaults conservative to avoid overloading the app server.
+  workers: process.env.CI ? 1 : Number(process.env.E2E_WORKERS || 1),
   reporter: [["html", { open: "never" }], ["list"]],
   use: {
     baseURL: process.env.BASE_URL || "http://localhost:3000",
@@ -77,28 +125,51 @@ export default defineConfig({
     },
   ],
 
-  // Development server configuration
+  // Local server configuration
   webServer: process.env.CI
     ? undefined
     : {
-        command: "npm run dev",
+        command: useDevServer
+          ? "npm run dev"
+          : "npm run build && npm run start",
         url: "http://localhost:3000",
         // Default to false so we don't accidentally reuse a stale local server
         // missing E2E env flags (ALLOW_TEST_RUNNER/TRUST_PROXY).
         reuseExistingServer: process.env.PW_REUSE_EXISTING_SERVER === "1",
-        timeout: 120000,
-        // Provide test env vars so the dev server can unseal test session cookies
+        timeout: Number(process.env.E2E_WEB_SERVER_TIMEOUT_MS || 300000),
+        // Provide test env vars so the app can unseal test session cookies
         env: {
-          ...rootEnv,
+          ...rootEnvWithoutNodeEnv,
           E2E_QUIET: process.env.E2E_QUIET || "1",
+          E2E_SERVER_MODE: e2eServerMode,
+          NODE_ENV: useDevServer ? "development" : "production",
+          CI: useDevServer ? (process.env.CI ?? "false") : "true",
+          TEST_RUNNER_SECRET_KEY: testRunnerSecret,
           // Stable test session secret (must be >= 32 chars)
-          SESSION_SECRET:
-            process.env.SESSION_SECRET ||
-            "test-session-secret-012345678901234567890123456",
+          SESSION_SECRET: e2eRequiredSecrets.sessionSecret,
+          SESSION_COOKIE_SECURE: process.env.SESSION_COOKIE_SECURE || "0",
+          DATA_ENCRYPTION_KEY: e2eRequiredSecrets.dataEncryptionKey,
+          MAGIC_LINK_SECRET: e2eRequiredSecrets.magicLinkSecret,
+          CRON_SECRET: e2eRequiredSecrets.cronSecret,
+          RESEND_API_KEY: e2eRequiredSecrets.resendApiKey,
+          RESEND_FROM: e2eRequiredSecrets.resendFrom,
           // Allow test-only runner endpoint during E2E
           ALLOW_TEST_RUNNER: "1",
           // Trust proxy headers (required for per-test x-forwarded-for handling)
           TRUST_PROXY: "1",
+          // Disable external analytics/redis during local E2E unless explicitly enabled.
+          UPSTASH_REDIS_REST_URL: disableExternalRateLimit
+            ? ""
+            : (process.env.UPSTASH_REDIS_REST_URL ?? ""),
+          UPSTASH_REDIS_REST_TOKEN: disableExternalRateLimit
+            ? ""
+            : (process.env.UPSTASH_REDIS_REST_TOKEN ?? ""),
+          RATE_LIMIT_TELEMETRY_URL: disableExternalRateLimit
+            ? ""
+            : (process.env.RATE_LIMIT_TELEMETRY_URL ?? ""),
+          RATE_LIMIT_ANALYTICS: disableExternalRateLimit
+            ? "0"
+            : (process.env.RATE_LIMIT_ANALYTICS ?? "1"),
         },
       },
 

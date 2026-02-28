@@ -8,13 +8,18 @@ export type SeedPublicSiteResult = {
   publicLinkId?: string;
   templateId?: string;
   questionId?: string;
+  redFlagQuestionId?: string;
   clearedRateLimit?: boolean;
   error?: string;
 };
 
 export async function seedPublicSite(
   request: APIRequestContext,
-  opts?: { slugPrefix?: string },
+  opts?: {
+    slugPrefix?: string;
+    includeRedFlagQuestion?: boolean;
+    companySlug?: string;
+  },
 ): Promise<{ ok: boolean; body: SeedPublicSiteResult | null }> {
   try {
     const res = await request.post(`/api/test/seed-public-site`, {

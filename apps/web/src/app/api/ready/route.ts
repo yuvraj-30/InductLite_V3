@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import { validateEnv } from "@/lib/env-validation";
 import { createRequestLogger } from "@/lib/logger";
-import { generateRequestId, getClientIp } from "@/lib/auth/csrf";
+import { generateRequestId } from "@/lib/auth/csrf";
+import { getStableClientKey } from "@/lib/rate-limit/clientKey";
+import { checkReadinessRateLimit } from "@/lib/rate-limit";
+import { checkDatabaseReadiness } from "@/lib/db/readiness";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -23,24 +25,7 @@ interface ReadinessStatus {
   timestamp: string;
 }
 
-const readinessBuckets = new Map<string, { count: number; windowStart: number }>();
-const READY_WINDOW_MS = 60_000;
-const READY_RL_PER_IP_PER_MIN = 120;
-
-function isReadinessRateLimited(clientKey: string): boolean {
-  const now = Date.now();
-  const existing = readinessBuckets.get(clientKey);
-  if (!existing || now - existing.windowStart >= READY_WINDOW_MS) {
-    readinessBuckets.set(clientKey, { count: 1, windowStart: now });
-    return false;
-  }
-
-  existing.count += 1;
-  readinessBuckets.set(clientKey, existing);
-  return existing.count > READY_RL_PER_IP_PER_MIN;
-}
-
-export async function GET(): Promise<NextResponse<ReadinessStatus>> {
+export async function GET(req: Request): Promise<NextResponse<ReadinessStatus>> {
   const requestId = generateRequestId();
   const log = createRequestLogger(requestId, {
     path: "/api/ready",
@@ -53,13 +38,25 @@ export async function GET(): Promise<NextResponse<ReadinessStatus>> {
   };
 
   try {
-    const clientIp = await getClientIp();
-    const clientKey = clientIp || "unknown";
-    if (isReadinessRateLimited(clientKey)) {
-      log.warn({ client_ip: clientIp }, "Readiness endpoint rate limited");
+    const clientKey = getStableClientKey(
+      {
+        "x-forwarded-for": req.headers.get("x-forwarded-for") ?? undefined,
+        "x-real-ip": req.headers.get("x-real-ip") ?? undefined,
+        "user-agent": req.headers.get("user-agent") ?? undefined,
+        accept: req.headers.get("accept") ?? undefined,
+      },
+      { trustProxy: process.env.TRUST_PROXY === "1" },
+    );
+    const rl = await checkReadinessRateLimit({ requestId, clientKey });
+    if (!rl.success) {
+      const retryAfterSeconds = Math.max(
+        1,
+        Math.ceil((rl.reset - Date.now()) / 1000),
+      );
+      log.warn({ client_key: clientKey }, "Readiness endpoint rate limited");
       return NextResponse.json(status, {
         status: 429,
-        headers: { "retry-after": "60" },
+        headers: { "retry-after": String(retryAfterSeconds) },
       });
     }
 
@@ -69,12 +66,18 @@ export async function GET(): Promise<NextResponse<ReadinessStatus>> {
       return NextResponse.json(status, { status: 503 });
     }
 
-    // Quick database ping - if this fails, app isn't ready
-    // eslint-disable-next-line security-guardrails/no-raw-sql -- Readiness check requires raw SQL for minimal overhead
-    await prisma.$queryRaw`SELECT 1`;
+    const database = await checkDatabaseReadiness();
+    if (!database.ok) {
+      log.warn(
+        { database_error: database.error ?? "unknown" },
+        "Readiness check failed: database unavailable",
+      );
+      return NextResponse.json(status, { status: 503 });
+    }
+
     status.ready = true;
 
-    log.debug({}, "Readiness check passed");
+    log.debug({ db_latency_ms: database.latency_ms }, "Readiness check passed");
     return NextResponse.json(status, { status: 200 });
   } catch (error) {
     log.error({ error: String(error) }, "Readiness check failed");

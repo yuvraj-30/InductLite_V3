@@ -19,6 +19,7 @@ import {
   createTestCompany,
   createTestSite,
   createTestTemplate,
+  createTestUser,
 } from "./setup";
 
 // Types for dynamic imports
@@ -203,6 +204,73 @@ describe("Token Replay Attack Prevention", () => {
       );
       expect(persisted!.termsAcceptedAt!.getTime()).toBeLessThanOrEqual(
         afterCreate.getTime(),
+      );
+    });
+
+    it("createPublicSignIn should persist supervisor approval competency evidence", async () => {
+      const phone = "+64211234567";
+      const template = await createTestTemplate(prisma, company.id, site.id);
+      const supervisor = await createTestUser(prisma, company.id, {
+        role: "SITE_MANAGER",
+      });
+      const reviewedAt = new Date("2026-02-22T10:45:00.000Z");
+      const briefingAcknowledgedAt = new Date("2026-02-22T10:40:00.000Z");
+
+      const created = await publicSigninRepo.createPublicSignIn({
+        companyId: company.id,
+        siteId: site.id,
+        idempotencyKey: "token-replay-supervisor-evidence",
+        visitorName: "Supervisor Evidence User",
+        visitorPhone: phone,
+        hasAcceptedTerms: true,
+        templateId: template.id,
+        templateVersion: template.version,
+        answers: [{ questionId: "q1", answer: "yes" }],
+        visitorType: "VISITOR",
+        competencyEvidence: {
+          status: "SUPERVISOR_APPROVED",
+          supervisorVerifiedBy: supervisor.id,
+          supervisorVerifiedAt: reviewedAt,
+          briefingAcknowledgedAt,
+        },
+      });
+
+      const persisted = await prisma.inductionResponse.findFirst({
+        where: { sign_in_record_id: created.signInRecordId },
+        select: {
+          competency_status: true,
+          briefing_acknowledged_at: true,
+          supervisor_verified_by: true,
+          supervisor_verified_at: true,
+          completion_snapshot: true,
+        },
+      });
+
+      expect(persisted?.competency_status).toBe("SUPERVISOR_APPROVED");
+      expect(persisted?.briefing_acknowledged_at?.toISOString()).toBe(
+        briefingAcknowledgedAt.toISOString(),
+      );
+      expect(persisted?.supervisor_verified_by).toBe(supervisor.id);
+      expect(persisted?.supervisor_verified_at?.toISOString()).toBe(
+        reviewedAt.toISOString(),
+      );
+
+      const snapshot = (persisted?.completion_snapshot ?? {}) as {
+        competency?: {
+          status?: string;
+          supervisor_verified_by?: string | null;
+          supervisor_verified_at?: string | null;
+          briefing_acknowledged_at?: string | null;
+        };
+      };
+
+      expect(snapshot.competency?.status).toBe("SUPERVISOR_APPROVED");
+      expect(snapshot.competency?.supervisor_verified_by).toBe(supervisor.id);
+      expect(snapshot.competency?.supervisor_verified_at).toBe(
+        reviewedAt.toISOString(),
+      );
+      expect(snapshot.competency?.briefing_acknowledged_at).toBe(
+        briefingAcknowledgedAt.toISOString(),
       );
     });
 

@@ -11,7 +11,7 @@
 
 import { publicDb } from "@/lib/db/public-db";
 import { scopedDb } from "@/lib/db/scoped-db";
-import { Prisma } from "@prisma/client";
+import { Prisma, type InductionCompetencyStatus } from "@prisma/client";
 import { createHash } from "crypto";
 import { handlePrismaError, RepositoryError } from "./base";
 import {
@@ -56,6 +56,13 @@ export interface PublicSignInInput {
   termsVersionId?: string;
   privacyVersionId?: string;
   consentStatement?: string;
+  competencyEvidence?: {
+    status: InductionCompetencyStatus;
+    supervisorVerifiedBy?: string;
+    supervisorVerifiedAt?: Date;
+    briefingAcknowledgedAt?: Date;
+    refresherDueAt?: Date;
+  };
 }
 
 /**
@@ -71,6 +78,72 @@ export interface SignInResult {
 }
 
 const MAX_SIGNATURE_BYTES = 2_000_000;
+const REFRESHER_INTERVAL_DAYS = 365;
+
+interface ResolvedCompetencyEvidence {
+  status: InductionCompetencyStatus;
+  briefingAcknowledgedAt: Date;
+  refresherDueAt: Date | null;
+  supervisorVerifiedBy: string | null;
+  supervisorVerifiedAt: Date | null;
+}
+
+function addDays(date: Date, days: number): Date {
+  return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+}
+
+function refresherStatus(
+  refresherDueAt: Date | null,
+  now: Date,
+): "NOT_SCHEDULED" | "CURRENT" | "DUE" {
+  if (!refresherDueAt) {
+    return "NOT_SCHEDULED";
+  }
+  return refresherDueAt.getTime() <= now.getTime() ? "DUE" : "CURRENT";
+}
+
+function resolveCompetencyEvidence(
+  evidence: PublicSignInInput["competencyEvidence"] | undefined,
+  options: {
+    templateForceReinduction: boolean;
+    defaultBriefingAcknowledgedAt: Date;
+  },
+): ResolvedCompetencyEvidence {
+  const status = evidence?.status ?? "SELF_DECLARED";
+  const briefingAcknowledgedAt =
+    evidence?.briefingAcknowledgedAt ?? options.defaultBriefingAcknowledgedAt;
+  const refresherDueAt =
+    evidence?.refresherDueAt ??
+    (options.templateForceReinduction
+      ? addDays(briefingAcknowledgedAt, REFRESHER_INTERVAL_DAYS)
+      : null);
+
+  if (status === "SUPERVISOR_APPROVED") {
+    const supervisorVerifiedBy = evidence?.supervisorVerifiedBy?.trim();
+    if (!supervisorVerifiedBy) {
+      throw new RepositoryError(
+        "Supervisor approval evidence is missing reviewer id",
+        "VALIDATION",
+      );
+    }
+
+    return {
+      status,
+      briefingAcknowledgedAt,
+      refresherDueAt,
+      supervisorVerifiedBy,
+      supervisorVerifiedAt: evidence?.supervisorVerifiedAt ?? new Date(),
+    };
+  }
+
+  return {
+    status: "SELF_DECLARED",
+    briefingAcknowledgedAt,
+    refresherDueAt,
+    supervisorVerifiedBy: null,
+    supervisorVerifiedAt: null,
+  };
+}
 
 function extractSignatureMeta(signatureData: string): {
   value: string;
@@ -219,6 +292,8 @@ export async function createPublicSignIn(
         return existing;
       }
 
+      const acceptedAt = new Date();
+
       // 1. Create sign-in record (token will be added after we have the ID)
       const signInRecord = await db.signInRecord.create({
         data: {
@@ -230,7 +305,7 @@ export async function createPublicSignIn(
           employer_name: input.employerName?.trim() || null,
           visitor_type: input.visitorType,
           hasAcceptedTerms: true,
-          termsAcceptedAt: new Date(),
+          termsAcceptedAt: acceptedAt,
           terms_version_id: input.termsVersionId ?? null,
           privacy_version_id: input.privacyVersionId ?? null,
           consent_statement:
@@ -257,7 +332,12 @@ export async function createPublicSignIn(
       /* eslint-disable security-guardrails/require-company-id -- intentional id-only lookup followed by explicit company_id check */
       const templateById = await tx.inductionTemplate.findFirst({
         where: { id: input.templateId },
-        select: { id: true, company_id: true, version: true },
+        select: {
+          id: true,
+          company_id: true,
+          version: true,
+          force_reinduction: true,
+        },
       });
       /* eslint-enable security-guardrails/require-company-id */
 
@@ -300,8 +380,17 @@ export async function createPublicSignIn(
       });
 
       const signatureCapturedAt = signatureMeta ? new Date() : null;
+      const competencyEvidence = resolveCompetencyEvidence(
+        input.competencyEvidence,
+        {
+          templateForceReinduction: templateById.force_reinduction,
+          defaultBriefingAcknowledgedAt:
+            signInRecord.termsAcceptedAt ?? acceptedAt,
+        },
+      );
+      const recordedAt = new Date();
       const completionSnapshot = {
-        recorded_at: new Date().toISOString(),
+        recorded_at: recordedAt.toISOString(),
         template: {
           id: input.templateId,
           version: input.templateVersion,
@@ -321,6 +410,19 @@ export async function createPublicSignIn(
           size_bytes: signatureMeta?.sizeBytes ?? null,
           captured_at: signatureCapturedAt?.toISOString() ?? null,
         },
+        competency: {
+          status: competencyEvidence.status,
+          briefing_acknowledged_at:
+            competencyEvidence.briefingAcknowledgedAt.toISOString(),
+          refresher_due_at: competencyEvidence.refresherDueAt?.toISOString() ?? null,
+          refresher_status: refresherStatus(
+            competencyEvidence.refresherDueAt,
+            recordedAt,
+          ),
+          supervisor_verified_by: competencyEvidence.supervisorVerifiedBy,
+          supervisor_verified_at:
+            competencyEvidence.supervisorVerifiedAt?.toISOString() ?? null,
+        },
       };
 
       // 4. Create induction response
@@ -339,6 +441,11 @@ export async function createPublicSignIn(
           signature_size_bytes: signatureMeta?.sizeBytes ?? null,
           signature_captured_at: signatureCapturedAt,
           passed: true, // All required fields validated before this point
+          competency_status: competencyEvidence.status,
+          briefing_acknowledged_at: competencyEvidence.briefingAcknowledgedAt,
+          refresher_due_at: competencyEvidence.refresherDueAt,
+          supervisor_verified_by: competencyEvidence.supervisorVerifiedBy,
+          supervisor_verified_at: competencyEvidence.supervisorVerifiedAt,
         },
       });
 

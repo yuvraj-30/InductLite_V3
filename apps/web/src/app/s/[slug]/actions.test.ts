@@ -12,6 +12,7 @@ import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 // Mock all dependencies before importing the module under test
 vi.mock("@/lib/repository/site.repository", () => ({
   findSiteByPublicSlug: vi.fn(),
+  listSiteManagerNotificationRecipients: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock("@/lib/repository/template.repository", () => ({
@@ -21,6 +22,23 @@ vi.mock("@/lib/repository/template.repository", () => ({
 vi.mock("@/lib/repository/public-signin.repository", () => ({
   createPublicSignIn: vi.fn(),
   signOutWithToken: vi.fn(),
+}));
+
+vi.mock("@/lib/repository/email.repository", () => ({
+  queueEmailNotification: vi.fn().mockResolvedValue({ id: "notif-1" }),
+}));
+
+vi.mock("@/lib/repository/signin-escalation.repository", () => ({
+  createPendingSignInEscalation: vi.fn().mockResolvedValue({
+    created: true,
+    escalation: {
+      id: "esc-12345678",
+      notification_targets: 0,
+      notifications_queued: 0,
+      status: "PENDING",
+    },
+  }),
+  setSignInEscalationNotificationCounts: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@/lib/repository/emergency.repository", () => ({
@@ -66,12 +84,21 @@ vi.mock("@/lib/auth/csrf", () => ({
 
 // Import after mocks are set up
 import { submitSignIn, submitSignOut, getSiteForSignIn } from "./actions";
-import { findSiteByPublicSlug } from "@/lib/repository/site.repository";
+import {
+  findSiteByPublicSlug,
+  listSiteManagerNotificationRecipients,
+} from "@/lib/repository/site.repository";
 import { getActiveTemplateForSite } from "@/lib/repository/template.repository";
 import {
   createPublicSignIn,
   signOutWithToken,
 } from "@/lib/repository/public-signin.repository";
+import { createAuditLog } from "@/lib/repository/audit.repository";
+import { queueEmailNotification } from "@/lib/repository/email.repository";
+import {
+  createPendingSignInEscalation,
+  setSignInEscalationNotificationCounts,
+} from "@/lib/repository/signin-escalation.repository";
 import { createRequestLogger } from "@/lib/logger";
 
 describe("Public Actions Error Handling", () => {
@@ -145,6 +172,177 @@ describe("Public Actions Error Handling", () => {
       if (!result.success) {
         expect(result.error.code).toBe("VALIDATION_ERROR");
       }
+    });
+
+    it("should block sign-in when a red-flag answer requires supervisor escalation", async () => {
+      const redFlagQuestionId = "c123456789012345678901234";
+      (findSiteByPublicSlug as Mock).mockResolvedValue(mockSite);
+      (getActiveTemplateForSite as Mock).mockResolvedValue({
+        ...mockTemplate,
+        questions: [
+          {
+            id: redFlagQuestionId,
+            question_text: "Do you feel unwell today?",
+            question_type: "YES_NO",
+            options: null,
+            is_required: true,
+            display_order: 1,
+            red_flag: true,
+          },
+        ],
+      });
+      (listSiteManagerNotificationRecipients as Mock).mockResolvedValue([
+        {
+          userId: "manager-1",
+          email: "manager@example.com",
+          name: "Manager One",
+        },
+      ]);
+
+      const result = await submitSignIn({
+        ...validInput,
+        answers: [{ questionId: redFlagQuestionId, answer: "yes" }],
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe("VALIDATION_ERROR");
+        expect(result.error.message).toBe(
+          "Supervisor approval required before sign-in",
+        );
+        expect(result.error.fieldErrors?.answers?.[0]).toContain(
+          "Critical safety response detected",
+        );
+      }
+      expect(createPublicSignIn).not.toHaveBeenCalled();
+      expect(createPendingSignInEscalation).toHaveBeenCalledWith(
+        expect.objectContaining({
+          companyId: "company-123",
+          siteId: "site-123",
+          visitorType: "CONTRACTOR",
+        }),
+      );
+      expect(createAuditLog).toHaveBeenCalledWith(
+        "company-123",
+        expect.objectContaining({
+          action: "visitor.sign_in_escalation_submitted",
+          entity_type: "PendingSignInEscalation",
+          entity_id: "esc-12345678",
+          details: expect.objectContaining({
+            manager_notification_targets: 1,
+            manager_notifications_queued: 1,
+          }),
+        }),
+      );
+      expect(setSignInEscalationNotificationCounts).toHaveBeenCalledWith(
+        "company-123",
+        "esc-12345678",
+        1,
+        1,
+      );
+      expect(queueEmailNotification).toHaveBeenCalledWith(
+        "company-123",
+        expect.objectContaining({
+          user_id: "manager-1",
+          to: "manager@example.com",
+        }),
+      );
+    });
+
+    it("should complete sign-in when escalation is already approved", async () => {
+      const redFlagQuestionId = "c123456789012345678901234";
+      (findSiteByPublicSlug as Mock).mockResolvedValue(mockSite);
+      (getActiveTemplateForSite as Mock).mockResolvedValue({
+        ...mockTemplate,
+        questions: [
+          {
+            id: redFlagQuestionId,
+            question_text: "Do you feel unwell today?",
+            question_type: "YES_NO",
+            options: null,
+            is_required: true,
+            display_order: 1,
+            red_flag: true,
+          },
+        ],
+      });
+      (createPendingSignInEscalation as Mock).mockResolvedValue({
+        created: false,
+        escalation: {
+          id: "esc-12345678",
+          status: "APPROVED",
+          reviewed_by: "manager-1",
+          reviewed_at: new Date("2026-02-22T09:00:00Z"),
+          termsAcceptedAt: new Date("2026-02-22T08:59:00Z"),
+          notification_targets: 1,
+          notifications_queued: 1,
+        },
+      });
+      (createPublicSignIn as Mock).mockResolvedValue({
+        signInRecordId: "signin-1",
+        signOutToken: "token-1",
+        signOutTokenExpiresAt: new Date("2026-02-23T10:00:00Z"),
+        visitorName: "John Doe",
+        siteName: "Test Site",
+        signInTime: new Date("2026-02-22T10:00:00Z"),
+      });
+
+      const result = await submitSignIn({
+        ...validInput,
+        answers: [{ questionId: redFlagQuestionId, answer: "yes" }],
+      });
+
+      expect(result.success).toBe(true);
+      expect(createPublicSignIn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          competencyEvidence: expect.objectContaining({
+            status: "SUPERVISOR_APPROVED",
+            supervisorVerifiedBy: "manager-1",
+            supervisorVerifiedAt: expect.any(Date),
+            briefingAcknowledgedAt: expect.any(Date),
+          }),
+        }),
+      );
+      expect(queueEmailNotification).not.toHaveBeenCalled();
+    });
+
+    it("should return denied state when escalation is already denied", async () => {
+      const redFlagQuestionId = "c123456789012345678901234";
+      (findSiteByPublicSlug as Mock).mockResolvedValue(mockSite);
+      (getActiveTemplateForSite as Mock).mockResolvedValue({
+        ...mockTemplate,
+        questions: [
+          {
+            id: redFlagQuestionId,
+            question_text: "Do you feel unwell today?",
+            question_type: "YES_NO",
+            options: null,
+            is_required: true,
+            display_order: 1,
+            red_flag: true,
+          },
+        ],
+      });
+      (createPendingSignInEscalation as Mock).mockResolvedValue({
+        created: false,
+        escalation: {
+          id: "esc-12345678",
+          status: "DENIED",
+          notification_targets: 1,
+          notifications_queued: 1,
+        },
+      });
+
+      const result = await submitSignIn({
+        ...validInput,
+        answers: [{ questionId: redFlagQuestionId, answer: "yes" }],
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.message).toBe("Supervisor denied site entry");
+      }
+      expect(createPublicSignIn).not.toHaveBeenCalled();
     });
 
     it("should return generic error when repository throws Error with SQL query", async () => {

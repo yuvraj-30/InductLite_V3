@@ -7,17 +7,20 @@
 
 import { Suspense } from "react";
 import Link from "next/link";
+import { checkPermissionReadOnly } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import {
   listCurrentlyOnSite,
   findAllSites,
   type SignInRecordWithDetails,
 } from "@/lib/repository";
+import { getOnboardingProgress } from "@/lib/repository/dashboard.repository";
 import { SignOutButton } from "./sign-out-button";
 import { SiteFilterSelect } from "./SiteFilterSelect";
 import { LiveRegisterAutoRefresh } from "./auto-refresh";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
+import { OnboardingChecklist } from "../components/OnboardingChecklist";
 
 export const metadata = {
   title: "Live Register | InductLite",
@@ -51,6 +54,14 @@ async function LiveRegisterContent({
     method: "GET",
   });
   const context = await requireAuthenticatedContextReadOnly();
+  const [canManageSitePermission, canManageTemplatePermission, onboardingProgress] =
+    await Promise.all([
+      checkPermissionReadOnly("site:manage"),
+      checkPermissionReadOnly("template:manage"),
+      getOnboardingProgress(context.companyId),
+    ]);
+  const canManageSites = canManageSitePermission.success;
+  const canManageTemplates = canManageTemplatePermission.success;
   let records: SignInRecordWithDetails[] = [];
   let sites: Site[] = [];
   let dataLoadFailed = false;
@@ -143,6 +154,12 @@ async function LiveRegisterContent({
           </div>
           <h3 className="mb-2 text-lg font-medium text-gray-900">No one currently on site</h3>
           <p className="text-gray-600">When visitors sign in, they will appear here.</p>
+          <OnboardingChecklist
+            progress={onboardingProgress}
+            className="mt-6 text-left"
+            canManageSites={canManageSites}
+            canManageTemplates={canManageTemplates}
+          />
         </div>
       ) : (
         <div className="space-y-6">

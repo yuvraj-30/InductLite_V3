@@ -19,6 +19,10 @@ const E2E_QUIET = (() => {
   return v === "1" || v?.toLowerCase() === "true";
 })();
 
+const RATE_LIMIT_ANALYTICS_ENABLED =
+  process.env.RATE_LIMIT_ANALYTICS === "1" &&
+  process.env.NODE_ENV === "production";
+
 function getTestRunId(): string | null {
   const allowTestRunner =
     process.env.NODE_ENV === "test" || process.env.ALLOW_TEST_RUNNER === "1";
@@ -106,6 +110,9 @@ export async function __test_clearInMemoryStoreForClient(clientKey: string) {
   inMemoryStore.clearPrefix(`${runPrefix}public-slug:${clientKey}`);
   inMemoryStore.clearPrefix(`${runPrefix}signin-site:`);
   inMemoryStore.clearPrefix(`${runPrefix}signout:${clientKey}:`);
+  inMemoryStore.clearPrefix(`${runPrefix}admin-ip:${clientKey}`);
+  inMemoryStore.clearPrefix(`${runPrefix}magic-verify:${clientKey}:`);
+  inMemoryStore.clearPrefix(`${runPrefix}ready:${clientKey}`);
 
   // If Redis is available, try to remove keys with these prefixes as well.
   try {
@@ -186,6 +193,21 @@ const RL_SIGNOUT_PER_IP_PER_MIN = Number(
 const RL_CONTRACTOR_MAGIC_LINK_PER_IP_PER_HOUR = Number(
   process.env.RL_CONTRACTOR_MAGIC_LINK_PER_IP_PER_HOUR ?? 3,
 );
+const RL_ADMIN_PER_USER_PER_MIN = Number(
+  process.env.RL_ADMIN_PER_USER_PER_MIN ?? 60,
+);
+const RL_ADMIN_PER_IP_PER_MIN = Number(process.env.RL_ADMIN_PER_IP_PER_MIN ?? 120);
+const RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN = Number(
+  process.env.RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN ?? 60,
+);
+const RL_READY_PER_IP_PER_MIN = 120;
+
+function getRateLimitRedisClient() {
+  if (process.env.NODE_ENV !== "production") {
+    return null;
+  }
+  return getRedisClient();
+}
 
 // Clean up every minute
 if (typeof setInterval !== "undefined") {
@@ -197,12 +219,12 @@ if (typeof setInterval !== "undefined") {
  * Uses Upstash Redis in production, in-memory for dev.
  */
 function createRateLimiter(): Ratelimit | null {
-  const redis = getRedisClient();
+  const redis = getRateLimitRedisClient();
   if (redis) {
     return new Ratelimit({
       redis,
       limiter: Ratelimit.slidingWindow(RL_PUBLIC_SLUG_PER_IP_PER_MIN, "60 s"),
-      analytics: true,
+      analytics: RATE_LIMIT_ANALYTICS_ENABLED,
       prefix: "inductlite:ratelimit",
     });
   }
@@ -268,26 +290,37 @@ export async function checkPublicSlugRateLimit(
 
   // Use Upstash rate limiter if available
   if (rateLimiter) {
-    const result = await rateLimiter.limit(key);
+    try {
+      const result = await rateLimiter.limit(key);
 
-    if (!result.success) {
+      if (!result.success) {
+        log.warn(
+          { clientKey, slug, remaining: result.remaining },
+          "Rate limit exceeded for public slug access",
+        );
+        recordRateLimitBlocked({
+          kind: "public-slug",
+          clientKey,
+          meta: { slug },
+        });
+      }
+
+      return {
+        success: result.success,
+        limit: result.limit,
+        remaining: result.remaining,
+        reset: result.reset,
+      };
+    } catch (error) {
       log.warn(
-        { clientKey, slug, remaining: result.remaining },
-        "Rate limit exceeded for public slug access",
+        {
+          clientKey,
+          slug,
+          error: error instanceof Error ? error.message : String(error),
+        },
+        "Redis public slug limiter unavailable, falling back to in-memory",
       );
-      recordRateLimitBlocked({
-        kind: "public-slug",
-        clientKey,
-        meta: { slug },
-      });
     }
-
-    return {
-      success: result.success,
-      limit: result.limit,
-      remaining: result.remaining,
-      reset: result.reset,
-    };
   }
 
   // In-memory fallback for development
@@ -366,14 +399,14 @@ export async function checkLoginRateLimit(
   // Rate limit by both clientKey and email to prevent distributed attacks
   const key = `${TEST_RUN_PREFIX}login:${clientKey}:${email.toLowerCase()}`;
 
-  const redis = getRedisClient();
+  const redis = getRateLimitRedisClient();
   if (redis) {
     try {
       // Create a stricter limiter for login using memoized client
       const loginLimiter = new Ratelimit({
         redis,
         limiter: Ratelimit.slidingWindow(5, "15 m"), // 5 attempts per 15 minutes
-        analytics: true,
+        analytics: RATE_LIMIT_ANALYTICS_ENABLED,
         prefix: "inductlite:login-ratelimit",
       });
 
@@ -456,33 +489,43 @@ export async function checkContractorMagicLinkRateLimit(options?: {
 
   const key = `${TEST_RUN_PREFIX}contractor-magic-link:${clientKey}`;
 
-  const redis = getRedisClient();
+  const redis = getRateLimitRedisClient();
   if (redis) {
-    const limiter = new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(
-        RL_CONTRACTOR_MAGIC_LINK_PER_IP_PER_HOUR,
-        "60 m",
-      ),
-      analytics: true,
-      prefix: "inductlite:contractor-magic-ratelimit",
-    });
-
-    const result = await limiter.limit(key);
-    if (!result.success) {
-      log.warn({ clientKey }, "Contractor magic-link rate limit exceeded");
-      recordRateLimitBlocked({
-        kind: "contractor-magic-link",
-        clientKey,
+    try {
+      const limiter = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(
+          RL_CONTRACTOR_MAGIC_LINK_PER_IP_PER_HOUR,
+          "60 m",
+        ),
+        analytics: RATE_LIMIT_ANALYTICS_ENABLED,
+        prefix: "inductlite:contractor-magic-ratelimit",
       });
-    }
 
-    return {
-      success: result.success,
-      limit: result.limit,
-      remaining: result.remaining,
-      reset: result.reset,
-    };
+      const result = await limiter.limit(key);
+      if (!result.success) {
+        log.warn({ clientKey }, "Contractor magic-link rate limit exceeded");
+        recordRateLimitBlocked({
+          kind: "contractor-magic-link",
+          clientKey,
+        });
+      }
+
+      return {
+        success: result.success,
+        limit: result.limit,
+        remaining: result.remaining,
+        reset: result.reset,
+      };
+    } catch (error) {
+      log.warn(
+        {
+          clientKey,
+          error: error instanceof Error ? error.message : String(error),
+        },
+        "Redis contractor magic-link limiter unavailable, falling back to in-memory",
+      );
+    }
   }
 
   const windowMs = 60 * 60 * 1000;
@@ -541,20 +584,20 @@ export async function checkSignInRateLimit(
   const key = `${TEST_RUN_PREFIX}signin:${clientKey}:${siteSlug}`;
   const siteKey = `${TEST_RUN_PREFIX}signin-site:${siteSlug}`;
 
-  const redis = getRedisClient();
+  const redis = getRateLimitRedisClient();
   if (redis) {
     try {
       const signInLimiter = new Ratelimit({
         redis,
         limiter: Ratelimit.slidingWindow(RL_SIGNIN_PER_IP_PER_MIN, "1 m"),
-        analytics: true,
+        analytics: RATE_LIMIT_ANALYTICS_ENABLED,
         prefix: "inductlite:signin-ratelimit",
       });
 
       const siteLimiter = new Ratelimit({
         redis,
         limiter: Ratelimit.slidingWindow(RL_SIGNIN_PER_SITE_PER_MIN, "1 m"),
-        analytics: true,
+        analytics: RATE_LIMIT_ANALYTICS_ENABLED,
         prefix: "inductlite:signin-site-ratelimit",
       });
 
@@ -647,32 +690,42 @@ export async function checkSignOutRateLimit(
 
   const key = `${TEST_RUN_PREFIX}signout:${clientKey}:${tokenPrefix}`;
 
-  const redis = getRedisClient();
+  const redis = getRateLimitRedisClient();
   if (redis) {
-    const signOutLimiter = new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(RL_SIGNOUT_PER_IP_PER_MIN, "1 m"),
-      analytics: true,
-      prefix: "inductlite:signout-ratelimit",
-    });
-
-    const result = await signOutLimiter.limit(key);
-
-    if (!result.success) {
-      log.warn({ clientKey }, "Sign-out rate limit exceeded");
-      recordRateLimitBlocked({
-        kind: "signout",
-        clientKey,
-        meta: { tokenPrefix },
+    try {
+      const signOutLimiter = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(RL_SIGNOUT_PER_IP_PER_MIN, "1 m"),
+        analytics: RATE_LIMIT_ANALYTICS_ENABLED,
+        prefix: "inductlite:signout-ratelimit",
       });
-    }
 
-    return {
-      success: result.success,
-      limit: result.limit,
-      remaining: result.remaining,
-      reset: result.reset,
-    };
+      const result = await signOutLimiter.limit(key);
+
+      if (!result.success) {
+        log.warn({ clientKey }, "Sign-out rate limit exceeded");
+        recordRateLimitBlocked({
+          kind: "signout",
+          clientKey,
+          meta: { tokenPrefix },
+        });
+      }
+
+      return {
+        success: result.success,
+        limit: result.limit,
+        remaining: result.remaining,
+        reset: result.reset,
+      };
+    } catch (error) {
+      log.warn(
+        {
+          clientKey,
+          error: error instanceof Error ? error.message : String(error),
+        },
+        "Redis sign-out limiter unavailable, falling back to in-memory",
+      );
+    }
   }
 
   // In-memory fallback
@@ -695,6 +748,234 @@ export async function checkSignOutRateLimit(
     success,
     limit,
     remaining,
+    reset: Date.now() + windowMs,
+  };
+}
+
+/**
+ * Check rate limit for authenticated/admin mutation paths.
+ *
+ * Enforces three limits together:
+ * - per authenticated user
+ * - per client IP/device key
+ * - per tenant/company
+ */
+export async function checkAdminMutationRateLimit(
+  companyId: string,
+  userId: string,
+  options?: { requestId?: string; clientKey?: string },
+): Promise<RateLimitResult> {
+  const requestId = options?.requestId ?? generateRequestId();
+  const log = createRequestLogger(requestId);
+
+  let clientKey: string;
+  if (options?.clientKey) {
+    clientKey = options.clientKey;
+  } else {
+    const headersList = await headers();
+    const headersObj: Record<string, string | undefined> = {
+      "x-forwarded-for": headersList.get("x-forwarded-for") ?? undefined,
+      "x-real-ip": headersList.get("x-real-ip") ?? undefined,
+      "user-agent": headersList.get("user-agent") ?? undefined,
+      accept: headersList.get("accept") ?? undefined,
+    };
+
+    clientKey = getStableClientKey(headersObj, {
+      trustProxy: process.env.TRUST_PROXY === "1",
+    });
+  }
+
+  const userKey = `${TEST_RUN_PREFIX}admin-user:${userId}`;
+  const ipKey = `${TEST_RUN_PREFIX}admin-ip:${clientKey}`;
+  const companyKey = `${TEST_RUN_PREFIX}admin-company:${companyId}`;
+
+  const redis = getRateLimitRedisClient();
+  if (redis) {
+    try {
+      const userLimiter = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(RL_ADMIN_PER_USER_PER_MIN, "1 m"),
+        analytics: RATE_LIMIT_ANALYTICS_ENABLED,
+        prefix: "inductlite:admin-user-ratelimit",
+      });
+      const ipLimiter = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(RL_ADMIN_PER_IP_PER_MIN, "1 m"),
+        analytics: RATE_LIMIT_ANALYTICS_ENABLED,
+        prefix: "inductlite:admin-ip-ratelimit",
+      });
+      const companyLimiter = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(
+          RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN,
+          "1 m",
+        ),
+        analytics: RATE_LIMIT_ANALYTICS_ENABLED,
+        prefix: "inductlite:admin-company-mutation-ratelimit",
+      });
+
+      const [userResult, ipResult, companyResult] = await Promise.all([
+        userLimiter.limit(userKey),
+        ipLimiter.limit(ipKey),
+        companyLimiter.limit(companyKey),
+      ]);
+
+      const success =
+        userResult.success && ipResult.success && companyResult.success;
+      if (!success) {
+        log.warn(
+          { userId, clientKey, companyId },
+          "Admin mutation rate limit exceeded",
+        );
+        recordRateLimitBlocked({
+          kind: "admin-mutation",
+          clientKey,
+          meta: { userId, companyId },
+        });
+      }
+
+      return {
+        success,
+        limit: Math.min(userResult.limit, ipResult.limit, companyResult.limit),
+        remaining: Math.min(
+          userResult.remaining,
+          ipResult.remaining,
+          companyResult.remaining,
+        ),
+        reset: Math.max(userResult.reset, ipResult.reset, companyResult.reset),
+      };
+    } catch (error) {
+      log.warn(
+        { error: String(error) },
+        "Redis admin mutation limiter unavailable, falling back to in-memory",
+      );
+    }
+  }
+
+  const windowMs = 60 * 1000;
+  const userCount = await inMemoryStore.incr(userKey, windowMs);
+  const ipCount = await inMemoryStore.incr(ipKey, windowMs);
+  const companyCount = await inMemoryStore.incr(companyKey, windowMs);
+
+  const success =
+    userCount <= RL_ADMIN_PER_USER_PER_MIN &&
+    ipCount <= RL_ADMIN_PER_IP_PER_MIN &&
+    companyCount <= RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN;
+
+  if (!success) {
+    log.warn(
+      { userId, clientKey, companyId },
+      "Admin mutation rate limit exceeded (in-memory)",
+    );
+    recordRateLimitBlocked({
+      kind: "admin-mutation",
+      clientKey,
+      meta: { userId, companyId },
+    });
+  }
+
+  return {
+    success,
+    limit: Math.min(
+      RL_ADMIN_PER_USER_PER_MIN,
+      RL_ADMIN_PER_IP_PER_MIN,
+      RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN,
+    ),
+    remaining: Math.min(
+      Math.max(0, RL_ADMIN_PER_USER_PER_MIN - userCount),
+      Math.max(0, RL_ADMIN_PER_IP_PER_MIN - ipCount),
+      Math.max(0, RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN - companyCount),
+    ),
+    reset: Date.now() + windowMs,
+  };
+}
+
+/**
+ * Check rate limit for contractor magic-link verification/consume attempts.
+ *
+ * Public endpoint: key by client and token-prefix to reduce brute-force abuse.
+ */
+export async function checkMagicLinkVerifyRateLimit(
+  tokenPrefix: string,
+  options?: { requestId?: string; clientKey?: string },
+): Promise<RateLimitResult> {
+  const requestId = options?.requestId ?? generateRequestId();
+  const log = createRequestLogger(requestId);
+
+  let clientKey: string;
+  if (options?.clientKey) {
+    clientKey = options.clientKey;
+  } else {
+    const headersList = await headers();
+    const headersObj: Record<string, string | undefined> = {
+      "x-forwarded-for": headersList.get("x-forwarded-for") ?? undefined,
+      "x-real-ip": headersList.get("x-real-ip") ?? undefined,
+      "user-agent": headersList.get("user-agent") ?? undefined,
+      accept: headersList.get("accept") ?? undefined,
+    };
+
+    clientKey = getStableClientKey(headersObj, {
+      trustProxy: process.env.TRUST_PROXY === "1",
+    });
+  }
+
+  const key = `${TEST_RUN_PREFIX}magic-verify:${clientKey}:${tokenPrefix}`;
+  const limit = RL_SIGNOUT_PER_IP_PER_MIN;
+
+  const redis = getRateLimitRedisClient();
+  if (redis) {
+    try {
+      const verifyLimiter = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(limit, "1 m"),
+        analytics: RATE_LIMIT_ANALYTICS_ENABLED,
+        prefix: "inductlite:magic-verify-ratelimit",
+      });
+
+      const result = await verifyLimiter.limit(key);
+      if (!result.success) {
+        log.warn({ clientKey }, "Magic-link verify rate limit exceeded");
+        recordRateLimitBlocked({
+          kind: "magic-verify",
+          clientKey,
+          meta: { tokenPrefix },
+        });
+      }
+
+      return {
+        success: result.success,
+        limit: result.limit,
+        remaining: result.remaining,
+        reset: result.reset,
+      };
+    } catch (error) {
+      log.warn(
+        {
+          clientKey,
+          error: error instanceof Error ? error.message : String(error),
+        },
+        "Redis magic-link verify limiter unavailable, falling back to in-memory",
+      );
+    }
+  }
+
+  const windowMs = 60 * 1000;
+  const count = await inMemoryStore.incr(key, windowMs);
+  const success = count <= limit;
+
+  if (!success) {
+    log.warn({ clientKey }, "Magic-link verify rate limit exceeded (in-memory)");
+    recordRateLimitBlocked({
+      kind: "magic-verify",
+      clientKey,
+      meta: { tokenPrefix },
+    });
+  }
+
+  return {
+    success,
+    limit,
+    remaining: Math.max(0, limit - count),
     reset: Date.now() + windowMs,
   };
 }
@@ -733,27 +1014,37 @@ export async function checkCspReportRateLimit(options?: {
   const key = `csp-report:${clientKey}`;
 
   // Use Redis if available.
-  const redis = getRedisClient();
+  const redis = getRateLimitRedisClient();
   if (redis) {
-    const limiter = new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(limit, "60 s"),
-      analytics: true,
-      prefix: "inductlite:csp-report-ratelimit",
-    });
+    try {
+      const limiter = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(limit, "60 s"),
+        analytics: RATE_LIMIT_ANALYTICS_ENABLED,
+        prefix: "inductlite:csp-report-ratelimit",
+      });
 
-    const result = await limiter.limit(key);
-    if (!result.success) {
-      log.warn({ clientKey }, "CSP report rate limit exceeded");
-      recordRateLimitBlocked({ kind: "csp-report", clientKey });
+      const result = await limiter.limit(key);
+      if (!result.success) {
+        log.warn({ clientKey }, "CSP report rate limit exceeded");
+        recordRateLimitBlocked({ kind: "csp-report", clientKey });
+      }
+
+      return {
+        success: result.success,
+        limit: result.limit,
+        remaining: result.remaining,
+        reset: result.reset,
+      };
+    } catch (error) {
+      log.warn(
+        {
+          clientKey,
+          error: error instanceof Error ? error.message : String(error),
+        },
+        "Redis CSP report limiter unavailable, falling back to in-memory",
+      );
     }
-
-    return {
-      success: result.success,
-      limit: result.limit,
-      remaining: result.remaining,
-      reset: result.reset,
-    };
   }
 
   // In-memory fallback
@@ -769,6 +1060,89 @@ export async function checkCspReportRateLimit(options?: {
   return {
     success,
     limit,
+    remaining,
+    reset: Date.now() + windowMs,
+  };
+}
+
+/**
+ * Check rate limit for readiness probes.
+ *
+ * Shared backend strategy:
+ * - Redis sliding window when available (cluster-safe)
+ * - In-memory fallback only when Redis is unavailable
+ */
+export async function checkReadinessRateLimit(options?: {
+  requestId?: string;
+  clientKey?: string;
+}): Promise<RateLimitResult> {
+  const requestId = options?.requestId ?? generateRequestId();
+  const log = createRequestLogger(requestId);
+
+  let clientKey: string;
+  if (options?.clientKey) {
+    clientKey = options.clientKey;
+  } else {
+    const headersList = await headers();
+    const headersObj: Record<string, string | undefined> = {
+      "x-forwarded-for": headersList.get("x-forwarded-for") ?? undefined,
+      "x-real-ip": headersList.get("x-real-ip") ?? undefined,
+      "user-agent": headersList.get("user-agent") ?? undefined,
+      accept: headersList.get("accept") ?? undefined,
+    };
+    clientKey = getStableClientKey(headersObj, {
+      trustProxy: process.env.TRUST_PROXY === "1",
+    });
+  }
+
+  const windowMs = 60_000;
+  const key = `${TEST_RUN_PREFIX}ready:${clientKey}`;
+  const redis = getRateLimitRedisClient();
+
+  if (redis) {
+    try {
+      const limiter = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(RL_READY_PER_IP_PER_MIN, "60 s"),
+        analytics: RATE_LIMIT_ANALYTICS_ENABLED,
+        prefix: "inductlite:ready-ratelimit",
+      });
+
+      const result = await limiter.limit(key);
+      if (!result.success) {
+        log.warn({ clientKey }, "Readiness probe rate limit exceeded");
+        recordRateLimitBlocked({ kind: "readiness", clientKey });
+      }
+
+      return {
+        success: result.success,
+        limit: result.limit,
+        remaining: result.remaining,
+        reset: result.reset,
+      };
+    } catch (error) {
+      log.warn(
+        {
+          clientKey,
+          error: error instanceof Error ? error.message : String(error),
+        },
+        "Redis readiness limiter unavailable, falling back to in-memory",
+      );
+    }
+  }
+
+  const count = await inMemoryStore.incr(key, windowMs);
+  const remaining = Math.max(0, RL_READY_PER_IP_PER_MIN - count);
+  const success = count <= RL_READY_PER_IP_PER_MIN;
+
+  if (!success) {
+    log.warn({ clientKey }, "Readiness probe rate limit exceeded (in-memory)");
+    recordRateLimitBlocked({ kind: "readiness", clientKey });
+  }
+
+  return {
+    success,
+    limit: RL_READY_PER_IP_PER_MIN,
     remaining,
     reset: Date.now() + windowMs,
   };

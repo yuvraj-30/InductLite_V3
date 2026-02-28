@@ -9,7 +9,9 @@ import { checkAuthReadOnly, checkPermissionReadOnly } from "@/lib/auth";
 import { findAllSites, findSitesByIds } from "@/lib/repository";
 import { listManagedSiteIds } from "@/lib/repository/site-manager.repository";
 import { listActivePublicLinksForSites } from "@/lib/repository/site.repository";
+import { getOnboardingProgress } from "@/lib/repository/dashboard.repository";
 import { DeactivateSiteButton, ReactivateSiteButton } from "./site-buttons";
+import { OnboardingChecklist } from "../components/OnboardingChecklist";
 
 export const metadata = {
   title: "Sites | InductLite",
@@ -29,7 +31,12 @@ export default async function SitesPage() {
   }
 
   const companyId = guard.user.companyId;
-  const canManagePromise = checkPermissionReadOnly("site:manage");
+  const [canManage, canManageTemplatesPermission, onboardingProgress] =
+    await Promise.all([
+      checkPermissionReadOnly("site:manage"),
+      checkPermissionReadOnly("template:manage"),
+      getOnboardingProgress(companyId),
+    ]);
 
   // Fetch sites for this company (site managers only see assigned sites)
   let sites = [] as Awaited<ReturnType<typeof findAllSites>>;
@@ -53,9 +60,9 @@ export default async function SitesPage() {
     sitePublicLinks.map((l) => [l.site_id, l.slug]),
   );
 
-  // Check if user can manage sites
-  const canManage = await canManagePromise;
+  // Check if user can manage sites/templates
   const canManageSites = canManage.success;
+  const canManageTemplates = canManageTemplatesPermission.success;
 
   return (
     <div className="p-6">
@@ -132,6 +139,12 @@ export default async function SitesPage() {
               </Link>
             </div>
           )}
+          <OnboardingChecklist
+            progress={onboardingProgress}
+            className="mt-6 text-left"
+            canManageSites={canManageSites}
+            canManageTemplates={canManageTemplates}
+          />
         </div>
       ) : (
         <div className="bg-white shadow overflow-hidden sm:rounded-md">

@@ -48,11 +48,33 @@ export type {
   UpdateUserInput,
 } from "./user.repository";
 
+// Auth repository
+export {
+  registerCompanyWithAdmin,
+} from "./auth.repository";
+
+export type {
+  RegisterCompanyWithAdminInput,
+  RegisterCompanyWithAdminResult,
+} from "./auth.repository";
+
+// Company repository
+export {
+  findCompanyComplianceSettings,
+  updateCompanyComplianceSettings,
+} from "./company.repository";
+
+export type {
+  CompanyComplianceSettings,
+  UpdateCompanyComplianceSettingsInput,
+} from "./company.repository";
+
 // Site repository
 export {
   findSiteById,
   findSiteByIdWithCounts,
   findSiteByPublicSlug,
+  listSiteManagerNotificationRecipients,
   findAllSites,
   findSitesByIds,
   listSites,
@@ -69,10 +91,15 @@ export type {
   SiteWithCounts,
   SiteListItem,
   SiteListWithCounts,
+  SiteManagerNotificationRecipient,
   SiteFilter,
   CreateSiteInput,
   UpdateSiteInput,
 } from "./site.repository";
+
+// Email repository
+export { queueEmailNotification } from "./email.repository";
+export type { QueueEmailNotificationInput } from "./email.repository";
 
 // Contractor repository
 export {
@@ -248,6 +275,8 @@ export {
   createSiteEmergencyProcedure,
   updateSiteEmergencyProcedure,
   deactivateSiteEmergencyProcedure,
+  listEmergencyDrills,
+  createEmergencyDrill,
 } from "./emergency.repository";
 
 export type {
@@ -255,6 +284,7 @@ export type {
   UpdateEmergencyContactInput,
   CreateEmergencyProcedureInput,
   UpdateEmergencyProcedureInput,
+  CreateEmergencyDrillInput,
 } from "./emergency.repository";
 
 // Incident repository
@@ -278,3 +308,18 @@ export type {
   PublicSignInInput,
   SignInResult,
 } from "./public-signin.repository";
+
+// Sign-in escalation repository
+export {
+  createPendingSignInEscalation,
+  findSignInEscalationById,
+  listSignInEscalations,
+  setSignInEscalationNotificationCounts,
+  approveSignInEscalation,
+  denySignInEscalation,
+} from "./signin-escalation.repository";
+
+export type {
+  CreateSignInEscalationInput,
+  SignInEscalationRecord,
+} from "./signin-escalation.repository";

@@ -8,6 +8,9 @@ describe("rate-limit guardrail defaults", () => {
     process.env.RL_SIGNIN_PER_IP_PER_MIN = "30";
     process.env.RL_SIGNIN_PER_SITE_PER_MIN = "200";
     process.env.RL_SIGNOUT_PER_IP_PER_MIN = "30";
+    process.env.RL_ADMIN_PER_USER_PER_MIN = "60";
+    process.env.RL_ADMIN_PER_IP_PER_MIN = "120";
+    process.env.RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN = "60";
     delete process.env.ALLOW_TEST_RUNNER;
     vi.resetModules();
   });
@@ -21,6 +24,8 @@ describe("rate-limit guardrail defaults", () => {
       checkPublicSlugRateLimit,
       checkSignInRateLimit,
       checkSignOutRateLimit,
+      checkAdminMutationRateLimit,
+      checkReadinessRateLimit,
     } = await import("@/lib/rate-limit");
 
     const publicRes = await checkPublicSlugRateLimit("slug", {
@@ -37,5 +42,19 @@ describe("rate-limit guardrail defaults", () => {
       clientKey: "ua:test",
     });
     expect(signOutRes.limit).toBe(30);
+
+    const adminRes = await checkAdminMutationRateLimit(
+      "company-test",
+      "user-test",
+      {
+        clientKey: "ua:test",
+      },
+    );
+    expect(adminRes.limit).toBe(60);
+
+    const readyRes = await checkReadinessRateLimit({
+      clientKey: "ua:test",
+    });
+    expect(readyRes.limit).toBe(120);
   });
 });

@@ -1,273 +1,306 @@
 # Project Implementation Plan
 
-Source of requirements: `docs/MASTER_FOUNDER_PLAN.md`  
-Scope: architectural execution map plus implementation completion record.
+Date: 2026-02-22  
+Authoring role: Senior Software Architect  
+Status: In progress (Phases 3-4 partial complete)
 
-## Execution Completion (2026-02-21)
-
-- Phase 0 complete: planning freeze and dependency order established.
-- Phase 1 complete: Prisma schema + migrations shipped for hazards, emergency data, legal versioning/signature evidence, and incident reporting.
-- Phase 2 complete: repository/service layer shipped for hazards, emergency, legal consent, signature persistence, exports boundary, and incident reports.
-- Phase 3 complete: security/ops hardening shipped (structured logging expansion, sanitized health/readiness, sitemap repository boundary, rate-limit telemetry updates).
-- Phase 4 complete: public/admin UX shipped (legal pages/links, hazard register UI, emergency setup UI, incident register UI, live-register incident shortcut, offline queue modules).
-- Phase 5 complete: test sweep complete (unit + integration + e2e + guardrail checks).
-- Phase 6 complete: docs/runbooks synchronized with implementation and tenant-owned model registry updated.
-
-## 1. Execution Principles
-
-1. `Prisma schema + migration` changes must land before any repository/action/UI changes that depend on new fields/tables.
-2. `Repository/service` changes must land before `Server Actions/Route Handlers`.
-3. `Server Actions/Route Handlers` must land before `UI` wiring that calls new payload shapes.
-4. `Guardrails/docs/env contracts` must be updated in the same phase as feature toggles or new limits.
-5. `Tests` are phase-gated; each phase must pass its required checks before the next phase starts.
-
-## 2. Strict Phase Sequence (Dependency-Safe)
-
-| Phase | Name | Depends On | Blocks |
-| --- | --- | --- | --- |
-| 0 | Baseline + Planning Freeze | None | All implementation work |
-| 1 | Data Model + Migration Foundation | Phase 0 | Repositories, Actions, UI |
-| 2 | Repository + Service Layer | Phase 1 | Actions/Routes, UI |
-| 3 | Security/Audit + Operational Hardening | Phase 2 | UI completion, release |
-| 4 | Public/Admin UX Delivery | Phase 2-3 | E2E completion, release |
-| 5 | Test & Verification Sweep | Phase 1-4 | Documentation finalization |
-| 6 | Documentation + Release Readiness | Phase 5 | Merge/release |
-
-## 3. Phase-by-Phase File Touch Map
-
-## Phase 0: Baseline + Planning Freeze
-Goal: lock execution order and acceptance criteria.
-
-Create:
-- `project-implementation-plan.md` (this file)
-
-Reference (no edits required in this phase):
+Source documents:
 - `docs/MASTER_FOUNDER_PLAN.md`
 - `ARCHITECTURE_GUARDRAILS.md`
 - `AI_AGENT_INSTRUCTIONS.md`
 
-Exit criteria:
-- Approved file map and sequencing.
-- No application code changes.
+## 1) Executive Summary
 
----
+This plan converts `docs/MASTER_FOUNDER_PLAN.md` into an execution blueprint with strict ordering, risk controls, and test gates.
 
-## Phase 1: Data Model + Migration Foundation
-Goal: introduce compliance-safe schema changes first.
+Primary outcome:
+- Deliver legal-compliance-critical capabilities first (retention, notifiable workflow, emergency drill evidence).
+- Close guardrail gaps (admin rate limiting, export download byte enforcement, route hardening).
+- Improve field UX and resilience without violating tenant isolation or cost guardrails.
 
-Modify:
+Progress snapshot (2026-02-23):
+- Completed: admin + magic-link rate-limiting controls (Phase 3 subset).
+- Completed: export byte-budget guardrails for queueing/downloads with deterministic control payloads (Phase 3 subset).
+- Completed: reliability hardening for `/health` and `/api/ready` (shared ORM DB readiness check, shared rate-limit strategy for readiness).
+- Completed: structured client crash telemetry path from `app/error.tsx` and `app/global-error.tsx` to `/api/client-errors`.
+- Completed: compliance data model increment (notifiable incident metadata, emergency drill register, company/record legal-hold flags, incident/drill retention enforcement).
+- Completed: public sign-in critical-event escalation gate (red-flag induction answers now block entry and create audit evidence).
+- Completed: blocked red-flag escalation notifications are queued to site managers for follow-up.
+- Completed: admin escalation queue with explicit approve/deny decisions that resolve blocked red-flag submissions.
+- Completed: end-to-end escalation lifecycle coverage for both resolution outcomes (blocked red-flag submission -> admin approve/deny -> deterministic retry behavior on original worker session).
+- Completed: escalation lifecycle E2E validation across Chromium/Firefox/WebKit and included in smoke suite gating.
+- Completed: auth signup transaction moved from app-layer action to repository boundary (`registerCompanyWithAdmin`) with unit coverage.
+- Completed: worker competency/briefing evidence layer (induction competency state, supervisor verification evidence, and refresher scheduling persisted with immutable completion snapshots).
+- Completed: public induction UX hardening (larger stepper readability, explicit load-failure retry action with offline guidance, and shared-device signature safety defaults for kiosk mode).
+- Completed: persistent admin onboarding guidance across empty states (Sites/Templates/Live Register now reuse shared onboarding progress checklist until first induction is completed).
+- Completed: contractor magic-link recovery UX (invalid/expired path now includes explicit "Request New Link" CTA, expiry/timing guidance, and direct recovery path from expired portal sessions).
+- Completed: public emergency information UX refresh (tap-first emergency cards with quick-call actions and clearer step hierarchy on the induction screen).
+- Completed: legal-hold + retention class completion for compliance records (induction/sign-in and audit classes added; company compliance legal hold now hard-stops sign-in, incident, drill, and audit purges).
+- Completed: admin compliance settings management for retention classes/legal hold (`/admin/settings`) with audit logging and permission-gated updates.
+- Completed: E2E coverage for admin compliance settings save flow + legal-hold reason validation, and guardrail control-matrix entries for settings update controls (`COMP-001..003`).
+
+## 2) Non-Negotiable Constraints
+
+All work must preserve:
+- Tenant isolation by construction (`company_id` scoping, repository boundary).
+- CSRF protections on mutating server actions (`assertOrigin()` baseline).
+- No raw SQL additions.
+- Guardrail-first behavior for exports/uploads/rate limits.
+- Cost ceilings and no new paid infra without explicit budget approval.
+
+## 3) Program Scope
+
+In scope:
+- WorkSafe NZ compliance data and workflow coverage.
+- Security and guardrail hardening listed in founder plan.
+- Resilience and observability improvements.
+- UX polish for induction/admin onboarding friction points.
+
+Out of scope (this program increment):
+- New infrastructure platforms.
+- Mobile native app.
+- Multi-region architecture changes.
+
+## 4) Target Deliverables
+
+1. Legal/Compliance
+- Notifiable event data model and workflow.
+- Emergency drill/test evidence register.
+- Legal hold plus retention classes for compliance records.
+
+2. Security/Guardrails
+- Enforced admin rate limits (`RL_ADMIN_*`) in validation + runtime.
+- Export download/day byte quota enforcement.
+- Magic link consume route abuse controls.
+
+3. Ops/Resilience
+- Shared readiness limiter strategy (not process-local only).
+- Structured crash/error telemetry path.
+- Health/readiness contract hardening.
+
+4. UX/CSM
+- Field-friendly induction stepper and high-friction control improvements.
+- Retry-first public error states.
+- Persistent guided onboarding across admin empty states.
+
+## 5) Workstreams
+
+## WS-A: Compliance Data and Policy Controls
+Goals:
+- Model and retain evidence required for regulator-facing operations.
+
+Primary files (expected):
 - `apps/web/prisma/schema.prisma`
-- `apps/web/prisma/seed.ts` (only if seed data required for new admin UX or e2e)
+- `apps/web/src/lib/maintenance/retention.ts`
+- `apps/web/src/lib/repository/incident.repository.ts`
+- `apps/web/src/app/admin/incidents/actions.ts`
+- `apps/web/src/app/admin/incidents/page.tsx`
 
-Create:
-- `apps/web/prisma/migrations/<timestamp>_master_founder_phase1/migration.sql`
+## WS-B: Security and Guardrail Enforcement
+Goals:
+- Remove policy drift between documented controls and runtime behavior.
 
-Expected schema additions (architectural targets):
-- Hazard register domain (site-scoped).
-- Emergency contacts/procedures (site-scoped).
-- Signature evidence persistence fields connected to induction response.
-- Versioned legal consent evidence fields (terms/privacy version references + acceptance metadata).
+Primary files (expected):
+- `apps/web/src/lib/env-validation.ts`
+- `apps/web/src/lib/rate-limit/index.ts`
+- `apps/web/src/app/(auth)/verify/route.ts`
+- `apps/web/src/lib/repository/export.repository.ts`
+- `apps/web/src/app/api/exports/[id]/download/route.ts`
 
-Docs/contracts to update in this phase:
-- `docs/guardrail-control-matrix.md` (if new limits/env vars are introduced)
-- `docs/tenant-owned-models.md` (regenerated artifact flow only; do not hand-edit if CI enforces generation)
+## WS-C: Reliability and Observability
+Goals:
+- Improve production behavior under failure and improve diagnostics.
 
-Mandatory sequence:
-1. Edit `schema.prisma`.
-2. Generate and inspect migration SQL.
-3. Run Prisma generate/migrate.
-4. Only then move to repositories.
+Primary files (expected):
+- `apps/web/src/app/api/ready/route.ts`
+- `apps/web/src/app/health/route.ts`
+- `apps/web/src/app/error.tsx`
+- `apps/web/src/app/global-error.tsx`
+- `apps/web/src/lib/logger/pino.ts`
+
+## WS-D: UX Friction Reduction
+Goals:
+- Improve field usability and first-run admin success path.
+
+Primary files (expected):
+- `apps/web/src/app/s/[slug]/components/SignInFlow.tsx`
+- `apps/web/src/app/s/[slug]/components/InductionQuestions.tsx`
+- `apps/web/src/app/s/[slug]/page.tsx`
+- `apps/web/src/app/admin/dashboard/page.tsx`
+- `apps/web/src/app/admin/sites/page.tsx`
+- `apps/web/src/app/admin/templates/page.tsx`
+
+## 6) Phase Plan and Sequencing
+
+## Phase 0: Planning Baseline and ADR Pack
+Objective:
+- Freeze architecture decisions and acceptance criteria before coding.
+
+Tasks:
+- Write ADRs for retention model, admin rate-limiter design, and export byte accounting.
+- Define control IDs and error contracts for new denials.
+
+Exit criteria:
+- Signed technical scope and PR slicing strategy.
+
+## Phase 1: Schema and Migration Foundation
+Objective:
+- Land additive schema changes for compliance and retention controls.
+
+Tasks:
+- Add notifiable-event fields and drill/test evidence models.
+- Add legal-hold and retention classification fields.
+- Generate migration and update type-safe repository contracts.
 
 Exit criteria:
 - Migration applies cleanly.
 - Prisma client generated.
-- No repository/action/UI changes merged before this is stable.
+- No breaking changes to current routes.
 
----
+## Phase 2: Repository and Service Layer
+Objective:
+- Implement all new data behavior behind scoped repositories.
 
-## Phase 2: Repository + Service Layer
-Goal: make new schema usable through tenant-safe repository boundaries.
-
-Modify:
-- `apps/web/src/lib/repository/public-signin.repository.ts`
-- `apps/web/src/lib/repository/export.repository.ts`
-- `apps/web/src/lib/repository/site.repository.ts`
-- `apps/web/src/lib/repository/audit.repository.ts`
-- `apps/web/src/lib/repository/index.ts`
-- `apps/web/src/lib/auth/magic-link.ts`
-- `apps/web/src/lib/repository/magic-link.repository.ts`
-- `apps/web/src/lib/security/data-protection.ts` (only if extra encryption/hash utilities are needed)
-
-Create:
-- `apps/web/src/lib/repository/hazard.repository.ts`
-- `apps/web/src/lib/repository/emergency.repository.ts`
-- `apps/web/src/lib/legal/consent-versioning.ts`
-
-Key architectural requirements implemented in this phase:
-- Persist signature evidence end-to-end in repository write path.
-- Add tenant-scoped CRUD/query methods for hazards/emergency contacts.
-- Move export queue/concurrency transaction logic out of app action into repository/service.
-- Add audit events for magic-link issue/consume/failure.
-
-Mandatory sequence:
-1. Repository interfaces/types.
-2. Repository implementation.
-3. Audit action enum expansion in `audit.repository.ts`.
-4. Barrel exports in `repository/index.ts`.
-5. Unit tests for repository changes.
+Tasks:
+- Implement compliant retention logic and legal-hold exclusions.
+- Add repository methods for drill records and incident regulatory metadata.
+- Add export byte budget accounting and query helpers.
 
 Exit criteria:
-- All data writes reachable via repository boundary.
-- No app route directly depends on unavailable repository methods.
+- No app-layer direct data logic for new capabilities.
+- Unit tests cover repository paths.
 
----
+## Phase 3: Security and Guardrail Enforcement
+Objective:
+- Enforce missing controls in runtime paths.
 
-## Phase 3: Security/Audit + Operational Hardening
-Goal: align runtime behavior with security and observability requirements.
-
-Modify:
-- `apps/web/src/app/health/route.ts`
-- `apps/web/src/app/api/ready/route.ts`
-- `apps/web/src/app/sitemap.xml/route.ts`
-- `apps/web/src/app/(auth)/contractor/actions.ts`
-- `apps/web/src/app/(auth)/verify/route.ts`
-- `apps/web/src/lib/rate-limit/index.ts` (if health/ready throttles are added)
-- `apps/web/src/lib/rate-limit/telemetry.ts`
-- `apps/web/src/app/admin/dashboard/page.tsx`
-- `apps/web/src/app/admin/history/page.tsx`
-- `apps/web/src/app/admin/live-register/page.tsx`
-- `apps/web/src/instrumentation.ts` (if logger standardization includes startup path)
-
-Create:
-- `apps/web/src/lib/repository/sitemap.repository.ts`
-
-Key architectural requirements implemented in this phase:
-- Remove route-layer direct Prisma usage where planned (`sitemap.xml`).
-- Replace ad-hoc `console.*` operational logging in key admin pages/telemetry paths with structured logger.
-- Sanitize health/readiness outward error payloads.
-- Add/confirm audit trails for magic-link operations.
-
-Mandatory sequence:
-1. Repository refactor for sitemap and dependent imports.
-2. Logging standardization.
-3. Health/ready behavior hardening.
-4. Route-level security/audit updates.
+Tasks:
+- Add `RL_ADMIN_PER_USER_PER_MIN`, `RL_ADMIN_PER_IP_PER_MIN`, `RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN` to env validation.
+- Add admin rate-limit checks to admin server actions and relevant API routes.
+- Add magic-link consume rate limit on `/verify`.
+- Enforce export download byte caps before download redirect/response.
 
 Exit criteria:
-- Structured logging path used consistently in targeted areas.
-- Health/ready routes no longer leak sensitive detail.
+- Guardrail denials are deterministic and include control metadata.
+- Guardrail tests updated and passing.
 
----
+## Phase 4: Reliability and Error-Path Hardening
+Objective:
+- Improve failure handling and observability quality.
 
-## Phase 4: Public/Admin UX Delivery
-Goal: implement UX/compliance surface changes after backend contracts are stable.
-
-Modify:
-- `apps/web/src/app/s/[slug]/actions.ts`
-- `apps/web/src/app/s/[slug]/components/SignInFlow.tsx`
-- `apps/web/src/app/s/[slug]/components/InductionQuestions.tsx`
-- `apps/web/src/app/s/[slug]/components/SuccessScreen.tsx`
-- `apps/web/src/components/ui/public-shell.tsx`
-- `apps/web/src/app/page.tsx`
-- `apps/web/src/app/admin/dashboard/page.tsx`
-- `apps/web/src/app/admin/sites/[id]/page.tsx`
-- `apps/web/src/app/admin/sites/actions.ts`
-- `apps/web/src/lib/validation/schemas.ts`
-- `apps/web/next.config.js` (only if offline strategy/caching changes are required)
-
-Create:
-- `apps/web/src/app/privacy/page.tsx`
-- `apps/web/src/app/terms/page.tsx`
-- `apps/web/src/app/admin/hazards/page.tsx`
-- `apps/web/src/app/admin/hazards/actions.ts`
-- `apps/web/src/app/admin/sites/[id]/emergency/page.tsx`
-- `apps/web/src/app/admin/sites/[id]/emergency/actions.ts`
-- `apps/web/src/lib/offline/signin-queue.ts`
-- `apps/web/src/lib/offline/signin-sync.ts`
-
-Key architectural requirements implemented in this phase:
-- Fat-finger-friendly public induction controls.
-- Terms/privacy links and legal version visibility.
-- First-run admin onboarding checklist.
-- Hazard and emergency admin workflows.
-- Offline submission queue/sync UX foundations.
-
-Mandatory sequence:
-1. Validation schema updates.
-2. Server action payload wiring.
-3. Public/admin UI wiring.
-4. Offline queue UX integration.
+Tasks:
+- Replace process-local-only readiness throttle with shared limiter strategy.
+- Ensure client crash paths emit structured telemetry.
+- Harden public error states with retry UX.
 
 Exit criteria:
-- UI consumes only already-shipped server contracts.
-- No UI path relies on schema fields absent from migration.
+- Failure flows are user-recoverable.
+- Critical errors are observable in structured logs.
 
----
+## Phase 5: UX and Adoption Improvements
+Objective:
+- Reduce first-use friction for workers/admins.
 
-## Phase 5: Test & Verification Sweep
-Goal: prevent regressions and validate guardrails.
+Tasks:
+- Field mode visual updates for induction stepper and controls.
+- Public retry and recovery affordances.
+- Persistent onboarding guidance across admin empty states.
 
-Modify:
-- `apps/web/src/lib/repository/__tests__/public-signin.repository.unit.test.ts`
-- `apps/web/src/app/s/[slug]/actions.test.ts`
-- `apps/web/src/lib/auth/__tests__/magic-link.test.ts`
-- `apps/web/e2e/public-signin.spec.ts`
-- `apps/web/e2e/admin-auth.spec.ts` (only if auth/legal nav impact)
+Exit criteria:
+- E2E validates first induction setup path end-to-end.
+- Mobile usability checks pass for induction flow.
 
-Create:
-- `apps/web/tests/integration/hazard-register.integration.test.ts`
-- `apps/web/tests/integration/emergency-contacts.integration.test.ts`
-- `apps/web/tests/integration/legal-consent-signature.integration.test.ts`
-- `apps/web/tests/integration/health-ready-hardening.integration.test.ts`
-- `apps/web/e2e/admin-hazards.spec.ts`
-- `apps/web/e2e/admin-emergency-contacts.spec.ts`
+## Phase 6: Verification, Documentation, and Release Gate
+Objective:
+- Validate all behavior and synchronize docs.
 
-Required command sequence:
+Tasks:
+- Run full lint/typecheck/test/guardrail command matrix.
+- Update docs for workflows, runbooks, and new env controls.
+- Produce release notes with cost/security deltas and fallback options.
+
+Exit criteria:
+- All required checks green.
+- Documentation and guardrail matrix reflect actual implementation.
+
+## 7) PR Slicing Strategy
+
+PR-1: Schema/migrations only  
+PR-2: Repository/service implementation only  
+PR-3: Guardrail/rate-limit enforcement in actions/routes  
+PR-4: Ops/resilience changes (health/ready/error telemetry)  
+PR-5: UX improvements and onboarding polish  
+PR-6: Tests + docs + final policy updates
+
+Rules:
+- Keep PRs scoped to one phase where possible.
+- Do not merge downstream PRs before upstream phase gate is complete.
+
+## 8) Acceptance Criteria
+
+Compliance:
+- Incident workflows store and export regulator metadata.
+- Compliance-critical records respect retention and legal-hold rules.
+
+Security:
+- Admin/public abuse controls align with documented guardrails.
+- Export download byte quotas enforced per company and globally.
+
+Reliability:
+- Readiness and health behavior is deterministic and safe under scale.
+- Crash/error events are centrally observable.
+
+UX:
+- Public induction flow is usable with high-friction field conditions.
+- New admins receive persistent setup guidance until first successful induction.
+
+## 9) Risk Register
+
+1. Risk: Migration complexity on existing production data.  
+Mitigation: additive-first migration strategy, backfill scripts, rollback checkpoints.
+
+2. Risk: Guardrail over-enforcement causes workflow blockage.  
+Mitigation: phased rollout, dry-run logging mode where appropriate, explicit control IDs.
+
+3. Risk: Retention changes accidentally purge required legal data.  
+Mitigation: legal-hold precedence, retention integration tests, staged retention jobs.
+
+4. Risk: Rate-limiting changes create false positives for legitimate admins.  
+Mitigation: separate user/ip/company scopes, telemetry on block reasons, bounded threshold tuning.
+
+5. Risk: UX changes regress desktop workflows.  
+Mitigation: responsive test matrix and targeted E2E coverage for desktop/mobile.
+
+## 10) Test Plan (Exact Commands)
+
+From repo root:
 1. `npm run lint`
 2. `npm run typecheck`
 3. `npm run test`
-4. `cd apps/web && npm run test:integration`
-5. `cd apps/web && npm run test:e2e:smoke`
-6. `npm run guardrails-lint && npm run guardrails-tests && npm run policy-check`
+4. `npm run test:integration`
+5. `npm run test:e2e:smoke`
+6. `npm run guardrails-lint`
+7. `npm run guardrails-tests`
+8. `npm run policy-check`
 
-Exit criteria:
-- All changed-layer tests pass before docs/release updates.
+Targeted app-level runs when needed:
+1. `cd apps/web && npm run test:integration`
+2. `cd apps/web && npm run test:e2e:smoke`
 
----
+## 11) Documentation Update Checklist
 
-## Phase 6: Documentation + Release Readiness
-Goal: finalize operational/legal docs and release artifacts.
+Must update in same implementation window:
+- `docs/MASTER_FOUNDER_PLAN.md` (progress and outcomes)
+- `docs/guardrail-control-matrix.md` (new/changed controls)
+- `docs/critical-paths.md` (if critical-path behavior changes)
+- `.env.example` and `apps/web/.env.example` if new env contracts are introduced
+- `README.md` and relevant runbooks if operational behavior changes
 
-Modify:
-- `docs/MASTER_FOUNDER_PLAN.md` (status updates/checklist outcomes)
-- `docs/PRODUCT_CRITIQUE.md` (if used as active product narrative)
-- `docs/guardrail-control-matrix.md` (new controls/limits)
-- `docs/critical-paths.md` (if BUDGET_PROTECT/critical flow behavior changed)
-- `README.md` (new pages/routes/feature summary)
-- `AI_AGENT_INSTRUCTIONS.md` (if conventions/env contracts changed)
-- `.env.example` and `.env.production.example` (only if new env vars are required)
+## 12) Definition of Done (Program Level)
 
-Create (if absent):
-- `docs/LEGAL_COMPLIANCE_IMPLEMENTATION.md` (evidence mapping to feature set)
-- `docs/OPERATIONS_OBSERVABILITY_RUNBOOK.md` (logger/error/health behavior)
-
-Exit criteria:
-- Docs match implementation and scripts.
-- Links and commands validated.
-- Plan marked complete and ready for approval.
-
-## 4. Hard Dependency Guardrails (Must Not Violate)
-
-1. Do not modify `apps/web/src/app/**` to consume new fields before Phase 1 migration is merged and Prisma client is regenerated.
-2. Do not modify UI payload handling before repository contracts are finalized in Phase 2.
-3. Do not introduce public-route logging or health behavior changes without concurrent tests (Phase 5).
-4. Do not add new env vars without same-phase `.env.example` and docs updates.
-5. Do not bypass tenant scoping (`company_id`) in any new repository method.
-
-## 5. Approval Gates
-
-1. Gate A (after Phase 1): migration/schema sign-off.
-2. Gate B (after Phase 2): repository/service contract sign-off.
-3. Gate C (after Phase 3): security/ops sign-off.
-4. Gate D (after Phase 4): UX/product sign-off.
-5. Gate E (after Phase 5-6): release readiness sign-off.
+Done means all items below are true:
+- Phase gates 0-6 completed.
+- All test/guardrail/policy checks pass.
+- No tenant isolation or CSRF regressions.
+- Cost model remains within current guardrail tier budgets.
+- Documentation accurately reflects shipped behavior.

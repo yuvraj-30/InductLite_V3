@@ -22,6 +22,26 @@ test.describe.serial("Admin Authentication", () => {
     await page.goto("/");
   });
 
+  test.afterEach(async ({ request, workerUser }) => {
+    const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
+
+    // Reset lock state so downstream specs do not inherit a locked worker account.
+    await request
+      .post(`${BASE_URL}/api/test/set-user-lock`, {
+        headers: getTestRouteHeaders(),
+        data: { email: workerUser.email, failed_logins: 0, lock: false },
+      })
+      .catch(() => null);
+
+    // Reset any targeted rate-limit counters for this worker.
+    await request
+      .post(
+        `${BASE_URL}/api/test/clear-rate-limit?clientKey=${encodeURIComponent(workerUser.clientKey)}`,
+        { headers: getTestRouteHeaders() },
+      )
+      .catch(() => null);
+  });
+
   test("should redirect unauthenticated users to login", async ({ page }) => {
     await page.goto("/admin/live-register");
 

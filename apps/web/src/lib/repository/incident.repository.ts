@@ -5,6 +5,7 @@
  */
 
 import { scopedDb } from "@/lib/db/scoped-db";
+import { publicDb } from "@/lib/db/public-db";
 import type {
   IncidentReport,
   IncidentSeverity,
@@ -21,6 +22,13 @@ import {
   type PaginationParams,
   type PaginatedResult,
 } from "./base";
+
+const DEFAULT_INCIDENT_RETENTION_DAYS = 1825;
+
+function computeRetentionExpiry(days: number, occurredAt: Date): Date {
+  const safeDays = Number.isFinite(days) && days > 0 ? Math.floor(days) : 1;
+  return new Date(occurredAt.getTime() + safeDays * 24 * 60 * 60 * 1000);
+}
 
 export interface IncidentFilter {
   site_id?: string;
@@ -41,6 +49,11 @@ export interface CreateIncidentInput {
   immediate_actions?: string;
   occurred_at?: Date;
   reported_by?: string;
+  is_notifiable?: boolean;
+  worksafe_notified_at?: Date;
+  worksafe_reference_number?: string;
+  worksafe_notified_by?: string;
+  legal_hold?: boolean;
 }
 
 export async function findIncidentReportById(
@@ -126,6 +139,33 @@ export async function createIncidentReport(
 
   try {
     const db = scopedDb(companyId);
+    const occurredAt = input.occurred_at ?? new Date();
+    if (Number.isNaN(occurredAt.getTime())) {
+      throw new RepositoryError("Invalid occurred_at timestamp", "VALIDATION");
+    }
+
+    const isNotifiable = Boolean(input.is_notifiable);
+    if (!isNotifiable && input.worksafe_notified_at) {
+      throw new RepositoryError(
+        "WorkSafe notification timestamp requires a notifiable incident",
+        "VALIDATION",
+      );
+    }
+    if (!isNotifiable && input.worksafe_reference_number?.trim()) {
+      throw new RepositoryError(
+        "WorkSafe reference number requires a notifiable incident",
+        "VALIDATION",
+      );
+    }
+    if (
+      input.worksafe_notified_at &&
+      Number.isNaN(input.worksafe_notified_at.getTime())
+    ) {
+      throw new RepositoryError(
+        "Invalid WorkSafe notified timestamp",
+        "VALIDATION",
+      );
+    }
 
     const site = await db.site.findFirst({
       where: { id: input.site_id, company_id: companyId },
@@ -153,6 +193,28 @@ export async function createIncidentReport(
       }
     }
 
+    if (input.worksafe_notified_by) {
+      const notifier = await db.user.findFirst({
+        where: { id: input.worksafe_notified_by, company_id: companyId },
+        select: { id: true },
+      });
+      if (!notifier) {
+        throw new RepositoryError("WorkSafe notifier user not found", "NOT_FOUND");
+      }
+    }
+
+    const company = await publicDb.company.findFirst({
+      where: { id: companyId },
+      select: {
+        incident_retention_days: true,
+        compliance_legal_hold: true,
+      },
+    });
+    const retentionDays =
+      company?.incident_retention_days && company.incident_retention_days > 0
+        ? company.incident_retention_days
+        : DEFAULT_INCIDENT_RETENTION_DAYS;
+
     return await db.incidentReport.create({
       data: {
         site_id: input.site_id,
@@ -163,7 +225,19 @@ export async function createIncidentReport(
         title,
         description: input.description?.trim() || null,
         immediate_actions: input.immediate_actions?.trim() || null,
-        occurred_at: input.occurred_at ?? new Date(),
+        occurred_at: occurredAt,
+        is_notifiable: isNotifiable,
+        worksafe_notified_at: isNotifiable
+          ? (input.worksafe_notified_at ?? null)
+          : null,
+        worksafe_reference_number: isNotifiable
+          ? (input.worksafe_reference_number?.trim() || null)
+          : null,
+        worksafe_notified_by: isNotifiable
+          ? (input.worksafe_notified_by ?? null)
+          : null,
+        legal_hold: input.legal_hold ?? company?.compliance_legal_hold ?? false,
+        retention_expires_at: computeRetentionExpiry(retentionDays, occurredAt),
         reported_by: input.reported_by ?? null,
       },
     });
@@ -228,4 +302,3 @@ export async function resolveIncidentReport(
     handlePrismaError(error, "IncidentReport");
   }
 }
-

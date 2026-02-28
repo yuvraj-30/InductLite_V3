@@ -1,0 +1,6 @@
+/* Keep heading snapshots text-width stable across responsive layouts. */
+h1,
+h2 {
+  display: inline-block !important;
+  width: fit-content !important;
+}

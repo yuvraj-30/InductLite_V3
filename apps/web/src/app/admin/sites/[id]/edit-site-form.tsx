@@ -4,7 +4,8 @@
  * Edit Site Form Component
  */
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { updateSiteAction, SiteActionResult } from "../actions";
 
 interface Site {
@@ -97,7 +98,7 @@ function FormFields({ site }: { site: Site }) {
 export function EditSiteForm({ site }: EditSiteFormProps) {
   // Bind the siteId to the action
   const boundUpdateAction = updateSiteAction.bind(null, site.id);
-  const [state, formAction] = useFormState(boundUpdateAction, initialState);
+  const [state, formAction] = useActionState(boundUpdateAction, initialState);
 
   return (
     <form action={formAction} className="space-y-4">

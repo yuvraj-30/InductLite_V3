@@ -29,11 +29,11 @@ function getCachedSiteConfig(slug: string) {
   )();
 }
 
-function renderErrorCard(message: string) {
+function renderErrorCard(message: string, retryHref: string) {
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
-        <div className="text-red-500 mb-4">
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="surface-panel-strong w-full max-w-md p-8 text-center">
+        <div className="mb-4 text-red-600 dark:text-red-200">
           <svg
             className="mx-auto h-16 w-16"
             fill="none"
@@ -48,8 +48,19 @@ function renderErrorCard(message: string) {
             />
           </svg>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Unable to Load</h1>
+        <h1 className="kinetic-title mb-2 text-3xl font-black">Unable to Load</h1>
         <Alert variant="error">{message}</Alert>
+        <p className="mt-3 text-sm text-secondary">
+          If you are offline, reconnect to mobile data or Wi-Fi, then retry.
+        </p>
+        <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center">
+          <a href={retryHref} className="btn-primary px-4 text-sm">
+            Retry
+          </a>
+          <a href="/" className="btn-secondary px-4 text-sm">
+            Back to Home
+          </a>
+        </div>
       </div>
     </div>
   );
@@ -77,17 +88,18 @@ export default async function PublicSignInPage({
   params,
 }: PublicSignInPageProps) {
   const { slug } = await params;
+  const retryHref = `/s/${encodeURIComponent(slug)}`;
 
   const rateLimit = await checkPublicSlugRateLimit(slug);
   if (!rateLimit.success) {
-    return renderErrorCard("Too many requests. Please try again later.");
+    return renderErrorCard("Too many requests. Please try again later.", retryHref);
   }
 
   const result = await getCachedSiteConfig(slug);
 
   // Rate limited or error
   if (!result.success) {
-    return renderErrorCard(result.error.message);
+    return renderErrorCard(result.error.message, retryHref);
   }
 
   // Site not found

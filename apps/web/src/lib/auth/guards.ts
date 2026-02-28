@@ -14,6 +14,7 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "./session";
 import type { SessionUser } from "./session-config";
 import type { UserRole } from "@prisma/client";
+import { checkAdminMutationRateLimit } from "@/lib/rate-limit";
 
 export type Permission =
   | "user:manage" // Create, update, delete users
@@ -102,6 +103,18 @@ export async function checkAdmin(): Promise<GuardResult> {
     };
   }
 
+  const rateLimit = await checkAdminMutationRateLimit(
+    authResult.user.companyId,
+    authResult.user.id,
+  );
+  if (!rateLimit.success) {
+    return {
+      success: false,
+      error: "Too many admin requests. Please try again later.",
+      code: "FORBIDDEN",
+    };
+  }
+
   return authResult;
 }
 
@@ -122,6 +135,18 @@ export async function checkPermission(
     return {
       success: false,
       error: `Permission denied: ${permission}`,
+      code: "FORBIDDEN",
+    };
+  }
+
+  const rateLimit = await checkAdminMutationRateLimit(
+    authResult.user.companyId,
+    authResult.user.id,
+  );
+  if (!rateLimit.success) {
+    return {
+      success: false,
+      error: "Too many admin requests. Please try again later.",
       code: "FORBIDDEN",
     };
   }

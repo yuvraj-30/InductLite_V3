@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { checkPermissionReadOnly } from "@/lib/auth";
-import { findExportJobById } from "@/lib/repository/export.repository";
+import {
+  checkExportDownloadGuardrails,
+  findExportJobById,
+} from "@/lib/repository/export.repository";
 import { createAuditLog } from "@/lib/repository/audit.repository";
 import { getSignedDownloadUrl } from "@/lib/storage";
 import { generateRequestId } from "@/lib/auth/csrf";
+import { guardrailDeniedResponse } from "@/lib/api";
 import fs from "fs/promises";
 
 function inferContentType(fileName?: string | null): string {
@@ -40,6 +44,30 @@ export async function GET(
     return NextResponse.json({ error: "Export expired" }, { status: 410 });
   }
 
+  const downloadBytes = Number(job.file_size ?? 0);
+  if (!Number.isFinite(downloadBytes) || downloadBytes <= 0) {
+    return NextResponse.json(
+      { error: "Export metadata incomplete" },
+      { status: 409 },
+    );
+  }
+
+  const budgetCheck = await checkExportDownloadGuardrails(
+    context.companyId,
+    downloadBytes,
+  );
+  if (!budgetCheck.allowed) {
+    return NextResponse.json(
+      guardrailDeniedResponse(
+        budgetCheck.controlId,
+        budgetCheck.violatedLimit,
+        budgetCheck.scope,
+        budgetCheck.message,
+      ),
+      { status: 429 },
+    );
+  }
+
   const requestId = generateRequestId();
   await createAuditLog(context.companyId, {
     action: "export.download",
@@ -47,6 +75,11 @@ export async function GET(
     entity_id: job.id,
     user_id: context.id,
     request_id: requestId,
+    details: {
+      export_type: job.export_type,
+      file_name: job.file_name,
+      download_bytes: downloadBytes,
+    },
   });
 
   const storageMode = (process.env.STORAGE_MODE || "local").toLowerCase();

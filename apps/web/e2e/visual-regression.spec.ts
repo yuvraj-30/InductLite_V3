@@ -10,6 +10,7 @@
 import { test } from "./test-fixtures";
 import { expect } from "@playwright/test";
 import { takeAndCompare } from "./utils/visual";
+import { getTestRouteHeaders } from "./utils/test-route-auth";
 
 // Test helper: wait for page layout (height) to stabilise to avoid flaky fullPage screenshots
 async function ensureStableHeight(page: any, polls = 6, delay = 250) {
@@ -20,6 +21,58 @@ async function ensureStableHeight(page: any, polls = 6, delay = 250) {
     last = h;
     await page.waitForTimeout(delay);
   }
+}
+
+async function fillInputResilient(input: any, value: string) {
+  await input.click().catch(() => null);
+  await input.fill(value).catch(() => null);
+
+  let current = (await input.inputValue().catch(() => "")) as string;
+  if (current.trim()) return;
+
+  await input.type(value, { delay: 25 }).catch(() => null);
+  current = (await input.inputValue().catch(() => "")) as string;
+  if (current.trim()) return;
+
+  await input
+    .evaluate((el, nextValue) => {
+      const node = el as HTMLInputElement;
+      node.value = String(nextValue);
+      node.dispatchEvent(new Event("input", { bubbles: true }));
+      node.dispatchEvent(new Event("change", { bubbles: true }));
+    }, value)
+    .catch(() => null);
+}
+
+async function openPublicSignIn(page: any, slug: string): Promise<boolean> {
+  for (let attempt = 1; attempt <= 8; attempt++) {
+    try {
+      await page.goto(`/s/${slug}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 8000,
+      });
+      const nameField = page.getByLabel(/name|full name/i);
+      if (await nameField.isVisible({ timeout: 6000 }).catch(() => false)) {
+        return true;
+      }
+
+      const html = await page.content().catch(() => "");
+      if (
+        /(Too many requests|RATE_LIMITED|No active template|Site Not Found|Unable to Load)/i.test(
+          html,
+        )
+      ) {
+        await page.waitForTimeout(500 * attempt);
+        continue;
+      }
+    } catch {
+      // Retry transient navigation failures in local/dev webserver mode.
+    }
+
+    await page.waitForTimeout(400 * attempt);
+  }
+
+  return false;
 }
 
 // Helper: capture full-page screenshot or region and either upload to VRT or
@@ -40,7 +93,6 @@ test.describe("Visual Regression - Login Page (Playwright)", () => {
         fullPage: true,
       });
       if (res.uploaded) {
-        test.skip(true, "VRT upload performed; check tracker");
         return;
       }
 
@@ -72,6 +124,15 @@ test.describe("Visual Regression - Login Page (Playwright)", () => {
 test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
   let TEST_SITE_SLUG = "test-site";
 
+  test.beforeEach(async ({ context, request }) => {
+    // Avoid public slug limiter collisions when visual tests run all projects serially.
+    const randIp = `127.0.0.${Math.floor(Math.random() * 250) + 1}`;
+    await context.setExtraHTTPHeaders({ "x-forwarded-for": randIp });
+    await request
+      .post("/api/test/clear-rate-limit", { headers: getTestRouteHeaders() })
+      .catch(() => null);
+  });
+
   test.beforeAll(async ({ request, seedPublicSite }) => {
     try {
       const body = await seedPublicSite({ slugPrefix: "test-site-e2e-visual" });
@@ -86,7 +147,9 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
     const res = await request.get(`/s/${TEST_SITE_SLUG}`);
     const txt = await res.text();
     if (res.status() === 404 || /Site Not Found|No active template/i.test(txt)) {
-      test.skip(true, "Visual public sign-in test site not seeded for this environment");
+      throw new Error(
+        "Visual public sign-in test site not seeded for this environment",
+      );
     }
   });
 
@@ -97,10 +160,8 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
   });
 
   test("public sign-in page matches baseline", async ({ page }) => {
-    await page.goto(`/s/${TEST_SITE_SLUG}`);
-    await expect(page.getByLabel(/name|full name/i)).toBeVisible({
-      timeout: 10000,
-    });
+    const opened = await openPublicSignIn(page, TEST_SITE_SLUG);
+    expect(opened).toBe(true);
 
     // Use a stable region to avoid browser chrome / dynamic viewport height jitter.
     const main = page.locator("main").first();
@@ -108,7 +169,6 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
       fullPage: false,
     });
     if (regionRes.uploaded) {
-      test.skip(true, "VRT upload performed; check tracker");
       return;
     }
     await expect(main).toHaveScreenshot(regionRes.filename!, {
@@ -119,10 +179,8 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
   });
 
   test("induction form matches baseline", async ({ page }) => {
-    await page.goto(`/s/${TEST_SITE_SLUG}`);
-    await expect(page.getByLabel(/name|full name/i)).toBeVisible({
-      timeout: 10000,
-    });
+    const opened = await openPublicSignIn(page, TEST_SITE_SLUG);
+    expect(opened).toBe(true);
 
     // Fill in required fields to proceed
     await page.getByLabel(/name/i).fill("Visual Test Visitor");
@@ -146,7 +204,6 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
         fullPage: false,
       });
       if (regionRes.uploaded) {
-        test.skip(true, "VRT upload performed; check tracker");
         return;
       }
       await expect(form).toHaveScreenshot(regionRes.filename!, {
@@ -159,7 +216,6 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
         fullPage: true,
       });
       if (res.uploaded) {
-        test.skip(true, "VRT upload performed; check tracker");
         return;
       }
       await expect(page).toHaveScreenshot(res.filename!, {
@@ -174,10 +230,8 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
   test("signature pad matches baseline", async ({ page }) => {
     test.setTimeout(60000);
 
-    await page.goto(`/s/${TEST_SITE_SLUG}`);
-    await expect(page.getByLabel(/name|full name/i)).toBeVisible({
-      timeout: 10000,
-    });
+    const opened = await openPublicSignIn(page, TEST_SITE_SLUG);
+    expect(opened).toBe(true);
 
     // Step 1: Fill details
     await page.getByLabel(/name/i).fill("Signature Visual Test");
@@ -254,15 +308,24 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
     // use kiosk flow which renders the same signature canvas component more deterministically.
     if (!(await canvas.isVisible().catch(() => false))) {
       await page.goto(`/s/${TEST_SITE_SLUG}/kiosk`);
-      await expect(page.locator('input[id="visitorName"]')).toBeVisible({
-        timeout: 15000,
-      });
-      await page.locator('input[id="visitorName"]').fill("Visual Kiosk User");
-      await page.locator('input[id="visitorPhone"]').fill("+64211234567");
-      const visitorTypeSelect = page.locator('select[id="visitorType"]');
-      if (await visitorTypeSelect.count()) {
-        await visitorTypeSelect.selectOption("CONTRACTOR").catch(() => null);
-      }
+      const kioskForm = page.getByRole("region", { name: /sign-in form/i }).first();
+      const kioskNameInput = kioskForm
+        .getByRole("textbox", { name: /full name/i })
+        .first();
+      await expect(kioskNameInput).toBeVisible({ timeout: 15000 });
+      await fillInputResilient(kioskNameInput, "Visual Kiosk User");
+
+      const kioskPhoneInput = kioskForm
+        .getByRole("textbox", { name: /phone number|phone/i })
+        .first();
+      await fillInputResilient(kioskPhoneInput, "+64211234567");
+
+      await kioskForm
+        .getByRole("combobox", { name: /visitor type/i })
+        .first()
+        .selectOption("CONTRACTOR")
+        .catch(() => null);
+
       const employer = page.locator('input[id="employerName"]');
       if (await employer.count()) {
         await employer.fill("Visual Employer").catch(() => null);
@@ -271,19 +334,24 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
       if (await role.count()) {
         await role.fill("Contractor").catch(() => null);
       }
-      await page.locator('button[type="submit"]').click();
-      await expect(page.getByRole("heading", { name: /site induction/i })).toBeVisible({
-        timeout: 15000,
+      const submitKioskForm = kioskForm
+        .getByRole("button", { name: /continue to induction|continue/i })
+        .first();
+      await submitKioskForm.click();
+      const kioskInductionHeading = page.getByRole("heading", {
+        name: /site induction/i,
       });
-      const ack = page.getByRole("checkbox");
-      const ackCount = await ack.count();
-      for (let i = 0; i < ackCount; i++) {
-        await ack.nth(i).check().catch(() => null);
+      if (await kioskInductionHeading.isVisible({ timeout: 15000 }).catch(() => false)) {
+        const ack = page.getByRole("checkbox");
+        const ackCount = await ack.count();
+        for (let i = 0; i < ackCount; i++) {
+          await ack.nth(i).check().catch(() => null);
+        }
+        const continueBtn = page.getByRole("button", {
+          name: /continue|continue to sign off|finish/i,
+        });
+        await continueBtn.first().click().catch(() => null);
       }
-      const continueBtn = page.getByRole("button", {
-        name: /continue|continue to sign off|finish/i,
-      });
-      await continueBtn.first().click();
     }
 
     await expect(canvas).toBeVisible({ timeout: 15000 });
@@ -299,7 +367,6 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
       fullPage: false,
     });
     if (regionRes.uploaded) {
-      test.skip(true, "VRT upload performed; check tracker");
       return;
     }
 
@@ -323,13 +390,8 @@ test.describe("Visual Regression - Admin Dashboard", () => {
       await page.goto("/admin");
       await page.waitForURL(/\/admin/);
     } catch (err) {
-      console.warn(
-        "Skipping admin visual test: programmatic login failed:",
-        String(err),
-      );
-      test.skip(
-        true,
-        "Admin user not seeded locally (run db:seed or skip visual admin tests)",
+      throw new Error(
+        `Admin visual test setup failed (programmatic login): ${String(err)}`,
       );
     }
   });
@@ -346,6 +408,12 @@ test.describe("Visual Regression - Admin Dashboard", () => {
       .getByRole("heading", { name: /live register/i })
       .first();
     if (await header.count()) {
+      await header.evaluate((el) => {
+        const node = el as HTMLElement;
+        node.style.display = "inline-block";
+        node.style.whiteSpace = "nowrap";
+        node.style.width = "200px";
+      });
       const regionRes = await takeAndCompare(
         page,
         "admin-live-register-heading",
@@ -354,19 +422,18 @@ test.describe("Visual Regression - Admin Dashboard", () => {
         },
       );
       if (regionRes.uploaded) {
-        test.skip(true, "VRT upload performed; check tracker");
         return;
       }
       await expect(header).toHaveScreenshot(regionRes.filename!, {
         timeout: 20000,
         maxDiffPixelRatio: 0.02,
+        stylePath: "./e2e/screenshot.heading.css",
       });
     } else {
       const res = await takeAndCompare(page, "admin-live-register-full", {
         fullPage: true,
       });
       if (res.uploaded) {
-        test.skip(true, "VRT upload performed; check tracker");
         return;
       }
       await expect(page).toHaveScreenshot(res.filename!, {
@@ -386,23 +453,27 @@ test.describe("Visual Regression - Admin Dashboard", () => {
     // Capture the page heading only for stable comparison (Sites heading)
     const header = page.getByRole("heading", { name: /sites/i }).first();
     if (await header.count()) {
+      await header.evaluate((el) => {
+        const node = el as HTMLElement;
+        node.style.display = "inline-block";
+        node.style.width = "fit-content";
+      });
       const regionRes = await takeAndCompare(page, "admin-sites-list-heading", {
         fullPage: false,
       });
       if (regionRes.uploaded) {
-        test.skip(true, "VRT upload performed; check tracker");
         return;
       }
       await expect(header).toHaveScreenshot(regionRes.filename!, {
         timeout: 20000,
         maxDiffPixelRatio: 0.02,
+        stylePath: "./e2e/screenshot.heading.css",
       });
     } else {
       const res = await takeAndCompare(page, "admin-sites-list-full", {
         fullPage: true,
       });
       if (res.uploaded) {
-        test.skip(true, "VRT upload performed; check tracker");
         return;
       }
       await expect(page).toHaveScreenshot(res.filename!, {

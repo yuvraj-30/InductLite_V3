@@ -4,7 +4,8 @@
  * Change Password Form Component
  */
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { changePasswordAction, type ActionResult } from "../actions";
 
 function FormFields() {
@@ -93,7 +94,7 @@ function FormFields() {
 }
 
 export function ChangePasswordForm() {
-  const [state, formAction] = useFormState<ActionResult | null, FormData>(
+  const [state, formAction] = useActionState<ActionResult | null, FormData>(
     changePasswordAction,
     null,
   );

@@ -20,14 +20,14 @@ function SubmitButton() {
   );
 }
 
-export function MagicLinkForm() {
+export function MagicLinkForm({ formId = "magic-link-form" }: { formId?: string }) {
   const [state, formAction] = useActionState<MagicLinkResult | null, FormData>(
     requestContractorMagicLinkAction,
     null,
   );
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form id={formId} action={formAction} className="space-y-6">
       {state && (
         <div
           className={`border px-4 py-3 rounded-md text-sm ${

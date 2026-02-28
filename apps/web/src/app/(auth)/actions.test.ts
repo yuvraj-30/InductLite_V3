@@ -1,6 +1,18 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import type { Mock } from "vitest";
 
+const hoisted = vi.hoisted(() => ({
+  RepositoryError: class MockRepositoryError extends Error {
+    code: string;
+
+    constructor(message: string, code: string) {
+      super(message);
+      this.name = "RepositoryError";
+      this.code = code;
+    }
+  },
+}));
+
 // Mock rate-limit and auth modules
 vi.mock("@/lib/rate-limit", () => ({
   checkLoginRateLimit: vi.fn(),
@@ -9,6 +21,12 @@ vi.mock("@/lib/auth", () => ({
   login: vi.fn(),
   logout: vi.fn(),
   changePassword: vi.fn(),
+  hashPassword: vi.fn(),
+}));
+vi.mock("@/lib/repository", () => ({
+  ensureDefaultPublishedTemplate: vi.fn(),
+  registerCompanyWithAdmin: vi.fn(),
+  RepositoryError: hoisted.RepositoryError,
 }));
 
 // Mock next/navigation redirect so it doesn't throw during tests
@@ -21,9 +39,13 @@ vi.mock("@/lib/auth/csrf", () => ({
   getUserAgent: async () => "test-agent",
 }));
 
-import { loginAction } from "./actions";
+import { loginAction, registerAction } from "./actions";
 import { checkLoginRateLimit } from "@/lib/rate-limit";
-import { login as sessionLogin } from "@/lib/auth";
+import { login as sessionLogin, hashPassword } from "@/lib/auth";
+import {
+  ensureDefaultPublishedTemplate,
+  registerCompanyWithAdmin,
+} from "@/lib/repository";
 
 describe("loginAction", () => {
   const makeFormData = (fields: Record<string, string>) =>
@@ -135,5 +157,85 @@ describe("loginAction", () => {
       "test-agent",
       undefined,
     );
+  });
+});
+
+describe("registerAction", () => {
+  const makeFormData = (fields: Record<string, string>) =>
+    ({
+      get: (key: string) => (key in fields ? fields[key]! : null),
+    }) as unknown as FormData;
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
+
+  it("returns email field error when repository reports duplicate account", async () => {
+    (hashPassword as unknown as Mock).mockResolvedValue("hashed-password");
+    (registerCompanyWithAdmin as unknown as Mock).mockRejectedValue(
+      new hoisted.RepositoryError(
+        "An account with this email already exists",
+        "ALREADY_EXISTS",
+      ),
+    );
+
+    const formData = makeFormData({
+      companyName: "BuildRight NZ",
+      name: "Founding Admin",
+      email: "admin@buildright.co.nz",
+      password: "Password1",
+      siteName: "Main Site",
+    });
+
+    const result = await registerAction(null, formData);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toBe("An account with this email already exists");
+      expect(result.fieldErrors?.email).toEqual([
+        "An account with this email already exists",
+      ]);
+    }
+  });
+
+  it("creates account via repository, provisions template, and redirects", async () => {
+    (hashPassword as unknown as Mock).mockResolvedValue("hashed-password");
+    (registerCompanyWithAdmin as unknown as Mock).mockResolvedValue({
+      companyId: "company-123",
+    });
+    (ensureDefaultPublishedTemplate as unknown as Mock).mockResolvedValue(
+      undefined,
+    );
+    (sessionLogin as unknown as Mock).mockResolvedValue({ success: true });
+
+    const formData = makeFormData({
+      companyName: "BuildRight NZ",
+      name: "Founding Admin",
+      email: "admin@buildright.co.nz",
+      password: "Password1",
+      siteName: "Main Site",
+    });
+
+    await registerAction(null, formData);
+
+    expect(registerCompanyWithAdmin).toHaveBeenCalledWith(
+      expect.objectContaining({
+        companyName: "BuildRight NZ",
+        adminName: "Founding Admin",
+        adminEmail: "admin@buildright.co.nz",
+        adminPasswordHash: "hashed-password",
+        firstSiteName: "Main Site",
+      }),
+    );
+    expect(ensureDefaultPublishedTemplate).toHaveBeenCalledWith("company-123");
+    expect(sessionLogin).toHaveBeenCalledWith(
+      "admin@buildright.co.nz",
+      "Password1",
+      "127.0.0.1",
+      "test-agent",
+    );
+
+    const { redirect } = await import("next/navigation");
+    expect(redirect).toHaveBeenCalledWith("/admin/dashboard?welcome=1");
   });
 });

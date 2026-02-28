@@ -18,23 +18,25 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
-        {/* Logo/Brand */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900">InductLite</h1>
-          <p className="mt-2 text-sm text-gray-600">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-12 sm:px-6 lg:px-8">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <div className="absolute -left-20 top-8 h-72 w-72 rounded-full bg-indigo-500/18 blur-3xl" />
+        <div className="absolute right-0 top-20 h-72 w-72 rounded-full bg-cyan-400/18 blur-3xl" />
+      </div>
+
+      <div className="relative z-10 w-full max-w-md space-y-8">
+        <div className="text-center kinetic-hover">
+          <h1 className="kinetic-title text-4xl font-black">InductLite</h1>
+          <p className="mt-2 text-sm text-secondary">
             Site Induction & Contractor Management
           </p>
         </div>
 
-        {/* Auth form container */}
-        <div className="rounded-lg border border-gray-200 bg-white px-4 py-8 shadow-sm sm:px-10">
+        <div className="surface-panel-strong px-4 py-8 sm:px-10">
           {children}
         </div>
 
-        {/* Footer */}
-        <p className="text-center text-xs text-gray-500">
+        <p className="text-center text-xs text-muted">
           &copy; {new Date().getFullYear()} InductLite. All rights reserved.
         </p>
       </div>

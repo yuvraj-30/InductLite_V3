@@ -7,6 +7,7 @@ import { createAuditLog } from "@/lib/repository/audit.repository";
 import {
   queueExportJobWithLimits,
   ExportLimitReachedError,
+  ExportGlobalBytesLimitReachedError,
 } from "@/lib/repository/export.repository";
 import { createExportSchema } from "@inductlite/shared";
 import {
@@ -90,6 +91,14 @@ export async function createExportAction(
 
     return successResponse({ exportJobId: job.id }, "Export queued");
   } catch (error) {
+    if (error instanceof ExportGlobalBytesLimitReachedError) {
+      return guardrailDeniedResponse(
+        "EXPT-002",
+        `MAX_EXPORT_BYTES_GLOBAL_PER_DAY=${GUARDRAILS.MAX_EXPORT_BYTES_GLOBAL_PER_DAY}`,
+        "environment",
+        "Global export generation budget reached. Please try again tomorrow.",
+      );
+    }
     if (error instanceof ExportLimitReachedError) {
       return guardrailDeniedResponse(
         "EXPT-008",

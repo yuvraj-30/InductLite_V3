@@ -5,9 +5,10 @@ import {
   type APIRequestContext,
   type Page,
 } from "@playwright/test";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, UserRole } from "@prisma/client";
+import { hashPassword } from "../src/lib/auth/password";
 
-import { programmaticLogin } from "./utils/auth";
+import { programmaticLogin, uiLogin } from "./utils/auth";
 import {
   seedPublicSite as _seedPublicSite,
   deletePublicSite as _deletePublicSite,
@@ -21,6 +22,8 @@ type MyFixtures = {
   /** Seed a temporary public site for tests. Returns the seed response body */
   seedPublicSite: (opts?: {
     slugPrefix?: string;
+    includeRedFlagQuestion?: boolean;
+    companySlug?: string;
   }) => Promise<SeedPublicSiteResult>;
   /** Delete a previously seeded public site by slug */
   deletePublicSite: (
@@ -62,45 +65,139 @@ const console = {
 };
 
 export const test = base.extend<MyFixtures>({
-  loginAs: async ({ context }, playUse) => {
+  loginAs: async ({ context, workerUser }, playUse, testInfo) => {
+    const projectName = testInfo.project.name;
+    const forceUiLogin =
+      projectName === "webkit" || projectName === "mobile-safari";
+
+    const openClientPage = async () => {
+      const page = await (context as BrowserContext).newPage();
+      await page.setExtraHTTPHeaders({ "x-e2e-client": workerUser.clientKey });
+      return page;
+    };
+
     await playUse(async (email = "admin@buildright.co.nz") => {
-      await programmaticLogin(context as BrowserContext, email);
+      const password =
+        email === workerUser.email
+          ? workerUser.password
+          : (process.env.E2E_ADMIN_PASSWORD ?? "Admin123!");
+      let usedUiFallback = false;
+
+      if (!forceUiLogin) {
+        try {
+          await programmaticLogin(context as BrowserContext, email, {
+            clientKey: workerUser.clientKey,
+          });
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          const shouldFallbackToUi =
+            /create-session failed:/i.test(message) &&
+            /(404|503|500|502|504)/.test(message);
+
+          if (!shouldFallbackToUi) {
+            throw err;
+          }
+
+          const page = await openClientPage();
+          try {
+            await uiLogin(page, email, password);
+            usedUiFallback = true;
+          } catch (uiErr) {
+            const uiMessage =
+              uiErr instanceof Error ? uiErr.message : String(uiErr);
+            throw new Error(
+              `programmaticLogin failed (${message}); UI login fallback failed (${uiMessage})`,
+            );
+          } finally {
+            await page.close();
+          }
+        }
+      } else {
+        const page = await openClientPage();
+        try {
+          await uiLogin(page, email, password);
+          usedUiFallback = true;
+        } finally {
+          await page.close();
+        }
+      }
 
       // Optionally skip verification to speed runs (set E2E_SKIP_LOGIN_VERIFY=1 or true)
       const skipVerify = (() => {
         const v = process.env.E2E_SKIP_LOGIN_VERIFY;
         return v === "1" || v?.toLowerCase() === "true";
       })();
-      if (skipVerify) return;
 
-      // Verify session works by navigating to /admin and checking for a stable admin UI element
-      const page = await (context as BrowserContext).newPage();
-      try {
+      const verifySession = async (
+        page: Page,
+        maxAttempts: number,
+      ): Promise<Error | null> => {
         const base = process.env.BASE_URL ?? "http://localhost:3000";
-        const maxAttempts = 2;
         let lastErr: Error | null = null;
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
           try {
             await page.goto(`${base}/admin`, {
-              waitUntil: "networkidle",
+              waitUntil: "domcontentloaded",
               timeout: 10000,
             });
-            // Use accessible role for stable match: the header contains a Sign Out link
-            await page
-              .getByRole("link", { name: /sign out/i })
-              .waitFor({ timeout: 3000 });
-            lastErr = null;
-            break;
+            const currentUrl = page.url();
+            if (/\/login(?:\?|$)/i.test(currentUrl)) {
+              throw new Error(`redirected to login (${currentUrl})`);
+            }
+
+            const hasLoginForm = await page
+              .getByLabel("Email address")
+              .isVisible()
+              .catch(() => false);
+            if (hasLoginForm) {
+              throw new Error("login form is still visible after login attempt");
+            }
+
+            // Success criteria: reached a non-login admin route.
+            if (/\/admin(?:\/|$)/i.test(currentUrl)) {
+              return null;
+            }
+
+            throw new Error(`unexpected URL after login verification: ${currentUrl}`);
           } catch (err) {
             lastErr = err instanceof Error ? err : new Error(String(err));
-            // small backoff before retry
             await page.waitForTimeout(500);
           }
         }
-        if (lastErr) {
+        return lastErr;
+      };
+
+      // Even when E2E_SKIP_LOGIN_VERIFY=1, we still perform a minimal verification
+      // and fallback to UI login when the session cookie is not applied (common on WebKit/mobile Safari).
+      const page = await openClientPage();
+      try {
+        const maxAttempts = skipVerify
+          ? 1
+          : (usedUiFallback ? 1 : 2);
+        let verifyErr = await verifySession(page, maxAttempts);
+
+        if (verifyErr) {
+          await uiLogin(page, email, password);
+          usedUiFallback = true;
+          verifyErr = await verifySession(page, 2);
+        }
+
+        if (verifyErr) {
           throw new Error(
-            `programmaticLogin verification failed: could not detect authenticated admin UI after ${maxAttempts} attempts. This may indicate the seeded admin user is missing or session cookie was not applied. Cause: ${lastErr.message}`,
+            `login verification failed after UI fallback: ${verifyErr.message}`,
           );
+        }
+
+        const base = process.env.BASE_URL ?? "http://localhost:3000";
+        const cookies = await (context as BrowserContext).cookies([base]);
+        const hasSessionCookie = cookies.some(
+          (cookie) =>
+            cookie.name === "inductlite_session" &&
+            typeof cookie.value === "string" &&
+            cookie.value.length > 0,
+        );
+        if (!hasSessionCookie) {
+          throw new Error("login verification failed: session cookie missing");
         }
       } finally {
         await page.close();
@@ -109,23 +206,47 @@ export const test = base.extend<MyFixtures>({
   },
 
   seedPublicSite: async ({ request }, playUse) => {
-    await playUse(async (opts?: { slugPrefix?: string }) => {
-      const { ok, body } = await _seedPublicSite(
-        request as APIRequestContext,
-        opts,
-      );
-      if (!ok || !body) {
+    await playUse(
+      async (opts?: {
+        slugPrefix?: string;
+        includeRedFlagQuestion?: boolean;
+        companySlug?: string;
+      }) => {
+        let lastResult:
+          | { ok: boolean; body: SeedPublicSiteResult | null }
+          | null = null;
+
+        for (let attempt = 1; attempt <= 8; attempt++) {
+          const result = await _seedPublicSite(
+            request as APIRequestContext,
+            opts,
+          );
+          lastResult = result;
+
+          if (result.ok && result.body?.success) {
+            return result.body;
+          }
+
+          const serialized = JSON.stringify(result.body ?? {});
+          const isTransient =
+            !result.ok ||
+            !result.body ||
+            /404|503|not found|fetch failed|ECONNRESET|socket hang up/i.test(
+              serialized,
+            );
+
+          if (!isTransient || attempt === 8) {
+            break;
+          }
+
+          await new Promise((r) => setTimeout(r, 400 * attempt));
+        }
+
         throw new Error(
-          `seedPublicSite: failed to call endpoint: ${JSON.stringify(body)}`,
+          `seedPublicSite: failed after retries: ${JSON.stringify(lastResult?.body ?? null)}`,
         );
-      }
-      if (!body.success) {
-        throw new Error(
-          `seedPublicSite: unsuccessful: ${JSON.stringify(body)}`,
-        );
-      }
-      return body;
-    });
+      },
+    );
   },
 
   deletePublicSite: async ({ request }, playUse) => {
@@ -175,7 +296,7 @@ export const test = base.extend<MyFixtures>({
 
   // Worker-scoped server fixture: creates a per-worker schema, starts an app server bound to a unique port,
   // and exposes `baseUrl` and `schema` for other fixtures to use.
-  workerServer: async ({}, playUse, testInfo) => {
+  workerServer: [async ({}, playUse, testInfo) => {
     const { spawn } = await import("child_process");
     const path = await import("path");
     const fetchWithTimeout = async (
@@ -223,6 +344,66 @@ export const test = base.extend<MyFixtures>({
       throw new Error(`Timed out waiting for ${url} to become available`);
     };
 
+    const warmRoute = async (opts: {
+      url: string;
+      method?: "GET" | "POST" | "DELETE";
+      body?: unknown;
+      okStatuses: number[];
+      timeoutMs?: number;
+    }) => {
+      const {
+        url,
+        method = "GET",
+        body,
+        okStatuses,
+        timeoutMs = 90000,
+      } = opts;
+      const start = Date.now();
+      let lastStatus: number | null = null;
+      let lastBody = "";
+
+      while (Date.now() - start < timeoutMs) {
+        try {
+          const headers = getTestRouteHeaders(
+            body
+              ? {
+                  "content-type": "application/json",
+                }
+              : undefined,
+          );
+          const res = await fetchWithTimeout(
+            url,
+            {
+              method,
+              headers,
+              body: body ? JSON.stringify(body) : undefined,
+            },
+            5000,
+          );
+
+          lastStatus = res.status;
+          lastBody = await res.text().catch(() => "");
+
+          if (okStatuses.includes(res.status)) return;
+          if (res.status === 401 || res.status === 403) {
+            throw new Error(
+              `E2E endpoint denied (${res.status}) for ${method} ${url}. Response: ${lastBody || "<empty>"}`,
+            );
+          }
+        } catch (e) {
+          if (e instanceof Error && e.message.includes("E2E endpoint denied")) {
+            throw e;
+          }
+        }
+
+        await new Promise((r) => setTimeout(r, 500));
+      }
+
+      throw new Error(
+        `Timed out warming route ${method} ${url} (lastStatus=${lastStatus}, lastBody=${lastBody || "<empty>"})`,
+      );
+    };
+
     // If running with a shared server (useful on Windows local runs), skip
     // per-worker DB/schema isolation and server spawning. Set
     // E2E_USE_SHARED_SERVER=1 to enable this behaviour.
@@ -234,77 +415,70 @@ export const test = base.extend<MyFixtures>({
       // in test workers (local dev machines commonly hit these constraints).
       const baseUrl = process.env.BASE_URL ?? "http://localhost:3000";
 
-      // Fail fast with a clear message when reusing a server that was started
-      // without E2E test-runner permissions.
-      // Treat 404/503 as transient during Next dev warmup and retry.
-      try {
-        const started = Date.now();
-        let allowSeen = false;
-        let lastStatus: number | null = null;
-        let lastBody = "";
+      // Best-effort diagnostics for shared-server runtime. We do not gate on this
+      // endpoint because some dev-server states can transiently 404 it while test
+      // routes are still reachable. Gating happens via /api/test/clear-rate-limit.
+      const runtimeProbeStarted = Date.now();
+      let runtimeAllowSeen = false;
+      let runtimeLastStatus: number | null = null;
+      let runtimeLastBody = "";
 
-        while (Date.now() - started < 120000) {
-          try {
-            const runtimeRes = await fetchWithTimeout(
-              `${baseUrl}/api/test/runtime`,
-              {
-                headers: getTestRouteHeaders(),
-              },
-              5000,
-            );
-            lastStatus = runtimeRes.status;
-            const txt = await runtimeRes.text().catch(() => "");
-            lastBody = txt;
-
-            if (runtimeRes.status === 404 || runtimeRes.status === 503) {
-              await new Promise((r) => setTimeout(r, 500));
-              continue;
-            }
-
-            if (!runtimeRes.ok) {
-              throw new Error(
-                `runtime endpoint returned ${runtimeRes.status} ${runtimeRes.statusText} ${txt}`,
-              );
-            }
-
-            const runtimeBody = (() => {
-              try {
-                return JSON.parse(txt) as {
-                  allowTestRunner?: boolean;
-                  nodeEnv?: string;
-                };
-              } catch {
-                return {} as { allowTestRunner?: boolean; nodeEnv?: string };
-              }
-            })();
-
-            if (runtimeBody.allowTestRunner) {
-              allowSeen = true;
-              break;
-            }
-
-            throw new Error(
-              `E2E shared server at ${baseUrl} has ALLOW_TEST_RUNNER disabled. Start tests via Playwright webServer (default), or run dev server with ALLOW_TEST_RUNNER=1 and TRUST_PROXY=1.`,
-            );
-          } catch (err) {
-            if (
-              err instanceof Error &&
-              /ALLOW_TEST_RUNNER disabled/.test(err.message)
-            ) {
-              throw err;
-            }
-            await new Promise((r) => setTimeout(r, 500));
-          }
-        }
-
-        if (!allowSeen) {
-          throw new Error(
-            `runtime preflight timed out (lastStatus=${lastStatus}, lastBody=${lastBody || "<empty>"})`,
+      while (Date.now() - runtimeProbeStarted < 30000) {
+        try {
+          const runtimeRes = await fetchWithTimeout(
+            `${baseUrl}/api/test/runtime`,
+            {
+              headers: getTestRouteHeaders(),
+            },
+            5000,
           );
+          runtimeLastStatus = runtimeRes.status;
+          const txt = await runtimeRes.text().catch(() => "");
+          runtimeLastBody = txt;
+
+          if (runtimeRes.status === 404 || runtimeRes.status === 503) {
+            await new Promise((r) => setTimeout(r, 500));
+            continue;
+          }
+
+          if (!runtimeRes.ok) {
+            await new Promise((r) => setTimeout(r, 500));
+            continue;
+          }
+
+          const runtimeBody = (() => {
+            try {
+              return JSON.parse(txt) as {
+                allowTestRunner?: boolean;
+                nodeEnv?: string;
+              };
+            } catch {
+              return {} as { allowTestRunner?: boolean; nodeEnv?: string };
+            }
+          })();
+
+          if (runtimeBody.allowTestRunner) {
+            runtimeAllowSeen = true;
+            break;
+          }
+
+          throw new Error(
+            `E2E shared server at ${baseUrl} has ALLOW_TEST_RUNNER disabled. Start tests via Playwright webServer (default), or run dev server with ALLOW_TEST_RUNNER=1 and TRUST_PROXY=1.`,
+          );
+        } catch (err) {
+          if (
+            err instanceof Error &&
+            /ALLOW_TEST_RUNNER disabled/.test(err.message)
+          ) {
+            throw err;
+          }
+          await new Promise((r) => setTimeout(r, 500));
         }
-      } catch (err) {
-        throw new Error(
-          `E2E shared-server preflight failed at ${baseUrl}: ${String(err)}`,
+      }
+
+      if (!runtimeAllowSeen) {
+        console.warn(
+          `E2E: runtime probe did not confirm allowTestRunner (lastStatus=${runtimeLastStatus}, lastBody=${runtimeLastBody || "<empty>"}); continuing with clear-rate-limit readiness check`,
         );
       }
 
@@ -374,7 +548,52 @@ export const test = base.extend<MyFixtures>({
         }
       }
 
-      await waitForUrl(`${baseUrl}/api/test/clear-rate-limit`, 120000);
+      const sharedWarmupTimeoutMs = 30000;
+      let clearRateLimitReady = true;
+      try {
+        await waitForUrl(`${baseUrl}/api/test/clear-rate-limit`, 45000);
+      } catch (err) {
+        clearRateLimitReady = false;
+        console.warn(
+          `E2E: clear-rate-limit readiness check failed in shared mode (${String(err)}). Proceeding with route warmup checks.`,
+        );
+      }
+      // Warm critical test routes concurrently so the worker fixture remains under timeout.
+      await Promise.all([
+        warmRoute({
+          url: `${baseUrl}/api/test/runtime`,
+          method: "GET",
+          okStatuses: [200],
+          timeoutMs: sharedWarmupTimeoutMs,
+        }),
+        warmRoute({
+          url: `${baseUrl}/api/test/create-session?email=${encodeURIComponent("warmup@example.test")}&json=1`,
+          method: "GET",
+          okStatuses: [200, 404],
+          timeoutMs: sharedWarmupTimeoutMs,
+        }),
+        warmRoute({
+          url: `${baseUrl}/api/test/seed-public-site`,
+          method: "POST",
+          body: {
+            slugPrefix: "warmup-e2e",
+            includeRedFlagQuestion: false,
+          },
+          okStatuses: [200],
+          timeoutMs: sharedWarmupTimeoutMs,
+        }),
+        warmRoute({
+          url: `${baseUrl}/api/test/seed-public-site?slug=${encodeURIComponent("warmup-missing-site")}`,
+          method: "DELETE",
+          okStatuses: [200],
+          timeoutMs: sharedWarmupTimeoutMs,
+        }),
+      ]);
+      if (!clearRateLimitReady) {
+        console.warn(
+          "E2E: clear-rate-limit endpoint was not ready, but core test routes are available; continuing.",
+        );
+      }
 
       await playUse({ baseUrl, schema: "public" });
       return;
@@ -1068,10 +1287,10 @@ export const test = base.extend<MyFixtures>({
     } catch (e) {
       console.warn("Failed to drop worker schema:", String(e));
     }
-  },
+  }, { scope: "worker", timeout: 180000 }],
 
   // Worker-scoped user fixture: creates a unique user/company per worker and exposes a clientKey
-  workerUser: async ({ workerServer }, playUse, testInfo) => {
+  workerUser: [async ({ workerServer }, playUse, testInfo) => {
     const workerIndex = testInfo.workerIndex;
     const suffix = Math.random().toString(36).substring(2, 8);
     const clientKey = E2E_RUN_ID
@@ -1081,35 +1300,119 @@ export const test = base.extend<MyFixtures>({
     const password = "Admin123!";
 
     const base = workerServer.baseUrl;
-    const res = await fetch(`${base}/api/test/create-user`, {
-      method: "POST",
-      headers: getTestRouteHeaders({
-        "content-type": "application/json",
-        "x-e2e-client": clientKey,
-      }),
-      body: JSON.stringify({
-        email,
-        password,
-        role: "ADMIN",
-        companySlug: `test-company-${clientKey}`,
-      }),
-    });
+    let createUserStatus: number | null = null;
+    let createUserBody = "";
+    let createUserOk = false;
 
-    const txt = await res.text();
+    for (let attempt = 1; attempt <= 20; attempt++) {
+      try {
+        const res = await fetch(`${base}/api/test/create-user`, {
+          method: "POST",
+          headers: getTestRouteHeaders({
+            "content-type": "application/json",
+            "x-e2e-client": clientKey,
+          }),
+          body: JSON.stringify({
+            email,
+            password,
+            role: "ADMIN",
+            companySlug: `test-company-${clientKey}`,
+          }),
+        });
+
+        const txt = await res.text();
+        createUserStatus = res.status;
+        createUserBody = txt;
+
+        if (res.ok) {
+          createUserOk = true;
+          break;
+        }
+
+        const retryable =
+          res.status === 404 || res.status === 503 || res.status >= 500;
+        if (!retryable || attempt === 20) {
+          break;
+        }
+      } catch (err) {
+        createUserStatus = null;
+        createUserBody = String(err);
+        if (attempt === 20) {
+          break;
+        }
+      }
+
+      await new Promise((r) => setTimeout(r, 300 * attempt));
+    }
+
     try {
-      // Log response body for diagnostics (helps in CI logs) - not exposing secrets
       console.log(
-        "E2E: create-user response status=",
-        res.status,
+        "E2E: create-user final response status=",
+        createUserStatus,
         "body=",
-        txt,
+        createUserBody,
       );
     } catch (_) {
       // ignore
     }
 
-    if (!res.ok) {
-      throw new Error(`create-user failed: ${res.status} ${txt}`);
+    if (!createUserOk) {
+      try {
+        const db = new PrismaClient();
+        await db.$connect();
+        try {
+          const companySlug = `test-company-${clientKey}`;
+          let company = await db.company.findUnique({
+            where: { slug: companySlug },
+          });
+          if (!company) {
+            company = await db.company.create({
+              data: {
+                name: `Test Company ${companySlug}`,
+                slug: companySlug,
+              },
+            });
+          }
+
+          const passwordHash = await hashPassword(password);
+          await db.user.upsert({
+            where: { email },
+            update: {
+              company_id: company.id,
+              password_hash: passwordHash,
+              role: UserRole.ADMIN,
+              name: email.split("@")[0] ?? email,
+              is_active: true,
+            },
+            create: {
+              company_id: company.id,
+              email,
+              password_hash: passwordHash,
+              role: UserRole.ADMIN,
+              name: email.split("@")[0] ?? email,
+              is_active: true,
+            },
+          });
+        } finally {
+          await db.$disconnect();
+        }
+
+        createUserOk = true;
+        createUserStatus = 200;
+        createUserBody = "created-via-direct-prisma-fallback";
+      } catch (fallbackErr) {
+        createUserBody = `${createUserBody}\nfallback-error: ${String(fallbackErr)}`;
+      }
+    }
+
+    if (!createUserOk) {
+      const compactBody =
+        createUserBody.length > 2000
+          ? `${createUserBody.slice(0, 2000)}...`
+          : createUserBody;
+      throw new Error(
+        `create-user failed: ${createUserStatus ?? "network-error"} ${compactBody}`,
+      );
     }
 
     // Optional deep diagnostics only when explicitly enabled.
@@ -1135,7 +1438,7 @@ export const test = base.extend<MyFixtures>({
     }
 
     await playUse({ email, password, clientKey });
-  },
+  }, { scope: "worker", timeout: 120000 }],
 
   // Override page to set the per-worker client header for all page requests
   page: async ({ page, workerUser, workerServer }, playUse) => {

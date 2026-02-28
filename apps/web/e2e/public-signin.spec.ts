@@ -44,15 +44,35 @@ test.beforeEach(async ({ context, request }) => {
 // Helper to attempt opening a public site and retry on rate-limited or transient errors
 // Returns true if the site loaded successfully, false if the site does not exist and tests should skip
 async function openSite(page: Page, slug: string): Promise<boolean> {
-  // Increase attempts to tolerate transient dev-server/hydration delays
-  for (let attempt = 0; attempt < 5; attempt++) {
-    await page.goto(`/s/${slug}`);
+  const isClosedError = (value: unknown): boolean => {
+    const message = value instanceof Error ? value.message : String(value);
+    return /Target page, context or browser has been closed/i.test(message);
+  };
+
+  // Keep retry budget under the default 30s per-test timeout.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (page.isClosed()) {
+      return false;
+    }
+
+    try {
+      await page.goto(`/s/${slug}`, {
+        waitUntil: "domcontentloaded",
+        timeout: 6000,
+      });
+    } catch (err) {
+      if (isClosedError(err)) {
+        return false;
+      }
+      await page.waitForTimeout(350);
+      continue;
+    }
     try {
       // Wait for the sign-in name field to be visible and stable. Increase timeout to allow
       // client-side rendering/hydration to finish and ensure we don't return prematurely.
       await page
         .getByLabel(/full name/i)
-        .waitFor({ state: "visible", timeout: 7000 });
+        .waitFor({ state: "visible", timeout: 4000 });
       // Stabilize: wait briefly and ensure the label is still present and visible
       await page.waitForTimeout(500);
       const visible = await page.getByLabel(/full name/i).isVisible();
@@ -72,6 +92,9 @@ async function openSite(page: Page, slug: string): Promise<boolean> {
       try {
         content = await page.content();
       } catch (pageErr) {
+        if (page.isClosed() || isClosedError(pageErr)) {
+          return false;
+        }
         console.warn(
           `openSite: failed to read page content (attempt ${attempt + 1}): ${String(pageErr)}`,
         );
@@ -97,7 +120,20 @@ async function openSite(page: Page, slug: string): Promise<boolean> {
     }
   }
   // Final navigation - let test fail deterministically if still broken and log short snippet
-  await page.goto(`/s/${slug}`);
+  if (page.isClosed()) {
+    return false;
+  }
+  try {
+    await page.goto(`/s/${slug}`, {
+      waitUntil: "domcontentloaded",
+      timeout: 6000,
+    });
+  } catch (err) {
+    if (isClosedError(err)) {
+      return false;
+    }
+    return false;
+  }
   const snippet = (await page.content()).slice(0, 2000);
   console.warn(
     `openSite: final page content snippet for slug=${slug}:`,
@@ -111,7 +147,26 @@ async function openSite(page: Page, slug: string): Promise<boolean> {
     return false;
   }
 
-  return true;
+  // Final verification: only treat the page as "open" when the actual sign-in
+  // field is rendered. This avoids false positives on partially hydrated pages.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      await page
+        .getByLabel(/full name/i)
+        .waitFor({ state: "visible", timeout: 4000 });
+      return true;
+    } catch {
+      if (attempt === 0) {
+        try {
+          await page.reload({ waitUntil: "domcontentloaded", timeout: 6000 });
+        } catch {
+          return false;
+        }
+      }
+    }
+  }
+
+  return false;
 }
 
 async function fillAndAssertInput(
@@ -204,17 +259,13 @@ test.describe.serial("Public Sign-In Flow", () => {
         res.status() === 404 ||
         /Site Not Found|No active template/i.test(txt)
       ) {
-        test.skip(
-          true,
+        throw new Error(
           "Public site not seeded in this environment (run 'npm run db:seed')",
         );
       }
     } catch (err) {
-      // Network or other error - skip to avoid noisy failures
-      test.skip(
-        true,
-        "Could not verify public site; skipping public-signin tests",
-      );
+      // Network or other error - fail fast so setup issues are explicit.
+      throw new Error(`Could not verify public site readiness: ${String(err)}`);
     }
   });
 
@@ -242,10 +293,7 @@ test.describe.serial("Public Sign-In Flow", () => {
     if (!E2E_QUIET) {
       console.warn("openSite returned", ok);
     }
-    if (!ok) {
-      test.skip(true, "Public site not seeded in this environment");
-      return;
-    }
+    expect(ok).toBe(true);
 
     // Wait for the sign-in form to be ready
     await expect(page.getByLabel(/full name/i)).toBeVisible({ timeout: 10000 });
@@ -281,10 +329,7 @@ test.describe.serial("Public Sign-In Flow", () => {
 
   test("should validate required fields", async ({ page }) => {
     const ok = await openSite(page, TEST_SITE_SLUG);
-    if (!ok) {
-      test.skip(true, "Public site not seeded in this environment");
-      return;
-    }
+    expect(ok).toBe(true);
     await expect(page.getByLabel(/full name/i)).toBeVisible({ timeout: 5000 });
     await fillDetailsForm(page, { name: "", phone: "" });
 
@@ -308,10 +353,7 @@ test.describe.serial("Public Sign-In Flow", () => {
 
   test("should validate phone number format", async ({ page }) => {
     const ok = await openSite(page, TEST_SITE_SLUG);
-    if (!ok) {
-      test.skip(true, "Public site not seeded in this environment");
-      return;
-    }
+    expect(ok).toBe(true);
     await expect(page.getByLabel(/full name/i)).toBeVisible({ timeout: 5000 });
 
     await fillDetailsForm(page, {
@@ -337,10 +379,7 @@ test.describe.serial("Public Sign-In Flow", () => {
 
   test("should complete sign-in flow", async ({ page }) => {
     const ok = await openSite(page, TEST_SITE_SLUG);
-    if (!ok) {
-      test.skip(true, "Public site not seeded in this environment");
-      return;
-    }
+    expect(ok).toBe(true);
     await expect(page.getByLabel(/full name/i)).toBeVisible({ timeout: 5000 });
 
     // Fill in visitor details
@@ -435,10 +474,7 @@ test.describe.serial("Public Sign-In Flow", () => {
     page,
   }) => {
     const ok = await openSite(page, TEST_SITE_SLUG);
-    if (!ok) {
-      test.skip(true, "Public site not seeded in this environment");
-      return;
-    }
+    expect(ok).toBe(true);
     await expect(page.getByLabel(/full name/i)).toBeVisible({ timeout: 5000 });
 
     // Complete sign-in
@@ -633,9 +669,18 @@ test.describe.serial("Public Sign-In Flow", () => {
 
       // CI can intermittently miss a single click on this step; retry until we see transition.
       for (let attempt = 0; attempt < 3; attempt++) {
-        await confirmBtn.click({ timeout: 5000 });
-
         let transitioned = false;
+
+        if (await signOutAnchor.first().isVisible().catch(() => false)) {
+          transitioned = true;
+        } else if (await successHeading.isVisible().catch(() => false)) {
+          transitioned = true;
+        } else if (!(await signOffHeading.isVisible().catch(() => false))) {
+          transitioned = true;
+        } else {
+          await confirmBtn.click({ timeout: 5000 });
+        }
+
         for (let i = 0; i < 16; i++) {
           if (await signOutAnchor.first().isVisible().catch(() => false)) {
             transitioned = true;
@@ -666,8 +711,7 @@ test.describe.serial("Public Sign-In Flow", () => {
         .isVisible()
         .catch(() => false);
       if (hasFetchFailed) {
-        test.skip(true, "Transient upstream fetch failure in test environment");
-        return;
+        throw new Error("Transient upstream fetch failure in test environment");
       }
     }
 
@@ -693,10 +737,7 @@ test.describe.serial("Public Sign-In Flow", () => {
     test.setTimeout(120000);
 
     const ok = await openSite(page, TEST_SITE_SLUG);
-    if (!ok) {
-      test.skip(true, "Public site not seeded in this environment");
-      return;
-    }
+    expect(ok).toBe(true);
 
     await page.evaluate((slug) => {
       const key = `inductlite:last-visit:${slug}`;
@@ -866,16 +907,12 @@ test.describe.serial("XSS Prevention", () => {
         res.status() === 404 ||
         /Site Not Found|No active template/i.test(txt)
       ) {
-        test.skip(
-          true,
+        throw new Error(
           "Public site not seeded in this environment (run 'npm run db:seed')",
         );
       }
-    } catch {
-      test.skip(
-        true,
-        "Could not verify public site; skipping XSS tests for this environment",
-      );
+    } catch (error) {
+      throw new Error(`Could not verify public site for XSS tests: ${String(error)}`);
     }
   });
 
@@ -891,10 +928,7 @@ test.describe.serial("XSS Prevention", () => {
 
   test("should sanitize name field input", async ({ page }) => {
     const ok = await openSite(page, TEST_SITE_SLUG);
-    if (!ok) {
-      test.skip(true, "Public site not seeded in this environment");
-      return;
-    }
+    expect(ok).toBe(true);
 
     // Ensure field is visible/stable before interacting to avoid intermittent hydration races
     await page

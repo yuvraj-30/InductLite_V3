@@ -14,18 +14,20 @@ export default async function RegisterPage() {
   }
 
   return (
-    <div>
-      <h2 className="mb-6 text-xl font-semibold text-gray-900">
+    <div className="kinetic-hover">
+      <h2 className="kinetic-title mb-3 text-2xl font-black">
         Create your company workspace
       </h2>
+      <p className="mb-6 text-sm text-secondary">
+        Get a secure tenant environment running in minutes.
+      </p>
       <RegisterForm />
-      <p className="mt-6 text-center text-sm text-gray-500">
+      <p className="mt-6 text-center text-sm text-muted">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-blue-600 hover:text-blue-500">
+        <Link href="/login" className="font-semibold text-accent hover:underline">
           Sign in
         </Link>
       </p>
     </div>
   );
 }
-

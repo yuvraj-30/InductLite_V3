@@ -1,6 +1,7 @@
 import { getContractorSession } from "@/lib/auth/contractor-session";
 import { findContractorByIdWithDocuments } from "@/lib/repository";
 import { Alert } from "@/components/ui/alert";
+import Link from "next/link";
 
 export const metadata = {
   title: "Contractor Portal | InductLite",
@@ -14,6 +15,12 @@ export default async function ContractorPortalPage() {
         <Alert variant="error">
           Your session has expired. Please request a new magic link.
         </Alert>
+        <Link
+          href="/contractor?status=invalid"
+          className="mt-3 inline-flex min-h-[40px] items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+        >
+          Request New Link
+        </Link>
       </div>
     );
   }

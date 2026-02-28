@@ -9,6 +9,7 @@ import {
   deactivateSiteEmergencyContact,
   createSiteEmergencyProcedure,
   deactivateSiteEmergencyProcedure,
+  createEmergencyDrill,
 } from "@/lib/repository/emergency.repository";
 import { createAuditLog } from "@/lib/repository/audit.repository";
 import { generateRequestId } from "@/lib/auth/csrf";
@@ -27,6 +28,18 @@ const emergencyProcedureSchema = z.object({
   title: z.string().min(2, "Title is required").max(120),
   instructions: z.string().min(4, "Instructions are required").max(10_000),
   sortOrder: z.coerce.number().int().min(0).max(200).default(0),
+});
+
+const emergencyDrillSchema = z.object({
+  drillType: z
+    .enum(["EVACUATION", "FIRE", "EARTHQUAKE", "MEDICAL", "OTHER"])
+    .default("EVACUATION"),
+  scenario: z.string().min(4, "Scenario is required").max(3000),
+  outcomeNotes: z.string().max(3000).optional().or(z.literal("")),
+  followUpActions: z.string().max(3000).optional().or(z.literal("")),
+  conductedAt: z.string().optional().or(z.literal("")),
+  nextDueAt: z.string().optional().or(z.literal("")),
+  legalHold: z.coerce.boolean().default(false),
 });
 
 export type EmergencyActionResult =
@@ -219,4 +232,90 @@ export async function deactivateEmergencyProcedureAction(
 
   revalidatePath(siteEmergencyPath(siteId));
   return { success: true, message: "Emergency procedure removed" };
+}
+
+export async function createEmergencyDrillAction(
+  siteId: string,
+  _prevState: EmergencyActionResult | null,
+  formData: FormData,
+): Promise<EmergencyActionResult> {
+  const requestId = generateRequestId();
+  const log = createRequestLogger(requestId, {
+    path: siteEmergencyPath(siteId),
+    method: "POST",
+  });
+
+  try {
+    await assertOrigin();
+  } catch {
+    return { success: false, error: "Invalid request origin" };
+  }
+
+  const parsed = emergencyDrillSchema.safeParse({
+    drillType: formData.get("drillType")?.toString() ?? "EVACUATION",
+    scenario: formData.get("scenario")?.toString() ?? "",
+    outcomeNotes: formData.get("outcomeNotes")?.toString() ?? "",
+    followUpActions: formData.get("followUpActions")?.toString() ?? "",
+    conductedAt: formData.get("conductedAt")?.toString() ?? "",
+    nextDueAt: formData.get("nextDueAt")?.toString() ?? "",
+    legalHold: formData.get("legalHold") ?? false,
+  });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.errors[0]?.message ?? "Invalid input" };
+  }
+
+  const guard = await checkSitePermission("site:manage", siteId);
+  if (!guard.success) {
+    return { success: false, error: guard.error };
+  }
+
+  let conductedAt: Date | undefined;
+  if (parsed.data.conductedAt) {
+    conductedAt = new Date(parsed.data.conductedAt);
+    if (Number.isNaN(conductedAt.getTime())) {
+      return { success: false, error: "Invalid conducted-at timestamp" };
+    }
+  }
+
+  let nextDueAt: Date | undefined;
+  if (parsed.data.nextDueAt) {
+    nextDueAt = new Date(parsed.data.nextDueAt);
+    if (Number.isNaN(nextDueAt.getTime())) {
+      return { success: false, error: "Invalid next-due timestamp" };
+    }
+  }
+
+  const context = await requireAuthenticatedContextReadOnly();
+  try {
+    const created = await createEmergencyDrill(context.companyId, {
+      site_id: siteId,
+      drill_type: parsed.data.drillType,
+      scenario: parsed.data.scenario,
+      outcome_notes: parsed.data.outcomeNotes || undefined,
+      follow_up_actions: parsed.data.followUpActions || undefined,
+      conducted_at: conductedAt,
+      next_due_at: nextDueAt,
+      tested_by: context.userId,
+      legal_hold: parsed.data.legalHold,
+    });
+
+    await createAuditLog(context.companyId, {
+      action: "emergency.drill.create",
+      entity_type: "EmergencyDrill",
+      entity_id: created.id,
+      user_id: context.userId,
+      details: {
+        site_id: siteId,
+        drill_type: created.drill_type,
+        legal_hold: created.legal_hold,
+      },
+      request_id: requestId,
+    });
+
+    revalidatePath(siteEmergencyPath(siteId));
+    return { success: true, message: "Emergency drill logged" };
+  } catch (error) {
+    log.error({ error: String(error) }, "Create emergency drill failed");
+    return { success: false, error: "Failed to save emergency drill" };
+  }
 }

@@ -12,10 +12,13 @@ import Link from "next/link";
 import { checkAuthReadOnly } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import { redirect } from "next/navigation";
-import { getDashboardMetrics } from "@/lib/repository/dashboard.repository";
-import { countTemplates } from "@/lib/repository";
+import {
+  getDashboardMetrics,
+  getOnboardingProgress,
+} from "@/lib/repository/dashboard.repository";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
+import { OnboardingChecklist } from "../components/OnboardingChecklist";
 
 export const metadata = {
   title: "Dashboard | InductLite",
@@ -41,6 +44,8 @@ export default async function AdminDashboardPage({
   const canManageContractors =
     result.user.role === "ADMIN" || result.user.role === "SITE_MANAGER";
   const canManageUsers = result.user.role === "ADMIN";
+  const canManageSites = canManageContractors;
+  const canManageTemplates = canManageContractors;
 
   const context = await requireAuthenticatedContextReadOnly();
   const companyId = context.companyId;
@@ -58,8 +63,17 @@ export default async function AdminDashboardPage({
     recentSignIns: [],
     recentAuditLogs: [],
   };
+  const onboardingFallback: Awaited<ReturnType<typeof getOnboardingProgress>> = {
+    totalSitesCount: 0,
+    publishedTemplatesCount: 0,
+    totalSignInsCount: 0,
+    hasSites: false,
+    hasPublishedTemplate: false,
+    hasFirstSignIn: false,
+    onboardingComplete: false,
+  };
 
-  const [metrics, publishedTemplatesCount] = await Promise.all([
+  const [metrics, onboardingProgress] = await Promise.all([
     getDashboardMetrics(companyId).catch((error) => {
       metricsLoadFailed = true;
       log.error(
@@ -68,15 +82,13 @@ export default async function AdminDashboardPage({
       );
       return metricsFallback;
     }),
-    countTemplates(companyId, { isPublished: true, isArchived: false }).catch(
-      (error) => {
-        log.error(
-          { company_id: companyId, error: String(error) },
-          "Dashboard template count load failed",
-        );
-        return 0;
-      },
-    ),
+    getOnboardingProgress(companyId).catch((error) => {
+      log.error(
+        { company_id: companyId, error: String(error) },
+        "Dashboard onboarding state load failed",
+      );
+      return onboardingFallback;
+    }),
   ]);
 
   const {
@@ -89,171 +101,160 @@ export default async function AdminDashboardPage({
     recentSignIns,
     recentAuditLogs,
   } = metrics;
-  const hasSites = totalSitesCount > 0;
-  const hasPublishedTemplate = publishedTemplatesCount > 0;
-  const hasFirstSignIn = signInsSevenDays > 0 || currentlyOnSiteCount > 0;
-  const onboardingComplete = hasSites && hasPublishedTemplate && hasFirstSignIn;
+
+  const totalVisitorsWindow = Math.max(signInsSevenDays, 1);
+  const liveOccupancyPercent = Math.min(
+    100,
+    Math.round((currentlyOnSiteCount / totalVisitorsWindow) * 100),
+  );
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">
-          Overview of your sites and contractors
+    <div className="space-y-6 p-2 sm:p-3">
+      <section className="surface-panel-strong kinetic-hover overflow-hidden bg-gradient-to-br from-indigo-500/18 via-cyan-400/12 to-transparent p-5 sm:p-6">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+          Mission Control
         </p>
-      </div>
+        <h1 className="kinetic-title mt-1 text-3xl font-black sm:text-4xl">Dashboard</h1>
+        <p className="mt-2 max-w-3xl text-sm text-secondary sm:text-base">
+          Real-time operations overview across sites, workforce presence, and compliance risk.
+        </p>
+      </section>
 
       {metricsLoadFailed && (
-        <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <div className="rounded-xl border border-amber-400/45 bg-amber-100/70 px-4 py-3 text-sm text-amber-950 dark:bg-amber-950/45 dark:text-amber-100">
           Dashboard data could not be loaded. Please refresh and try again.
         </div>
       )}
 
-      {(showWelcome || !onboardingComplete) && (
-        <div className="mb-8 rounded-lg border border-blue-200 bg-blue-50 p-5">
-          <h2 className="text-lg font-semibold text-blue-900">
-            Get Started Checklist
-          </h2>
-          <p className="mt-1 text-sm text-blue-800">
-            Complete these to get your first successful induction live.
-          </p>
-          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-            <ChecklistCard
-              done={hasSites}
-              title="Create Site"
-              href="/admin/sites/new"
-              actionLabel="Create Site"
-            />
-            <ChecklistCard
-              done={hasPublishedTemplate}
-              title="Publish Template"
-              href="/admin/templates"
-              actionLabel="Manage Templates"
-            />
-            <ChecklistCard
-              done={hasFirstSignIn}
-              title="Run First Induction"
-              href="/admin/sites"
-              actionLabel="Open Site QR"
-            />
-          </div>
-        </div>
+      {(showWelcome || !onboardingProgress.onboardingComplete) && (
+        <OnboardingChecklist
+          progress={onboardingProgress}
+          className="mb-8"
+          title="Get Started Checklist"
+          canManageSites={canManageSites}
+          canManageTemplates={canManageTemplates}
+          showWhenComplete={showWelcome}
+        />
       )}
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {/* Active Sites */}
-        <Link
-          href="/admin/sites"
-          className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow"
-        >
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <svg
-                  className="h-6 w-6 text-blue-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                  />
-                </svg>
-              </div>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Active Sites</p>
-              <p className="text-2xl font-semibold text-gray-900">
+      <section className="bento-grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+        <Link href="/admin/sites" className="kinetic-hover bento-card xl:col-span-2">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                Active Sites
+              </p>
+              <p className="mt-2 text-4xl font-black text-[color:var(--text-primary)]">
                 {activeSitesCount}
-                <span className="text-sm text-gray-500 font-normal">
-                  {" "}
+                <span className="ml-2 text-base font-medium text-muted">
                   / {totalSitesCount}
                 </span>
               </p>
+              <p className="mt-2 text-sm text-secondary">
+                Live sites currently accepting sign-ins.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-indigo-400/30 bg-indigo-500/14 p-3">
+              <svg
+                className="h-6 w-6 text-indigo-800 dark:text-indigo-100"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                />
+              </svg>
             </div>
           </div>
         </Link>
 
-        {/* Currently On-Site */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <svg
-                  className="h-6 w-6 text-green-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-              </div>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">
-                Currently On-Site
+        <div className="bento-card">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                On Site Right Now
               </p>
-              <p className="text-2xl font-semibold text-green-600">
+              <p className="mt-2 text-4xl font-black text-[color:var(--accent-success)]">
                 {currentlyOnSiteCount}
               </p>
+              <p className="mt-1 text-xs text-muted">
+                Approx. {liveOccupancyPercent}% of this week&apos;s sign-in volume.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-emerald-400/35 bg-emerald-500/16 p-3">
+              <svg
+                className="h-6 w-6 text-emerald-800 dark:text-emerald-100"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
             </div>
           </div>
         </div>
 
-        {/* Sign-Ins Today / 7 Days */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <svg
-                  className="h-6 w-6 text-purple-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                  />
-                </svg>
-              </div>
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Sign-Ins</p>
-              <p className="text-2xl font-semibold text-gray-900">
+        <div className="bento-card">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                Sign-In Velocity
+              </p>
+              <p className="mt-2 text-4xl font-black text-[color:var(--text-primary)]">
                 {signInsToday}
-                <span className="text-sm text-gray-500 font-normal">
-                  {" "}
-                  today
-                </span>
               </p>
-              <p className="text-sm text-gray-500">
-                {signInsSevenDays} in last 7 days
+              <p className="mt-1 text-sm text-secondary">
+                {signInsSevenDays} sign-ins in the last 7 days.
               </p>
+            </div>
+            <div className="rounded-2xl border border-fuchsia-400/35 bg-fuchsia-500/14 p-3">
+              <svg
+                className="h-6 w-6 text-fuchsia-900 dark:text-fuchsia-100"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                />
+              </svg>
             </div>
           </div>
         </div>
 
-        {/* Documents Expiring Soon */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
+        <div className="bento-card">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                Documents Expiring
+              </p>
+              <p
+                className={`mt-2 text-4xl font-black ${documentsExpiringSoon > 0 ? "text-amber-800 dark:text-amber-100" : "text-[color:var(--text-primary)]"}`}
+              >
+                {documentsExpiringSoon}
+              </p>
+              <p className="mt-1 text-sm text-secondary">Due within the next 30 days.</p>
+            </div>
+            <div
+              className={`rounded-2xl border p-3 ${documentsExpiringSoon > 0 ? "border-amber-400/45 bg-amber-500/18" : "border-white/35 bg-white/45"}`}
+            >
               <div
-                className={`p-3 rounded-lg ${documentsExpiringSoon > 0 ? "bg-yellow-100" : "bg-gray-100"}`}
+                className={`${documentsExpiringSoon > 0 ? "text-amber-900 dark:text-amber-100" : "text-secondary"}`}
               >
                 <svg
-                  className={`h-6 w-6 ${documentsExpiringSoon > 0 ? "text-yellow-600" : "text-gray-600"}`}
+                  className="h-6 w-6"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -267,82 +268,81 @@ export default async function AdminDashboardPage({
                 </svg>
               </div>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Docs Expiring</p>
-              <p
-                className={`text-2xl font-semibold ${documentsExpiringSoon > 0 ? "text-yellow-600" : "text-gray-900"}`}
-              >
-                {documentsExpiringSoon}
-              </p>
-              <p className="text-sm text-gray-500">within 30 days</p>
-            </div>
           </div>
         </div>
-      </div>
+      </section>
 
       {(canManageContractors || canManageUsers) && (
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">
+        <section>
+          <h2 className="kinetic-title mb-3 text-lg font-black text-[color:var(--text-primary)]">
             Management
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bento-grid grid-cols-1 md:grid-cols-2">
             {canManageContractors && (
               <Link
                 href="/admin/contractors"
-                className="bg-white rounded-lg shadow p-5 hover:shadow-md transition-shadow"
+                className="kinetic-hover bento-card"
               >
-                <p className="text-sm font-medium text-gray-500">Contractors</p>
-                <p className="mt-1 text-lg font-semibold text-gray-900">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                  Contractors
+                </p>
+                <p className="kinetic-title mt-1 text-xl font-bold text-[color:var(--text-primary)]">
                   View and manage contractor records
+                </p>
+                <p className="mt-2 text-sm text-secondary">
+                  Update status, details, and compliance readiness.
                 </p>
               </Link>
             )}
             {canManageUsers && (
               <Link
                 href="/admin/users"
-                className="bg-white rounded-lg shadow p-5 hover:shadow-md transition-shadow"
+                className="kinetic-hover bento-card"
               >
-                <p className="text-sm font-medium text-gray-500">Users</p>
-                <p className="mt-1 text-lg font-semibold text-gray-900">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                  Users
+                </p>
+                <p className="kinetic-title mt-1 text-xl font-bold text-[color:var(--text-primary)]">
                   View roles and account status
+                </p>
+                <p className="mt-2 text-sm text-secondary">
+                  Manage role permissions and account lifecycle.
                 </p>
               </Link>
             )}
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Sign-Ins */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">
+      <section className="bento-grid grid-cols-1 lg:grid-cols-2">
+        <div className="surface-panel overflow-hidden">
+          <div className="border-b border-white/25 px-5 py-4">
+            <h2 className="kinetic-title text-xl font-black text-[color:var(--text-primary)]">
               Recent Sign-Ins
             </h2>
           </div>
-          <div className="p-6">
+          <div className="p-5">
             {recentSignIns.length === 0 ? (
-              <p className="text-gray-500 text-sm">No recent sign-ins.</p>
+              <p className="text-sm text-secondary">No recent sign-ins.</p>
             ) : (
-              <ul className="divide-y divide-gray-200">
+              <ul className="divide-y divide-white/20">
                 {recentSignIns.map((record) => (
                   <li key={record.id} className="py-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-semibold text-[color:var(--text-primary)]">
                           {record.visitor_name}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-secondary">
                           {record.site.name}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted">
                           {new Date(record.sign_in_ts).toLocaleString()}
                         </p>
                         {!record.sign_out_ts && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                          <span className="mt-1 inline-flex items-center rounded-full border border-emerald-400/35 bg-emerald-500/16 px-2 py-0.5 text-xs font-semibold text-emerald-900 dark:text-emerald-100">
                             On site
                           </span>
                         )}
@@ -355,36 +355,35 @@ export default async function AdminDashboardPage({
           </div>
         </div>
 
-        {/* Recent Audit Logs */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-lg font-medium text-gray-900">
+        <div className="surface-panel overflow-hidden">
+          <div className="flex items-center justify-between border-b border-white/25 px-5 py-4">
+            <h2 className="kinetic-title text-xl font-black text-[color:var(--text-primary)]">
               Recent Activity
             </h2>
             <Link
               href="/admin/audit-log"
-              className="text-sm text-blue-600 hover:text-blue-800"
+              className="rounded-lg border border-white/35 bg-white/45 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-secondary hover:bg-white/70"
             >
               View all
             </Link>
           </div>
-          <div className="p-6">
+          <div className="p-5">
             {recentAuditLogs.length === 0 ? (
-              <p className="text-gray-500 text-sm">No recent activity.</p>
+              <p className="text-sm text-secondary">No recent activity.</p>
             ) : (
-              <ul className="divide-y divide-gray-200">
+              <ul className="divide-y divide-white/20">
                 {recentAuditLogs.map((log) => (
                   <li key={log.id} className="py-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-semibold text-[color:var(--text-primary)]">
                           {formatAuditAction(log.action)}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-secondary">
                           by {log.user?.name || "System"}
                         </p>
                       </div>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted">
                         {new Date(log.created_at).toLocaleString()}
                       </p>
                     </div>
@@ -394,7 +393,7 @@ export default async function AdminDashboardPage({
             )}
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }
@@ -420,40 +419,5 @@ function formatAuditAction(action: string): string {
   };
 
   return actionMap[action] || action.replace(".", " ").replace(/_/g, " ");
-}
-
-function ChecklistCard({
-  done,
-  title,
-  href,
-  actionLabel,
-}: {
-  done: boolean;
-  title: string;
-  href: string;
-  actionLabel: string;
-}) {
-  return (
-    <div className="rounded-md border border-blue-100 bg-white p-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-gray-900">{title}</p>
-        <span
-          className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-            done ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
-          }`}
-        >
-          {done ? "Done" : "Pending"}
-        </span>
-      </div>
-      {!done && (
-        <Link
-          href={href}
-          className="mt-3 inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800"
-        >
-          {actionLabel} -&gt;
-        </Link>
-      )}
-    </div>
-  );
 }
 

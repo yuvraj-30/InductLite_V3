@@ -110,6 +110,14 @@ function getMissingRequiredQuestionIds(
     .map((question) => question.id);
 }
 
+function toTelHref(phone: string): string {
+  const normalized = phone.replace(/[^\d+]/g, "");
+  if (!normalized) {
+    return `tel:${phone}`;
+  }
+  return `tel:${normalized}`;
+}
+
 export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
   const [step, setStep] = useState<Step>("details");
   const [isPending, startTransition] = useTransition();
@@ -285,6 +293,14 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
 
     return () => window.clearTimeout(timer);
   }, [isKiosk, step]);
+
+  useEffect(() => {
+    if (!isKiosk) return;
+    if (!rememberSignature && !reuseSavedSignature) return;
+
+    setRememberSignature(false);
+    setReuseSavedSignature(false);
+  }, [isKiosk, rememberSignature, reuseSavedSignature]);
 
   const applySuccessResult = (data: SignInResult) => {
     setSignInResult(data);
@@ -516,25 +532,25 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
 
   return (
     <div
-      className="overflow-hidden rounded-lg bg-white shadow-lg"
+      className="surface-panel-strong overflow-hidden"
       role="region"
       aria-label="Sign-In Form"
     >
-      <div className="border-b bg-gray-50 px-4 py-3">
+      <div className="border-b border-white/25 bg-white/45 px-4 py-3 backdrop-blur-xl">
         {!isOnline && (
-          <div className="mb-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+          <div className="mb-3 rounded-lg border border-amber-400/45 bg-amber-100/75 px-3 py-2 text-sm text-amber-950 dark:bg-amber-950/45 dark:text-amber-100">
             You are offline. We can save this sign-in and sync when connection returns.
           </div>
         )}
 
         {pendingQueueMessage && (
-          <div className="mb-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">
+          <div className="mb-3 rounded-lg border border-cyan-400/45 bg-cyan-100/70 px-3 py-2 text-sm text-cyan-950 dark:bg-cyan-950/45 dark:text-cyan-100">
             {pendingQueueMessage}
             {isOnline && (
               <button
                 type="button"
                 onClick={syncQueuedSubmission}
-                className="ml-2 font-semibold text-blue-700 underline"
+                className="ml-2 font-semibold text-cyan-800 underline dark:text-cyan-100"
               >
                 Sync now
               </button>
@@ -544,51 +560,55 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
 
         <div className="flex items-center">
           <div
-            className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
-              step === "details" ? "bg-blue-600 text-white" : "bg-green-500 text-white"
+            className={`flex h-10 w-10 items-center justify-center rounded-full text-base font-semibold ${
+              step === "details"
+                ? "bg-gradient-to-br from-indigo-600 to-cyan-500 text-white"
+                : "bg-emerald-500 text-white"
             }`}
           >
             {step === "details" ? "1" : "Done"}
           </div>
 
-          <div className="mx-2 h-1 flex-1 bg-gray-200">
+          <div className="mx-2 h-1 flex-1 rounded-full bg-white/55">
             <div
-              className={`h-full bg-blue-600 transition-all ${
+              className={`h-full rounded-full bg-gradient-to-r from-indigo-600 to-cyan-500 transition-all ${
                 step === "induction" || step === "signature" ? "w-full" : "w-0"
               }`}
             />
           </div>
 
           <div
-            className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
+            className={`flex h-10 w-10 items-center justify-center rounded-full text-base font-semibold ${
               step === "induction"
-                ? "bg-blue-600 text-white"
+                ? "bg-gradient-to-br from-indigo-600 to-cyan-500 text-white"
                 : step === "signature"
-                  ? "bg-green-500 text-white"
-                  : "bg-gray-200 text-gray-500"
+                  ? "bg-emerald-500 text-white"
+                  : "bg-white/55 text-secondary"
             }`}
           >
             {step === "signature" ? "Done" : "2"}
           </div>
 
-          <div className="mx-2 h-1 flex-1 bg-gray-200">
+          <div className="mx-2 h-1 flex-1 rounded-full bg-white/55">
             <div
-              className={`h-full bg-blue-600 transition-all ${
+              className={`h-full rounded-full bg-gradient-to-r from-indigo-600 to-cyan-500 transition-all ${
                 step === "signature" ? "w-full" : "w-0"
               }`}
             />
           </div>
 
           <div
-            className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
-              step === "signature" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-500"
+            className={`flex h-10 w-10 items-center justify-center rounded-full text-base font-semibold ${
+              step === "signature"
+                ? "bg-gradient-to-br from-indigo-600 to-cyan-500 text-white"
+                : "bg-white/55 text-secondary"
             }`}
           >
             3
           </div>
         </div>
 
-        <div className="mt-1 flex justify-between text-xs text-gray-500">
+        <div className="mt-2 flex justify-between text-sm font-medium text-secondary">
           <span>Your Details</span>
           <span className="ml-2">Induction</span>
           <span>Sign Off</span>
@@ -596,20 +616,20 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
       </div>
 
       {error && (
-        <div role="alert" className="border-b border-red-200 bg-red-50 px-4 py-3">
-          <p className="text-sm font-medium text-red-900">{error}</p>
+        <div role="alert" className="border-b border-red-400/45 bg-red-100/70 px-4 py-3 dark:bg-red-950/45">
+          <p className="text-sm font-semibold text-red-950 dark:text-red-100">{error}</p>
         </div>
       )}
 
       {step === "details" && (
         <form onSubmit={handleDetailsSubmit} className="space-y-4 p-4">
-          <div>
-            <h2 className="mb-1 text-lg font-semibold text-gray-900">Welcome to {site.name}</h2>
-            {site.address && <p className="text-sm text-gray-600">{site.address}</p>}
+          <div className="kinetic-hover">
+            <h2 className="kinetic-title mb-1 text-xl font-black">Welcome to {site.name}</h2>
+            {site.address && <p className="text-sm text-secondary">{site.address}</p>}
           </div>
 
           <div>
-            <label htmlFor="visitorName" className="mb-1 block text-sm font-medium text-gray-700">
+            <label htmlFor="visitorName" className="label mb-1">
               Full Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -618,18 +638,18 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
               value={details.visitorName}
               autoComplete={isKiosk ? "off" : "name"}
               onChange={(e) => setDetails({ ...details, visitorName: e.target.value })}
-              className={`min-h-[44px] w-full rounded-lg border px-3 py-2 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500 ${
-                fieldErrors.visitorName ? "border-red-500" : "border-gray-300"
-              }`}
+              className={`input text-base ${fieldErrors.visitorName ? "border-red-500" : ""}`}
               placeholder="Enter your full name"
             />
             {fieldErrors.visitorName && (
-              <p className="mt-1 text-sm text-red-600">{fieldErrors.visitorName[0]}</p>
+              <p className="mt-1 text-sm text-red-700 dark:text-red-200">
+                {fieldErrors.visitorName[0]}
+              </p>
             )}
           </div>
 
           <div>
-            <label htmlFor="visitorPhone" className="mb-1 block text-sm font-medium text-gray-700">
+            <label htmlFor="visitorPhone" className="label mb-1">
               Phone Number <span className="text-red-500">*</span>
             </label>
             <input
@@ -638,53 +658,53 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
               value={details.visitorPhone}
               autoComplete={isKiosk ? "off" : "tel"}
               onChange={(e) => setDetails({ ...details, visitorPhone: e.target.value })}
-              className={`min-h-[44px] w-full rounded-lg border px-3 py-2 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500 ${
-                fieldErrors.visitorPhone ? "border-red-500" : "border-gray-300"
-              }`}
+              className={`input text-base ${fieldErrors.visitorPhone ? "border-red-500" : ""}`}
               placeholder="021 123 4567"
             />
             {fieldErrors.visitorPhone && (
-              <p className="mt-1 text-sm text-red-600">{fieldErrors.visitorPhone[0]}</p>
+              <p className="mt-1 text-sm text-red-700 dark:text-red-200">
+                {fieldErrors.visitorPhone[0]}
+              </p>
             )}
           </div>
 
-          <div className="rounded-lg border border-blue-100 bg-blue-50 p-3">
-            <label className="flex items-start gap-3 text-sm text-blue-900">
+          <div className="rounded-xl border border-indigo-400/30 bg-indigo-500/12 p-3">
+            <label className="flex items-start gap-3 text-sm text-indigo-950 dark:text-indigo-100">
               <input
                 type="checkbox"
                 checked={expressMode}
                 onChange={(e) => setExpressMode(e.target.checked)}
-                className="mt-0.5 h-5 w-5 rounded border-blue-300 text-blue-600 focus:ring-blue-500"
+                className="mt-0.5 h-5 w-5 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500"
               />
               <span>Express Mode: show only essential fields for faster sign-in.</span>
             </label>
           </div>
 
           {lastVisitSnapshot && (
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-              <p className="text-sm font-semibold text-emerald-900">
+            <div className="rounded-xl border border-emerald-400/35 bg-emerald-500/12 p-3">
+              <p className="text-sm font-semibold text-emerald-950 dark:text-emerald-100">
                 Last visit found on this device
               </p>
-              <p className="mt-1 text-xs text-emerald-700">
+              <p className="mt-1 text-xs text-emerald-800 dark:text-emerald-200">
                 Saved {new Date(lastVisitSnapshot.savedAt).toLocaleString("en-NZ")}
               </p>
               <button
                 type="button"
                 onClick={applyLastVisitDetails}
-                className="mt-2 min-h-[44px] rounded-lg border border-emerald-300 bg-white px-3 py-2 text-sm font-semibold text-emerald-800 hover:bg-emerald-100"
+                className="btn-secondary mt-2 min-h-[44px] border-emerald-400/35 bg-white/80 px-3 py-2 text-sm text-emerald-900 hover:bg-emerald-100 dark:text-emerald-100"
               >
                 Use Last Visit Details
               </button>
             </div>
           )}
 
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-            <label className="flex items-start gap-3 text-sm text-gray-700">
+          <div className="rounded-xl border border-white/35 bg-white/45 p-3">
+            <label className="flex items-start gap-3 text-sm text-secondary">
               <input
                 type="checkbox"
                 checked={rememberDetails}
                 onChange={(e) => setRememberDetails(e.target.checked)}
-                className="mt-0.5 h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="mt-0.5 h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
               <span>
                 Remember my details on this device for faster future sign-ins.
@@ -693,7 +713,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
           </div>
 
           <div>
-            <label htmlFor="visitorType" className="mb-1 block text-sm font-medium text-gray-700">
+            <label htmlFor="visitorType" className="label mb-1">
               Visitor Type <span className="text-red-500">*</span>
             </label>
             <select
@@ -705,7 +725,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
                   visitorType: e.target.value as VisitorDetails["visitorType"],
                 })
               }
-              className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+              className="input text-base"
             >
               <option value="CONTRACTOR">Contractor</option>
               <option value="VISITOR">Visitor</option>
@@ -717,10 +737,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
           {!expressMode && (
             <>
               <div>
-                <label
-                  htmlFor="visitorEmail"
-                  className="mb-1 block text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="visitorEmail" className="label mb-1">
                   Email (optional)
                 </label>
                 <input
@@ -729,16 +746,13 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
                   value={details.visitorEmail}
                   autoComplete={isKiosk ? "off" : "email"}
                   onChange={(e) => setDetails({ ...details, visitorEmail: e.target.value })}
-                  className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                  className="input text-base"
                   placeholder="your@email.com"
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="employerName"
-                  className="mb-1 block text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="employerName" className="label mb-1">
                   Company / Employer
                 </label>
                 <input
@@ -746,13 +760,13 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
                   type="text"
                   value={details.employerName}
                   onChange={(e) => setDetails({ ...details, employerName: e.target.value })}
-                  className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                  className="input text-base"
                   placeholder="Your company name"
                 />
               </div>
 
               <div>
-                <label htmlFor="roleOnSite" className="mb-1 block text-sm font-medium text-gray-700">
+                <label htmlFor="roleOnSite" className="label mb-1">
                   Role on Site (optional)
                 </label>
                 <input
@@ -760,17 +774,14 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
                   type="text"
                   value={details.roleOnSite}
                   onChange={(e) => setDetails({ ...details, roleOnSite: e.target.value })}
-                  className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                  className="input text-base"
                   placeholder="e.g., Electrician, Delivery driver"
                 />
               </div>
             </>
           )}
 
-          <button
-            type="submit"
-            className="min-h-[48px] w-full rounded-lg bg-blue-600 px-4 py-3 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
+          <button type="submit" className="btn-primary min-h-[48px] w-full text-base font-semibold">
             Continue to Induction -&gt;
           </button>
         </form>
@@ -782,41 +793,82 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
             <button
               type="button"
               onClick={() => setStep("details")}
-              className="text-sm text-blue-600 hover:underline"
+              className="text-sm font-semibold text-accent hover:underline"
             >
               Back to details
             </button>
           </div>
 
           {(emergencyContacts.length > 0 || emergencyProcedures.length > 0) && (
-            <section className="mb-5 rounded-lg border border-red-200 bg-red-50 p-4">
-              <h3 className="text-base font-semibold text-red-900">
+            <section className="mb-5 rounded-xl border border-red-400/35 bg-gradient-to-b from-red-500/12 to-transparent p-4">
+              <h3 className="text-base font-semibold text-red-950 dark:text-red-100">
                 Emergency Information
               </h3>
+              <p className="mt-1 text-xs text-red-900 dark:text-red-200">
+                In immediate danger call <span className="font-semibold">111</span>. Use the cards below for site emergency contacts.
+              </p>
               {emergencyContacts.length > 0 && (
-                <div className="mt-2">
-                  <p className="text-sm font-medium text-red-900">Emergency Contacts</p>
-                  <ul className="mt-1 space-y-1 text-sm text-red-800">
+                <div className="mt-4">
+                  <p className="text-sm font-semibold text-red-950 dark:text-red-100">
+                    Emergency Contacts
+                  </p>
+                  <div className="mt-2 grid gap-2">
                     {emergencyContacts.map((contact) => (
-                      <li key={contact.id} className="rounded bg-white/70 px-2 py-1">
-                        <span className="font-medium">{contact.name}</span>
-                        {contact.role ? ` (${contact.role})` : ""}: {contact.phone}
-                      </li>
+                      <article
+                        key={contact.id}
+                        className="rounded-lg border border-red-400/30 bg-white/75 p-3 shadow-soft dark:bg-red-950/30"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold text-[color:var(--text-primary)]">
+                              {contact.name}
+                            </p>
+                            <p className="text-xs text-secondary">
+                              {contact.role ?? "Emergency contact"} | {contact.phone}
+                            </p>
+                            {contact.notes && (
+                              <p className="mt-1 text-xs text-muted">{contact.notes}</p>
+                            )}
+                          </div>
+                          <a
+                            href={toTelHref(contact.phone)}
+                            className="inline-flex min-h-[40px] items-center rounded-md bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-700"
+                          >
+                            Call
+                          </a>
+                        </div>
+                      </article>
                     ))}
-                  </ul>
+                  </div>
                 </div>
               )}
               {emergencyProcedures.length > 0 && (
-                <div className="mt-3">
-                  <p className="text-sm font-medium text-red-900">Emergency Procedures</p>
-                  <ol className="mt-1 list-decimal space-y-1 pl-5 text-sm text-red-800">
-                    {emergencyProcedures.map((procedure) => (
-                      <li key={procedure.id}>
-                        <span className="font-medium">{procedure.title}:</span>{" "}
-                        {procedure.instructions}
-                      </li>
+                <div className="mt-4">
+                  <p className="text-sm font-semibold text-red-950 dark:text-red-100">
+                    Emergency Procedures
+                  </p>
+                  <div className="mt-2 space-y-2">
+                    {emergencyProcedures.map((procedure, index) => (
+                      <article
+                        key={procedure.id}
+                        className="rounded-lg border border-red-300/35 bg-white/75 p-3 dark:bg-red-950/30"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-xs font-semibold text-red-700">
+                            {index + 1}
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-[color:var(--text-primary)]">
+                              {procedure.title}
+                            </p>
+                            <p className="mt-1 text-xs leading-relaxed text-secondary">
+                              {procedure.instructions}
+                            </p>
+                          </div>
+                        </div>
+                      </article>
                     ))}
-                  </ol>
+                  </div>
                 </div>
               )}
             </section>
@@ -833,7 +885,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
           <button
             type="button"
             onClick={handleInductionSubmit}
-            className="mt-6 min-h-[48px] w-full rounded-lg bg-blue-600 px-4 py-3 text-base font-medium text-white hover:bg-blue-700"
+            className="btn-primary mt-6 min-h-[48px] w-full text-base font-semibold"
           >
             Continue to Sign Off -&gt;
           </button>
@@ -842,13 +894,13 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
 
       {step === "signature" && (
         <div className="space-y-4 p-4">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">Sign Off</h2>
-            <p className="text-sm text-gray-600">
+          <div className="kinetic-hover">
+            <h2 className="kinetic-title text-xl font-black">Sign Off</h2>
+            <p className="text-sm text-secondary">
               Please sign below to confirm your induction completion.
             </p>
             {site.legal && (
-              <p className="mt-1 text-xs text-gray-600">
+              <p className="mt-1 text-xs text-muted">
                 Consent record: Terms v{site.legal.termsVersion}, Privacy v
                 {site.legal.privacyVersion}
               </p>
@@ -856,7 +908,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
           </div>
 
           {lastVisitSnapshot?.signatureData && (
-            <label className="flex min-h-[48px] items-start gap-2 rounded-lg border border-indigo-200 bg-indigo-50 p-3 text-sm text-indigo-900">
+            <label className="flex min-h-[48px] items-start gap-2 rounded-lg border border-indigo-400/30 bg-indigo-500/12 p-3 text-sm text-indigo-950 dark:text-indigo-100">
               <input
                 type="checkbox"
                 checked={reuseSavedSignature}
@@ -867,7 +919,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
             </label>
           )}
 
-          <div className="rounded-lg border-2 border-gray-200 bg-gray-50">
+          <div className="rounded-lg border-2 border-white/35 bg-white/45">
             {SignatureCanvasComponent ? (
               <SignatureCanvasComponent
                 ref={sigCanvas}
@@ -883,22 +935,34 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
                 }}
               />
             ) : (
-              <div className="h-40 w-full animate-pulse rounded-lg bg-gray-100" />
+              <div className="h-40 w-full animate-pulse rounded-lg bg-white/70" />
             )}
           </div>
 
-          <label className="flex min-h-[48px] items-start gap-2 rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
+          <label className="flex min-h-[48px] items-start gap-2 rounded-lg border border-white/35 bg-white/45 p-3 text-sm text-secondary">
             <input
               type="checkbox"
               checked={rememberSignature}
               onChange={(e) => setRememberSignature(e.target.checked)}
-              className="mt-0.5 h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              disabled={Boolean(isKiosk)}
+              className="mt-0.5 h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
             />
-            <span>Save my signature on this device for faster repeat sign-ins.</span>
+            <span>
+              Save my signature on this device for faster repeat sign-ins.
+              <span className="mt-1 block text-xs text-amber-700">
+                Shared device? Leave this off to protect your signature.
+              </span>
+            </span>
           </label>
 
+          {isKiosk && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              Kiosk mode detected: signature saving is disabled for shared-device safety.
+            </div>
+          )}
+
           <div>
-            <label className="flex items-start gap-2 text-sm text-gray-700">
+            <label className="flex items-start gap-2 text-sm text-secondary">
               <input
                 id="hasAcceptedTerms"
                 type="checkbox"
@@ -909,7 +973,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
                     hasAcceptedTerms: e.target.checked,
                   })
                 }
-                className="mt-0.5 h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="mt-0.5 h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
               />
               <span>
                 {legalConsentStatement}{" "}
@@ -917,7 +981,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
                   href="/terms"
                   target="_blank"
                   rel="noreferrer"
-                  className="font-medium text-blue-700 hover:underline"
+                  className="font-semibold text-accent hover:underline"
                 >
                   Terms
                 </a>{" "}
@@ -926,7 +990,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
                   href="/privacy"
                   target="_blank"
                   rel="noreferrer"
-                  className="font-medium text-blue-700 hover:underline"
+                  className="font-semibold text-accent hover:underline"
                 >
                   Privacy
                 </a>
@@ -946,7 +1010,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
                 sigCanvas.current?.clear();
                 setError(null);
               }}
-              className="min-h-[44px] flex-1 rounded-lg border border-gray-300 px-4 py-2 text-base font-medium text-gray-700 hover:bg-gray-50"
+              className="btn-secondary min-h-[44px] flex-1 text-base"
             >
               Clear
             </button>
@@ -954,7 +1018,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
               type="button"
               onClick={handleSignatureSubmit}
               disabled={isPending || !details.hasAcceptedTerms}
-              className="min-h-[44px] flex-[2] rounded-lg bg-green-600 px-8 py-2 text-base font-medium text-white hover:bg-green-700 disabled:opacity-50"
+              className="btn-primary min-h-[44px] flex-[2] px-8 text-base font-semibold disabled:opacity-50"
             >
               {isPending ? "Signing in..." : "Confirm and Sign In"}
             </button>
@@ -963,7 +1027,7 @@ export function SignInFlow({ slug, site, template, isKiosk }: SignInFlowProps) {
           <button
             type="button"
             onClick={() => setStep("induction")}
-            className="text-sm text-blue-600 hover:underline"
+            className="text-sm font-semibold text-accent hover:underline"
           >
             Back to questions
           </button>

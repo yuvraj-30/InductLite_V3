@@ -1,7 +1,7 @@
 # Tenant Owned Models
 
-Version: `v2`
-Updated: `2026-02-21`
+Version: `v3`
+Updated: `2026-02-22`
 Source: `apps/web/prisma/schema.prisma`
 
 This file is the canonical `TENANT_OWNED_MODELS` registry.
@@ -14,6 +14,7 @@ Manual edits are not allowed.
 - `Site`
 - `InductionTemplate`
 - `SignInRecord`
+- `PendingSignInEscalation`
 - `EmailNotification`
 - `Contractor`
 - `SiteManagerAssignment`
@@ -24,6 +25,7 @@ Manual edits are not allowed.
 - `SiteEmergencyContact`
 - `SiteEmergencyProcedure`
 - `IncidentReport`
+- `EmergencyDrill`
 - `LegalDocumentVersion`
 
 ## Child Models Without `company_id` (Parent-Scoped Only)

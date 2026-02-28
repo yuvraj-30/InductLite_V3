@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { reportClientError } from "@/lib/client-error-reporting";
 
 /**
  * Root Global Error Boundary
@@ -16,10 +17,14 @@ export default function RootGlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[RootGlobalError]", {
-      message: error.message,
-      digest: error.digest,
-    });
+    reportClientError({ source: "root-error-boundary", error });
+    if (process.env.NODE_ENV === "development") {
+      console.error("[RootGlobalError]", {
+        message: error.message,
+        digest: error.digest,
+        stack: error.stack,
+      });
+    }
   }, [error]);
 
   return (

@@ -10,6 +10,10 @@ import { generateRequestId } from "@/lib/auth/csrf";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_SIGNIN_RETENTION_DAYS = 365;
+const DEFAULT_INDUCTION_RETENTION_DAYS = 365;
+const DEFAULT_AUDIT_RETENTION_DAYS = 90;
+const DEFAULT_INCIDENT_RETENTION_DAYS = 1825;
+const DEFAULT_EMERGENCY_DRILL_RETENTION_DAYS = 1825;
 
 async function runWithConcurrency<T>(
   items: T[],
@@ -40,18 +44,6 @@ function getRetentionCutoff(days: number, now: Date): Date {
 export async function runRetentionTasks(): Promise<void> {
   const log = createRequestLogger(generateRequestId());
   const now = new Date();
-
-  // Purge audit logs in one batch (guardrail-based global cutoff)
-  const cutoff = new Date(
-    Date.now() - GUARDRAILS.AUDIT_RETENTION_DAYS * 24 * 60 * 60 * 1000,
-  );
-  try {
-    await publicDb.auditLog.deleteMany({
-      where: { created_at: { lt: cutoff } },
-    });
-  } catch (err) {
-    log.warn({ err: String(err) }, "Audit purge failed");
-  }
 
   // Purge expired export files + jobs (batch fetch, tenant-safe delete by company+id)
   const expiredExports = await publicDb.exportJob.findMany({
@@ -111,21 +103,45 @@ export async function runRetentionTasks(): Promise<void> {
   // Purge signed-out sign-in records based on per-company retention policy.
   // InductionResponse rows are cascaded by FK when SignInRecord is deleted.
   const companies = await publicDb.company.findMany({
-    select: { id: true, retention_days: true },
+    select: {
+      id: true,
+      retention_days: true,
+      induction_retention_days: true,
+      audit_retention_days: true,
+      incident_retention_days: true,
+      emergency_drill_retention_days: true,
+      compliance_legal_hold: true,
+    },
   });
 
   await runWithConcurrency(companies, 10, async (company) => {
-    const retentionDays =
+    const signInRetentionDays =
       company.retention_days > 0
         ? company.retention_days
         : DEFAULT_SIGNIN_RETENTION_DAYS;
-    const cutoff = getRetentionCutoff(retentionDays, now);
+    const inductionRetentionDays =
+      company.induction_retention_days > 0
+        ? company.induction_retention_days
+        : DEFAULT_INDUCTION_RETENTION_DAYS;
+    const signInEvidenceRetentionDays = Math.max(
+      signInRetentionDays,
+      inductionRetentionDays,
+    );
+    const signInCutoff = getRetentionCutoff(signInEvidenceRetentionDays, now);
+
+    if (company.compliance_legal_hold) {
+      log.info(
+        { companyId: company.id },
+        "Skipping sign-in, incident, drill, and audit retention due to company compliance legal hold",
+      );
+      return;
+    }
 
     try {
       const deleted = await publicDb.signInRecord.deleteMany({
         where: {
           company_id: company.id,
-          sign_out_ts: { lt: cutoff },
+          sign_out_ts: { lt: signInCutoff },
         },
       });
 
@@ -133,7 +149,9 @@ export async function runRetentionTasks(): Promise<void> {
         log.info(
           {
             companyId: company.id,
-            retention_days: retentionDays,
+            sign_in_retention_days: signInRetentionDays,
+            induction_retention_days: inductionRetentionDays,
+            retention_days: signInEvidenceRetentionDays,
             deleted_count: deleted.count,
           },
           "Sign-in retention cleanup completed",
@@ -143,10 +161,132 @@ export async function runRetentionTasks(): Promise<void> {
       log.warn(
         {
           companyId: company.id,
-          retention_days: retentionDays,
+          sign_in_retention_days: signInRetentionDays,
+          induction_retention_days: inductionRetentionDays,
+          retention_days: signInEvidenceRetentionDays,
           err: String(err),
         },
         "Sign-in retention cleanup failed",
+      );
+    }
+
+    const auditRetentionDays =
+      company.audit_retention_days > 0
+        ? company.audit_retention_days
+        : DEFAULT_AUDIT_RETENTION_DAYS;
+    const auditRetentionFloor =
+      GUARDRAILS.AUDIT_RETENTION_DAYS > 0
+        ? GUARDRAILS.AUDIT_RETENTION_DAYS
+        : DEFAULT_AUDIT_RETENTION_DAYS;
+    const effectiveAuditRetentionDays = Math.max(
+      auditRetentionDays,
+      auditRetentionFloor,
+    );
+    const auditCutoff = getRetentionCutoff(effectiveAuditRetentionDays, now);
+
+    try {
+      const auditDeleted = await publicDb.auditLog.deleteMany({
+        where: {
+          company_id: company.id,
+          created_at: { lt: auditCutoff },
+        },
+      });
+
+      if (auditDeleted.count > 0) {
+        log.info(
+          {
+            companyId: company.id,
+            audit_retention_days: effectiveAuditRetentionDays,
+            deleted_count: auditDeleted.count,
+          },
+          "Audit retention cleanup completed",
+        );
+      }
+    } catch (err) {
+      log.warn(
+        {
+          companyId: company.id,
+          audit_retention_days: effectiveAuditRetentionDays,
+          err: String(err),
+        },
+        "Audit retention cleanup failed",
+      );
+    }
+
+    const incidentRetentionDays =
+      company.incident_retention_days > 0
+        ? company.incident_retention_days
+        : DEFAULT_INCIDENT_RETENTION_DAYS;
+    const incidentCutoff = getRetentionCutoff(incidentRetentionDays, now);
+    try {
+      const incidentDeleted = await publicDb.incidentReport.deleteMany({
+        where: {
+          company_id: company.id,
+          status: "CLOSED",
+          legal_hold: false,
+          OR: [
+            { retention_expires_at: { lt: now } },
+            { retention_expires_at: null, occurred_at: { lt: incidentCutoff } },
+          ],
+        },
+      });
+
+      if (incidentDeleted.count > 0) {
+        log.info(
+          {
+            companyId: company.id,
+            retention_days: incidentRetentionDays,
+            deleted_count: incidentDeleted.count,
+          },
+          "Incident retention cleanup completed",
+        );
+      }
+    } catch (err) {
+      log.warn(
+        {
+          companyId: company.id,
+          retention_days: incidentRetentionDays,
+          err: String(err),
+        },
+        "Incident retention cleanup failed",
+      );
+    }
+
+    const drillRetentionDays =
+      company.emergency_drill_retention_days > 0
+        ? company.emergency_drill_retention_days
+        : DEFAULT_EMERGENCY_DRILL_RETENTION_DAYS;
+    const drillCutoff = getRetentionCutoff(drillRetentionDays, now);
+    try {
+      const drillDeleted = await publicDb.emergencyDrill.deleteMany({
+        where: {
+          company_id: company.id,
+          legal_hold: false,
+          OR: [
+            { retention_expires_at: { lt: now } },
+            { retention_expires_at: null, conducted_at: { lt: drillCutoff } },
+          ],
+        },
+      });
+
+      if (drillDeleted.count > 0) {
+        log.info(
+          {
+            companyId: company.id,
+            retention_days: drillRetentionDays,
+            deleted_count: drillDeleted.count,
+          },
+          "Emergency drill retention cleanup completed",
+        );
+      }
+    } catch (err) {
+      log.warn(
+        {
+          companyId: company.id,
+          retention_days: drillRetentionDays,
+          err: String(err),
+        },
+        "Emergency drill retention cleanup failed",
       );
     }
   });

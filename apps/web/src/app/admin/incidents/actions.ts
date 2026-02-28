@@ -23,6 +23,10 @@ const createIncidentSchema = z.object({
   description: z.string().max(4000).optional().or(z.literal("")),
   immediateActions: z.string().max(2000).optional().or(z.literal("")),
   occurredAt: z.string().optional().or(z.literal("")),
+  isNotifiable: z.coerce.boolean().default(false),
+  worksafeReferenceNumber: z.string().max(120).optional().or(z.literal("")),
+  worksafeNotifiedAt: z.string().optional().or(z.literal("")),
+  legalHold: z.coerce.boolean().default(false),
 });
 
 export type IncidentActionResult =
@@ -54,6 +58,10 @@ export async function createIncidentReportAction(
     description: formData.get("description"),
     immediateActions: formData.get("immediateActions"),
     occurredAt: formData.get("occurredAt"),
+    isNotifiable: formData.get("isNotifiable") ?? false,
+    worksafeReferenceNumber: formData.get("worksafeReferenceNumber"),
+    worksafeNotifiedAt: formData.get("worksafeNotifiedAt"),
+    legalHold: formData.get("legalHold") ?? false,
   });
 
   if (!parsed.success) {
@@ -83,6 +91,30 @@ export async function createIncidentReportAction(
     }
   }
 
+  let worksafeNotifiedAt: Date | undefined;
+  if (parsed.data.worksafeNotifiedAt) {
+    worksafeNotifiedAt = new Date(parsed.data.worksafeNotifiedAt);
+    if (Number.isNaN(worksafeNotifiedAt.getTime())) {
+      return { success: false, error: "Invalid WorkSafe notified timestamp" };
+    }
+  }
+  if (!parsed.data.isNotifiable && worksafeNotifiedAt) {
+    return {
+      success: false,
+      error: "WorkSafe notified timestamp requires a notifiable incident",
+    };
+  }
+  if (
+    !parsed.data.isNotifiable &&
+    parsed.data.worksafeReferenceNumber &&
+    parsed.data.worksafeReferenceNumber.trim().length > 0
+  ) {
+    return {
+      success: false,
+      error: "WorkSafe reference number requires a notifiable incident",
+    };
+  }
+
   const context = await requireAuthenticatedContextReadOnly();
 
   try {
@@ -95,6 +127,11 @@ export async function createIncidentReportAction(
       description: parsed.data.description || undefined,
       immediate_actions: parsed.data.immediateActions || undefined,
       occurred_at: occurredAt,
+      is_notifiable: parsed.data.isNotifiable,
+      worksafe_notified_at: worksafeNotifiedAt,
+      worksafe_reference_number: parsed.data.worksafeReferenceNumber || undefined,
+      worksafe_notified_by: worksafeNotifiedAt ? context.userId : undefined,
+      legal_hold: parsed.data.legalHold,
       reported_by: context.userId,
     });
 
@@ -108,6 +145,10 @@ export async function createIncidentReportAction(
         sign_in_record_id: created.sign_in_record_id,
         incident_type: created.incident_type,
         severity: created.severity,
+        is_notifiable: created.is_notifiable,
+        worksafe_notified_at: created.worksafe_notified_at,
+        worksafe_reference_number: created.worksafe_reference_number,
+        legal_hold: created.legal_hold,
       },
       request_id: requestId,
     });
@@ -179,4 +220,3 @@ export async function resolveIncidentReportAction(
     return { success: false, error: "Failed to close incident report" };
   }
 }
-

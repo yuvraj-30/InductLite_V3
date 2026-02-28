@@ -170,15 +170,42 @@ export async function getOrCreateActiveLegalVersions(
     );
   }
 
-  active = await getActiveLegalVersions(companyId, now);
-  if (!active.terms || !active.privacy) {
+  // Re-resolve using a fresh timestamp to avoid races between concurrent calls
+  // (for example generateMetadata + page render) that can create versions with
+  // slightly newer effective_at values than the original `now`.
+  active = await getActiveLegalVersions(companyId, new Date());
+  if (active.terms && active.privacy) {
+    return { terms: active.terms, privacy: active.privacy };
+  }
+
+  // Final safety net: if records exist but clock granularity/order causes the
+  // active query window to miss them briefly, return latest versions.
+  const db = scopedDb(companyId);
+  const [latestTerms, latestPrivacy] = await Promise.all([
+    db.legalDocumentVersion.findFirst({
+      where: {
+        company_id: companyId,
+        document_type: "TERMS",
+      },
+      orderBy: [{ effective_at: "desc" }, { version: "desc" }],
+    }),
+    db.legalDocumentVersion.findFirst({
+      where: {
+        company_id: companyId,
+        document_type: "PRIVACY",
+      },
+      orderBy: [{ effective_at: "desc" }, { version: "desc" }],
+    }),
+  ]);
+
+  if (!latestTerms || !latestPrivacy) {
     throw new RepositoryError(
       "Unable to resolve active legal document versions",
       "DATABASE_ERROR",
     );
   }
 
-  return { terms: active.terms, privacy: active.privacy };
+  return { terms: latestTerms, privacy: latestPrivacy };
 }
 
 export function buildConsentStatement(options?: {

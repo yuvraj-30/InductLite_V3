@@ -5,7 +5,7 @@
  * Separated from the route handler for testability.
  */
 
-import { prisma } from "@/lib/db";
+import { checkDatabaseReadiness } from "@/lib/db/readiness";
 
 export interface HealthStatus {
   status: "ok" | "degraded" | "error";
@@ -40,17 +40,15 @@ export async function performHealthCheck(): Promise<HealthStatus> {
   };
 
   // Check database connectivity
-  try {
-    const dbStart = Date.now();
-    // eslint-disable-next-line security-guardrails/no-raw-sql -- Health check requires raw SQL for minimal overhead
-    await prisma.$queryRaw`SELECT 1`;
-    healthStatus.checks.database.latency_ms = Date.now() - dbStart;
-  } catch (error) {
+  const database = await checkDatabaseReadiness();
+  if (!database.ok) {
     healthStatus.status = "error";
     healthStatus.checks.database.status = "error";
     healthStatus.checks.database.error =
-      error instanceof Error ? error.message : "Unknown database error";
+      database.error ?? "Unknown database error";
+    return healthStatus;
   }
+  healthStatus.checks.database.latency_ms = database.latency_ms;
 
   return healthStatus;
 }

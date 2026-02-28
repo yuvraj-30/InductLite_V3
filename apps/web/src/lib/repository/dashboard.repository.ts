@@ -24,6 +24,16 @@ export interface DashboardMetrics {
   }>;
 }
 
+export interface OnboardingProgress {
+  totalSitesCount: number;
+  publishedTemplatesCount: number;
+  totalSignInsCount: number;
+  hasSites: boolean;
+  hasPublishedTemplate: boolean;
+  hasFirstSignIn: boolean;
+  onboardingComplete: boolean;
+}
+
 export async function getDashboardMetrics(
   companyId: string,
   opts: { now?: Date } = {},
@@ -103,6 +113,47 @@ export async function getDashboardMetrics(
       documentsExpiringSoon,
       recentSignIns,
       recentAuditLogs,
+    };
+  } catch (error) {
+    handlePrismaError(error, "Dashboard");
+  }
+}
+
+export async function getOnboardingProgress(
+  companyId: string,
+): Promise<OnboardingProgress> {
+  requireCompanyId(companyId);
+
+  const db = scopedDb(companyId);
+
+  try {
+    const [totalSitesCount, publishedTemplatesCount, totalSignInsCount] =
+      await Promise.all([
+        db.site.count({ where: { company_id: companyId } }),
+        db.inductionTemplate.count({
+          where: {
+            company_id: companyId,
+            is_published: true,
+            is_archived: false,
+          },
+        }),
+        db.signInRecord.count({ where: { company_id: companyId } }),
+      ]);
+
+    const hasSites = totalSitesCount > 0;
+    const hasPublishedTemplate = publishedTemplatesCount > 0;
+    const hasFirstSignIn = totalSignInsCount > 0;
+    const onboardingComplete =
+      hasSites && hasPublishedTemplate && hasFirstSignIn;
+
+    return {
+      totalSitesCount,
+      publishedTemplatesCount,
+      totalSignInsCount,
+      hasSites,
+      hasPublishedTemplate,
+      hasFirstSignIn,
+      onboardingComplete,
     };
   } catch (error) {
     handlePrismaError(error, "Dashboard");

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { reportClientError } from "@/lib/client-error-reporting";
 
 /**
  * Global Error Boundary
@@ -16,13 +17,14 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Log error to monitoring service in production
-    // The digest is a hash that can be used to match server-side logs
-    console.error("[GlobalError]", {
-      message: error.message,
-      digest: error.digest,
-      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
-    });
+    reportClientError({ source: "app-error-boundary", error });
+    if (process.env.NODE_ENV === "development") {
+      console.error("[GlobalError]", {
+        message: error.message,
+        digest: error.digest,
+        stack: error.stack,
+      });
+    }
   }, [error]);
 
   const isDev = process.env.NODE_ENV === "development";

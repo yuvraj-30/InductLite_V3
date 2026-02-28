@@ -45,32 +45,36 @@ export function SuccessScreen({ result }: SuccessScreenProps) {
   };
 
   return (
-    <div className="overflow-hidden rounded-lg bg-white shadow-lg">
-      <div className="bg-green-600 px-6 py-8 text-center text-white">
+    <div className="surface-panel-strong overflow-hidden">
+      <div className="bg-gradient-to-br from-emerald-600 via-emerald-500 to-cyan-500 px-6 py-8 text-center text-white">
         <div className="mb-4 text-5xl" aria-hidden="true">
           OK
         </div>
-        <h2 className="text-2xl font-bold">Signed In Successfully</h2>
-        <p className="mt-2 text-green-50">Welcome to {result.siteName}</p>
+        <h2 className="kinetic-title text-3xl font-black">Signed In Successfully</h2>
+        <p className="mt-2 text-emerald-50">Welcome to {result.siteName}</p>
       </div>
 
       <div className="space-y-4 px-6 py-6">
-        <div className="rounded-lg bg-gray-50 p-4">
+        <div className="rounded-xl border border-white/35 bg-white/45 p-4">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="text-gray-500">Name</p>
-              <p className="font-medium text-gray-900">{result.visitorName}</p>
+              <p className="text-muted">Name</p>
+              <p className="font-semibold text-[color:var(--text-primary)]">
+                {result.visitorName}
+              </p>
             </div>
             <div>
-              <p className="text-gray-500">Signed in at</p>
-              <p className="font-medium text-gray-900">{formattedTime}</p>
+              <p className="text-muted">Signed in at</p>
+              <p className="font-semibold text-[color:var(--text-primary)]">{formattedTime}</p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-          <h3 className="mb-2 font-medium text-blue-900">Sign Out When Leaving</h3>
-          <p className="mb-3 text-sm text-blue-700">
+        <div className="rounded-xl border border-indigo-400/35 bg-indigo-500/12 p-4">
+          <h3 className="mb-2 font-semibold text-indigo-950 dark:text-indigo-100">
+            Sign Out When Leaving
+          </h3>
+          <p className="mb-3 text-sm text-indigo-900 dark:text-indigo-200">
             Use the link below to sign out when you leave site. This link expires at{" "}
             <strong>{expiryTime}</strong>.
           </p>
@@ -78,23 +82,25 @@ export function SuccessScreen({ result }: SuccessScreenProps) {
           <div className="flex flex-col gap-2">
             <button
               onClick={copySignOutLink}
-              className="w-full rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="btn-primary w-full"
             >
               Copy Sign-Out Link
             </button>
 
             <a
               href={signOutUrl}
-              className="w-full rounded-lg border border-blue-300 bg-white px-4 py-2 text-center font-medium text-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="btn-secondary w-full text-center font-semibold text-accent"
             >
               Sign Out Now
             </a>
           </div>
         </div>
 
-        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-          <h3 className="mb-1 font-medium text-yellow-900">Safety Reminder</h3>
-          <ul className="list-inside list-disc space-y-1 text-sm text-yellow-700">
+        <div className="rounded-xl border border-amber-400/40 bg-amber-500/12 p-4">
+          <h3 className="mb-1 font-semibold text-amber-950 dark:text-amber-100">
+            Safety Reminder
+          </h3>
+          <ul className="list-inside list-disc space-y-1 text-sm text-amber-900 dark:text-amber-200">
             <li>Wear required PPE at all times</li>
             <li>Report hazards to site management immediately</li>
             <li>Follow all site safety procedures</li>
@@ -103,8 +109,8 @@ export function SuccessScreen({ result }: SuccessScreenProps) {
         </div>
       </div>
 
-      <div className="border-t bg-gray-50 px-6 py-4 text-center">
-        <p className="text-sm text-gray-500">Need help? Contact site reception.</p>
+      <div className="border-t border-white/25 bg-white/35 px-6 py-4 text-center">
+        <p className="text-sm text-secondary">Need help? Contact site reception.</p>
       </div>
     </div>
   );

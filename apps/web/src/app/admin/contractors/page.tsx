@@ -206,8 +206,8 @@ export default async function ContractorsPage({
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border bg-white">
-          <table className="min-w-full divide-y divide-gray-200">
+        <div className="overflow-x-auto rounded-lg border bg-white">
+          <table className="min-w-[920px] divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -237,11 +237,13 @@ export default async function ContractorsPage({
                     <p className="text-sm font-medium text-gray-900">
                       {contractor.name}
                     </p>
-                    <p className="text-xs text-gray-500">{contractor.id}</p>
+                    <p className="break-all text-xs text-gray-500">
+                      {contractor.id}
+                    </p>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-700">
                     <p>{contractor.contact_name || "Not set"}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="break-all text-xs text-gray-500">
                       {contractor.contact_email || contractor.contact_phone || "-"}
                     </p>
                   </td>

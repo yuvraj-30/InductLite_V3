@@ -39,6 +39,12 @@ export type SiteListWithCounts = SiteListItem & {
   };
 };
 
+export interface SiteManagerNotificationRecipient {
+  userId: string;
+  email: string;
+  name: string;
+}
+
 /**
  * Site filter options
  */
@@ -152,6 +158,71 @@ export async function findSiteByPublicSlug(
     return publicLink.site;
   } catch (error) {
     handlePrismaError(error, "Site");
+  }
+}
+
+/**
+ * List active site manager recipients for safety escalation notifications.
+ */
+export async function listSiteManagerNotificationRecipients(
+  companyId: string,
+  siteId: string,
+): Promise<SiteManagerNotificationRecipient[]> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+    const assignments = await db.siteManagerAssignment.findMany({
+      where: {
+        company_id: companyId,
+        site_id: siteId,
+        user: { is_active: true },
+      },
+      select: {
+        user_id: true,
+        user: {
+          select: {
+            email: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: { created_at: "asc" },
+    });
+
+    const assignedRecipients = assignments.map((assignment) => ({
+      userId: assignment.user_id,
+      email: assignment.user.email,
+      name: assignment.user.name,
+    }));
+
+    if (assignedRecipients.length > 0) {
+      return assignedRecipients;
+    }
+
+    // Fallback for older tenants without explicit site-manager assignments:
+    // notify active admins/site managers so escalations are never silent.
+    const fallbackUsers = await db.user.findMany({
+      where: {
+        company_id: companyId,
+        is_active: true,
+        role: { in: ["ADMIN", "SITE_MANAGER"] },
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+      },
+      orderBy: [{ role: "asc" }, { created_at: "asc" }],
+    });
+
+    return fallbackUsers.map((user) => ({
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+    }));
+  } catch (error) {
+    handlePrismaError(error, "SiteManagerAssignment");
   }
 }
 

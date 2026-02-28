@@ -7,7 +7,26 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        body: ["var(--font-body)", "Manrope", "sans-serif"],
+        display: ["var(--font-display)", "Space Grotesk", "sans-serif"],
+      },
+      borderRadius: {
+        panel: "1.15rem",
+        control: "0.85rem",
+      },
+      boxShadow: {
+        glass: "var(--shadow-soft)",
+        float: "var(--shadow-float)",
+      },
       colors: {
+        ink: "var(--text-primary)",
+        mist: "var(--text-secondary)",
+        cyber: {
+          primary: "var(--accent-primary)",
+          glow: "var(--accent-cyber)",
+          neon: "var(--accent-neon)",
+        },
         primary: {
           50: "#eff6ff",
           100: "#dbeafe",

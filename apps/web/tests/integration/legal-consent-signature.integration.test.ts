@@ -93,11 +93,21 @@ describe("Legal consent and signature persistence integration", () => {
     expect(persistedInduction?.signature_captured_at).toBeTruthy();
     expect(persistedInduction?.signature_url).toBeTruthy();
     expect(persistedInduction?.completion_snapshot).toBeTruthy();
+    expect(persistedInduction?.competency_status).toBe("SELF_DECLARED");
+    expect(persistedInduction?.briefing_acknowledged_at).toBeTruthy();
+    expect(persistedInduction?.supervisor_verified_by).toBeNull();
+    expect(persistedInduction?.supervisor_verified_at).toBeNull();
 
     const snapshot = persistedInduction?.completion_snapshot as {
       legal?: { terms_version_id?: string; privacy_version_id?: string };
       template?: { version?: number; questions?: Array<{ id: string }> };
       signature?: { hash?: string };
+      competency?: {
+        status?: string;
+        briefing_acknowledged_at?: string;
+        refresher_status?: string;
+        supervisor_verified_by?: string | null;
+      };
     };
 
     expect(snapshot.legal?.terms_version_id).toBe(activeLegal.terms.id);
@@ -105,5 +115,9 @@ describe("Legal consent and signature persistence integration", () => {
     expect(snapshot.template?.version).toBe(template.version);
     expect((snapshot.template?.questions?.length ?? 0) > 0).toBe(true);
     expect(snapshot.signature?.hash).toBe(persistedInduction?.signature_hash ?? undefined);
+    expect(snapshot.competency?.status).toBe("SELF_DECLARED");
+    expect(snapshot.competency?.briefing_acknowledged_at).toBeTruthy();
+    expect(snapshot.competency?.refresher_status).toBe("NOT_SCHEDULED");
+    expect(snapshot.competency?.supervisor_verified_by).toBeNull();
   });
 });

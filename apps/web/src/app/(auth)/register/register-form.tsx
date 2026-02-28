@@ -10,7 +10,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      className="btn-primary w-full"
     >
       {pending ? "Creating workspace..." : "Create Workspace"}
     </button>
@@ -40,14 +40,14 @@ export function RegisterForm() {
       {state && !state.success && (
         <div
           role="alert"
-          className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          className="rounded-xl border border-red-400/45 bg-red-100/70 px-4 py-3 text-sm text-red-950 dark:bg-red-950/45 dark:text-red-100"
         >
           {state.error}
         </div>
       )}
 
       <div>
-        <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="companyName" className="label">
           Company Name
         </label>
         <input
@@ -56,7 +56,7 @@ export function RegisterForm() {
           type="text"
           autoComplete="organization"
           required
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+          className="input mt-1"
           placeholder="BuildRight NZ"
         />
         {getFieldError("companyName") && (
@@ -65,7 +65,7 @@ export function RegisterForm() {
       </div>
 
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="name" className="label">
           Your Name
         </label>
         <input
@@ -74,7 +74,7 @@ export function RegisterForm() {
           type="text"
           autoComplete="name"
           required
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+          className="input mt-1"
           placeholder="Site foreman name"
         />
         {getFieldError("name") && (
@@ -83,7 +83,7 @@ export function RegisterForm() {
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="email" className="label">
           Work Email
         </label>
         <input
@@ -92,7 +92,7 @@ export function RegisterForm() {
           type="email"
           autoComplete="email"
           required
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+          className="input mt-1"
           placeholder="you@company.co.nz"
         />
         {getFieldError("email") && (
@@ -101,7 +101,7 @@ export function RegisterForm() {
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="password" className="label">
           Password
         </label>
         <input
@@ -110,7 +110,7 @@ export function RegisterForm() {
           type="password"
           autoComplete="new-password"
           required
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+          className="input mt-1"
           placeholder="At least 8 chars, upper/lower/number"
         />
         {getFieldError("password") && (
@@ -119,7 +119,7 @@ export function RegisterForm() {
       </div>
 
       <div>
-        <label htmlFor="siteName" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="siteName" className="label">
           First Site Name
         </label>
         <input
@@ -129,7 +129,7 @@ export function RegisterForm() {
           autoComplete="off"
           required
           defaultValue="Main Site"
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+          className="input mt-1"
           placeholder="Main Site"
         />
         {getFieldError("siteName") && (
@@ -141,4 +141,3 @@ export function RegisterForm() {
     </form>
   );
 }
-

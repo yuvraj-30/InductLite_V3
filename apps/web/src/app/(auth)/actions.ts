@@ -24,9 +24,11 @@ import {
   getUserAgent,
 } from "@/lib/auth/csrf";
 import { checkLoginRateLimit } from "@/lib/rate-limit";
-import { publicDb } from "@/lib/db/public-db";
-import { ensureDefaultPublishedTemplate } from "@/lib/repository";
-import { randomBytes } from "crypto";
+import {
+  ensureDefaultPublishedTemplate,
+  registerCompanyWithAdmin,
+  RepositoryError,
+} from "@/lib/repository";
 
 /**
  * Login form schema
@@ -76,39 +78,6 @@ export type RegisterActionResult =
       error: string;
       fieldErrors?: Record<string, string[]>;
     };
-
-function slugifyCompanyName(companyName: string): string {
-  const base = companyName
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 42);
-
-  return base || "company";
-}
-
-async function generateUniqueCompanySlug(companyName: string): Promise<string> {
-  const base = slugifyCompanyName(companyName);
-  let candidate = base;
-  let counter = 2;
-
-  while (true) {
-    const exists = await publicDb.company.findFirst({
-      where: { slug: candidate },
-      select: { id: true },
-    });
-
-    if (!exists) return candidate;
-
-    const suffix = `-${counter}`;
-    candidate = `${base.slice(0, Math.max(1, 48 - suffix.length))}${suffix}`;
-    counter += 1;
-  }
-}
-
-function generateSecurePublicSlug(): string {
-  return randomBytes(16).toString("base64url");
-}
 
 /**
  * Login action
@@ -237,74 +206,14 @@ export async function registerAction(
   const normalizedEmail = email.toLowerCase().trim();
 
   try {
-    const existingUser = await publicDb.user.findFirst({
-      where: { email: normalizedEmail },
-      select: { id: true },
-    });
-
-    if (existingUser) {
-      return {
-        success: false,
-        error: "An account with this email already exists",
-        fieldErrors: { email: ["An account with this email already exists"] },
-      };
-    }
-
-    const slug = await generateUniqueCompanySlug(companyName);
     const passwordHash = await hashPassword(password);
-
-    const created = await publicDb.$transaction(async (tx) => {
-      const company = await tx.company.create({
-        data: {
-          name: companyName.trim(),
-          slug,
-          retention_days: 365,
-        },
-      });
-
-      const user = await tx.user.create({
-        data: {
-          company_id: company.id,
-          email: normalizedEmail,
-          password_hash: passwordHash,
-          name: name.trim(),
-          role: "ADMIN",
-          is_active: true,
-        },
-      });
-
-      const site = await tx.site.create({
-        data: {
-          company_id: company.id,
-          name: siteName.trim(),
-          is_active: true,
-        },
-      });
-
-      await tx.sitePublicLink.create({
-        data: {
-          site_id: site.id,
-          slug: generateSecurePublicSlug(),
-          is_active: true,
-        },
-      });
-
-      await tx.auditLog.create({
-        data: {
-          company_id: company.id,
-          user_id: user.id,
-          action: "company.signup",
-          entity_type: "Company",
-          entity_id: company.id,
-          details: {
-            company_name: company.name,
-            first_site_name: site.name,
-          },
-          request_id: requestId,
-        },
-      });
-
-      return { companyId: company.id };
+    const created = await registerCompanyWithAdmin({
+      companyName,
+      adminName: name,
+      adminEmail: normalizedEmail,
+      adminPasswordHash: passwordHash,
+      firstSiteName: siteName,
+      requestId,
     });
 
     try {
@@ -340,6 +249,14 @@ export async function registerAction(
       };
     }
   } catch (error) {
+    if (error instanceof RepositoryError && error.code === "ALREADY_EXISTS") {
+      return {
+        success: false,
+        error: "An account with this email already exists",
+        fieldErrors: { email: ["An account with this email already exists"] },
+      };
+    }
+
     log.error({ error: String(error) }, "Registration failed");
     return { success: false, error: "Failed to create account" };
   }

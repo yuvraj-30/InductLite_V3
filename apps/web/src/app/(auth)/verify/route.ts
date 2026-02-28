@@ -4,6 +4,7 @@ import { setContractorSession } from "@/lib/auth/contractor-session";
 import { buildPublicUrl } from "@/lib/url/public-url";
 import { createAuditLog } from "@/lib/repository/audit.repository";
 import { generateRequestId } from "@/lib/auth/csrf";
+import { checkMagicLinkVerifyRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -11,6 +12,16 @@ export async function GET(req: Request) {
   const requestId = generateRequestId();
   const url = new URL(req.url);
   const token = url.searchParams.get("token") || "";
+  const tokenPrefix = token.slice(0, 10);
+
+  const rateLimit = await checkMagicLinkVerifyRateLimit(tokenPrefix, {
+    requestId,
+  });
+  if (!rateLimit.success) {
+    return NextResponse.redirect(
+      buildPublicUrl("/contractor?status=invalid", req.url),
+    );
+  }
 
   if (!token) {
     return NextResponse.redirect(

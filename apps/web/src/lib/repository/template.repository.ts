@@ -153,6 +153,7 @@ export interface QuestionData {
   question_type: QuestionType;
   options: JsonValue;
   is_required: boolean;
+  red_flag: boolean;
   display_order: number;
   correct_answer: JsonValue;
   logic?: JsonValue;
@@ -174,28 +175,65 @@ const QUICK_START_QUESTIONS: Array<{
   question_text: string;
   question_type: QuestionType;
   is_required: boolean;
+  red_flag: boolean;
+  correct_answer: JsonValue | null;
 }> = [
   {
     question_text: "I will follow all site instructions from the foreman.",
     question_type: "ACKNOWLEDGMENT",
     is_required: true,
+    red_flag: false,
+    correct_answer: null,
   },
   {
     question_text: "I know where the emergency assembly point is.",
     question_type: "YES_NO",
     is_required: true,
+    red_flag: true,
+    correct_answer: "yes",
   },
   {
     question_text: "I am wearing the required PPE for this site.",
     question_type: "YES_NO",
     is_required: true,
+    red_flag: true,
+    correct_answer: "yes",
   },
   {
     question_text: "Any hazards to report before starting work?",
     question_type: "TEXT",
     is_required: false,
+    red_flag: false,
+    correct_answer: null,
   },
 ];
+
+const QUICK_START_SAFETY_EXPECTED_ANSWERS = new Map(
+  QUICK_START_QUESTIONS.filter((question) => question.red_flag).map(
+    (question) => [question.question_text, question.correct_answer],
+  ),
+);
+
+function normalizeYesNoValue(value: unknown): "yes" | "no" | null {
+  if (typeof value === "boolean") {
+    return value ? "yes" : "no";
+  }
+
+  if (typeof value === "number") {
+    if (value === 1) return "yes";
+    if (value === 0) return "no";
+    return null;
+  }
+
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (["yes", "y", "true", "1"].includes(normalized)) return "yes";
+  if (["no", "n", "false", "0"].includes(normalized)) return "no";
+  return null;
+}
 
 /**
  * Filter options for templates
@@ -577,10 +615,52 @@ export async function ensureDefaultPublishedTemplate(
             question_text: question.question_text,
             question_type: question.question_type,
             is_required: question.is_required,
+            red_flag: question.red_flag,
             display_order: index + 1,
             options: Prisma.JsonNull,
-            correct_answer: Prisma.JsonNull,
+            correct_answer: question.correct_answer ?? Prisma.JsonNull,
           })),
+        });
+        created = true;
+      }
+
+      // Backfill safety flags/answers for legacy quick-start templates that
+      // were created before red-flag escalation rules were encoded.
+      const safetyQuestions = await tx.inductionQuestion.findMany({
+        where: {
+          template_id: template.id,
+          question_text: {
+            in: Array.from(QUICK_START_SAFETY_EXPECTED_ANSWERS.keys()),
+          },
+        },
+        select: {
+          id: true,
+          question_text: true,
+          red_flag: true,
+          correct_answer: true,
+        },
+      });
+
+      for (const question of safetyQuestions) {
+        const expectedAnswer = QUICK_START_SAFETY_EXPECTED_ANSWERS.get(
+          question.question_text,
+        );
+        if (expectedAnswer === undefined) continue;
+
+        const hasExpectedAnswer =
+          normalizeYesNoValue(question.correct_answer) ===
+          normalizeYesNoValue(expectedAnswer);
+        if (question.red_flag && hasExpectedAnswer) continue;
+
+        const nextCorrectAnswer =
+          expectedAnswer === null ? Prisma.JsonNull : expectedAnswer;
+
+        await tx.inductionQuestion.updateMany({
+          where: { id: question.id, template_id: template.id },
+          data: {
+            red_flag: true,
+            correct_answer: nextCorrectAnswer,
+          },
         });
         created = true;
       }

@@ -11,14 +11,17 @@ test.describe("Accessibility Checks", () => {
         TEST_SITE_SLUG = body.slug;
         return;
       }
-    } catch {
+    } catch (error) {
       // fallback to existing seed
+      console.warn("a11y seedPublicSite failed, trying fallback slug:", String(error));
     }
 
     const res = await request.get(`/s/${TEST_SITE_SLUG}`);
     const txt = await res.text();
     if (res.status() === 404 || /Site Not Found|No active template/i.test(txt)) {
-      test.skip(true, "A11y public site not seeded in this environment");
+      throw new Error(
+        "A11y public site is not seeded. Ensure test runner endpoints are enabled and site seeding succeeds.",
+      );
     }
   });
 

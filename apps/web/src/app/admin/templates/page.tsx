@@ -7,12 +7,14 @@
 import Link from "next/link";
 import { checkAuthReadOnly, checkPermissionReadOnly } from "@/lib/auth";
 import { listTemplates } from "@/lib/repository";
+import { getOnboardingProgress } from "@/lib/repository/dashboard.repository";
 import {
   PublishTemplateForm,
   ArchiveTemplateForm,
   DeleteTemplateForm,
   CreateVersionForm,
 } from "./template-action-forms";
+import { OnboardingChecklist } from "../components/OnboardingChecklist";
 
 export const metadata = {
   title: "Induction Templates | InductLite",
@@ -67,11 +69,15 @@ export default async function TemplatesPage() {
     );
   }
 
-  const [canManage, result] = await Promise.all([
-    checkPermissionReadOnly("template:manage"),
-    listTemplates(guard.user.companyId, { isArchived: false }, { pageSize: 100 }),
-  ]);
-  const canManageTemplates = canManage.success;
+  const [canManageTemplatePermission, canManageSitePermission, onboardingProgress, result] =
+    await Promise.all([
+      checkPermissionReadOnly("template:manage"),
+      checkPermissionReadOnly("site:manage"),
+      getOnboardingProgress(guard.user.companyId),
+      listTemplates(guard.user.companyId, { isArchived: false }, { pageSize: 100 }),
+    ]);
+  const canManageTemplates = canManageTemplatePermission.success;
+  const canManageSites = canManageSitePermission.success;
 
   const templates = result.items;
 
@@ -141,6 +147,12 @@ export default async function TemplatesPage() {
               </Link>
             </div>
           )}
+          <OnboardingChecklist
+            progress={onboardingProgress}
+            className="mt-6 text-left"
+            canManageSites={canManageSites}
+            canManageTemplates={canManageTemplates}
+          />
         </div>
       ) : (
         <div className="bg-white shadow overflow-hidden sm:rounded-lg">

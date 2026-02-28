@@ -77,6 +77,7 @@ export type AuditAction =
   | "emergency.procedure.create"
   | "emergency.procedure.update"
   | "emergency.procedure.deactivate"
+  | "emergency.drill.create"
   // Incident actions
   | "incident.create"
   | "incident.resolve"
@@ -85,6 +86,10 @@ export type AuditAction =
   | "signin.signout"
   // Visitor actions (public endpoints)
   | "visitor.sign_in"
+  | "visitor.sign_in_blocked"
+  | "visitor.sign_in_escalation_submitted"
+  | "visitor.sign_in_escalation_approved"
+  | "visitor.sign_in_escalation_denied"
   | "visitor.sign_out"
   // Export actions
   | "export.create"
@@ -93,7 +98,9 @@ export type AuditAction =
   | "export.denied"
   // Public link actions
   | "publiclink.create"
-  | "publiclink.deactivate";
+  | "publiclink.deactivate"
+  // Settings actions
+  | "settings.update";
 
 /**
  * Audit log entry input

@@ -7,8 +7,51 @@ function uniqueSuffix() {
 async function createSite(page: any, name: string) {
   await page.goto("/admin/sites/new");
   await page.getByLabel(/site name/i).fill(name);
-  await page.getByRole("button", { name: "Create Site" }).click();
-  await expect(page).toHaveURL(/\/admin\/sites$/);
+  await Promise.all([
+    page.waitForURL(/\/admin\/sites(?:\?.*)?$/, { timeout: 30000 }),
+    page.getByRole("button", { name: "Create Site" }).click(),
+  ]);
+}
+
+async function submitHazardsForm(page: any, form: any) {
+  const submitRequest = page
+    .waitForResponse(
+      (response: any) =>
+        response.request().method() === "POST" &&
+        /\/admin\/hazards(?:\?|$)/.test(response.url()),
+      { timeout: 15000 },
+    )
+    .catch(() => null);
+
+  const submitButton = form.locator('button[type="submit"]').first();
+  await submitButton.scrollIntoViewIfNeeded().catch(() => undefined);
+  try {
+    await submitButton.click({ timeout: 10000 });
+  } catch {
+    await submitButton.evaluate((button: Element) => {
+      (button as HTMLButtonElement).click();
+    });
+  }
+
+  await submitRequest;
+}
+
+async function safeGotoHazards(page: any) {
+  try {
+    await page.goto("/admin/hazards", { waitUntil: "domcontentloaded" });
+    return true;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (
+      /ERR_ABORTED|NS_BINDING_ABORTED|frame was detached|interrupted by another navigation|aborted/i.test(
+        message,
+      )
+    ) {
+      await page.waitForTimeout(200);
+      return false;
+    }
+    throw error;
+  }
 }
 
 test.describe.serial("Admin Hazard Register", () => {
@@ -28,19 +71,57 @@ test.describe.serial("Admin Hazard Register", () => {
 
     await page.locator('select[name="siteId"]').selectOption({ label: siteName });
     await page.locator('select[name="riskLevel"]').selectOption("HIGH");
-    await page.locator('input[name="title"]').fill(hazardTitle);
-    await page
-      .locator('textarea[name="description"]')
-      .fill("Scaffold board not secured on upper level.");
+    const titleField = page.getByLabel("Hazard Title");
+    await expect(titleField).toBeVisible({ timeout: 15000 });
+    await titleField.fill(hazardTitle);
 
-    await page.getByRole("button", { name: "Add Hazard" }).click();
+    const descriptionField = page.getByLabel("Description");
+    await expect(descriptionField).toBeVisible({ timeout: 15000 });
+    await descriptionField.fill("Scaffold board not secured on upper level.");
+
+    const addHazardForm = page
+      .locator("form")
+      .filter({ has: page.getByRole("button", { name: "Add Hazard" }) })
+      .first();
+    await submitHazardsForm(page, addHazardForm);
+
+    await expect
+      .poll(
+        async () => {
+          const navigated = await safeGotoHazards(page);
+          if (!navigated) return 0;
+          return page.locator("tr", { hasText: hazardTitle }).count();
+        },
+        { timeout: 30000 },
+      )
+      .toBe(1);
 
     const hazardRow = page.locator("tr", { hasText: hazardTitle }).first();
-    await expect(hazardRow).toBeVisible();
     await expect(hazardRow).toContainText("HIGH");
     await expect(hazardRow).toContainText("OPEN");
 
-    await hazardRow.getByRole("button", { name: "Close" }).click();
-    await expect(hazardRow).toContainText("CLOSED");
+    const closeForm = hazardRow.locator("form").first();
+    await expect(closeForm).toBeVisible();
+    await submitHazardsForm(page, closeForm);
+
+    await expect
+      .poll(
+        async () => {
+          const navigated = await safeGotoHazards(page);
+          if (!navigated) return false;
+          const hazardPageVisible = await page
+            .getByRole("heading", { level: 1, name: "Hazard Register" })
+            .isVisible()
+            .catch(() => false);
+          if (!hazardPageVisible) return false;
+          const refreshedRow = page
+            .locator("tr", { hasText: hazardTitle })
+            .first();
+          if ((await refreshedRow.count()) === 0) return false;
+          return refreshedRow.getByText("CLOSED").isVisible();
+        },
+        { timeout: 45000 },
+      )
+      .toBe(true);
   });
 });

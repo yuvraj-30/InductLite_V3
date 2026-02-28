@@ -1,7 +1,7 @@
 # Guardrail Control Matrix
 
-Version: `v2`
-Updated: `2026-02-15`
+Version: `v3`
+Updated: `2026-02-23`
 
 This file is the machine-checkable registry for MUST-level controls.
 
@@ -41,6 +41,9 @@ This file is the machine-checkable registry for MUST-level controls.
 | EXPT-009 | MAX_CONCURRENT_EXPORTS_PER_COMPANY | 1 | 1/1/1 | export enqueue action | guardrails-export-limits | Backend |
 | ABUSE-001 | RL_PUBLIC_SLUG_PER_IP_PER_MIN | 30 | 30/30/30 | public actions rate-limit middleware | guardrails-public-rl | Security |
 | ABUSE-002 | RL_ADMIN_PER_USER_PER_MIN | 60 | 60/60/60 | admin actions rate-limit middleware | guardrails-admin-rl | Security |
+| COMP-001 | N/A | settings updates require `settings:manage` permission + `assertOrigin()` | N/A | `apps/web/src/app/admin/settings/actions.ts` | e2e-admin-settings-save | Security |
+| COMP-002 | N/A | legal hold reason required when `compliance_legal_hold=true` | N/A | `apps/web/src/app/admin/settings/actions.ts` + `apps/web/src/lib/repository/company.repository.ts` | e2e-admin-settings-legal-hold-validation | Compliance |
+| COMP-003 | N/A | compliance settings changes must emit immutable audit event (`settings.update`) | N/A | `apps/web/src/app/admin/settings/actions.ts` + `apps/web/src/lib/repository/audit.repository.ts` | unit-admin-settings-actions | Security |
 | MSG-001 | MAX_EMAILS_PER_COMPANY_PER_MONTH | 500 | 500/2000/10000 | centralized message wrapper | guardrails-messaging-caps | Backend |
 | MSG-002 | MAX_EMAILS_GLOBAL_PER_DAY | 2000 | 2000/8000/40000 | centralized message wrapper | guardrails-messaging-caps | Backend |
 | TENANT-001 | N/A | scopedDb only | N/A | repository and static analysis rules | guardrails-tenant-scope | Security |

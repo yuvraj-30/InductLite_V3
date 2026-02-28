@@ -137,6 +137,15 @@ export default async function IncidentsPage({ searchParams }: IncidentsPageProps
             />
           </label>
 
+          <label className="text-sm text-gray-700">
+            WorkSafe Notified At (optional)
+            <input
+              name="worksafeNotifiedAt"
+              type="datetime-local"
+              className="mt-1 block min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+            />
+          </label>
+
           <label className="text-sm text-gray-700 md:col-span-2">
             Title
             <input
@@ -150,12 +159,43 @@ export default async function IncidentsPage({ searchParams }: IncidentsPageProps
           </label>
 
           <label className="text-sm text-gray-700 md:col-span-2">
+            WorkSafe Reference Number (optional)
+            <input
+              name="worksafeReferenceNumber"
+              type="text"
+              maxLength={120}
+              className="mt-1 block min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              placeholder="e.g. WS-NOTIFY-2026-0001"
+            />
+          </label>
+
+          <label className="text-sm text-gray-700 md:col-span-2">
             Description
             <textarea
               name="description"
               rows={3}
               className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
             />
+          </label>
+
+          <label className="flex items-center gap-2 text-sm text-gray-700 md:col-span-2">
+            <input
+              name="isNotifiable"
+              type="checkbox"
+              value="true"
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            This is a notifiable event
+          </label>
+
+          <label className="flex items-center gap-2 text-sm text-gray-700 md:col-span-2">
+            <input
+              name="legalHold"
+              type="checkbox"
+              value="true"
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            Apply legal hold (exclude from automated retention purge)
           </label>
 
           <label className="text-sm text-gray-700 md:col-span-2">
@@ -221,6 +261,11 @@ export default async function IncidentsPage({ searchParams }: IncidentsPageProps
                         {incident.sign_in_record_id
                           ? ` | Sign-in: ${incident.sign_in_record_id.slice(0, 8)}...`
                           : ""}
+                        {incident.is_notifiable ? " | Notifiable" : ""}
+                        {incident.worksafe_reference_number
+                          ? ` | Ref: ${incident.worksafe_reference_number}`
+                          : ""}
+                        {incident.legal_hold ? " | Legal hold" : ""}
                       </p>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-700">
@@ -258,4 +303,3 @@ export default async function IncidentsPage({ searchParams }: IncidentsPageProps
     </div>
   );
 }
-

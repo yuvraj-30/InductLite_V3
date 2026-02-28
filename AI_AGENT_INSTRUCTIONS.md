@@ -41,6 +41,7 @@ Repo root uses Turborepo:
 - Unit tests: `npm run test` (or `cd apps/web && npm run test`)
 - Integration tests (Testcontainers + real Postgres): `cd apps/web && npm run test:integration`
 - E2E tests (Playwright): `cd apps/web && npm run test:e2e`
+- E2E stable lane (single-worker, deterministic): `cd apps/web && npm run test:e2e:stable`
 - Visual regression (Playwright snapshot suite): `cd apps/web && npm run test:visual`
 - DB: `npm run db:migrate` / `npm run db:seed` (root forwards to `apps/web`)
 - Prisma generate: `npm run db:generate`
@@ -173,6 +174,7 @@ export async function deactivateContractor(companyId: string, contractorId: stri
 ### 5.3 E2E tests (Playwright)
 - If you change user-visible flows, update `apps/web/e2e/**` and run:
   - `cd apps/web && npm run test:e2e`
+  - `cd apps/web && npm run test:e2e:stable`
 
 ### 5.4 Security guardrails tests
 - If you change `apps/web/eslint-plugin-security/**`, update rule tests accordingly (RuleTester-based).

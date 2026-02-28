@@ -1,44 +1,58 @@
 # UI/UX Consistency Guide
 
-This project uses a shared visual language across admin, auth, contractor, and public flows.
+This repo now uses a 2026 tokenized visual system across admin, auth, contractor, and public flows.
 
 ## Core Principles
 
-- Keep interaction patterns predictable across all pages.
-- Use shared utility classes/components before writing one-off styles.
-- Keep page sections visually familiar: heading, context text, actions, content.
-- Use role-appropriate visual identity without changing interaction behavior.
+- Build on shared tokens and primitives before writing one-off utility strings.
+- Prioritize intent-first actions: keyboard-first navigation via command palette where applicable.
+- Preserve accessibility and operational clarity under both adaptive modes.
+- Keep interaction behavior stable while evolving visual depth and hierarchy.
+
+## Design System Source
+
+- Token source of truth: `apps/web/src/design/modern-theme.json`.
+- Runtime token application: `apps/web/src/app/globals.css`.
+- Adaptive mode runtime (`warm-light` and `high-contrast-dark`): `apps/web/src/components/ui/theme-runtime.tsx`.
 
 ## Shared Patterns
 
-- Buttons: use `btn-primary`, `btn-secondary`, `btn-danger`.
-- Inputs: use `input` and labels with `label`.
-- Cards: use `card` or `rounded-lg border bg-white` table shells.
-- Alerts: use `Alert` component from `apps/web/src/components/ui/alert.tsx`.
-- Public pages: use `PublicShell` from `apps/web/src/components/ui/public-shell.tsx`.
-- Admin nav: use `NavLink` from `apps/web/src/app/admin/nav-link.tsx` for active-state consistency.
+- Buttons: `btn-primary`, `btn-secondary`, `btn-danger`.
+- Inputs: `input` with `label` (minimum 44px touch target).
+- Surfaces: `surface-panel`, `surface-panel-strong`, `card`, `bento-card`.
+- Layout grids: `bento-grid` for modular dashboard-style grouping.
+- Alerts: `Alert` component in `apps/web/src/components/ui/alert.tsx`.
+- Public shell: `PublicShell` in `apps/web/src/components/ui/public-shell.tsx`.
+- Admin navigation active state: `NavLink` in `apps/web/src/app/admin/nav-link.tsx`.
 
-## Layout Consistency
+## Intent-Based UX
 
-- Headings:
-  - Page title: `text-2xl font-bold text-gray-900`
-  - Supporting text: `text-gray-600`
-- Content containers:
-  - Cards/tables should share border/radius/shadow rhythm.
-- Empty states:
-  - Use centered card with clear title and one follow-up action.
+- Admin shell includes `Cmd/Ctrl + K` command palette:
+  - Component: `apps/web/src/app/admin/admin-command-palette.tsx`
+  - Integration: `apps/web/src/app/admin/layout.tsx`
+- Commands should be role-aware and include:
+  - clear title,
+  - short action description,
+  - route target,
+  - optional context keywords.
+
+## Typography & Motion
+
+- Body font uses variable `Manrope`; display uses variable `Space Grotesk`.
+- Kinetic typography should use `kinetic-title` and `kinetic-hover` on interactive headings.
+- Respect reduced motion (`prefers-reduced-motion`) by avoiding non-essential animation.
 
 ## Accessibility Requirements
 
-- Active navigation links must expose `aria-current="page"`.
-- Alerts should expose `role="alert"` for actionable feedback.
-- Focus states should remain visible and consistent.
+- Maintain WCAG 2.2 contrast in both adaptive modes.
+- Keep visible focus indicators for links, buttons, and form controls.
+- Keep `aria-current="page"` on active nav links.
+- Use `role="alert"` for actionable error/success notices.
+- Command palette must keep keyboard navigation (`Cmd/Ctrl+K`, arrows, Enter, Escape).
 
 ## Testing Expectations
 
-- Visual snapshots should cover representative pages in each section:
-  - auth (`/login`)
-  - admin (`/admin/dashboard`, `/admin/users`, `/admin/exports`)
-  - public (`/s/[slug]`, `/sign-out`)
-  - contractor (`/contractor/portal`)
-- UI changes should include visual baseline updates and reviewer sign-off.
+- Run at minimum:
+  - `npm run -w apps/web lint`
+  - `npm run -w apps/web typecheck`
+- For UI-heavy changes, also run relevant Playwright specs for touched flows when environment supports E2E fixture server mode.

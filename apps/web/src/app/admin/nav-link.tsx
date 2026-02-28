@@ -22,14 +22,14 @@ export function NavLink({ href, children, exact = false }: NavLinkProps) {
   return (
     <Link
       href={href}
-      className={`block rounded-md px-4 py-2 text-sm transition-colors ${
+      className={`kinetic-hover block rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
         isActive
-          ? "bg-blue-50 text-blue-700"
-          : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+          ? "border border-indigo-400/40 bg-indigo-500/20 text-indigo-900 shadow-soft dark:text-indigo-100"
+          : "border border-transparent text-secondary hover:border-white/45 hover:bg-white/50 hover:text-[color:var(--text-primary)]"
       }`}
       aria-current={isActive ? "page" : undefined}
     >
-      {children}
+      <span className="kinetic-title">{children}</span>
     </Link>
   );
 }

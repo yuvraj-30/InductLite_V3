@@ -61,8 +61,8 @@ export default async function AdminExportsPage() {
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border bg-white">
-          <table className="min-w-full divide-y divide-gray-200">
+        <div className="overflow-x-auto rounded-lg border bg-white">
+          <table className="min-w-[760px] divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -85,7 +85,9 @@ export default async function AdminExportsPage() {
             <tbody className="divide-y divide-gray-200 bg-white">
               {jobs.items.map((job) => (
                 <tr key={job.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm text-gray-600">{job.id}</td>
+                  <td className="break-all px-4 py-3 text-sm text-gray-600">
+                    {job.id}
+                  </td>
                   <td className="px-4 py-3 text-sm text-gray-900">{job.export_type}</td>
                   <td className="px-4 py-3">
                     <span
@@ -94,7 +96,9 @@ export default async function AdminExportsPage() {
                       {job.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{job.requested_by}</td>
+                  <td className="break-all px-4 py-3 text-sm text-gray-600">
+                    {job.requested_by}
+                  </td>
                   <td className="px-4 py-3 text-sm">
                     {job.status === "SUCCEEDED" && job.file_path ? (
                       <a

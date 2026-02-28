@@ -1,68 +1,117 @@
 # MASTER_FOUNDER_PLAN
 
-Date: 2026-02-19
+Date: 2026-02-22
 Scope: Whole-company audit across product/legal, engineering/security, and operations.
 
-This plan is a product and engineering assessment, not legal advice. Treat legal items as implementation requirements to validate with NZ counsel.
-
-## Execution Status (2026-02-21)
-
-- Phase 1 complete: schema + migration foundation shipped for hazards, emergency data, legal versioning, signature evidence metadata, and incident/near-miss reporting.
-- Phase 2 complete: repository/service wiring shipped for signature persistence, legal consent linkage, hazards, emergency data, incident reports, and export queue boundaries.
-- Phase 3 complete: structured logging expanded, health/readiness hardening applied, sitemap moved behind repository boundary, and magic-link/rate-limit telemetry auditability improved.
-- Phase 4 complete: public legal pages and links shipped, emergency admin/public UX shipped, hazard register UI shipped, incident register UI shipped, and live-register incident shortcuts added.
-- Phase 5 complete: unit/integration/e2e/guardrail suites pass in this environment.
-- Phase 6 complete: compliance + operations runbooks updated and tenant-owned model registry refreshed.
+This is an engineering/compliance planning document, not legal advice. Validate legal interpretation with NZ counsel before launch.
 
 ## Section 1: The Must Build Roadmap (PM/Legal)
 
-| Feature | Why | Priority |
-| --- | --- | --- |
-| Hazard Register (site-level hazard log with controls, owner, status, close-out evidence) | WorkSafe-style hazard identification/control requires a durable register, not just questionnaire answers. | Critical |
-| Emergency Contacts and Emergency Procedures per site | Workers need immediate emergency contacts/evacuation info at induction time. | Critical |
-| Persist Digital Signature Evidence | Legally defensible acknowledgement requires durable signature payload + metadata persistence. | Critical |
-| Versioned Terms + Privacy Notice with explicit consent record | Informed consent requires durable linkage to legal document version and timestamped acceptance. | Critical |
-| Evidence-grade Induction Completion Record | Add immutable snapshot of template content, legal copy version, signer metadata, and consent timestamp to strengthen compliance exports. | Critical |
-| Incident / Near-miss capture tied to sign-ins and sites | Required for practical H&S operations and post-incident investigations. | High |
-| Offline submission queue for field use | Field teams need submission resilience in low-connectivity environments. | High |
+- Feature: Notifiable Event Workflow + 5-Year Retention Lock
+  Why: NZ law requires keeping records of each notifiable event for at least 5 years. Current defaults (`retention_days=365`, `AUDIT_RETENTION_DAYS=90`) can purge evidence too early.
+  Priority: **Critical**
+  Status: Implemented (data model + workflow fields + retention enforcement) on 2026-02-22.
+
+- Feature: Emergency Plan Drill/Test Register
+  Why: NZ regulations require emergency plans to be prepared, maintained, and tested (including annual testing where no trigger event occurs). Current schema has emergency contacts/procedures but no drill history.
+  Priority: **Critical**
+  Status: Implemented (site-level drill register + audit events + retention semantics) on 2026-02-22.
+
+- Feature: Regulator-Ready Incident Fields
+  Why: `IncidentReport` lacks explicit WorkSafe notification metadata (`is_notifiable`, `notified_at`, `reference_number`, `notified_by`) needed for defensible compliance exports.
+  Priority: **Critical**
+  Status: Implemented on 2026-02-22.
+
+- Feature: Legal Hold + Compliance Retention Classes
+  Why: A single tenant retention value is too blunt for mixed legal obligations (incidents, inductions, audits). Add per-record-class retention and legal-hold override.
+  Priority: **Critical**
+  Status: Implemented on 2026-02-23 (company-level legal hold now hard-overrides sign-in/induction, incident, drill, and audit retention purges; class-level retention windows now cover incidents, emergency drills, induction evidence/sign-in records, and audit logs, with admin settings UI to configure retention classes in-app).
+
+- Feature: Worker Competency/Briefing Evidence Layer
+  Why: HSWA primary duty includes providing information/training/supervision. Answers JSON proves completion but not competency state, refresher status, or supervisor verification.
+  Priority: **Critical**
+  Status: Implemented on 2026-02-22 (induction competency state, briefing timestamp, refresher scheduling, and supervisor-verification evidence are now persisted in `InductionResponse` and immutable completion snapshots).
+
+- Feature: Critical-Event Escalation Workflow
+  Why: Red-flag/critical induction answers currently capture data but do not force escalation/approval workflow before entry.
+  Priority: **Critical**
+  Status: Implemented (server-side red-flag gate + queued manager alerts + stateful supervisor approve/deny workflow in admin) on 2026-02-22.
 
 ## Section 2: The Tech Debt Cleanup (Engineering/SRE)
 
-| File | Issue | Fix |
-| --- | --- | --- |
-| `apps/web/src/app/s/[slug]/components/SignInFlow.tsx` | Signature is captured client-side but only passed upstream; no persistence guarantee. | Keep signature in request payload and add checksum/size validation before storage. |
-| `apps/web/src/app/s/[slug]/actions.ts` | `submitSignIn` validates signature presence but does not pass it into durable storage contract. | Extend repository input type with `signatureData` and persist through the create path. |
-| `apps/web/src/lib/repository/public-signin.repository.ts` | `inductionResponse.create` writes answers only; `signature_url` remains unused. | Store encrypted signature blob/object URL and hash in `InductionResponse`. |
-| `apps/web/src/app/admin/exports/actions.ts` | App-layer action performs direct transaction (`publicDb` + `scopedDb`) instead of going through repository/service boundary. | Move queue/limit transaction logic into `src/lib/repository/export.repository.ts` (or export service) and keep action orchestration-only. |
-| `apps/web/src/app/sitemap.xml/route.ts` | Route uses direct Prisma client in app layer. | Move sitemap query to a repository function to align with data-access pattern guardrails. |
-| `apps/web/src/app/admin/dashboard/page.tsx` | Uses `console.error` fallback logging without structured request context. | Replace with `createRequestLogger` and structured fields (`request_id`, `company_id`, action). |
-| `apps/web/src/app/admin/history/page.tsx` | Uses unstructured `console.error` for partial data failures. | Standardize on structured logger and include deterministic error codes for UI fallbacks. |
-| `apps/web/src/app/admin/live-register/page.tsx` | Uses unstructured `console.error` and generic failure banners. | Standardize logging + add typed failure reasons for better incident triage. |
-| `apps/web/src/app/health/route.ts` | Returns raw DB error message in health payload, which can leak internals. | Return generic external error text; log detailed error server-side only. |
-| `apps/web/src/app/api/ready/route.ts` | Public readiness endpoint does DB ping with no abuse control. | Restrict by network/proxy layer or add lightweight rate limiting. |
-| `apps/web/src/lib/auth/magic-link.ts` | Magic-link creation/consumption has no audit log event. | Add `createAuditLog` events for issue/consume/failure outcomes. |
-| `apps/web/src/lib/rate-limit/telemetry.ts` | Uses `console.warn` telemetry path. | Route telemetry through structured logger for consistent ingestion. |
+- File: `apps/web/src/lib/env-validation.ts`
+  Issue: Public rate-limit env vars are validated, but admin rate-limit guardrails (`RL_ADMIN_*`) are not validated/enforced.
+  Fix: Add `RL_ADMIN_PER_USER_PER_MIN`, `RL_ADMIN_PER_IP_PER_MIN`, `RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN` validation + defaults + tests.
+
+- File: `apps/web/src/lib/rate-limit/index.ts`
+  Issue: Only public/login/contractor/CSP limiters exist; no admin mutation limiter path.
+  Fix: Add admin limit helpers and wire them into admin Server Actions and admin Route Handlers.
+
+- File: `apps/web/src/app/(auth)/verify/route.ts`
+  Issue: Magic-link consume endpoint has no explicit rate limiter.
+  Fix: Add token/IP scoped limiter and failure telemetry before token verification.
+
+- File: `apps/web/src/lib/repository/export.repository.ts`
+  Issue: Export queue enforces count/concurrency but not daily byte guardrails (`MAX_EXPORT_BYTES_GLOBAL_PER_DAY`, download byte caps).
+  Fix: Add byte-budget accounting and deny/queue behavior with deterministic control IDs.
+
+- File: `apps/web/src/app/api/exports/[id]/download/route.ts`
+  Issue: Download path audits access but does not enforce per-company/global daily download byte limits.
+  Fix: Enforce download-byte guardrails before issuing local file response/signed URL.
+
+- File: `apps/web/src/app/health/route.ts`
+  Issue: Uses raw SQL ping (`$queryRaw`) despite repository policy direction to avoid raw SQL.
+  Fix: Replace with a scoped ORM readiness check utility shared with `/api/ready`.
+  Status: Implemented on 2026-02-22.
+
+- File: `apps/web/src/app/api/ready/route.ts`
+  Issue: Rate limiter is process-local `Map`, so protection is inconsistent under horizontal scaling.
+  Fix: Use shared limiter backend (same strategy as `lib/rate-limit`) and keep in-memory only as explicit dev fallback.
+  Status: Implemented on 2026-02-22.
+
+- File: `apps/web/src/app/(auth)/actions.ts`
+  Issue: Registration flow performs multi-entity writes directly against `publicDb` in app-layer action.
+  Fix: Move signup transaction into dedicated auth/service repository boundary for consistency and testability.
+  Status: Implemented on 2026-02-22 (`registerCompanyWithAdmin` repository boundary now owns signup transaction).
+
+- File: `apps/web/src/app/error.tsx`
+  Issue: Client error boundary logs with `console.error`, not structured ingestion.
+  Fix: Post error events to a server endpoint that logs via structured logger with request correlation.
+  Status: Implemented on 2026-02-22.
+
+- File: `apps/web/src/app/global-error.tsx`
+  Issue: Root error boundary also uses `console.error`; critical client crashes may be invisible in centralized logs.
+  Fix: Mirror global boundary errors to centralized structured logging.
+  Status: Implemented on 2026-02-22.
 
 ## Section 3: The UX Polish List (CSM)
 
-| Flow | Friction | Fix |
-| --- | --- | --- |
-| Public sign-in details (`/s/[slug]`) | Small controls (`text-sm`, `h-4 w-4`, `py-2`) are not glove/dirty-hand friendly. | Introduce a field-work UI density mode: larger targets, 44px minimum touch areas, larger type. |
-| Public induction step | Required details + induction + signature can feel heavy with no progress persistence on refresh. | Add draft autosave (session/local) and resume-on-reload for same device. |
-| Signature step | Checkbox and clear/confirm controls are compact; no explicit "legal text version" shown before sign-off. | Enlarge controls and show plain-language legal summary with linked full terms/privacy. |
-| New admin first run (dashboard) | Dashboard shows metrics but lacks guided setup checklist (create site -> create template -> test QR). | Add onboarding checklist card with completion states and CTA links. |
-| Empty states across admin | Good single-page empty states exist, but no cross-product "getting started" sequence. | Add global first-run state and contextual nudges until first successful induction. |
-| Offline experience | Offline page only offers reload; no queued sign-ins for later sync. | Implement offline queue with sync status and conflict handling for kiosk/public flow. |
-| Public trust signals | Homepage/public shell lacks visible legal links and data-use messaging. | Add footer links to Terms, Privacy, and support contact on all public pages. |
+- Flow: Public induction stepper (`/s/[slug]`)
+  Friction: Progress circles and labels are visually small for fast field use (`h-8 w-8`, `text-xs`), reducing glove/dirty-hand readability.
+  Fix: Add "Field Mode" with larger stepper targets, larger labels, and stronger contrast.
+  Status: Implemented on 2026-02-22.
 
-## Truth Snapshot
+- Flow: Public load-failure state (`/s/[slug]`)
+  Friction: "Unable to Load" screen has no explicit retry action.
+  Fix: Add a primary `Retry` button and offline-aware fallback messaging.
+  Status: Implemented on 2026-02-22.
 
-What is working well:
-- Tenant-scoped repository pattern is broadly implemented.
-- Mutating server actions generally enforce `assertOrigin()` and Zod validation.
-- Audit log table and many admin/public mutation audit events are present.
-- Error boundaries exist with user-facing retry paths.
+- Flow: Signature step (`/s/[slug]`)
+  Friction: Users can store signatures locally, but risk tradeoff is not explicit for shared devices.
+  Fix: Add a clear "shared device" warning and one-tap "don't save on this device" default in kiosk mode.
+  Status: Implemented on 2026-02-22.
 
-What is currently blocking a stronger compliance and market-fit story:
-- Counsel-reviewed legal copy is still recommended before production launch.
-- Offline queue data is device-local; browser-at-rest encryption is not implemented.
+- Flow: First-run admin onboarding
+  Friction: Dashboard checklist exists, but setup guidance is not persistent across all empty-state pages.
+  Fix: Add global onboarding state + contextual next-step prompts on Sites/Templates/Live Register until first successful induction.
+  Status: Implemented on 2026-02-22.
+
+- Flow: Contractor magic-link failure path
+  Friction: Invalid/expired link redirects to status page without guided recovery CTA.
+  Fix: Add explicit "Request new link" CTA and timer/explanation to reduce support load.
+  Status: Implemented on 2026-02-22.
+
+- Flow: Public emergency information presentation
+  Friction: Emergency contacts/procedures render as dense text blocks on smaller screens.
+  Fix: Add tap-first cards with quick-call action and clearer hierarchy for urgent scenarios.
+  Status: Implemented on 2026-02-22.

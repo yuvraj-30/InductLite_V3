@@ -10,13 +10,21 @@
  * - AuditLog entries
  */
 
-import { findSiteByPublicSlug } from "@/lib/repository/site.repository";
+import {
+  findSiteByPublicSlug,
+  listSiteManagerNotificationRecipients,
+} from "@/lib/repository/site.repository";
 import { getActiveTemplateForSite } from "@/lib/repository/template.repository";
 import {
   createPublicSignIn,
   signOutWithToken,
   type SignInResult,
 } from "@/lib/repository/public-signin.repository";
+import { queueEmailNotification } from "@/lib/repository/email.repository";
+import {
+  createPendingSignInEscalation,
+  setSignInEscalationNotificationCounts,
+} from "@/lib/repository/signin-escalation.repository";
 import {
   listSiteEmergencyContacts,
   listSiteEmergencyProcedures,
@@ -101,6 +109,190 @@ function safePublicErrorMessage(err: unknown): string {
   return "An unexpected error occurred. Please try again.";
 }
 
+const NON_TRIGGERING_RED_FLAG_ANSWERS = new Set([
+  "no",
+  "false",
+  "none",
+  "n/a",
+  "na",
+  "nil",
+  "0",
+]);
+
+const QUICK_START_IMPLICIT_RED_FLAG_EXPECTATIONS = new Map<string, "yes" | "no">([
+  ["I know where the emergency assembly point is.", "yes"],
+  ["I am wearing the required PPE for this site.", "yes"],
+]);
+
+function shouldTriggerRedFlag(answer: unknown): boolean {
+  if (answer === null || answer === undefined) {
+    return false;
+  }
+
+  if (typeof answer === "boolean") {
+    return answer;
+  }
+
+  if (typeof answer === "number") {
+    return answer !== 0;
+  }
+
+  if (Array.isArray(answer)) {
+    return answer.some((value) => shouldTriggerRedFlag(value));
+  }
+
+  if (typeof answer === "string") {
+    const normalized = answer.trim().toLowerCase();
+    if (!normalized) {
+      return false;
+    }
+    return !NON_TRIGGERING_RED_FLAG_ANSWERS.has(normalized);
+  }
+
+  // Fail closed for unexpected answer shapes.
+  return true;
+}
+
+function normalizeYesNoValue(value: unknown): "yes" | "no" | null {
+  if (typeof value === "boolean") {
+    return value ? "yes" : "no";
+  }
+
+  if (typeof value === "number") {
+    if (value === 1) return "yes";
+    if (value === 0) return "no";
+    return null;
+  }
+
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim().toLowerCase();
+  if (["yes", "y", "true", "1"].includes(normalized)) return "yes";
+  if (["no", "n", "false", "0"].includes(normalized)) return "no";
+  return null;
+}
+
+function normalizeComparableValue(value: unknown): unknown {
+  if (typeof value === "string") {
+    return value.trim().toLowerCase();
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((entry) => normalizeComparableValue(entry));
+  }
+
+  if (value && typeof value === "object") {
+    const objectValue = value as Record<string, unknown>;
+    const sortedEntries = Object.keys(objectValue)
+      .sort()
+      .map((key) => [key, normalizeComparableValue(objectValue[key])]);
+    return Object.fromEntries(sortedEntries);
+  }
+
+  return value;
+}
+
+function answersEquivalent(left: unknown, right: unknown): boolean {
+  return (
+    JSON.stringify(normalizeComparableValue(left)) ===
+    JSON.stringify(normalizeComparableValue(right))
+  );
+}
+
+function shouldTriggerRedFlagForQuestion(
+  question: {
+    question_type?: string;
+    correct_answer?: unknown;
+  },
+  answer: unknown,
+): boolean {
+  if (question.correct_answer !== undefined && question.correct_answer !== null) {
+    if (question.question_type === "YES_NO") {
+      const expected = normalizeYesNoValue(question.correct_answer);
+      const actual = normalizeYesNoValue(answer);
+      if (expected !== null && actual !== null) {
+        return actual !== expected;
+      }
+    }
+
+    return !answersEquivalent(answer, question.correct_answer);
+  }
+
+  return shouldTriggerRedFlag(answer);
+}
+
+function findTriggeredRedFlagQuestions(
+  templateQuestions: Array<{
+    id: string;
+    question_text: string;
+    red_flag: boolean;
+    question_type?: string;
+    correct_answer?: unknown;
+  }>,
+  answers: SignInInput["answers"],
+) {
+  const answersByQuestionId = new Map(
+    answers.map((answer) => [answer.questionId, answer.answer]),
+  );
+
+  return templateQuestions
+    .filter(
+      (question) =>
+        question.red_flag ||
+        QUICK_START_IMPLICIT_RED_FLAG_EXPECTATIONS.has(question.question_text),
+    )
+    .filter((question) => {
+      const implicitExpectedAnswer =
+        QUICK_START_IMPLICIT_RED_FLAG_EXPECTATIONS.get(question.question_text);
+      const evaluationQuestion = {
+        ...question,
+        question_type: question.question_type ?? "YES_NO",
+        correct_answer:
+          question.correct_answer ?? implicitExpectedAnswer ?? undefined,
+      };
+
+      return shouldTriggerRedFlagForQuestion(
+        evaluationQuestion,
+        answersByQuestionId.get(question.id),
+      );
+    });
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function buildEscalationEmailBody(input: {
+  siteName: string;
+  visitorType: string;
+  redFlagQuestions: string[];
+}): string {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
+  const escalationsLink = appUrl
+    ? `${appUrl}/admin/escalations`
+    : "/admin/escalations";
+
+  return `
+    <h1>Supervisor Escalation Required</h1>
+    <p>A public induction has been blocked after a critical red-flag response.</p>
+    <p><strong>Site:</strong> ${escapeHtml(input.siteName)}</p>
+    <p><strong>Visitor Type:</strong> ${escapeHtml(input.visitorType)}</p>
+    <p><strong>Triggered Questions:</strong></p>
+    <ul>
+      ${input.redFlagQuestions.map((question) => `<li>${escapeHtml(question)}</li>`).join("")}
+    </ul>
+    <p>Review and follow up before site entry is permitted.</p>
+    <p><a href="${escalationsLink}">Review Escalations</a></p>
+  `;
+}
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -141,6 +333,7 @@ export interface TemplateInfo {
     questionType: string;
     options: string[] | null;
     isRequired: boolean;
+    redFlag: boolean;
     displayOrder: number;
   }>;
 }
@@ -238,6 +431,7 @@ export async function getSiteForSignIn(
           questionType: q.question_type,
           options: q.options as string[] | null,
           isRequired: q.is_required,
+          redFlag: q.red_flag,
           displayOrder: q.display_order,
         })),
       },
@@ -379,6 +573,251 @@ export async function submitSignIn(
       );
     }
 
+    const triggeredRedFlagQuestions = findTriggeredRedFlagQuestions(
+      template.questions,
+      parsed.data.answers,
+    );
+    if (triggeredRedFlagQuestions.length > 0) {
+      const [ip, userAgent] = await Promise.all([getClientIp(), getUserAgent()]);
+      const redFlagQuestionIds = triggeredRedFlagQuestions.map((q) => q.id);
+      const redFlagQuestionTexts = triggeredRedFlagQuestions.map(
+        (q) => q.question_text,
+      );
+
+      const escalationCreated = await createPendingSignInEscalation({
+        companyId: site.company.id,
+        siteId: site.id,
+        idempotencyKey,
+        visitorName: parsed.data.visitorName,
+        visitorPhone: formattedPhone,
+        visitorEmail: parsed.data.visitorEmail || undefined,
+        employerName: parsed.data.employerName || undefined,
+        visitorType: parsed.data.visitorType,
+        roleOnSite: parsed.data.roleOnSite || undefined,
+        hasAcceptedTerms: parsed.data.hasAcceptedTerms,
+        termsAcceptedAt: new Date(),
+        termsVersionId: legalVersions.terms.id,
+        privacyVersionId: legalVersions.privacy.id,
+        consentStatement,
+        templateId: template.id,
+        templateVersion: template.version,
+        answers: parsed.data.answers,
+        signatureData: parsed.data.signatureData.trim(),
+        redFlagQuestionIds,
+        redFlagQuestions: redFlagQuestionTexts,
+      });
+    if (
+      !escalationCreated.created &&
+      escalationCreated.escalation.status === "APPROVED"
+    ) {
+      if (
+        !escalationCreated.escalation.reviewed_by ||
+        !escalationCreated.escalation.reviewed_at
+      ) {
+        log.error(
+          {
+            requestId,
+            siteId: site.id,
+            escalationId: escalationCreated.escalation.id,
+          },
+          "Approved escalation is missing supervisor reviewer metadata",
+        );
+        return errorResponse(
+          "INTERNAL_ERROR",
+          "Escalation approval evidence is incomplete. Please contact reception.",
+        );
+      }
+
+      const approvedResult = await createPublicSignIn({
+        companyId: site.company.id,
+        siteId: site.id,
+        idempotencyKey,
+        visitorName: parsed.data.visitorName,
+          visitorPhone: formattedPhone,
+          visitorEmail: parsed.data.visitorEmail || undefined,
+          employerName: parsed.data.employerName,
+          visitorType: parsed.data.visitorType,
+          roleOnSite: parsed.data.roleOnSite,
+          hasAcceptedTerms: parsed.data.hasAcceptedTerms,
+          templateId: template.id,
+          templateVersion: template.version,
+          answers: parsed.data.answers,
+        signatureData: parsed.data.signatureData,
+        termsVersionId: legalVersions.terms.id,
+        privacyVersionId: legalVersions.privacy.id,
+        consentStatement,
+        competencyEvidence: {
+          status: "SUPERVISOR_APPROVED",
+          supervisorVerifiedBy: escalationCreated.escalation.reviewed_by,
+          supervisorVerifiedAt: escalationCreated.escalation.reviewed_at,
+          briefingAcknowledgedAt:
+            escalationCreated.escalation.termsAcceptedAt ?? new Date(),
+        },
+      });
+
+        await createAuditLog(site.company.id, {
+          action: "visitor.sign_in",
+          entity_type: "SignInRecord",
+          entity_id: approvedResult.signInRecordId,
+          user_id: undefined,
+          details: {
+            site_id: site.id,
+            site_name: site.name,
+            visitor_name: parsed.data.visitorName,
+            visitor_type: parsed.data.visitorType,
+            template_id: template.id,
+            template_version: template.version,
+            escalation_id: escalationCreated.escalation.id,
+          },
+          ip_address: ip,
+          user_agent: userAgent,
+          request_id: requestId,
+        });
+
+        return successResponse(approvedResult, "Signed in successfully");
+      }
+
+      if (
+        !escalationCreated.created &&
+        escalationCreated.escalation.status === "DENIED"
+      ) {
+        return validationErrorResponse(
+          {
+            answers: [
+              "Site entry was denied by a supervisor. Please contact reception for next steps.",
+            ],
+          },
+          "Supervisor denied site entry",
+        );
+      }
+
+      let managerNotificationTargets = 0;
+      let managerNotificationsQueued = 0;
+
+      if (escalationCreated.created) {
+        try {
+          const recipients = await listSiteManagerNotificationRecipients(
+            site.company.id,
+            site.id,
+          );
+          managerNotificationTargets = recipients.length;
+
+          if (recipients.length > 0) {
+            const queueResults = await Promise.allSettled(
+              recipients.map((recipient) =>
+                queueEmailNotification(site.company.id, {
+                  user_id: recipient.userId,
+                  to: recipient.email,
+                  subject: `Escalation Required: Blocked induction at ${site.name}`,
+                  body: buildEscalationEmailBody({
+                    siteName: site.name,
+                    visitorType: parsed.data.visitorType,
+                    redFlagQuestions: redFlagQuestionTexts,
+                  }),
+                }),
+              ),
+            );
+            managerNotificationsQueued = queueResults.filter(
+              (result) => result.status === "fulfilled",
+            ).length;
+
+            const queueFailures = queueResults.length - managerNotificationsQueued;
+            if (queueFailures > 0) {
+              log.error(
+                {
+                  requestId,
+                  siteId: site.id,
+                  escalationId: escalationCreated.escalation.id,
+                  queueFailures,
+                  queueTargets: queueResults.length,
+                },
+                "Failed to queue one or more escalation notifications",
+              );
+            }
+          }
+
+          await setSignInEscalationNotificationCounts(
+            site.company.id,
+            escalationCreated.escalation.id,
+            managerNotificationTargets,
+            managerNotificationsQueued,
+          );
+        } catch (notificationError) {
+          log.error(
+            {
+              requestId,
+              siteId: site.id,
+              escalationId: escalationCreated.escalation.id,
+              notificationErrorType:
+                notificationError instanceof Error
+                  ? notificationError.name
+                  : "unknown",
+            },
+            "Failed to resolve or queue escalation notifications",
+          );
+        }
+      } else {
+        managerNotificationTargets =
+          escalationCreated.escalation.notification_targets;
+        managerNotificationsQueued =
+          escalationCreated.escalation.notifications_queued;
+      }
+
+      try {
+        await createAuditLog(site.company.id, {
+          action: "visitor.sign_in_escalation_submitted",
+          entity_type: "PendingSignInEscalation",
+          entity_id: escalationCreated.escalation.id,
+          user_id: undefined,
+          details: {
+            reason: "critical_red_flag_response",
+            site_id: site.id,
+            site_name: site.name,
+            visitor_type: parsed.data.visitorType,
+            template_id: template.id,
+            template_version: template.version,
+            red_flag_question_ids: redFlagQuestionIds,
+            red_flag_questions: redFlagQuestionTexts,
+            manager_notification_targets: managerNotificationTargets,
+            manager_notifications_queued: managerNotificationsQueued,
+            escalation_status: escalationCreated.escalation.status,
+          },
+          ip_address: ip,
+          user_agent: userAgent,
+          request_id: requestId,
+        });
+      } catch (auditError) {
+        log.error(
+          {
+            requestId,
+            siteId: site.id,
+            escalationId: escalationCreated.escalation.id,
+            auditErrorType:
+              auditError instanceof Error ? auditError.name : "unknown",
+          },
+          "Failed to persist red-flag escalation audit event",
+        );
+      }
+
+      log.warn(
+        {
+          siteId: site.id,
+          escalationId: escalationCreated.escalation.id,
+          redFlagQuestionIds,
+        },
+        "Visitor sign-in blocked pending supervisor escalation",
+      );
+
+      return validationErrorResponse(
+        {
+          answers: [
+            `Critical safety response detected. Supervisor review required (ref ${escalationCreated.escalation.id.slice(0, 8)}).`,
+          ],
+        },
+        "Supervisor approval required before sign-in",
+      );
+    }
+
     // Create sign-in record
     const result = await createPublicSignIn({
       companyId: site.company.id,
@@ -398,6 +837,10 @@ export async function submitSignIn(
       termsVersionId: legalVersions.terms.id,
       privacyVersionId: legalVersions.privacy.id,
       consentStatement,
+      competencyEvidence: {
+        status: "SELF_DECLARED",
+        briefingAcknowledgedAt: new Date(),
+      },
     });
 
     // Create audit log

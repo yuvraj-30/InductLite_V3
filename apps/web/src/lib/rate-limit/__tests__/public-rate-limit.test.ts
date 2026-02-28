@@ -12,6 +12,9 @@ describe("Public rate-limit guardrails", () => {
       RL_SIGNIN_PER_IP_PER_MIN: "2",
       RL_SIGNIN_PER_SITE_PER_MIN: "2",
       RL_SIGNOUT_PER_IP_PER_MIN: "2",
+      RL_ADMIN_PER_USER_PER_MIN: "2",
+      RL_ADMIN_PER_IP_PER_MIN: "2",
+      RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN: "2",
     };
   });
 
@@ -74,5 +77,71 @@ describe("Public rate-limit guardrails", () => {
     expect(first.success).toBe(true);
     expect(second.success).toBe(true);
     expect(third.success).toBe(false);
+  });
+
+  it("enforces admin mutation rate limits", async () => {
+    const rateLimit = await import("../index");
+    rateLimit.__test_clearInMemoryStore();
+
+    const first = await rateLimit.checkAdminMutationRateLimit(
+      "company-1",
+      "user-1",
+      {
+        clientKey: "client-admin",
+      },
+    );
+    const second = await rateLimit.checkAdminMutationRateLimit(
+      "company-1",
+      "user-1",
+      {
+        clientKey: "client-admin",
+      },
+    );
+    const third = await rateLimit.checkAdminMutationRateLimit(
+      "company-1",
+      "user-1",
+      {
+        clientKey: "client-admin",
+      },
+    );
+
+    expect(first.success).toBe(true);
+    expect(second.success).toBe(true);
+    expect(third.success).toBe(false);
+  });
+
+  it("enforces magic-link verify rate limit", async () => {
+    const rateLimit = await import("../index");
+    await rateLimit.__test_clearInMemoryStoreForClient("client-verify");
+
+    const first = await rateLimit.checkMagicLinkVerifyRateLimit("token-a", {
+      clientKey: "client-verify",
+    });
+    const second = await rateLimit.checkMagicLinkVerifyRateLimit("token-a", {
+      clientKey: "client-verify",
+    });
+    const third = await rateLimit.checkMagicLinkVerifyRateLimit("token-a", {
+      clientKey: "client-verify",
+    });
+
+    expect(first.success).toBe(true);
+    expect(second.success).toBe(true);
+    expect(third.success).toBe(false);
+  });
+
+  it("enforces readiness probe rate limit", async () => {
+    const rateLimit = await import("../index");
+    await rateLimit.__test_clearInMemoryStoreForClient("client-ready");
+
+    let finalResult = await rateLimit.checkReadinessRateLimit({
+      clientKey: "client-ready",
+    });
+    for (let i = 0; i < 120; i++) {
+      finalResult = await rateLimit.checkReadinessRateLimit({
+        clientKey: "client-ready",
+      });
+    }
+
+    expect(finalResult.success).toBe(false);
   });
 });

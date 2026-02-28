@@ -30,9 +30,9 @@ export function InductionQuestions({
 }: InductionQuestionsProps) {
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-gray-900">Site Induction</h2>
-        <p className="text-sm text-gray-500 mt-1">
+      <div className="kinetic-hover">
+        <h2 className="kinetic-title text-xl font-black">Site Induction</h2>
+        <p className="mt-1 text-sm text-secondary">
           Please complete all required questions before signing in.
         </p>
       </div>
@@ -40,16 +40,21 @@ export function InductionQuestions({
       {template.questions.map((question, index) => (
         <div
           key={question.id}
-          className={`rounded-lg border p-3 ${missingRequiredQuestionIds.includes(question.id) ? "border-red-300 bg-red-50" : "border-gray-100"}`}
+          className={`rounded-xl border p-3 ${missingRequiredQuestionIds.includes(question.id) ? "border-red-400/45 bg-red-100/65 dark:bg-red-950/35" : "border-white/35 bg-white/45"}`}
         >
           <label
             htmlFor={`q-${question.id}`}
-            className="block text-sm font-medium text-gray-900 mb-2"
+            className="mb-2 block text-sm font-semibold text-[color:var(--text-primary)]"
           >
             {index + 1}. {question.questionText}
             {question.isRequired && (
               <span className="text-red-500 ml-1" aria-hidden="true">
                 *
+              </span>
+            )}
+            {question.redFlag && (
+              <span className="ml-2 rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800">
+                Critical Safety Question
               </span>
             )}
           </label>
@@ -62,7 +67,7 @@ export function InductionQuestions({
               value={(answers[question.id] as string) || ""}
               autoComplete="off"
               onChange={(e) => onAnswerChange(question.id, e.target.value)}
-              className="min-h-[44px] w-full rounded-lg border border-gray-300 px-3 py-2 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+              className="input text-base"
               placeholder="Enter your answer"
               aria-required={question.isRequired}
             />
@@ -74,7 +79,7 @@ export function InductionQuestions({
               {question.options.map((option) => (
                 <label
                   key={option}
-                  className="flex min-h-[48px] items-center rounded-lg border border-gray-200 p-3 hover:bg-gray-50 cursor-pointer"
+                  className="flex min-h-[48px] cursor-pointer items-center rounded-lg border border-white/35 bg-white/45 p-3 hover:bg-white/70"
                 >
                   <input
                     type="radio"
@@ -82,9 +87,9 @@ export function InductionQuestions({
                     value={option}
                     checked={answers[question.id] === option}
                     onChange={() => onAnswerChange(question.id, option)}
-                    className="h-5 w-5 text-blue-600 focus:ring-blue-500"
+                    className="h-5 w-5 text-indigo-600 focus:ring-indigo-500"
                   />
-                  <span className="ml-3 text-base text-gray-700">{option}</span>
+                  <span className="ml-3 text-base text-secondary">{option}</span>
                 </label>
               ))}
             </div>
@@ -99,7 +104,7 @@ export function InductionQuestions({
                 return (
                   <label
                     key={option}
-                    className="flex min-h-[48px] items-center rounded-lg border border-gray-200 p-3 hover:bg-gray-50 cursor-pointer"
+                    className="flex min-h-[48px] cursor-pointer items-center rounded-lg border border-white/35 bg-white/45 p-3 hover:bg-white/70"
                   >
                     <input
                       type="checkbox"
@@ -110,9 +115,9 @@ export function InductionQuestions({
                           : [...currentAnswers, option];
                         onAnswerChange(question.id, newAnswers);
                       }}
-                      className="h-5 w-5 rounded text-blue-600 focus:ring-blue-500"
+                      className="h-5 w-5 rounded text-indigo-600 focus:ring-indigo-500"
                     />
-                    <span className="ml-3 text-base text-gray-700">{option}</span>
+                    <span className="ml-3 text-base text-secondary">{option}</span>
                   </label>
                 );
               })}
@@ -122,7 +127,7 @@ export function InductionQuestions({
           {/* YES_NO question */}
           {question.questionType === "YES_NO" && (
             <div className="flex space-x-4">
-              <label className="flex min-h-[48px] flex-1 cursor-pointer items-center justify-center rounded-lg border border-gray-200 p-3 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-blue-500">
+              <label className="flex min-h-[48px] flex-1 cursor-pointer items-center justify-center rounded-lg border border-white/35 bg-white/45 p-3 hover:bg-white/70 focus-within:ring-2 focus-within:ring-indigo-500">
                 <input
                   type="radio"
                   name={question.id}
@@ -134,7 +139,7 @@ export function InductionQuestions({
                 />
                 <span className="ml-2 text-base font-medium text-green-700">Yes</span>
               </label>
-              <label className="flex min-h-[48px] flex-1 cursor-pointer items-center justify-center rounded-lg border border-gray-200 p-3 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-blue-500">
+              <label className="flex min-h-[48px] flex-1 cursor-pointer items-center justify-center rounded-lg border border-white/35 bg-white/45 p-3 hover:bg-white/70 focus-within:ring-2 focus-within:ring-indigo-500">
                 <input
                   type="radio"
                   name={question.id}
@@ -151,14 +156,14 @@ export function InductionQuestions({
 
           {/* ACKNOWLEDGMENT question */}
           {question.questionType === "ACKNOWLEDGMENT" && (
-            <label className="flex min-h-[48px] cursor-pointer items-start rounded-lg border border-gray-200 p-3 hover:bg-gray-50">
+            <label className="flex min-h-[48px] cursor-pointer items-start rounded-lg border border-white/35 bg-white/45 p-3 hover:bg-white/70">
               <input
                 type="checkbox"
                 checked={answers[question.id] === true}
                 onChange={(e) => onAnswerChange(question.id, e.target.checked)}
-                className="h-5 w-5 mt-0.5 text-blue-600 focus:ring-blue-500 rounded"
+                className="mt-0.5 h-5 w-5 rounded text-indigo-600 focus:ring-indigo-500"
               />
-              <span className="ml-3 text-base text-gray-700">
+              <span className="ml-3 text-base text-secondary">
                 I acknowledge and agree to the above
               </span>
             </label>
@@ -168,8 +173,8 @@ export function InductionQuestions({
 
       {/* Show any answer errors */}
       {fieldErrors.answers && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-          <p className="text-red-700 text-sm">{fieldErrors.answers[0]}</p>
+        <div className="rounded-lg border border-red-400/45 bg-red-100/70 p-3 dark:bg-red-950/45">
+          <p className="text-sm text-red-900 dark:text-red-100">{fieldErrors.answers[0]}</p>
         </div>
       )}
     </div>

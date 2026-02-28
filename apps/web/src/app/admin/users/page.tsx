@@ -243,8 +243,8 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border bg-white">
-          <table className="min-w-full divide-y divide-gray-200">
+        <div className="overflow-x-auto rounded-lg border bg-white">
+          <table className="min-w-[920px] divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -279,7 +279,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                         </span>
                       ) : null}
                     </p>
-                    <p className="text-sm text-gray-600">{user.email}</p>
+                    <p className="break-all text-sm text-gray-600">{user.email}</p>
                   </td>
                   <td className="px-4 py-3">
                     <span

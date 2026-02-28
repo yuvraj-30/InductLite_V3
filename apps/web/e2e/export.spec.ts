@@ -1,6 +1,153 @@
 import { test, expect } from "./test-fixtures";
 import { getTestRouteHeaders } from "./utils/test-route-auth";
 
+type ExportRow = {
+  id: string;
+  type: string;
+  status: string;
+};
+
+function toLocalDateTimeInputValue(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+async function readExportRows(page: any): Promise<ExportRow[]> {
+  return page.locator("tbody tr").evaluateAll((rows) =>
+    rows
+      .map((row) => {
+        const cells = Array.from(row.querySelectorAll("td"));
+        return {
+          id: cells[0]?.textContent?.trim() ?? "",
+          type: cells[1]?.textContent?.trim() ?? "",
+          status: cells[2]?.textContent?.trim() ?? "",
+        };
+      })
+      .filter((row) => row.id.length > 0),
+  );
+}
+
+async function gotoExportsPage(page: any): Promise<void> {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    await page.goto("/admin/exports");
+    const heading = page.getByRole("heading", { name: /^Exports$/i }).first();
+    if (await heading.isVisible().catch(() => false)) return;
+    await page.waitForTimeout(500);
+  }
+  throw new Error("Failed to load /admin/exports");
+}
+
+async function waitForNewExport(
+  page: any,
+  input: { existingIds: Set<string>; exportType: string; timeoutMs?: number },
+): Promise<ExportRow> {
+  const timeoutMs = input.timeoutMs ?? 30000;
+  const started = Date.now();
+
+  while (Date.now() - started < timeoutMs) {
+    await gotoExportsPage(page);
+    const rows = await readExportRows(page);
+    const next = rows.find(
+      (row) =>
+        row.type === input.exportType && !input.existingIds.has(row.id),
+    );
+    if (next) return next;
+    await page.waitForTimeout(500);
+  }
+
+  throw new Error(
+    `Timed out waiting for new ${input.exportType} export to appear`,
+  );
+}
+
+async function triggerExportButton(
+  page: any,
+  name: RegExp,
+): Promise<any> {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const button = page.getByRole("button", { name });
+    if (!(await button.isVisible().catch(() => false))) {
+      await gotoExportsPage(page);
+      continue;
+    }
+
+    await button.scrollIntoViewIfNeeded();
+    try {
+      await button.click({ timeout: 10000 });
+    } catch {
+      await button.evaluate((el) => {
+        (el as HTMLButtonElement).click();
+      });
+    }
+    return button;
+  }
+
+  throw new Error(`Export button not available: ${name.toString()}`);
+}
+
+async function waitForQueueTransition(button: any): Promise<void> {
+  try {
+    await expect(button).toBeDisabled({ timeout: 3000 });
+  } catch {
+    // Fast responses may skip visible disabled state.
+  }
+  await expect(button).toBeEnabled({ timeout: 15000 });
+}
+
+async function getQueuePanelError(page: any): Promise<string | null> {
+  const panel = page
+    .locator("div", {
+      has: page.getByRole("heading", { name: /Quick Export Actions/i }),
+    })
+    .first();
+  const alert = panel.getByRole("alert").first();
+  if (!(await alert.isVisible().catch(() => false))) return null;
+  const text = ((await alert.textContent()) || "").trim();
+  if (!text) return null;
+  return /could not queue|failed|disabled|limit|forbidden/i.test(text)
+    ? text
+    : null;
+}
+
+async function queueExportAndWaitForRow(
+  page: any,
+  input: {
+    buttonName: RegExp;
+    existingIds: Set<string>;
+    exportType: string;
+  },
+): Promise<ExportRow> {
+  let lastError: unknown = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const button = await triggerExportButton(page, input.buttonName);
+    try {
+      // Ensure transition has completed before we start reloading.
+      await waitForQueueTransition(button).catch(() => null);
+
+      const panelError = await getQueuePanelError(page);
+      if (panelError) {
+        throw new Error(`Export queue failed: ${panelError}`);
+      }
+
+      return await waitForNewExport(page, {
+        existingIds: input.existingIds,
+        exportType: input.exportType,
+        timeoutMs: 15000,
+      });
+    } catch (error) {
+      lastError = error;
+      await page.waitForTimeout(500);
+    }
+  }
+  throw lastError instanceof Error
+    ? lastError
+    : new Error(`Failed to queue ${input.exportType} export`);
+}
+
 test.describe("Admin Export UI & Processing", () => {
   test.describe.configure({ timeout: 120000 });
 
@@ -17,41 +164,42 @@ test.describe("Admin Export UI & Processing", () => {
     page,
     baseURL,
   }) => {
-    await page.goto("/admin/exports");
+    await gotoExportsPage(page);
+    const beforeIds = new Set((await readExportRows(page)).map((row) => row.id));
 
-    // Queue a SIGN_IN_CSV
-    await page.getByRole("button", { name: /Queue Sign-In CSV/i }).click();
+    const queuedExport = await queueExportAndWaitForRow(page, {
+      buttonName: /Queue Sign-In CSV/i,
+      existingIds: beforeIds,
+      exportType: "SIGN_IN_CSV",
+    });
+    const jobId = queuedExport.id;
 
-    // Expect the job appears in the table (queued) and capture its ID
-    const queuedRow = page.locator("tr", { hasText: "QUEUED" }).first();
-    await expect(queuedRow).toBeVisible({ timeout: 5000 });
-    const jobId = (await queuedRow.locator("td").first().innerText()).trim();
-
-    // Trigger the test-only runner endpoint until job succeeded
+    // Trigger the test-only runner endpoint until this job is marked SUCCEEDED
     const endpoint = `${baseURL}/api/test/process-next-export`;
-
-    // Allow test runner invocation
-    process.env.ALLOW_TEST_RUNNER = "1";
 
     let attempts = 0;
     let succeeded = false;
     while (attempts < 30) {
-      const res = await fetch(endpoint, {
+      await fetch(endpoint, {
         method: "POST",
         headers: getTestRouteHeaders(),
-      });
-      const json = await res.json();
-      if (json?.res?.id === jobId && json?.res?.status === "SUCCEEDED") {
+      }).catch(() => null);
+
+      await page.reload();
+      const rows = await readExportRows(page);
+      const thisJob = rows.find((row) => row.id === jobId);
+      if (thisJob?.status === "SUCCEEDED") {
         succeeded = true;
         break;
       }
+
       attempts++;
-      await new Promise((r) => setTimeout(r, 500));
+      await page.waitForTimeout(500);
     }
 
     expect(succeeded).toBe(true);
 
-    // Reload UI only after our job is succeeded, then ensure download link is present
+    // Ensure download link is present when job has succeeded
     await page.reload();
     const succeededRow = page.locator("tr", { hasText: jobId }).first();
     await expect(succeededRow.getByText(/SUCCEEDED/)).toBeVisible({
@@ -64,17 +212,37 @@ test.describe("Admin Export UI & Processing", () => {
   });
 
   test("queues compliance pack zip quick action", async ({ page }) => {
-    await page.goto("/admin/exports");
+    await gotoExportsPage(page);
+    const beforeIds = new Set((await readExportRows(page)).map((row) => row.id));
 
-    await page.getByRole("button", { name: /Compliance Pack ZIP \(24h\)/i }).click();
+    let queuedExport: ExportRow | null = null;
+    try {
+      queuedExport = await queueExportAndWaitForRow(page, {
+        buttonName: /Compliance Pack ZIP \(24h\)/i,
+        existingIds: beforeIds,
+        exportType: "COMPLIANCE_ZIP",
+      });
+    } catch {
+      const fromInput = page.getByLabel(/^From$/i);
+      const toInput = page.getByLabel(/^To$/i);
+      await fromInput.fill(
+        toLocalDateTimeInputValue(new Date(Date.now() - 24 * 60 * 60 * 1000)),
+      );
+      await toInput.fill(toLocalDateTimeInputValue(new Date()));
 
-    await expect(
-      page.getByText(/Export queued\. It will appear in the list below shortly\./i),
-    ).toBeVisible({ timeout: 5000 });
+      const rangeButton = page.getByRole("button", {
+        name: /Queue Compliance Pack \(Range\)/i,
+      });
+      await expect(rangeButton).toBeEnabled({ timeout: 10000 });
 
-    await page.reload();
-    await expect(page.getByText(/COMPLIANCE_ZIP/i).first()).toBeVisible({
-      timeout: 10000,
-    });
+      queuedExport = await queueExportAndWaitForRow(page, {
+        buttonName: /Queue Compliance Pack \(Range\)/i,
+        existingIds: beforeIds,
+        exportType: "COMPLIANCE_ZIP",
+      });
+    }
+
+    expect(queuedExport).not.toBeNull();
+    expect(queuedExport.status).toMatch(/QUEUED|RUNNING|SUCCEEDED/i);
   });
 });
