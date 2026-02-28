@@ -83,6 +83,17 @@ Example values:
 Rotation: update `CRON_SECRET` in both Render env vars and GitHub Secrets at the same time.
 Avoid reusing `CRON_SECRET` across environments (dev/staging/prod).
 
+Troubleshooting keep-alive failures:
+
+- If GitHub Actions reports HTTP `403` on `/api/cron/export-scheduler`:
+  - Confirm Render env has `TRUST_PROXY=1`.
+  - Confirm `CRON_ALLOW_GITHUB_ACTIONS=1` (or set explicit `CRON_ALLOWED_IPS` CIDRs).
+  - Confirm `CRON_SECRET` value matches exactly between Render env and GitHub Secrets.
+  - Check response JSON body for `code` values:
+    - `cron_secret_mismatch`
+    - `cron_ip_missing`
+    - `cron_ip_not_allowed`
+
 **Alternative (also free): UptimeRobot**
 
 - 5-minute checks on the free plan.

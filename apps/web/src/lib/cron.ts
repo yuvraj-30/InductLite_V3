@@ -21,8 +21,7 @@ function normalizeIp(input: string | null | undefined): string | null {
   const trimmed = input.trim();
   if (!trimmed) return null;
 
-  const firstValue = trimmed.split(",")[0]?.trim() ?? trimmed;
-  let candidate = firstValue;
+  let candidate = trimmed;
 
   if (candidate.startsWith("for=")) {
     candidate = candidate.slice(4);
@@ -54,6 +53,15 @@ function normalizeIp(input: string | null | undefined): string | null {
   }
 
   return null;
+}
+
+function extractForwardedIps(input: string | null | undefined): string[] {
+  if (!input) return [];
+  const values = input
+    .split(",")
+    .map((entry) => normalizeIp(entry))
+    .filter((entry): entry is string => Boolean(entry));
+  return [...new Set(values)];
 }
 
 function ipToInt(ip: string): number | null {
@@ -108,24 +116,31 @@ function isPrivateIpv4(ip: string): boolean {
   );
 }
 
-function getClientIp(req: Request): string | null {
+function getClientIps(req: Request): string[] {
   const trustProxy = process.env.TRUST_PROXY === "1";
+  const candidates: string[] = [];
+
+  const pushCandidate = (ip: string | null) => {
+    if (!ip) return;
+    if (!candidates.includes(ip)) {
+      candidates.push(ip);
+    }
+  };
+
   if (trustProxy) {
-    const forwardedFor = req.headers.get("x-forwarded-for");
-    const normalized = normalizeIp(forwardedFor);
-    if (normalized) return normalized;
+    // Prefer CDN/proxy-provided direct client IP first when present.
+    pushCandidate(normalizeIp(req.headers.get("cf-connecting-ip")));
 
-    const cfConnectingIp = normalizeIp(req.headers.get("cf-connecting-ip"));
-    if (cfConnectingIp) return cfConnectingIp;
-
-    const proxyIp = normalizeIp(
-      req.headers.get("x-real-ip") ?? req.headers.get("x-client-ip"),
-    );
-    if (proxyIp) return proxyIp;
+    // Then evaluate the forwarded chain. Some proxies prepend internal hops.
+    for (const forwarded of extractForwardedIps(req.headers.get("x-forwarded-for"))) {
+      pushCandidate(forwarded);
+    }
   }
-  return normalizeIp(
-    req.headers.get("x-real-ip") ?? req.headers.get("x-client-ip"),
-  );
+
+  pushCandidate(normalizeIp(req.headers.get("x-real-ip")));
+  pushCandidate(normalizeIp(req.headers.get("x-client-ip")));
+
+  return candidates;
 }
 
 async function getGithubActionsRanges(): Promise<string[]> {
@@ -193,17 +208,23 @@ export async function requireCronSecret(
     return {
       ok: false,
       log,
-      response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+      response: NextResponse.json(
+        { error: "Unauthorized", code: "cron_secret_mismatch" },
+        { status: 401 },
+      ),
     };
   }
 
-  const clientIp = getClientIp(req);
-  if (!clientIp) {
+  const clientIps = getClientIps(req);
+  if (clientIps.length === 0) {
     log.warn({ path }, "Cron request missing client IP");
     return {
       ok: false,
       log,
-      response: NextResponse.json({ error: "Forbidden" }, { status: 403 }),
+      response: NextResponse.json(
+        { error: "Forbidden", code: "cron_ip_missing" },
+        { status: 403 },
+      ),
     };
   }
 
@@ -211,20 +232,30 @@ export async function requireCronSecret(
   const allowPrivate = process.env.CRON_ALLOW_PRIVATE_IPS === "1";
   const allowGithub = process.env.CRON_ALLOW_GITHUB_ACTIONS !== "0";
   const allowRender = process.env.CRON_ALLOW_RENDER_INTERNAL === "1";
+  let matchedIp: string | null = null;
+  const matchIp = (predicate: (ip: string) => boolean): boolean => {
+    for (const candidateIp of clientIps) {
+      if (predicate(candidateIp)) {
+        matchedIp = candidateIp;
+        return true;
+      }
+    }
+    return false;
+  };
 
   let allowed = false;
-  if (isIpAllowed(clientIp, allowlist)) {
+  if (matchIp((ip) => isIpAllowed(ip, allowlist))) {
     allowed = true;
   }
 
-  if (!allowed && allowPrivate && isPrivateIpv4(clientIp)) {
+  if (!allowed && allowPrivate && matchIp((ip) => isPrivateIpv4(ip))) {
     allowed = true;
   }
 
   if (
     !allowed &&
     allowRender &&
-    (clientIp === "127.0.0.1" || clientIp === "::1" || isPrivateIpv4(clientIp))
+    matchIp((ip) => ip === "127.0.0.1" || ip === "::1" || isPrivateIpv4(ip))
   ) {
     allowed = true;
   }
@@ -232,7 +263,7 @@ export async function requireCronSecret(
   if (!allowed && allowGithub) {
     try {
       const ranges = await getGithubActionsRanges();
-      if (isIpAllowed(clientIp, ranges)) {
+      if (matchIp((ip) => isIpAllowed(ip, ranges))) {
         allowed = true;
       }
     } catch (err) {
@@ -241,13 +272,17 @@ export async function requireCronSecret(
   }
 
   if (!allowed) {
-    log.warn({ path, client_ip: clientIp }, "Cron IP not allowed");
+    log.warn({ path, client_ips: clientIps }, "Cron IP not allowed");
     return {
       ok: false,
       log,
-      response: NextResponse.json({ error: "Forbidden" }, { status: 403 }),
+      response: NextResponse.json(
+        { error: "Forbidden", code: "cron_ip_not_allowed" },
+        { status: 403 },
+      ),
     };
   }
 
+  log.info({ path, client_ips: clientIps, matched_ip: matchedIp }, "Cron auth allowed");
   return { ok: true, log };
 }

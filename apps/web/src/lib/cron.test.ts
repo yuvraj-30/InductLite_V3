@@ -82,6 +82,39 @@ describe("Cron Security Integration", () => {
     expect(result.ok).toBe(true);
   });
 
+  it("should allow when x-forwarded-for contains proxy and client IPs", async () => {
+    vi.stubEnv("TRUST_PROXY", "1");
+    vi.stubEnv("CRON_ALLOWED_IPS", "198.51.100.0/24");
+    vi.stubEnv("CRON_ALLOW_PRIVATE_IPS", "0");
+
+    const req = new Request("http://localhost/api/cron/test", {
+      headers: {
+        "x-cron-secret": CRON_SECRET,
+        "x-forwarded-for": "10.0.0.7, 198.51.100.42",
+      },
+    });
+
+    const result = await requireCronSecret(req, "/api/cron/test");
+    expect(result.ok).toBe(true);
+  });
+
+  it("should prefer cf-connecting-ip when present", async () => {
+    vi.stubEnv("TRUST_PROXY", "1");
+    vi.stubEnv("CRON_ALLOWED_IPS", "203.0.113.0/24");
+    vi.stubEnv("CRON_ALLOW_PRIVATE_IPS", "0");
+
+    const req = new Request("http://localhost/api/cron/test", {
+      headers: {
+        "x-cron-secret": CRON_SECRET,
+        "x-forwarded-for": "10.0.0.7",
+        "cf-connecting-ip": "203.0.113.55",
+      },
+    });
+
+    const result = await requireCronSecret(req, "/api/cron/test");
+    expect(result.ok).toBe(true);
+  });
+
   it("should allow GitHub IPv6 ranges when enabled", async () => {
     vi.stubEnv("TRUST_PROXY", "1");
     vi.stubEnv("CRON_ALLOW_PRIVATE_IPS", "0");
