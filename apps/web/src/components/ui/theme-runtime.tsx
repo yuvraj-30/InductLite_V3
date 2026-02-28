@@ -1,9 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
-
-const DARK_MODE_QUERY = "(prefers-color-scheme: dark)";
-const HIGH_CONTRAST_QUERY = "(prefers-contrast: more)";
+import {
+  DARK_MODE_QUERY,
+  HIGH_CONTRAST_QUERY,
+  THEME_PREFERENCE_CHANGE_EVENT,
+  THEME_PREFERENCE_STORAGE_KEY,
+  type ThemePreference,
+  resolveThemePreference,
+  sanitizeThemePreference,
+} from "./theme-preference";
 
 function listenMediaQuery(
   mediaQuery: MediaQueryList,
@@ -23,18 +29,47 @@ export function ThemeRuntime() {
     const root = document.documentElement;
     const darkMode = window.matchMedia(DARK_MODE_QUERY);
     const highContrast = window.matchMedia(HIGH_CONTRAST_QUERY);
+    let preference: ThemePreference = "auto";
+
+    try {
+      preference = sanitizeThemePreference(
+        window.localStorage.getItem(THEME_PREFERENCE_STORAGE_KEY),
+      );
+    } catch {
+      preference = "auto";
+    }
 
     const applyMode = () => {
-      root.dataset.theme =
-        darkMode.matches || highContrast.matches
-          ? "high-contrast-dark"
-          : "warm-light";
+      root.dataset.theme = resolveThemePreference(
+        preference,
+        darkMode.matches,
+        highContrast.matches,
+      );
+    };
+
+    const handlePreferenceChange = (event: Event) => {
+      const customEvent = event as CustomEvent<{ preference?: string }>;
+      preference = sanitizeThemePreference(customEvent.detail?.preference);
+      applyMode();
+    };
+
+    const handleStorageSync = (event: StorageEvent) => {
+      if (event.key !== THEME_PREFERENCE_STORAGE_KEY) return;
+      preference = sanitizeThemePreference(event.newValue);
+      applyMode();
+    };
+
+    const handleMediaChange = () => {
+      if (preference !== "auto") return;
+      applyMode();
     };
 
     applyMode();
 
-    const unlistenDark = listenMediaQuery(darkMode, applyMode);
-    const unlistenContrast = listenMediaQuery(highContrast, applyMode);
+    const unlistenDark = listenMediaQuery(darkMode, handleMediaChange);
+    const unlistenContrast = listenMediaQuery(highContrast, handleMediaChange);
+    window.addEventListener(THEME_PREFERENCE_CHANGE_EVENT, handlePreferenceChange);
+    window.addEventListener("storage", handleStorageSync);
 
     let frame = 0;
     const updateScrollDepth = () => {
@@ -60,6 +95,11 @@ export function ThemeRuntime() {
       }
       unlistenDark();
       unlistenContrast();
+      window.removeEventListener(
+        THEME_PREFERENCE_CHANGE_EVENT,
+        handlePreferenceChange,
+      );
+      window.removeEventListener("storage", handleStorageSync);
       window.removeEventListener("scroll", updateScrollDepth);
       window.removeEventListener("resize", updateScrollDepth);
     };

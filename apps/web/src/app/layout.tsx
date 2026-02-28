@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ThemeRuntime } from "@/components/ui/theme-runtime";
+import { ThemeSwitcher } from "@/components/ui/theme-switcher";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -46,6 +47,7 @@ export default function RootLayout({
     >
       <body className="min-h-screen font-body text-[color:var(--text-primary)] antialiased">
         <ThemeRuntime />
+        <ThemeSwitcher />
         {children}
       </body>
     </html>
