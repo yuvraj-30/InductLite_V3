@@ -66,6 +66,7 @@ ADMIN_PASSWORD=changeme-in-production
 
 See [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md) for full deployment guide.
 Go-live steps: [docs/GO_LIVE_CHECKLIST.md](docs/GO_LIVE_CHECKLIST.md).
+DB migration + rollback operations: [docs/MIGRATION_RUNBOOK.md](docs/MIGRATION_RUNBOOK.md).
 
 - Market and competitor strategy: [docs/NZ_MARKET_COMPETITOR_ANALYSIS.md](docs/NZ_MARKET_COMPETITOR_ANALYSIS.md).
 

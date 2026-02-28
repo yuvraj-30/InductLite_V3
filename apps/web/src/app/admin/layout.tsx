@@ -178,7 +178,7 @@ export default async function AdminLayout({
         <div className="absolute right-0 top-20 h-80 w-80 rounded-full bg-cyan-400/20 blur-3xl" />
       </div>
 
-      <header className="relative z-20 border-b border-white/35 bg-white/35 backdrop-blur-2xl">
+      <header className="relative z-20 border-b border-white/35 bg-[color:var(--bg-surface-strong)]">
         <div className="mx-auto max-w-[92rem] px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex min-w-0 items-center gap-3 kinetic-hover">
@@ -197,7 +197,7 @@ export default async function AdminLayout({
             <div className="flex flex-wrap items-center gap-3">
               <AdminCommandPalette commands={commandItems} />
 
-              <span className="max-w-[16rem] truncate rounded-full border border-white/40 bg-white/45 px-3 py-1 text-sm text-secondary shadow-soft">
+              <span className="max-w-[16rem] truncate rounded-full border border-white/40 bg-[color:var(--bg-surface)] px-3 py-1 text-sm text-secondary shadow-soft">
                 {user.name}{" "}
                 <span className="ml-1 rounded-full border border-indigo-500/25 bg-indigo-500/20 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-indigo-800 dark:text-indigo-100">
                   {user.role}
@@ -205,14 +205,14 @@ export default async function AdminLayout({
               </span>
               <Link
                 href="/change-password"
-                className="rounded-lg border border-white/35 bg-white/40 px-3 py-2 text-sm font-medium text-secondary hover:bg-white/65"
+                className="rounded-lg border border-white/35 bg-[color:var(--bg-surface)] px-3 py-2 text-sm font-medium text-secondary hover:bg-[color:var(--bg-surface-strong)]"
               >
                 Password
               </Link>
               <form action="/api/auth/logout" method="post">
                 <button
                   type="submit"
-                  className="rounded-lg border border-red-400/35 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-500/20 dark:text-red-200"
+                  className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-900 hover:bg-red-500/20 dark:text-red-100"
                 >
                   Sign Out
                 </button>
@@ -223,7 +223,7 @@ export default async function AdminLayout({
       </header>
 
       <div className="relative z-10 flex min-w-0 flex-col md:flex-row md:gap-4 md:px-4 md:py-4 lg:px-6">
-        <nav className="border-b border-white/30 bg-white/35 backdrop-blur-2xl md:min-h-[calc(100vh-102px)] md:w-72 md:shrink-0 md:rounded-2xl md:border md:px-2 md:py-2 md:shadow-soft">
+        <nav className="border-b border-white/30 bg-[color:var(--bg-surface-strong)] md:min-h-[calc(100vh-102px)] md:w-72 md:shrink-0 md:rounded-2xl md:border md:px-2 md:py-2 md:shadow-soft">
           <ul className="flex gap-1 overflow-x-auto px-2 py-2 md:block md:space-y-1 md:overflow-visible md:p-3">
             <li>
               <NavLink href="/admin" exact>
@@ -293,7 +293,7 @@ export default async function AdminLayout({
           </ul>
         </nav>
 
-        <main className="min-w-0 flex-1 p-4 sm:p-6 md:rounded-2xl md:border md:border-white/20 md:bg-white/20 md:backdrop-blur-xl md:shadow-soft">
+        <main className="min-w-0 flex-1 p-4 sm:p-6 md:rounded-2xl md:border md:border-white/25 md:bg-[color:var(--bg-surface)] md:shadow-soft">
           {children}
         </main>
       </div>

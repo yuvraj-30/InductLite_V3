@@ -183,7 +183,7 @@ export function AdminCommandPalette({ commands }: AdminCommandPaletteProps) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="group inline-flex min-h-[42px] items-center gap-2 rounded-xl border border-white/35 bg-white/45 px-3 py-2 text-sm font-medium text-[color:var(--text-secondary)] shadow-soft backdrop-blur-xl hover:-translate-y-0.5 hover:border-white/60 hover:bg-white/65"
+        className="group inline-flex min-h-[42px] items-center gap-2 rounded-xl border border-white/35 bg-[color:var(--bg-surface)] px-3 py-2 text-sm font-medium text-[color:var(--text-primary)] shadow-soft hover:-translate-y-0.5 hover:border-white/60 hover:bg-[color:var(--bg-surface-strong)]"
         aria-label="Open command palette"
       >
         <span>Quick Actions</span>
@@ -205,7 +205,7 @@ export function AdminCommandPalette({ commands }: AdminCommandPaletteProps) {
             role="dialog"
             aria-modal="true"
             aria-label="Command palette"
-            className="relative mx-auto mt-10 w-[min(92vw,46rem)] overflow-hidden rounded-2xl border border-white/30 bg-[color:var(--bg-surface-strong)] shadow-float backdrop-blur-2xl"
+            className="relative mx-auto mt-10 w-[min(92vw,46rem)] overflow-hidden rounded-2xl border border-white/30 bg-[color:var(--bg-surface-strong)] shadow-float"
           >
             <div className="border-b border-white/20 p-4">
               <label htmlFor="command-search" className="sr-only">
@@ -236,7 +236,7 @@ export function AdminCommandPalette({ commands }: AdminCommandPaletteProps) {
                       key={`suggestion-${command.id}`}
                       type="button"
                       onClick={() => executeCommand(command)}
-                      className="rounded-full border border-white/35 bg-white/45 px-3 py-1 text-xs font-medium text-secondary hover:border-white/60 hover:bg-white/70"
+                      className="rounded-full border border-white/35 bg-[color:var(--bg-surface)] px-3 py-1 text-xs font-medium text-[color:var(--text-primary)] hover:border-white/60 hover:bg-[color:var(--bg-surface-strong)]"
                     >
                       {command.title}
                     </button>
@@ -261,7 +261,7 @@ export function AdminCommandPalette({ commands }: AdminCommandPaletteProps) {
                     className={`kinetic-hover flex w-full items-start justify-between gap-3 rounded-xl px-3 py-3 text-left ${
                       selectedIndex === index
                         ? "bg-indigo-500/18 text-[color:var(--text-primary)]"
-                        : "text-[color:var(--text-secondary)] hover:bg-white/35"
+                        : "text-[color:var(--text-primary)] hover:bg-[color:var(--bg-surface)]"
                     }`}
                   >
                     <span className="min-w-0">
@@ -270,7 +270,7 @@ export function AdminCommandPalette({ commands }: AdminCommandPaletteProps) {
                         {item.command.description}
                       </span>
                     </span>
-                    <span className="rounded-md border border-white/30 bg-white/45 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                    <span className="rounded-md border border-white/30 bg-[color:var(--bg-surface)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted">
                       Go
                     </span>
                   </button>

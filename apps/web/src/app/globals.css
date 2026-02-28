@@ -9,13 +9,13 @@
   --scroll-depth: 0;
 
   --bg-base: #f8f2e8;
-  --bg-surface: rgba(255, 253, 247, 0.78);
-  --bg-surface-strong: rgba(255, 253, 247, 0.9);
+  --bg-surface: rgba(255, 253, 247, 0.92);
+  --bg-surface-strong: rgba(255, 253, 247, 0.97);
   --border-soft: rgba(79, 63, 42, 0.16);
   --border-strong: rgba(56, 41, 104, 0.32);
   --text-primary: #171924;
-  --text-secondary: #45475a;
-  --text-muted: #5f657a;
+  --text-secondary: #363849;
+  --text-muted: #50576d;
   --accent-primary: #3a2eb9;
   --accent-cyber: #0f7dcf;
   --accent-neon: #15b7ff;
@@ -30,7 +30,7 @@
 
   --radius-card: 1.15rem;
   --radius-control: 0.85rem;
-  --glass-blur: 18px;
+  --glass-blur: 6px;
 
   --page-gradient:
     radial-gradient(circle at 0% -10%, rgba(125, 79, 253, 0.2) 0, transparent 54%),
@@ -41,13 +41,13 @@
 @media (prefers-color-scheme: dark), (prefers-contrast: more) {
   :root {
     --bg-base: #070b13;
-    --bg-surface: rgba(12, 19, 34, 0.74);
-    --bg-surface-strong: rgba(10, 16, 30, 0.92);
+    --bg-surface: rgba(12, 19, 34, 0.9);
+    --bg-surface-strong: rgba(10, 16, 30, 0.96);
     --border-soft: rgba(143, 166, 211, 0.22);
     --border-strong: rgba(155, 180, 232, 0.45);
     --text-primary: #f2f8ff;
-    --text-secondary: #c4d4ee;
-    --text-muted: #98aac7;
+    --text-secondary: #d2e0f6;
+    --text-muted: #b6c7e2;
     --accent-primary: #5874ff;
     --accent-cyber: #188ed8;
     --accent-neon: #1ad0ff;
@@ -74,13 +74,13 @@ html[data-theme="warm-light"] {
 html[data-theme="high-contrast-dark"] {
   color-scheme: dark;
   --bg-base: #070b13;
-  --bg-surface: rgba(12, 19, 34, 0.74);
-  --bg-surface-strong: rgba(10, 16, 30, 0.92);
+  --bg-surface: rgba(12, 19, 34, 0.9);
+  --bg-surface-strong: rgba(10, 16, 30, 0.96);
   --border-soft: rgba(143, 166, 211, 0.22);
   --border-strong: rgba(155, 180, 232, 0.45);
   --text-primary: #f2f8ff;
-  --text-secondary: #c4d4ee;
-  --text-muted: #98aac7;
+  --text-secondary: #d2e0f6;
+  --text-muted: #b6c7e2;
   --accent-primary: #5874ff;
   --accent-cyber: #188ed8;
   --accent-neon: #1ad0ff;
@@ -176,7 +176,7 @@ body {
     border: 1px solid var(--border-soft);
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-soft);
-    backdrop-filter: blur(var(--glass-blur));
+    backdrop-filter: saturate(112%) blur(var(--glass-blur));
   }
 
   .surface-panel-strong {
@@ -184,7 +184,7 @@ body {
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-card);
     box-shadow: var(--shadow-float);
-    backdrop-filter: blur(calc(var(--glass-blur) + 4px));
+    backdrop-filter: saturate(114%) blur(calc(var(--glass-blur) + 2px));
   }
 
   .bento-grid {
@@ -206,10 +206,11 @@ body {
     @apply btn text-white;
     background-image: linear-gradient(
       118deg,
-      var(--accent-primary) 0%,
-      var(--accent-cyber) 58%,
-      var(--accent-neon) 100%
+      color-mix(in srgb, var(--accent-primary) 86%, #070e1c 14%) 0%,
+      color-mix(in srgb, var(--accent-cyber) 70%, #070e1c 30%) 58%,
+      color-mix(in srgb, var(--accent-neon) 62%, #070e1c 38%) 100%
     );
+    text-shadow: 0 1px 0 rgba(5, 10, 23, 0.28);
   }
 
   .btn-primary:hover {
@@ -321,6 +322,54 @@ body {
     font-size: 0.8125rem;
     line-height: 1.3rem;
     letter-spacing: 0.01em;
+  }
+
+  /* Bridge legacy utility classes to adaptive theme tokens for readability. */
+  .text-gray-400 {
+    color: var(--text-muted);
+  }
+
+  .text-gray-500 {
+    color: var(--text-secondary);
+  }
+
+  .text-gray-600 {
+    color: color-mix(in srgb, var(--text-secondary) 84%, var(--text-primary) 16%);
+  }
+
+  .border-white\/25,
+  .border-white\/35,
+  .border-white\/40,
+  .border-white\/45 {
+    border-color: var(--border-soft);
+  }
+
+  .bg-white\/35,
+  .bg-white\/40,
+  .bg-white\/45,
+  .bg-white\/50 {
+    background-color: var(--bg-surface);
+  }
+
+  .bg-white\/55,
+  .bg-white\/70 {
+    background-color: var(--bg-surface-strong);
+  }
+
+  .hover\:bg-white\/70:hover {
+    background-color: var(--bg-surface-strong);
+  }
+
+  .backdrop-blur-lg {
+    --tw-backdrop-blur: blur(4px);
+  }
+
+  .backdrop-blur-xl {
+    --tw-backdrop-blur: blur(6px);
+  }
+
+  .backdrop-blur-2xl {
+    --tw-backdrop-blur: blur(8px);
   }
 }
 

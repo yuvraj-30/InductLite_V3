@@ -69,7 +69,7 @@ export default function HomePage() {
             </p>
             <a
               href="mailto:support@inductlite.nz"
-              className="mt-2 inline-flex text-sm font-semibold text-accent hover:underline"
+              className="mt-2 inline-flex text-sm font-semibold text-[color:var(--text-primary)] hover:text-accent hover:underline"
             >
               support@inductlite.nz
             </a>
@@ -81,15 +81,18 @@ export default function HomePage() {
             Copyright {new Date().getFullYear()} InductLite. All rights reserved.
           </p>
           <p className="mt-1">
-            <Link href="/terms" className="text-accent hover:underline">
+            <Link href="/terms" className="text-[color:var(--text-primary)] hover:text-accent hover:underline">
               Terms
             </Link>{" "}
             |{" "}
-            <Link href="/privacy" className="text-accent hover:underline">
+            <Link href="/privacy" className="text-[color:var(--text-primary)] hover:text-accent hover:underline">
               Privacy
             </Link>{" "}
             |{" "}
-            <a href="mailto:support@inductlite.nz" className="text-accent hover:underline">
+            <a
+              href="mailto:support@inductlite.nz"
+              className="text-[color:var(--text-primary)] hover:text-accent hover:underline"
+            >
               Support
             </a>
           </p>

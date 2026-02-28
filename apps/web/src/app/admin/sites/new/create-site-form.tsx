@@ -62,7 +62,7 @@ export default function CreateSiteForm() {
           htmlFor="name"
           className="block text-sm font-medium text-gray-700"
         >
-          Site Name <span className="text-red-500">*</span>
+          Site Name <span className="text-red-700 dark:text-red-300">*</span>
         </label>
         <input
           type="text"

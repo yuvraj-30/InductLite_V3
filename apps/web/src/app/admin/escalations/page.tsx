@@ -176,19 +176,19 @@ export default async function SignInEscalationsPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">
+                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                     Visitor
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">
+                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                     Site
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">
+                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                     Decision
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">
+                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                     Reviewed
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-500">
+                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                     Notes
                   </th>
                 </tr>

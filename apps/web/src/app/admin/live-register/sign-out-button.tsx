@@ -52,7 +52,7 @@ export function SignOutButton({
         >
           No
         </button>
-        {error && <span className="text-xs text-red-600">{error}</span>}
+        {error && <span className="text-xs text-red-700">{error}</span>}
       </div>
     );
   }
@@ -60,7 +60,7 @@ export function SignOutButton({
   return (
     <button
       onClick={() => setShowConfirm(true)}
-      className="px-3 py-1 text-sm font-medium text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors"
+      className="px-3 py-1 text-sm font-medium text-red-800 bg-red-100 rounded hover:bg-red-200 transition-colors"
     >
       Sign Out
     </button>

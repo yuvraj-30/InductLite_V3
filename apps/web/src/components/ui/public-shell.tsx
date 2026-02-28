@@ -23,7 +23,7 @@ export function PublicShell({
         <div className="absolute right-0 top-1/3 h-72 w-72 rounded-full bg-indigo-500/20 blur-3xl" />
       </div>
 
-      <header className="relative z-10 border-b border-white/30 bg-white/40 backdrop-blur-xl">
+      <header className="relative z-10 border-b border-white/30 bg-[color:var(--bg-surface-strong)]">
         <div className="mx-auto flex max-w-4xl flex-col gap-2 px-4 py-5 sm:px-6">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
             Live Visitor Sign-In
@@ -36,7 +36,7 @@ export function PublicShell({
       <main className="relative z-10 mx-auto max-w-4xl px-4 py-6 sm:px-6">{children}</main>
 
       <footer className="relative z-10 px-4 pb-6 pt-2 text-center text-sm text-secondary sm:px-6">
-        <div className="mx-auto max-w-4xl rounded-[var(--radius-card)] border border-white/35 bg-white/45 px-4 py-3 backdrop-blur-xl">
+        <div className="mx-auto max-w-4xl rounded-[var(--radius-card)] border border-white/35 bg-[color:var(--bg-surface)] px-4 py-3">
           {footerText ? (
             <p>{footerText}</p>
           ) : (

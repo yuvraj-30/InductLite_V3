@@ -258,16 +258,16 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead>
                     <tr>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                         Visitor
                       </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                         Employer
                       </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                         Signed In
                       </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                         Signed Out
                       </th>
                     </tr>

@@ -53,6 +53,10 @@ Note: IP allowlist matching supports IPv4 and IPv6 CIDR entries.
 - GitHub Actions cron triggers export + maintenance via API routes.
 - Apply schema migrations before first traffic after deploy:
   - One-off command: `cd apps/web && npm run db:migrate`
+- For production migration/rollback operations (including Render free tier without shell), use:
+  - [Migration Runbook](./MIGRATION_RUNBOOK.md)
+  - [Rollback Runbook](./RUNBOOK_ROLLBACK.md)
+  - [Restore Runbook](./RUNBOOK_RESTORE.md)
 
 ## Keep-Alive + Cron (Free Tier)
 

@@ -6,27 +6,27 @@
     "warm-light": {
       "background": {
         "base": "#f8f2e8",
-        "surfaceGlass": "rgba(255, 253, 247, 0.78)",
-        "surfaceGlassStrong": "rgba(255, 253, 247, 0.90)",
+        "surfaceGlass": "rgba(255, 253, 247, 0.92)",
+        "surfaceGlassStrong": "rgba(255, 253, 247, 0.97)",
         "gradient": "radial-gradient(circle at 0% -10%, rgba(125, 79, 253, 0.20) 0, transparent 54%), radial-gradient(circle at 90% -15%, rgba(20, 195, 255, 0.20) 0, transparent 45%), linear-gradient(165deg, #fbf4e8 0%, #f2e7d2 38%, #d4d7f6 100%)"
       },
       "text": {
         "primary": "#171924",
-        "secondary": "#45475a",
-        "muted": "#5f657a"
+        "secondary": "#363849",
+        "muted": "#50576d"
       }
     },
     "high-contrast-dark": {
       "background": {
         "base": "#070b13",
-        "surfaceGlass": "rgba(12, 19, 34, 0.74)",
-        "surfaceGlassStrong": "rgba(10, 16, 30, 0.92)",
+        "surfaceGlass": "rgba(12, 19, 34, 0.90)",
+        "surfaceGlassStrong": "rgba(10, 16, 30, 0.96)",
         "gradient": "radial-gradient(circle at 5% -15%, rgba(76, 129, 255, 0.30) 0, transparent 50%), radial-gradient(circle at 95% -20%, rgba(8, 204, 255, 0.24) 0, transparent 48%), linear-gradient(168deg, #05080f 0%, #10192c 48%, #1b1d43 100%)"
       },
       "text": {
         "primary": "#f2f8ff",
-        "secondary": "#c4d4ee",
-        "muted": "#98aac7"
+        "secondary": "#d2e0f6",
+        "muted": "#b6c7e2"
       }
     }
   },
@@ -45,7 +45,7 @@
     "chip": "999px"
   },
   "depth": {
-    "glassBlur": "18px",
+    "glassBlur": "6px",
     "shadowSoft": "0 8px 24px rgba(11, 15, 31, 0.10)",
     "shadowFloat": "0 24px 48px rgba(11, 15, 31, 0.14)",
     "shadowTouch": "0 2px 10px rgba(11, 15, 31, 0.12)"
