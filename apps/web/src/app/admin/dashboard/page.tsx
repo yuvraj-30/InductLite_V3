@@ -116,7 +116,7 @@ export default async function AdminDashboardPage({
         </p>
         <h1 className="kinetic-title mt-1 text-3xl font-black sm:text-4xl">Dashboard</h1>
         <p className="mt-2 max-w-3xl text-sm text-secondary sm:text-base">
-          Real-time operations overview across sites, workforce presence, and compliance risk.
+          Live overview of sites, on-site workforce, and compliance risk.
         </p>
       </section>
 
@@ -182,7 +182,7 @@ export default async function AdminDashboardPage({
                 {currentlyOnSiteCount}
               </p>
               <p className="mt-1 text-xs text-muted">
-                Approx. {liveOccupancyPercent}% of this week&apos;s sign-in volume.
+                Around {liveOccupancyPercent}% of this week&apos;s sign-ins are on site now.
               </p>
             </div>
             <div className="rounded-2xl border border-emerald-400/35 bg-emerald-500/16 p-3">
@@ -290,7 +290,7 @@ export default async function AdminDashboardPage({
                   View and manage contractor records
                 </p>
                 <p className="mt-2 text-sm text-secondary">
-                  Update status, details, and compliance readiness.
+                  Keep details current and compliance-ready.
                 </p>
               </Link>
             )}
@@ -306,7 +306,7 @@ export default async function AdminDashboardPage({
                   View roles and account status
                 </p>
                 <p className="mt-2 text-sm text-secondary">
-                  Manage role permissions and account lifecycle.
+                  Manage access, roles, and account state.
                 </p>
               </Link>
             )}

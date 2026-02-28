@@ -57,6 +57,11 @@
       "minWeight": 540,
       "maxWeight": 760,
       "hoverScale": 1.01
+    },
+    "readability": {
+      "bodyLineHeight": 1.55,
+      "microTextSizeRem": 0.8125,
+      "microTextLineHeightRem": 1.3
     }
   },
   "motion": {

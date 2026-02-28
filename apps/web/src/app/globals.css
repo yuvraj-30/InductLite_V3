@@ -103,6 +103,7 @@ body {
   background-image: var(--page-gradient);
   background-attachment: fixed;
   font-family: var(--font-body);
+  line-height: 1.55;
   min-height: 100vh;
   text-rendering: optimizeLegibility;
 }
@@ -120,6 +121,11 @@ body {
 
   body {
     @apply antialiased;
+  }
+
+  p,
+  li {
+    line-height: 1.55;
   }
 
   h1 {
@@ -309,6 +315,12 @@ body {
 
   .text-accent {
     color: var(--accent-cyber);
+  }
+
+  .text-xs {
+    font-size: 0.8125rem;
+    line-height: 1.3rem;
+    letter-spacing: 0.01em;
   }
 }
 

@@ -21,8 +21,8 @@ export default function HomePage() {
             InductLite
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-secondary sm:text-base">
-            Modern visitor sign-in, induction evidence, and compliance operations
-            for NZ construction teams.
+            Visitor sign-in, induction records, and compliance operations for NZ
+            construction teams.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row">
             <Link href="/login" className="btn-primary w-full sm:w-auto sm:min-w-[180px]">
@@ -38,8 +38,8 @@ export default function HomePage() {
           <article className="bento-card lg:col-span-2">
             <h2 className="text-2xl font-bold">Fast Daily Operations</h2>
             <p className="mt-2 text-sm text-secondary">
-              Use Command Mode for quick actions, monitor live presence, and
-              complete audits without context switching.
+              Run daily operations faster with quick actions, live presence,
+              and audit-ready records.
             </p>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-white/25 bg-white/35 p-3 text-sm text-secondary">
@@ -60,8 +60,8 @@ export default function HomePage() {
           <article className="bento-card">
             <h2 className="text-xl font-bold">Visitor Flow</h2>
             <p className="mt-2 text-sm text-secondary">
-              Visitors use the public site link or QR code to sign in, complete
-              inductions, and sign out safely.
+              Visitors sign in from a public link or QR, complete induction,
+              then sign out safely.
             </p>
             <div className="cyber-divider mt-4" />
             <p className="mt-4 text-xs uppercase tracking-[0.12em] text-muted">

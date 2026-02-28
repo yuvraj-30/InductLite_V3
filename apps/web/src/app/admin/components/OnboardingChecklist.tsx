@@ -57,7 +57,7 @@ export function OnboardingChecklist({
   progress,
   className = "",
   title = "Getting Started Checklist",
-  description = "Complete these to get your first successful induction live.",
+  description = "Complete these three steps to launch your first live induction.",
   showWhenComplete = false,
   canManageSites = true,
   canManageTemplates = true,
