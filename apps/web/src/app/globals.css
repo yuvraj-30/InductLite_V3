@@ -337,6 +337,43 @@ body {
     color: color-mix(in srgb, var(--text-secondary) 84%, var(--text-primary) 16%);
   }
 
+  .text-gray-700 {
+    color: color-mix(in srgb, var(--text-secondary) 68%, var(--text-primary) 32%);
+  }
+
+  .text-gray-800 {
+    color: color-mix(in srgb, var(--text-primary) 86%, var(--text-secondary) 14%);
+  }
+
+  .text-gray-900 {
+    color: var(--text-primary);
+  }
+
+  .bg-white {
+    background-color: var(--bg-surface-strong);
+  }
+
+  .bg-gray-50 {
+    background-color: var(--bg-surface);
+  }
+
+  .bg-gray-100 {
+    background-color: color-mix(in srgb, var(--bg-surface) 84%, var(--bg-base) 16%);
+  }
+
+  .border-gray-200,
+  .border-gray-300 {
+    border-color: var(--border-soft);
+  }
+
+  .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+    border-color: var(--border-soft);
+  }
+
+  .hover\:bg-gray-50:hover {
+    background-color: var(--bg-surface-strong);
+  }
+
   .border-white\/25,
   .border-white\/35,
   .border-white\/40,
