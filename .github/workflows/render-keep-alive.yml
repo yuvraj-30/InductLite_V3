@@ -25,28 +25,8 @@ jobs:
           fi
           echo "--- health body ---"
           cat /tmp/health-body.txt || true
-          build_commit="$(python - <<'PY'
-import json
-try:
-  with open('/tmp/health-body.txt', 'r', encoding='utf-8') as f:
-    payload = json.load(f)
-  build = payload.get('build') or {}
-  print(build.get('commit') or '')
-except Exception:
-  print('')
-PY
-)"
-          build_source="$(python - <<'PY'
-import json
-try:
-  with open('/tmp/health-body.txt', 'r', encoding='utf-8') as f:
-    payload = json.load(f)
-  build = payload.get('build') or {}
-  print(build.get('source') or '')
-except Exception:
-  print('')
-PY
-)"
+          build_commit="$(jq -r '.build.commit // empty' /tmp/health-body.txt 2>/dev/null || true)"
+          build_source="$(jq -r '.build.source // empty' /tmp/health-body.txt 2>/dev/null || true)"
           if [[ -n "$build_commit" ]]; then
             echo "Render health build commit: $build_commit (source=${build_source:-unknown})"
             if [[ "$build_commit" != "$GITHUB_SHA" ]]; then
