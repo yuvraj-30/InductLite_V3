@@ -155,14 +155,14 @@ async function HistoryContent({
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Sign-In History</h1>
           <p className="text-gray-600 mt-1">
-            View and filter all sign-in records
+            View and filter site attendance records.
           </p>
         </div>
         <Link
           href="/admin/live-register"
           className="text-sm text-blue-600 hover:text-blue-800"
         >
-          ← View Live Register
+          {"<-"} Live Register
         </Link>
       </div>
 
@@ -210,28 +210,28 @@ async function HistoryContent({
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                       Visitor
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                       Site
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                       Type
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                       Employer
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                       Sign In
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                       Sign Out
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                       Duration
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                       Actions
                     </th>
                   </tr>
@@ -262,7 +262,7 @@ async function HistoryContent({
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center">
-                              <span className="text-xs font-medium text-gray-600">
+                              <span className="text-sm font-medium text-gray-600">
                                 {record.visitor_name
                                   .split(" ")
                                   .map((n) => n[0])
@@ -275,7 +275,7 @@ async function HistoryContent({
                               <div className="text-sm font-medium text-gray-900">
                                 {record.visitor_name}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-sm text-gray-600">
                                 {record.visitor_phone || "Unavailable"}
                               </div>
                             </div>
@@ -286,7 +286,7 @@ async function HistoryContent({
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-sm font-medium ${
                               record.visitor_type === "CONTRACTOR"
                                 ? "bg-blue-100 text-blue-800"
                                 : record.visitor_type === "VISITOR"
@@ -300,13 +300,13 @@ async function HistoryContent({
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {record.employer_name || "—"}
+                          {record.employer_name || "-"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div>
                             {record.sign_in_ts.toLocaleDateString("en-NZ")}
                           </div>
-                          <div className="text-xs">
+                          <div className="text-sm text-gray-600">
                             {record.sign_in_ts.toLocaleTimeString("en-NZ", {
                               hour: "2-digit",
                               minute: "2-digit",
@@ -315,7 +315,7 @@ async function HistoryContent({
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           {isOnSite ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-sm font-medium bg-green-100 text-green-800">
                               On Site
                             </span>
                           ) : (
@@ -325,7 +325,7 @@ async function HistoryContent({
                                   "en-NZ",
                                 )}
                               </div>
-                              <div className="text-xs">
+                              <div className="text-sm text-gray-600">
                                 {record.sign_out_ts!.toLocaleTimeString(
                                   "en-NZ",
                                   {

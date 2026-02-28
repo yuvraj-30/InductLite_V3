@@ -52,7 +52,7 @@ export function ContractorActionButtons({
 
     return (
       <div className="flex items-center gap-2">
-        <span className="text-xs text-gray-600">
+        <span className="text-sm text-gray-700">
           {isPurge
             ? `Delete ${contractorName} permanently?`
             : `${isActive ? "Deactivate" : "Reactivate"} ${contractorName}?`}
@@ -61,7 +61,7 @@ export function ContractorActionButtons({
           type="button"
           onClick={isPurge ? handlePurge : handleToggle}
           disabled={isPending}
-          className={`inline-flex items-center rounded px-2 py-1 text-xs font-medium text-white disabled:opacity-50 ${
+          className={`inline-flex min-h-[36px] items-center rounded px-2.5 py-1.5 text-sm font-medium text-white disabled:opacity-50 ${
             isPurge || isActive
               ? "bg-red-600 hover:bg-red-700"
               : "bg-green-600 hover:bg-green-700"
@@ -73,7 +73,7 @@ export function ContractorActionButtons({
           type="button"
           onClick={() => setConfirmAction(null)}
           disabled={isPending}
-          className="inline-flex items-center rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+          className="inline-flex min-h-[36px] items-center rounded border border-gray-300 px-2.5 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
         >
           No
         </button>
@@ -86,7 +86,7 @@ export function ContractorActionButtons({
       <button
         type="button"
         onClick={() => setConfirmAction("toggle")}
-        className={`inline-flex items-center rounded-md border px-2.5 py-1 text-xs font-medium ${
+        className={`inline-flex min-h-[36px] items-center rounded-md border px-2.5 py-1.5 text-sm font-medium ${
           isActive
             ? "border-red-300 text-red-700 hover:bg-red-50"
             : "border-green-300 text-green-700 hover:bg-green-50"
@@ -98,7 +98,7 @@ export function ContractorActionButtons({
         <button
           type="button"
           onClick={() => setConfirmAction("purge")}
-          className="inline-flex items-center rounded-md border border-red-300 px-2.5 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+          className="inline-flex min-h-[36px] items-center rounded-md border border-red-300 px-2.5 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50"
         >
           Delete
         </button>

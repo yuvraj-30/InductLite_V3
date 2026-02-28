@@ -210,22 +210,22 @@ export default async function ContractorsPage({
           <table className="min-w-[920px] divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                   Contractor
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                   Contact
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                   Trade
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                   Status
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                   Added
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                <th className="px-4 py-3 text-right text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                   Actions
                 </th>
               </tr>
@@ -237,13 +237,13 @@ export default async function ContractorsPage({
                     <p className="text-sm font-medium text-gray-900">
                       {contractor.name}
                     </p>
-                    <p className="break-all text-xs text-gray-500">
+                    <p className="break-all text-sm text-gray-600">
                       {contractor.id}
                     </p>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-700">
                     <p>{contractor.contact_name || "Not set"}</p>
-                    <p className="break-all text-xs text-gray-500">
+                    <p className="break-all text-sm text-gray-600">
                       {contractor.contact_email || contractor.contact_phone || "-"}
                     </p>
                   </td>
@@ -268,7 +268,7 @@ export default async function ContractorsPage({
                     <div className="flex justify-end gap-2">
                       <Link
                         href={`/admin/contractors/${contractor.id}`}
-                        className="inline-flex items-center rounded-md border border-gray-300 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                        className="inline-flex items-center rounded-md border border-gray-300 px-2.5 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
                       >
                         Edit
                       </Link>

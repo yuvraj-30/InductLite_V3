@@ -172,19 +172,19 @@ export default async function AuditLogPage({
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                       Timestamp
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                       Action
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                       Entity
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                       User
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                       Details
                     </th>
                   </tr>
@@ -197,7 +197,7 @@ export default async function AuditLogPage({
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getActionColor(log.action)}`}
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-sm font-medium ${getActionColor(log.action)}`}
                         >
                           {formatAction(log.action)}
                         </span>
@@ -207,7 +207,7 @@ export default async function AuditLogPage({
                           <span>
                             {log.entity_type}
                             {log.entity_id && (
-                              <span className="text-gray-500 text-xs ml-1">
+                              <span className="ml-1 text-sm text-gray-500">
                                 ({log.entity_id.slice(0, 8)}...)
                               </span>
                             )}
@@ -223,7 +223,7 @@ export default async function AuditLogPage({
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
                         {log.details ? (
-                          <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">
+                          <code className="rounded bg-gray-100 px-1.5 py-0.5 text-sm">
                             {JSON.stringify(log.details).slice(0, 50)}
                             {JSON.stringify(log.details).length > 50 && "..."}
                           </code>
