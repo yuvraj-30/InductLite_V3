@@ -205,20 +205,31 @@ export async function login(
       },
     });
 
-    // Audit log failed attempt
-    await db.auditLog.create({
-      data: {
-        user_id: user.id,
-        action: "auth.login_failed",
-        details: {
-          reason: "invalid_password",
-          failedAttempts: newFailedLogins,
-          locked: shouldLock,
-        } as object,
-        ip_address: ipAddress,
-        user_agent: userAgent,
-      },
-    });
+    // Best-effort audit logging: auth outcomes should not fail closed if audit persistence is unavailable.
+    try {
+      await db.auditLog.create({
+        data: {
+          user_id: user.id,
+          action: "auth.login_failed",
+          details: {
+            reason: "invalid_password",
+            failedAttempts: newFailedLogins,
+            locked: shouldLock,
+          } as object,
+          ip_address: ipAddress,
+          user_agent: userAgent,
+        },
+      });
+    } catch (auditError) {
+      logger.error(
+        {
+          userId: user.id,
+          companyId: user.company_id,
+          error: String(auditError),
+        },
+        "Failed to persist auth.login_failed audit log",
+      );
+    }
 
     logger.warn(
       { email, userId: user.id, failedAttempts: newFailedLogins },
@@ -263,19 +274,30 @@ export async function login(
         },
       });
 
-      await db.auditLog.create({
-        data: {
-          user_id: user.id,
-          action: "auth.login_failed",
-          details: {
-            reason: "invalid_totp",
-            failedAttempts: newFailedLogins,
-            locked: shouldLock,
-          } as object,
-          ip_address: ipAddress,
-          user_agent: userAgent,
-        },
-      });
+      try {
+        await db.auditLog.create({
+          data: {
+            user_id: user.id,
+            action: "auth.login_failed",
+            details: {
+              reason: "invalid_totp",
+              failedAttempts: newFailedLogins,
+              locked: shouldLock,
+            } as object,
+            ip_address: ipAddress,
+            user_agent: userAgent,
+          },
+        });
+      } catch (auditError) {
+        logger.error(
+          {
+            userId: user.id,
+            companyId: user.company_id,
+            error: String(auditError),
+          },
+          "Failed to persist auth.login_failed (MFA) audit log",
+        );
+      }
 
       return {
         success: false,
@@ -329,16 +351,26 @@ export async function login(
   session.lastActivity = now;
   await session.save();
 
-  // Audit log successful login
-  await db.auditLog.create({
-    data: {
-      user_id: user.id,
-      action: "auth.login_success",
-      details: { method: "email_password" } as object,
-      ip_address: ipAddress,
-      user_agent: userAgent,
-    },
-  });
+  try {
+    await db.auditLog.create({
+      data: {
+        user_id: user.id,
+        action: "auth.login_success",
+        details: { method: "email_password" } as object,
+        ip_address: ipAddress,
+        user_agent: userAgent,
+      },
+    });
+  } catch (auditError) {
+    logger.error(
+      {
+        userId: user.id,
+        companyId: user.company_id,
+        error: String(auditError),
+      },
+      "Failed to persist auth.login_success audit log",
+    );
+  }
 
   logger.info(
     { userId: user.id, companyId: user.company_id },
@@ -364,19 +396,35 @@ export async function logout(
   userAgent?: string,
 ): Promise<void> {
   const session = await getSession();
+  const requestId = generateRequestId();
+  const logger = createRequestLogger(requestId, {
+    path: "/api/auth/logout",
+    method: "POST",
+  });
 
   try {
     if (session.user) {
       // Audit log logout
       const db = scopedDb(session.user.companyId);
-      await db.auditLog.create({
-        data: {
-          user_id: session.user.id,
-          action: "auth.logout",
-          ip_address: ipAddress,
-          user_agent: userAgent,
-        },
-      });
+      try {
+        await db.auditLog.create({
+          data: {
+            user_id: session.user.id,
+            action: "auth.logout",
+            ip_address: ipAddress,
+            user_agent: userAgent,
+          },
+        });
+      } catch (auditError) {
+        logger.error(
+          {
+            userId: session.user.id,
+            companyId: session.user.companyId,
+            error: String(auditError),
+          },
+          "Failed to persist auth.logout audit log",
+        );
+      }
     }
   } finally {
     // Always clear auth session even if audit logging fails.
@@ -423,13 +471,26 @@ export async function changePassword(
     data: { password_hash: newPasswordHash },
   });
 
-  // Audit log
-  await db.auditLog.create({
-    data: {
-      user_id: user.id,
-      action: "auth.password_changed",
-    },
-  });
+  try {
+    await db.auditLog.create({
+      data: {
+        user_id: user.id,
+        action: "auth.password_changed",
+      },
+    });
+  } catch (auditError) {
+    const requestId = generateRequestId();
+    const logger = createRequestLogger(requestId, {
+      path: "/change-password",
+      method: "POST",
+      user_id: sessionUser.id,
+      company_id: sessionUser.companyId,
+    });
+    logger.error(
+      { error: String(auditError) },
+      "Failed to persist auth.password_changed audit log",
+    );
+  }
 
   return { success: true };
 }
