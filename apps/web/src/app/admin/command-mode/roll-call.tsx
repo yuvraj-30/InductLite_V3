@@ -62,7 +62,7 @@ export function CommandRollCall({ records }: CommandRollCallProps) {
         </button>
       </div>
 
-      <p className="mt-3 text-sm text-secondary">
+      <p className="mt-3 text-sm text-[color:var(--text-primary)]">
         Accounted: {accountedCount} / {records.length}
       </p>
 
@@ -92,7 +92,7 @@ export function CommandRollCall({ records }: CommandRollCallProps) {
                   }`}
                 >
                   <span className="font-semibold">{record.visitorName}</span>
-                  <span className="text-xs uppercase tracking-[0.08em] text-secondary">
+                  <span className="text-xs uppercase tracking-[0.08em] text-[color:var(--text-primary)]">
                     {record.siteName} | {record.visitorType} | {record.durationMinutes}m
                   </span>
                 </button>

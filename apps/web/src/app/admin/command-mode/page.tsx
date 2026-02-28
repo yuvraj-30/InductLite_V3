@@ -50,7 +50,7 @@ export default async function CommandModePage() {
             <h1 className="kinetic-title mt-2 text-3xl font-black tracking-tight">
               Command Mode
             </h1>
-            <p className="mt-2 text-sm text-secondary sm:text-base">
+            <p className="mt-2 text-sm text-[color:var(--text-primary)] sm:text-base">
               Live headcount, overstay alerts, and evacuation roll call.
             </p>
           </div>
@@ -90,11 +90,11 @@ export default async function CommandModePage() {
 
       <section className="grid gap-4 lg:grid-cols-[1.1fr,1fr]">
         <div className="surface-panel p-4 sm:p-5">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-secondary">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-[color:var(--text-primary)]">
             Overstay Alerts
           </h2>
           {longStay.length === 0 ? (
-            <p className="mt-3 text-sm text-secondary">No active long-stay visitors.</p>
+            <p className="mt-3 text-sm text-[color:var(--text-primary)]">No active long-stay visitors.</p>
           ) : (
             <ul className="mt-3 space-y-2">
               {longStay.slice(0, 12).map((row) => (
@@ -122,7 +122,7 @@ export default async function CommandModePage() {
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-secondary">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-[color:var(--text-primary)]">
             Evacuation Roll Call
           </h2>
           <CommandRollCall
