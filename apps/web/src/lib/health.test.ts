@@ -26,6 +26,8 @@ describe("performHealthCheck", () => {
     expect(result.checks.database.status).toBe("ok");
     expect(result.checks.database.latency_ms).toBe(12);
     expect(result.checks.database.error).toBeUndefined();
+    expect(result.build).toBeDefined();
+    expect(result.build?.source).toBeDefined();
   });
 
   it("returns error status when database readiness fails", async () => {

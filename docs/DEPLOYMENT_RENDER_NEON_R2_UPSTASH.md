@@ -93,6 +93,8 @@ Troubleshooting keep-alive failures:
     - `cron_secret_mismatch`
     - `cron_ip_missing`
     - `cron_ip_not_allowed`
+- Workflow now logs `/health` build metadata when available (`build.commit`, `build.source`).
+  - If the logged commit does not match the workflow SHA, Render is serving an older deployment.
 
 **Alternative (also free): UptimeRobot**
 

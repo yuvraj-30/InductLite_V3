@@ -14,12 +14,46 @@ jobs:
         run: |
           set -euo pipefail
           url="${RENDER_APP_URL%/}/health"
-          status="$(curl -sS -o /tmp/health-body.txt -w "%{http_code}" -H "User-Agent: github-actions-render-keep-alive" "$url" || true)"
+          status="$(curl -sS -D /tmp/health-headers.txt -o /tmp/health-body.txt -w "%{http_code}" -H "User-Agent: github-actions-render-keep-alive" "$url" || true)"
           if [[ ! "$status" =~ ^2 ]]; then
             echo "Health check failed: HTTP $status ($url)"
+            echo "--- headers ---"
+            cat /tmp/health-headers.txt || true
             echo "--- body ---"
             cat /tmp/health-body.txt || true
             exit 1
+          fi
+          echo "--- health body ---"
+          cat /tmp/health-body.txt || true
+          build_commit="$(python - <<'PY'
+import json
+try:
+  with open('/tmp/health-body.txt', 'r', encoding='utf-8') as f:
+    payload = json.load(f)
+  build = payload.get('build') or {}
+  print(build.get('commit') or '')
+except Exception:
+  print('')
+PY
+)"
+          build_source="$(python - <<'PY'
+import json
+try:
+  with open('/tmp/health-body.txt', 'r', encoding='utf-8') as f:
+    payload = json.load(f)
+  build = payload.get('build') or {}
+  print(build.get('source') or '')
+except Exception:
+  print('')
+PY
+)"
+          if [[ -n "$build_commit" ]]; then
+            echo "Render health build commit: $build_commit (source=${build_source:-unknown})"
+            if [[ "$build_commit" != "$GITHUB_SHA" ]]; then
+              echo "WARNING: Render commit differs from workflow SHA ($GITHUB_SHA)"
+            fi
+          else
+            echo "Render health payload did not include build commit metadata."
           fi
         env:
           RENDER_APP_URL: ${{ secrets.RENDER_APP_URL }}
@@ -28,9 +62,11 @@ jobs:
         run: |
           set -euo pipefail
           url="${RENDER_APP_URL%/}/api/cron/export-scheduler"
-          status="$(curl -sS -o /tmp/export-scheduler-body.txt -w "%{http_code}" -H "x-cron-secret: $CRON_SECRET" -H "User-Agent: github-actions-render-keep-alive" "$url" || true)"
+          status="$(curl -sS -D /tmp/export-scheduler-headers.txt -o /tmp/export-scheduler-body.txt -w "%{http_code}" -H "x-cron-secret: $CRON_SECRET" -H "User-Agent: github-actions-render-keep-alive" "$url" || true)"
           if [[ ! "$status" =~ ^2 ]]; then
             echo "Export scheduler failed: HTTP $status ($url)"
+            echo "--- headers ---"
+            cat /tmp/export-scheduler-headers.txt || true
             echo "--- body ---"
             cat /tmp/export-scheduler-body.txt || true
             exit 1
@@ -45,9 +81,11 @@ jobs:
           set -euo pipefail
           echo "Running daily maintenance cron"
           url="${RENDER_APP_URL%/}/api/cron/maintenance"
-          status="$(curl -sS -o /tmp/maintenance-body.txt -w "%{http_code}" -H "x-cron-secret: $CRON_SECRET" -H "User-Agent: github-actions-render-keep-alive" "$url" || true)"
+          status="$(curl -sS -D /tmp/maintenance-headers.txt -o /tmp/maintenance-body.txt -w "%{http_code}" -H "x-cron-secret: $CRON_SECRET" -H "User-Agent: github-actions-render-keep-alive" "$url" || true)"
           if [[ ! "$status" =~ ^2 ]]; then
             echo "Maintenance cron failed: HTTP $status ($url)"
+            echo "--- headers ---"
+            cat /tmp/maintenance-headers.txt || true
             echo "--- body ---"
             cat /tmp/maintenance-body.txt || true
             exit 1
