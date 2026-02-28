@@ -189,7 +189,7 @@ export default async function AdminLayout({
                 InductLite
               </Link>
               <span className="text-sm text-muted">|</span>
-              <span className="truncate text-sm text-secondary">
+              <span className="truncate text-sm text-[color:var(--text-primary)]">
                 {user.companyName}
               </span>
             </div>
@@ -197,22 +197,22 @@ export default async function AdminLayout({
             <div className="flex flex-wrap items-center gap-3">
               <AdminCommandPalette commands={commandItems} />
 
-              <span className="max-w-[16rem] truncate rounded-full border border-white/40 bg-[color:var(--bg-surface)] px-3 py-1 text-sm text-secondary shadow-soft">
+              <span className="max-w-[16rem] truncate rounded-full border border-white/40 bg-[color:var(--bg-surface)] px-3 py-1 text-sm text-[color:var(--text-primary)] shadow-soft">
                 {user.name}{" "}
-                <span className="ml-1 rounded-full border border-indigo-500/25 bg-indigo-500/20 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-indigo-800 dark:text-indigo-100">
+                <span className="ml-1 rounded-full border border-indigo-500/35 bg-indigo-500/25 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-indigo-900 dark:text-indigo-100">
                   {user.role}
                 </span>
               </span>
               <Link
                 href="/change-password"
-                className="rounded-lg border border-white/35 bg-[color:var(--bg-surface)] px-3 py-2 text-sm font-medium text-secondary hover:bg-[color:var(--bg-surface-strong)]"
+                className="rounded-lg border border-white/35 bg-[color:var(--bg-surface)] px-3 py-2 text-sm font-medium text-[color:var(--text-primary)] hover:bg-[color:var(--bg-surface-strong)]"
               >
                 Password
               </Link>
               <form action="/api/auth/logout" method="post">
                 <button
                   type="submit"
-                  className="rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm font-medium text-red-900 hover:bg-red-500/20 dark:text-red-100"
+                  className="rounded-lg border border-red-700/70 bg-red-700 px-3 py-2 text-sm font-semibold text-white hover:bg-red-800"
                 >
                   Sign Out
                 </button>
@@ -275,7 +275,7 @@ export default async function AdminLayout({
             {user.role === "ADMIN" && (
               <>
                 <li className="mt-4 border-t border-white/35 pt-4">
-                  <span className="block px-4 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
+                  <span className="block px-4 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-secondary">
                     Admin
                   </span>
                 </li>
