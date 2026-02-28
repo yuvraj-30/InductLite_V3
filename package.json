@@ -47,6 +47,23 @@
     "node": "24.x"
   },
   "overrides": {
-    "undici": ">=6.23.0"
+    "undici": ">=6.23.0",
+    "basic-ftp": "5.2.0",
+    "fast-xml-parser": "5.3.8",
+    "serialize-javascript": "7.0.3",
+    "@aws-sdk/xml-builder": {
+      "fast-xml-parser": "5.3.8"
+    },
+    "terser-webpack-plugin": {
+      "serialize-javascript": "7.0.3"
+    },
+    "@rollup/plugin-terser": {
+      "serialize-javascript": "7.0.3"
+    },
+    "rollup@2.79.2": "2.80.0",
+    "rollup@4.57.1": "4.59.0",
+    "minimatch@3.1.2": "3.1.3",
+    "minimatch@5.1.6": "5.1.8",
+    "minimatch@9.0.5": "9.0.7"
   }
 }
