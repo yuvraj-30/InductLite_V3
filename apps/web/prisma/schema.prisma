@@ -17,38 +17,38 @@ datasource db {
 // ============================================================================
 
 model Company {
-  id             String   @id @default(cuid())
-  name           String
-  slug           String   @unique
-  retention_days Int      @default(365) // Sign-in register retention policy
-  induction_retention_days Int @default(365) // Induction evidence retention policy
-  audit_retention_days Int @default(90) // Audit trail retention policy
-  incident_retention_days Int      @default(1825) // 5 years default for incident evidence
-  emergency_drill_retention_days Int @default(1825) // 5 years default for drill evidence
-  compliance_legal_hold Boolean @default(false)
-  compliance_legal_hold_reason String?
-  compliance_legal_hold_set_at DateTime?
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
+  id                             String    @id @default(cuid())
+  name                           String
+  slug                           String    @unique
+  retention_days                 Int       @default(365) // Sign-in register retention policy
+  induction_retention_days       Int       @default(365) // Induction evidence retention policy
+  audit_retention_days           Int       @default(90) // Audit trail retention policy
+  incident_retention_days        Int       @default(1825) // 5 years default for incident evidence
+  emergency_drill_retention_days Int       @default(1825) // 5 years default for drill evidence
+  compliance_legal_hold          Boolean   @default(false)
+  compliance_legal_hold_reason   String?
+  compliance_legal_hold_set_at   DateTime?
+  created_at                     DateTime  @default(now())
+  updated_at                     DateTime  @updatedAt
 
   // Relations
-  users                    User[]
-  sites                    Site[]
-  induction_templates      InductionTemplate[]
-  contractors              Contractor[]
-  hazard_register_entries  HazardRegisterEntry[]
-  emergency_contacts       SiteEmergencyContact[]
-  emergency_procedures     SiteEmergencyProcedure[]
-  emergency_drills         EmergencyDrill[]
+  users                       User[]
+  sites                       Site[]
+  induction_templates         InductionTemplate[]
+  contractors                 Contractor[]
+  hazard_register_entries     HazardRegisterEntry[]
+  emergency_contacts          SiteEmergencyContact[]
+  emergency_procedures        SiteEmergencyProcedure[]
+  emergency_drills            EmergencyDrill[]
   pending_sign_in_escalations PendingSignInEscalation[]
-  incident_reports         IncidentReport[]
-  legal_document_versions  LegalDocumentVersion[]
-  site_manager_assignments SiteManagerAssignment[]
-  magic_link_tokens        MagicLinkToken[]
-  sign_in_records          SignInRecord[]
-  export_jobs              ExportJob[]
-  audit_logs               AuditLog[]
-  email_notifications      EmailNotification[]
+  incident_reports            IncidentReport[]
+  legal_document_versions     LegalDocumentVersion[]
+  site_manager_assignments    SiteManagerAssignment[]
+  magic_link_tokens           MagicLinkToken[]
+  sign_in_records             SignInRecord[]
+  export_jobs                 ExportJob[]
+  audit_logs                  AuditLog[]
+  email_notifications         EmailNotification[]
 
   @@index([slug])
 }
@@ -69,19 +69,19 @@ model User {
   updated_at    DateTime  @updatedAt
 
   // Relations
-  company       Company                 @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  audit_logs    AuditLog[]              @relation("user_audit_logs")
-  sign_outs     SignInRecord[]          @relation("signed_out_by")
-  hazards_identified HazardRegisterEntry[] @relation("hazard_identified_by")
-  hazards_closed     HazardRegisterEntry[] @relation("hazard_closed_by")
-  incidents_reported IncidentReport[] @relation("incident_reported_by")
-  incidents_resolved IncidentReport[] @relation("incident_resolved_by")
-  incidents_worksafe_notified IncidentReport[] @relation("incident_worksafe_notified_by")
-  emergency_drills_tested EmergencyDrill[] @relation("emergency_drill_tested_by")
+  company                      Company                   @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  audit_logs                   AuditLog[]                @relation("user_audit_logs")
+  sign_outs                    SignInRecord[]            @relation("signed_out_by")
+  hazards_identified           HazardRegisterEntry[]     @relation("hazard_identified_by")
+  hazards_closed               HazardRegisterEntry[]     @relation("hazard_closed_by")
+  incidents_reported           IncidentReport[]          @relation("incident_reported_by")
+  incidents_resolved           IncidentReport[]          @relation("incident_resolved_by")
+  incidents_worksafe_notified  IncidentReport[]          @relation("incident_worksafe_notified_by")
+  emergency_drills_tested      EmergencyDrill[]          @relation("emergency_drill_tested_by")
   sign_in_escalations_reviewed PendingSignInEscalation[] @relation("sign_in_escalation_reviewed_by")
-  legal_documents_authored LegalDocumentVersion[] @relation("legal_document_author")
-  sites_managed SiteManagerAssignment[] @relation("site_manager_user")
-  notifications EmailNotification[]
+  legal_documents_authored     LegalDocumentVersion[]    @relation("legal_document_author")
+  sites_managed                SiteManagerAssignment[]   @relation("site_manager_user")
+  notifications                EmailNotification[]
 
   @@unique([company_id, email])
   @@index([company_id])
@@ -110,17 +110,17 @@ model Site {
   updated_at  DateTime @updatedAt
 
   // Relations
-  company         Company                 @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  templates       InductionTemplate[]     @relation("template_site")
-  public_links    SitePublicLink[]
-  sign_in_records SignInRecord[]
-  hazard_register_entries HazardRegisterEntry[]
-  emergency_contacts      SiteEmergencyContact[]
-  emergency_procedures    SiteEmergencyProcedure[]
-  emergency_drills        EmergencyDrill[]
+  company                     Company                   @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  templates                   InductionTemplate[]       @relation("template_site")
+  public_links                SitePublicLink[]
+  sign_in_records             SignInRecord[]
+  hazard_register_entries     HazardRegisterEntry[]
+  emergency_contacts          SiteEmergencyContact[]
+  emergency_procedures        SiteEmergencyProcedure[]
+  emergency_drills            EmergencyDrill[]
   pending_sign_in_escalations PendingSignInEscalation[]
-  incident_reports        IncidentReport[]
-  site_managers   SiteManagerAssignment[] @relation("site_manager_site")
+  incident_reports            IncidentReport[]
+  site_managers               SiteManagerAssignment[]   @relation("site_manager_site")
 
   @@unique([company_id, name])
   @@index([company_id])
@@ -235,14 +235,14 @@ model SignInRecord {
   created_at         DateTime    @default(now())
 
   // Relations
-  company            Company            @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  site               Site               @relation(fields: [site_id], references: [id], onDelete: Cascade)
-  terms_version      LegalDocumentVersion? @relation("sign_in_terms_version", fields: [terms_version_id], references: [id], onDelete: SetNull)
-  privacy_version    LegalDocumentVersion? @relation("sign_in_privacy_version", fields: [privacy_version_id], references: [id], onDelete: SetNull)
-  signed_out_user    User?              @relation("signed_out_by", fields: [signed_out_by], references: [id], onDelete: SetNull)
-  induction_response InductionResponse?
+  company             Company                  @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  site                Site                     @relation(fields: [site_id], references: [id], onDelete: Cascade)
+  terms_version       LegalDocumentVersion?    @relation("sign_in_terms_version", fields: [terms_version_id], references: [id], onDelete: SetNull)
+  privacy_version     LegalDocumentVersion?    @relation("sign_in_privacy_version", fields: [privacy_version_id], references: [id], onDelete: SetNull)
+  signed_out_user     User?                    @relation("signed_out_by", fields: [signed_out_by], references: [id], onDelete: SetNull)
+  induction_response  InductionResponse?
   approved_escalation PendingSignInEscalation? @relation("escalation_approved_signin")
-  incident_reports   IncidentReport[]
+  incident_reports    IncidentReport[]
 
   @@unique([company_id, idempotency_key])
   @@index([company_id])
@@ -275,42 +275,42 @@ enum InductionCompetencyStatus {
 }
 
 model PendingSignInEscalation {
-  id                String   @id @default(cuid())
-  company_id        String
-  site_id           String
-  idempotency_key   String
-  status            SignInEscalationStatus @default(PENDING)
-  visitor_name      String
-  visitor_phone     String
-  visitor_email     String?
-  employer_name     String?
-  visitor_type      VisitorType @default(CONTRACTOR)
-  role_on_site      String?
-  hasAcceptedTerms  Boolean @default(false)
-  termsAcceptedAt   DateTime?
-  terms_version_id  String?
-  privacy_version_id String?
-  consent_statement String?
-  template_id       String
-  template_version  Int
+  id                         String                 @id @default(cuid())
+  company_id                 String
+  site_id                    String
+  idempotency_key            String
+  status                     SignInEscalationStatus @default(PENDING)
+  visitor_name               String
+  visitor_phone              String
+  visitor_email              String?
+  employer_name              String?
+  visitor_type               VisitorType            @default(CONTRACTOR)
+  role_on_site               String?
+  hasAcceptedTerms           Boolean                @default(false)
+  termsAcceptedAt            DateTime?
+  terms_version_id           String?
+  privacy_version_id         String?
+  consent_statement          String?
+  template_id                String
+  template_version           Int
   /// @Encrypted: Do not store PII here without encryption.
-  answers           Json
-  signature_data    String?
-  red_flag_question_ids Json
-  red_flag_questions Json
-  notification_targets Int @default(0)
-  notifications_queued Int @default(0)
-  submitted_at      DateTime @default(now())
-  reviewed_at       DateTime?
-  reviewed_by       String?
-  review_notes      String?
-  approved_sign_in_record_id String? @unique
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
+  answers                    Json
+  signature_data             String?
+  red_flag_question_ids      Json
+  red_flag_questions         Json
+  notification_targets       Int                    @default(0)
+  notifications_queued       Int                    @default(0)
+  submitted_at               DateTime               @default(now())
+  reviewed_at                DateTime?
+  reviewed_by                String?
+  review_notes               String?
+  approved_sign_in_record_id String?                @unique
+  created_at                 DateTime               @default(now())
+  updated_at                 DateTime               @updatedAt
 
-  company           Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  site              Site @relation(fields: [site_id], references: [id], onDelete: Cascade)
-  reviewed_by_user  User? @relation("sign_in_escalation_reviewed_by", fields: [reviewed_by], references: [id], onDelete: SetNull)
+  company                 Company       @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  site                    Site          @relation(fields: [site_id], references: [id], onDelete: Cascade)
+  reviewed_by_user        User?         @relation("sign_in_escalation_reviewed_by", fields: [reviewed_by], references: [id], onDelete: SetNull)
   approved_sign_in_record SignInRecord? @relation("escalation_approved_signin", fields: [approved_sign_in_record_id], references: [id], onDelete: SetNull)
 
   @@unique([company_id, idempotency_key])
@@ -322,25 +322,25 @@ model PendingSignInEscalation {
 }
 
 model InductionResponse {
-  id                String   @id @default(cuid())
-  sign_in_record_id String   @unique
-  template_id       String
-  template_version  Int // Snapshot of version at time of completion
+  id                       String                    @id @default(cuid())
+  sign_in_record_id        String                    @unique
+  template_id              String
+  template_version         Int // Snapshot of version at time of completion
   /// @Encrypted: Do not store PII here without encryption.
-  answers           Json // Array of { question_id, answer }
-  completion_snapshot Json?
-  signature_url     String? // Base64 or R2 URL
-  signature_hash    String?
-  signature_mime_type String?
-  signature_size_bytes Int?
-  signature_captured_at DateTime?
-  completed_at      DateTime @default(now())
-  passed            Boolean  @default(true)
-  competency_status InductionCompetencyStatus @default(SELF_DECLARED)
+  answers                  Json // Array of { question_id, answer }
+  completion_snapshot      Json?
+  signature_url            String? // Base64 or R2 URL
+  signature_hash           String?
+  signature_mime_type      String?
+  signature_size_bytes     Int?
+  signature_captured_at    DateTime?
+  completed_at             DateTime                  @default(now())
+  passed                   Boolean                   @default(true)
+  competency_status        InductionCompetencyStatus @default(SELF_DECLARED)
   briefing_acknowledged_at DateTime?
-  refresher_due_at  DateTime?
-  supervisor_verified_by String?
-  supervisor_verified_at DateTime?
+  refresher_due_at         DateTime?
+  supervisor_verified_by   String?
+  supervisor_verified_at   DateTime?
 
   // Relations
   sign_in_record SignInRecord      @relation(fields: [sign_in_record_id], references: [id], onDelete: Cascade)
@@ -355,25 +355,25 @@ model InductionResponse {
 }
 
 model HazardRegisterEntry {
-  id             String          @id @default(cuid())
-  company_id     String
-  site_id        String
-  title          String
-  description    String?
-  risk_level     HazardRiskLevel @default(MEDIUM)
-  status         HazardStatus    @default(OPEN)
-  controls       Json?
-  identified_at  DateTime        @default(now())
-  identified_by  String?
-  closed_at      DateTime?
-  closed_by      String?
-  created_at     DateTime        @default(now())
-  updated_at     DateTime        @updatedAt
+  id            String          @id @default(cuid())
+  company_id    String
+  site_id       String
+  title         String
+  description   String?
+  risk_level    HazardRiskLevel @default(MEDIUM)
+  status        HazardStatus    @default(OPEN)
+  controls      Json?
+  identified_at DateTime        @default(now())
+  identified_by String?
+  closed_at     DateTime?
+  closed_by     String?
+  created_at    DateTime        @default(now())
+  updated_at    DateTime        @updatedAt
 
-  company             Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  site                Site    @relation(fields: [site_id], references: [id], onDelete: Cascade)
-  identified_by_user  User?   @relation("hazard_identified_by", fields: [identified_by], references: [id], onDelete: SetNull)
-  closed_by_user      User?   @relation("hazard_closed_by", fields: [closed_by], references: [id], onDelete: SetNull)
+  company            Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  site               Site    @relation(fields: [site_id], references: [id], onDelete: Cascade)
+  identified_by_user User?   @relation("hazard_identified_by", fields: [identified_by], references: [id], onDelete: SetNull)
+  closed_by_user     User?   @relation("hazard_closed_by", fields: [closed_by], references: [id], onDelete: SetNull)
 
   @@index([company_id])
   @@index([company_id, site_id])
@@ -398,18 +398,18 @@ enum HazardStatus {
 }
 
 model SiteEmergencyContact {
-  id          String   @id @default(cuid())
-  company_id  String
-  site_id     String
-  name        String
-  role        String?
-  phone       String
-  email       String?
-  notes       String?
-  priority    Int      @default(0)
-  is_active   Boolean  @default(true)
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  id         String   @id @default(cuid())
+  company_id String
+  site_id    String
+  name       String
+  role       String?
+  phone      String
+  email      String?
+  notes      String?
+  priority   Int      @default(0)
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
   site    Site    @relation(fields: [site_id], references: [id], onDelete: Cascade)
@@ -421,15 +421,15 @@ model SiteEmergencyContact {
 }
 
 model SiteEmergencyProcedure {
-  id             String   @id @default(cuid())
-  company_id     String
-  site_id        String
-  title          String
-  instructions   String
-  sort_order     Int      @default(0)
-  is_active      Boolean  @default(true)
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
+  id           String   @id @default(cuid())
+  company_id   String
+  site_id      String
+  title        String
+  instructions String
+  sort_order   Int      @default(0)
+  is_active    Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
 
   company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
   site    Site    @relation(fields: [site_id], references: [id], onDelete: Cascade)
@@ -452,10 +452,10 @@ model LegalDocumentVersion {
   created_at    DateTime          @default(now())
   updated_at    DateTime          @updatedAt
 
-  company            Company       @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  author             User?         @relation("legal_document_author", fields: [created_by], references: [id], onDelete: SetNull)
-  sign_in_terms      SignInRecord[] @relation("sign_in_terms_version")
-  sign_in_privacy    SignInRecord[] @relation("sign_in_privacy_version")
+  company         Company        @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  author          User?          @relation("legal_document_author", fields: [created_by], references: [id], onDelete: SetNull)
+  sign_in_terms   SignInRecord[] @relation("sign_in_terms_version")
+  sign_in_privacy SignInRecord[] @relation("sign_in_privacy_version")
 
   @@unique([company_id, document_type, version])
   @@index([company_id])
@@ -469,35 +469,35 @@ enum LegalDocumentType {
 }
 
 model IncidentReport {
-  id                String           @id @default(cuid())
-  company_id        String
-  site_id           String
-  sign_in_record_id String?
-  incident_type     IncidentType     @default(INCIDENT)
-  severity          IncidentSeverity @default(MEDIUM)
-  status            IncidentStatus   @default(OPEN)
-  title             String
-  description       String?
-  immediate_actions String?
-  occurred_at       DateTime         @default(now())
-  is_notifiable     Boolean          @default(false)
-  worksafe_notified_at DateTime?
+  id                        String           @id @default(cuid())
+  company_id                String
+  site_id                   String
+  sign_in_record_id         String?
+  incident_type             IncidentType     @default(INCIDENT)
+  severity                  IncidentSeverity @default(MEDIUM)
+  status                    IncidentStatus   @default(OPEN)
+  title                     String
+  description               String?
+  immediate_actions         String?
+  occurred_at               DateTime         @default(now())
+  is_notifiable             Boolean          @default(false)
+  worksafe_notified_at      DateTime?
   worksafe_reference_number String?
-  worksafe_notified_by String?
-  legal_hold        Boolean          @default(false)
-  retention_expires_at DateTime?
-  reported_by       String?
-  resolved_at       DateTime?
-  resolved_by       String?
-  created_at        DateTime         @default(now())
-  updated_at        DateTime         @updatedAt
+  worksafe_notified_by      String?
+  legal_hold                Boolean          @default(false)
+  retention_expires_at      DateTime?
+  reported_by               String?
+  resolved_at               DateTime?
+  resolved_by               String?
+  created_at                DateTime         @default(now())
+  updated_at                DateTime         @updatedAt
 
-  company          Company       @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  site             Site          @relation(fields: [site_id], references: [id], onDelete: Cascade)
-  sign_in_record   SignInRecord? @relation(fields: [sign_in_record_id], references: [id], onDelete: SetNull)
-  reported_by_user User?         @relation("incident_reported_by", fields: [reported_by], references: [id], onDelete: SetNull)
-  resolved_by_user User?         @relation("incident_resolved_by", fields: [resolved_by], references: [id], onDelete: SetNull)
-  worksafe_notified_by_user User? @relation("incident_worksafe_notified_by", fields: [worksafe_notified_by], references: [id], onDelete: SetNull)
+  company                   Company       @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  site                      Site          @relation(fields: [site_id], references: [id], onDelete: Cascade)
+  sign_in_record            SignInRecord? @relation(fields: [sign_in_record_id], references: [id], onDelete: SetNull)
+  reported_by_user          User?         @relation("incident_reported_by", fields: [reported_by], references: [id], onDelete: SetNull)
+  resolved_by_user          User?         @relation("incident_resolved_by", fields: [resolved_by], references: [id], onDelete: SetNull)
+  worksafe_notified_by_user User?         @relation("incident_worksafe_notified_by", fields: [worksafe_notified_by], references: [id], onDelete: SetNull)
 
   @@index([company_id])
   @@index([company_id, site_id])
@@ -515,24 +515,24 @@ model IncidentReport {
 }
 
 model EmergencyDrill {
-  id                  String            @id @default(cuid())
-  company_id          String
-  site_id             String
-  drill_type          EmergencyDrillType @default(EVACUATION)
-  scenario            String
-  outcome_notes       String?
-  follow_up_actions   String?
-  conducted_at        DateTime          @default(now())
-  next_due_at         DateTime?
-  tested_by           String?
-  legal_hold          Boolean           @default(false)
+  id                   String             @id @default(cuid())
+  company_id           String
+  site_id              String
+  drill_type           EmergencyDrillType @default(EVACUATION)
+  scenario             String
+  outcome_notes        String?
+  follow_up_actions    String?
+  conducted_at         DateTime           @default(now())
+  next_due_at          DateTime?
+  tested_by            String?
+  legal_hold           Boolean            @default(false)
   retention_expires_at DateTime?
-  created_at          DateTime          @default(now())
-  updated_at          DateTime          @updatedAt
+  created_at           DateTime           @default(now())
+  updated_at           DateTime           @updatedAt
 
-  company             Company           @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  site                Site              @relation(fields: [site_id], references: [id], onDelete: Cascade)
-  tested_by_user      User?             @relation("emergency_drill_tested_by", fields: [tested_by], references: [id], onDelete: SetNull)
+  company        Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  site           Site    @relation(fields: [site_id], references: [id], onDelete: Cascade)
+  tested_by_user User?   @relation("emergency_drill_tested_by", fields: [tested_by], references: [id], onDelete: SetNull)
 
   @@index([company_id])
   @@index([company_id, site_id])
