@@ -8,6 +8,20 @@ const GITHUB_ACTIONS_CACHE_TTL_MS = 60 * 60 * 1000;
 
 let githubActionsCache: { ranges: string[]; fetchedAt: number } | null = null;
 
+const TRUTHY_VALUES = new Set(["1", "true", "yes", "on"]);
+const FALSY_VALUES = new Set(["0", "false", "no", "off"]);
+
+function getBooleanEnv(name: string, defaultValue = false): boolean {
+  const raw = process.env[name];
+  if (raw === undefined) return defaultValue;
+
+  const normalized = raw.trim().toLowerCase();
+  if (!normalized) return defaultValue;
+  if (TRUTHY_VALUES.has(normalized)) return true;
+  if (FALSY_VALUES.has(normalized)) return false;
+  return defaultValue;
+}
+
 function parseIpList(value: string | undefined): string[] {
   if (!value) return [];
   return value
@@ -116,8 +130,7 @@ function isPrivateIpv4(ip: string): boolean {
   );
 }
 
-function getClientIps(req: Request): string[] {
-  const trustProxy = process.env.TRUST_PROXY === "1";
+function getClientIps(req: Request, trustProxy: boolean): string[] {
   const candidates: string[] = [];
 
   const pushCandidate = (ip: string | null) => {
@@ -215,7 +228,15 @@ export async function requireCronSecret(
     };
   }
 
-  const clientIps = getClientIps(req);
+  const trustProxy = getBooleanEnv("TRUST_PROXY");
+  const clientIps = getClientIps(req, trustProxy);
+  const enforceIpCheck = getBooleanEnv("CRON_ENFORCE_IP", true);
+
+  if (!enforceIpCheck) {
+    log.info({ path, client_ips: clientIps }, "Cron auth allowed (IP checks disabled)");
+    return { ok: true, log };
+  }
+
   if (clientIps.length === 0) {
     log.warn({ path }, "Cron request missing client IP");
     return {
@@ -229,10 +250,12 @@ export async function requireCronSecret(
   }
 
   const allowlist = parseIpList(process.env.CRON_ALLOWED_IPS);
-  const allowPrivate = process.env.CRON_ALLOW_PRIVATE_IPS === "1";
-  const allowGithub = process.env.CRON_ALLOW_GITHUB_ACTIONS !== "0";
-  const allowRender = process.env.CRON_ALLOW_RENDER_INTERNAL === "1";
+  const allowPrivate = getBooleanEnv("CRON_ALLOW_PRIVATE_IPS");
+  const allowGithub = getBooleanEnv("CRON_ALLOW_GITHUB_ACTIONS", true);
+  const allowRender = getBooleanEnv("CRON_ALLOW_RENDER_INTERNAL");
   let matchedIp: string | null = null;
+  let githubRangesCount = 0;
+  let githubMetaError: string | null = null;
   const matchIp = (predicate: (ip: string) => boolean): boolean => {
     for (const candidateIp of clientIps) {
       if (predicate(candidateIp)) {
@@ -263,10 +286,12 @@ export async function requireCronSecret(
   if (!allowed && allowGithub) {
     try {
       const ranges = await getGithubActionsRanges();
+      githubRangesCount = ranges.length;
       if (matchIp((ip) => isIpAllowed(ip, ranges))) {
         allowed = true;
       }
     } catch (err) {
+      githubMetaError = String(err);
       log.warn({ path, err: String(err) }, "GitHub meta lookup failed");
     }
   }
@@ -277,7 +302,20 @@ export async function requireCronSecret(
       ok: false,
       log,
       response: NextResponse.json(
-        { error: "Forbidden", code: "cron_ip_not_allowed" },
+        {
+          error: "Forbidden",
+          code: "cron_ip_not_allowed",
+          debug: {
+            trust_proxy: trustProxy,
+            client_ips: clientIps,
+            allowlist_count: allowlist.length,
+            allow_private_ips: allowPrivate,
+            allow_github_actions: allowGithub,
+            allow_render_internal: allowRender,
+            github_ranges_count: githubRangesCount,
+            github_meta_error: githubMetaError,
+          },
+        },
         { status: 403 },
       ),
     };

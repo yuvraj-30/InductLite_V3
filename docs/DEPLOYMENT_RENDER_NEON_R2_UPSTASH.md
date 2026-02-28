@@ -25,6 +25,7 @@
 - CRON_ALLOWED_IPS (optional)
 - CRON_ALLOW_GITHUB_ACTIONS=1
 - CRON_ALLOW_PRIVATE_IPS=0
+- CRON_ENFORCE_IP=1 (optional; set `0` for secret-only cron auth)
 
 Note: IP allowlist matching supports IPv4 and IPv6 CIDR entries.
 
@@ -93,6 +94,8 @@ Troubleshooting keep-alive failures:
     - `cron_secret_mismatch`
     - `cron_ip_missing`
     - `cron_ip_not_allowed`
+  - For `cron_ip_not_allowed`, use `debug` fields in the JSON response to inspect parsed `client_ips` and GitHub meta lookup status.
+  - If proxy/CDN IP forwarding is inconsistent and you need reliability over IP filtering, set `CRON_ENFORCE_IP=0` (secret-only auth for cron routes).
 - Workflow now logs `/health` build metadata when available (`build.commit`, `build.source`).
   - If the logged commit does not match the workflow SHA, Render is serving an older deployment.
 

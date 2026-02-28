@@ -106,6 +106,12 @@ const ENV_CONFIG: EnvConfig[] = [
     description: "Allow private IP ranges for cron endpoints",
   },
   {
+    name: "CRON_ENFORCE_IP",
+    required: false,
+    production: false,
+    description: "Enforce cron IP checks after secret validation",
+  },
+  {
     name: "RESEND_API_KEY",
     required: false,
     production: true,

@@ -7,6 +7,7 @@ describe("Cron Security Integration", () => {
   beforeEach(() => {
     vi.stubEnv("CRON_SECRET", CRON_SECRET);
     vi.stubEnv("TRUST_PROXY", "0");
+    vi.stubEnv("CRON_ENFORCE_IP", "1");
     vi.stubEnv("CRON_ALLOW_PRIVATE_IPS", "1");
     vi.stubEnv("CRON_ALLOW_GITHUB_ACTIONS", "0"); // Disable fetch for tests
     vi.stubEnv("CRON_ALLOWED_IPS", "192.168.1.1");
@@ -139,5 +140,38 @@ describe("Cron Security Integration", () => {
     expect(result.ok).toBe(true);
 
     fetchSpy.mockRestore();
+  });
+
+  it("should accept truthy TRUST_PROXY values", async () => {
+    vi.stubEnv("TRUST_PROXY", "true");
+    vi.stubEnv("CRON_ALLOWED_IPS", "203.0.113.0/24");
+    vi.stubEnv("CRON_ALLOW_PRIVATE_IPS", "0");
+
+    const req = new Request("http://localhost/api/cron/test", {
+      headers: {
+        "x-cron-secret": CRON_SECRET,
+        "x-forwarded-for": "203.0.113.77",
+      },
+    });
+
+    const result = await requireCronSecret(req, "/api/cron/test");
+    expect(result.ok).toBe(true);
+  });
+
+  it("should bypass IP checks when CRON_ENFORCE_IP is disabled", async () => {
+    vi.stubEnv("CRON_ENFORCE_IP", "0");
+    vi.stubEnv("TRUST_PROXY", "0");
+    vi.stubEnv("CRON_ALLOW_PRIVATE_IPS", "0");
+    vi.stubEnv("CRON_ALLOWED_IPS", "");
+
+    const req = new Request("http://localhost/api/cron/test", {
+      headers: {
+        "x-cron-secret": CRON_SECRET,
+        "x-real-ip": "203.0.113.200",
+      },
+    });
+
+    const result = await requireCronSecret(req, "/api/cron/test");
+    expect(result.ok).toBe(true);
   });
 });
