@@ -448,6 +448,26 @@ export async function findActiveRollCallEvent(
   }
 }
 
+export async function findRollCallEventById(
+  companyId: string,
+  eventId: string,
+): Promise<EvacuationEvent | null> {
+  requireCompanyId(companyId);
+  if (!eventId.trim()) return null;
+
+  try {
+    const db = scopedDb(companyId);
+    return await db.evacuationEvent.findFirst({
+      where: {
+        company_id: companyId,
+        id: eventId,
+      },
+    });
+  } catch (error) {
+    handlePrismaError(error, "EvacuationEvent");
+  }
+}
+
 export async function listRollCallEvents(
   companyId: string,
   siteId: string,

@@ -295,12 +295,20 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
                   Total: {activeRollCall.total_people} | Accounted: {activeRollCall.accounted_count} | Missing: {activeRollCall.missing_count}
                 </p>
               </div>
-              <a
-                href={`/api/rollcall/${activeRollCall.id}/export`}
-                className="rounded-md border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100"
-              >
-                Export Active CSV
-              </a>
+              <div className="flex flex-wrap items-center gap-2">
+                <a
+                  href={`/api/rollcall/${activeRollCall.id}/export`}
+                  className="rounded-md border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100"
+                >
+                  Export Active CSV
+                </a>
+                <a
+                  href={`/api/rollcall/${activeRollCall.id}/evidence`}
+                  className="rounded-md border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100"
+                >
+                  Export Incident Evidence (JSON)
+                </a>
+              </div>
             </div>
 
             <form
@@ -462,12 +470,20 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
                       Total {event.total_people} | Accounted {event.accounted_count} | Missing {event.missing_count}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <a
-                        href={`/api/rollcall/${event.id}/export`}
-                        className="rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
-                      >
-                        CSV
-                      </a>
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <a
+                          href={`/api/rollcall/${event.id}/export`}
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                        >
+                          CSV
+                        </a>
+                        <a
+                          href={`/api/rollcall/${event.id}/evidence`}
+                          className="rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                        >
+                          Evidence JSON
+                        </a>
+                      </div>
                     </td>
                   </tr>
                 ))}

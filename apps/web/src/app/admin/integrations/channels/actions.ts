@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { assertOrigin, checkPermission } from "@/lib/auth";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import { generateRequestId } from "@/lib/auth/csrf";
 import { createRequestLogger } from "@/lib/logger";
 import { checkAdminMutationRateLimit } from "@/lib/rate-limit";
@@ -80,6 +81,14 @@ async function authorizeMutation(): Promise<
 async function ensureChannelFeature(
   companyId: string,
 ): Promise<ChannelIntegrationActionResult | null> {
+  if (!isFeatureEnabled("TEAMS_SLACK_V1")) {
+    return {
+      success: false,
+      error:
+        "Teams/Slack integrations are disabled by rollout flag (CONTROL_ID: FLAG-ROLLOUT-001)",
+    };
+  }
+
   try {
     await assertCompanyFeatureEnabled(companyId, "TEAMS_SLACK_V1");
     return null;

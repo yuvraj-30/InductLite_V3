@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { checkPermissionReadOnly } from "@/lib/auth";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 import { findAllSites } from "@/lib/repository/site.repository";
@@ -25,6 +26,17 @@ export default async function PermitTemplatesPage() {
   }
 
   const context = await requireAuthenticatedContextReadOnly();
+  if (!isFeatureEnabled("PERMITS_V1")) {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold text-gray-900">Permit Templates</h1>
+        <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          Permit workflows are disabled by rollout flag (CONTROL_ID: FLAG-ROLLOUT-001).
+        </p>
+      </div>
+    );
+  }
+
   try {
     await assertCompanyFeatureEnabled(context.companyId, "PERMITS_V1");
   } catch (error) {

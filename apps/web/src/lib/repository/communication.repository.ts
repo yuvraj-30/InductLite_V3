@@ -117,6 +117,66 @@ export async function listEmergencyBroadcasts(
   }
 }
 
+export async function listEmergencyBroadcastsInWindow(
+  companyId: string,
+  input: {
+    site_id?: string;
+    started_at_from: Date;
+    started_at_to: Date;
+    limit?: number;
+  },
+): Promise<EmergencyBroadcast[]> {
+  requireCompanyId(companyId);
+  if (
+    Number.isNaN(input.started_at_from.getTime()) ||
+    Number.isNaN(input.started_at_to.getTime())
+  ) {
+    throw new RepositoryError("Invalid broadcast window", "VALIDATION");
+  }
+  const limit = Math.max(1, Math.min(input.limit ?? 300, 2000));
+
+  try {
+    const db = scopedDb(companyId);
+    return await db.emergencyBroadcast.findMany({
+      where: {
+        ...(input.site_id ? { site_id: input.site_id } : {}),
+        started_at: {
+          gte: input.started_at_from,
+          lte: input.started_at_to,
+        },
+      },
+      orderBy: [{ started_at: "asc" }],
+      take: limit,
+    });
+  } catch (error) {
+    if (error instanceof RepositoryError) throw error;
+    handlePrismaError(error, "EmergencyBroadcast");
+  }
+}
+
+export async function countEmergencyBroadcastsSince(
+  companyId: string,
+  input: { since: Date; site_id?: string },
+): Promise<number> {
+  requireCompanyId(companyId);
+  if (Number.isNaN(input.since.getTime())) {
+    throw new RepositoryError("since is invalid", "VALIDATION");
+  }
+
+  try {
+    const db = scopedDb(companyId);
+    return await db.emergencyBroadcast.count({
+      where: {
+        ...(input.site_id ? { site_id: input.site_id } : {}),
+        started_at: { gte: input.since },
+      },
+    });
+  } catch (error) {
+    if (error instanceof RepositoryError) throw error;
+    handlePrismaError(error, "EmergencyBroadcast");
+  }
+}
+
 export async function createBroadcastRecipient(
   companyId: string,
   input: CreateBroadcastRecipientInput,
@@ -164,6 +224,34 @@ export async function listBroadcastRecipients(
     return await db.broadcastRecipient.findMany({
       where: { broadcast_id: broadcastId },
       orderBy: [{ created_at: "asc" }],
+    });
+  } catch (error) {
+    handlePrismaError(error, "BroadcastRecipient");
+  }
+}
+
+export async function listBroadcastRecipientsForBroadcasts(
+  companyId: string,
+  broadcastIds: string[],
+): Promise<BroadcastRecipient[]> {
+  requireCompanyId(companyId);
+  const uniqueIds = Array.from(
+    new Set(
+      broadcastIds
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0),
+    ),
+  );
+  if (uniqueIds.length === 0) return [];
+
+  try {
+    const db = scopedDb(companyId);
+    return await db.broadcastRecipient.findMany({
+      where: {
+        broadcast_id: { in: uniqueIds },
+      },
+      orderBy: [{ created_at: "asc" }],
+      take: 5000,
     });
   } catch (error) {
     handlePrismaError(error, "BroadcastRecipient");
@@ -287,6 +375,70 @@ export async function listCommunicationEvents(
       take: limit,
     });
   } catch (error) {
+    handlePrismaError(error, "CommunicationEvent");
+  }
+}
+
+export async function listCommunicationEventsForBroadcasts(
+  companyId: string,
+  input: {
+    broadcast_ids: string[];
+    limit?: number;
+  },
+): Promise<CommunicationEvent[]> {
+  requireCompanyId(companyId);
+  const broadcastIds = Array.from(
+    new Set(
+      input.broadcast_ids
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0),
+    ),
+  );
+  if (broadcastIds.length === 0) return [];
+  const limit = Math.max(1, Math.min(input.limit ?? 5000, 10000));
+
+  try {
+    const db = scopedDb(companyId);
+    return await db.communicationEvent.findMany({
+      where: {
+        broadcast_id: { in: broadcastIds },
+      },
+      orderBy: [{ created_at: "asc" }],
+      take: limit,
+    });
+  } catch (error) {
+    handlePrismaError(error, "CommunicationEvent");
+  }
+}
+
+export async function countCommunicationEventsSince(
+  companyId: string,
+  input: {
+    since: Date;
+    event_type?: string;
+    channel?: BroadcastChannel;
+    status?: string;
+    site_id?: string;
+  },
+): Promise<number> {
+  requireCompanyId(companyId);
+  if (Number.isNaN(input.since.getTime())) {
+    throw new RepositoryError("since is invalid", "VALIDATION");
+  }
+
+  try {
+    const db = scopedDb(companyId);
+    return await db.communicationEvent.count({
+      where: {
+        created_at: { gte: input.since },
+        ...(input.site_id ? { site_id: input.site_id } : {}),
+        ...(input.event_type ? { event_type: input.event_type } : {}),
+        ...(input.channel ? { channel: input.channel } : {}),
+        ...(input.status ? { status: input.status } : {}),
+      },
+    });
+  } catch (error) {
+    if (error instanceof RepositoryError) throw error;
     handlePrismaError(error, "CommunicationEvent");
   }
 }

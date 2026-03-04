@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { publicDb } from "@/lib/db/public-db";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import {
   createChannelDelivery,
   createCommunicationEvent,
@@ -10,6 +11,7 @@ import {
 import { transitionVisitorApprovalRequest } from "@/lib/repository/visitor-approval.repository";
 import { createAuditLog } from "@/lib/repository/audit.repository";
 import { getClientIpFromHeaders, getUserAgentFromHeaders } from "@/lib/auth/csrf";
+import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 
 const channelActionSchema = z.object({
   integrationConfigId: z.string().cuid(),
@@ -44,6 +46,16 @@ function verifyHmacSignature(input: {
 }
 
 export async function POST(request: NextRequest) {
+  if (!isFeatureEnabled("TEAMS_SLACK_V1")) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Channel actions are disabled by rollout flag (CONTROL_ID: FLAG-ROLLOUT-001)",
+      },
+      { status: 403 },
+    );
+  }
+
   const rawBody = await request.text();
   let payload: unknown;
   try {
@@ -75,6 +87,22 @@ export async function POST(request: NextRequest) {
       { success: false, error: "Integration config not found or inactive" },
       { status: 404 },
     );
+  }
+
+  try {
+    await assertCompanyFeatureEnabled(config.company_id, "TEAMS_SLACK_V1");
+  } catch (error) {
+    if (error instanceof EntitlementDeniedError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Channel actions are not enabled for this plan (CONTROL_ID: PLAN-ENTITLEMENT-001)",
+        },
+        { status: 403 },
+      );
+    }
+    throw error;
   }
 
   const signatureHeader =

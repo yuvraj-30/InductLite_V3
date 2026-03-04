@@ -15,6 +15,8 @@ export interface ContractorRiskComputation {
     expiring_documents_30d: number;
     permit_breaches: number;
     prequalification_penalty: number;
+    incident_reports_180d: number;
+    quiz_failures_180d: number;
   };
   threshold_state: "LOW" | "MEDIUM" | "HIGH";
 }
@@ -41,10 +43,22 @@ export async function computeContractorRiskScore(
   try {
     const db = scopedDb(companyId);
     const now = new Date();
+    const riskWindowStart = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
     const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-    const [expiredDocuments, expiringDocuments, permitBreaches, latestPrequal] =
+    const [contractor, expiredDocuments, expiringDocuments, permitBreaches, latestPrequal] =
       await Promise.all([
+        // eslint-disable-next-line security-guardrails/require-company-id -- company_id is enforced by scopedDb
+        db.contractor.findFirst({
+          where: { id: input.contractor_id },
+          select: {
+            id: true,
+            name: true,
+            contact_email: true,
+            contact_phone: true,
+            contact_name: true,
+          },
+        }),
         db.contractorDocument.count({
           where: {
             contractor_id: input.contractor_id,
@@ -73,6 +87,62 @@ export async function computeContractorRiskScore(
           orderBy: { updated_at: "desc" },
         }),
       ]);
+    if (!contractor) {
+      throw new RepositoryError("Contractor not found", "NOT_FOUND");
+    }
+
+    const signInMatchers = [
+      ...(contractor.contact_email
+        ? [{ visitor_email: contractor.contact_email.trim().toLowerCase() }]
+        : []),
+      ...(contractor.contact_phone
+        ? [{ visitor_phone: contractor.contact_phone.trim() }]
+        : []),
+      ...(contractor.name ? [{ employer_name: contractor.name.trim() }] : []),
+      ...(contractor.contact_name
+        ? [{ visitor_name: contractor.contact_name.trim() }]
+        : []),
+    ];
+
+    const matchingSignInRecords =
+      signInMatchers.length === 0
+        ? []
+        // eslint-disable-next-line security-guardrails/require-company-id -- company_id is enforced by scopedDb
+        : await db.signInRecord.findMany({
+            where: {
+              ...(input.site_id ? { site_id: input.site_id } : {}),
+              sign_in_ts: { gte: riskWindowStart },
+              OR: signInMatchers,
+            },
+            select: { id: true },
+            take: 5000,
+          });
+    const matchingSignInIds = matchingSignInRecords.map((record) => record.id);
+
+    let incidentReports = 0;
+    let quizFailures = 0;
+    if (matchingSignInIds.length > 0) {
+      [incidentReports, quizFailures] = await Promise.all([
+        db.incidentReport.count({
+          where: {
+            ...(input.site_id ? { site_id: input.site_id } : {}),
+            occurred_at: { gte: riskWindowStart },
+            sign_in_record_id: { in: matchingSignInIds },
+          },
+        }),
+        db.signInRecord.count({
+          where: {
+            id: { in: matchingSignInIds },
+            induction_response: {
+              is: {
+                passed: false,
+                completed_at: { gte: riskWindowStart },
+              },
+            },
+          },
+        }),
+      ]);
+    }
 
     const prequalificationPenalty =
       latestPrequal?.status === "DENIED"
@@ -87,7 +157,9 @@ export async function computeContractorRiskScore(
       expiredDocuments * 14 +
       expiringDocuments * 4 +
       permitBreaches * 10 +
-      prequalificationPenalty;
+      prequalificationPenalty +
+      incidentReports * 8 +
+      quizFailures * 3;
     const rawScore = 100 - deductions;
     const score = clampScore(rawScore);
 
@@ -100,6 +172,8 @@ export async function computeContractorRiskScore(
         expiring_documents_30d: expiringDocuments,
         permit_breaches: permitBreaches,
         prequalification_penalty: prequalificationPenalty,
+        incident_reports_180d: incidentReports,
+        quiz_failures_180d: quizFailures,
       },
       threshold_state: computeThreshold(score),
     };
@@ -223,6 +297,46 @@ export async function refreshAllContractorRiskScores(
   }
 }
 
+export async function findContractorRiskScore(
+  companyId: string,
+  input: { contractor_id: string; site_id?: string },
+): Promise<ContractorRiskScore | null> {
+  requireCompanyId(companyId);
+  if (!input.contractor_id.trim()) return null;
+
+  try {
+    const db = scopedDb(companyId);
+    if (input.site_id) {
+      // eslint-disable-next-line security-guardrails/require-company-id -- company_id is enforced by scopedDb
+      const siteSpecific = await db.contractorRiskScore.findFirst({
+        where: {
+          contractor_id: input.contractor_id,
+          site_id: input.site_id,
+        },
+      });
+      if (siteSpecific) return siteSpecific;
+    }
+
+    // eslint-disable-next-line security-guardrails/require-company-id -- company_id is enforced by scopedDb
+    const allSites = await db.contractorRiskScore.findFirst({
+      where: {
+        contractor_id: input.contractor_id,
+        site_id: null,
+      },
+      orderBy: { updated_at: "desc" },
+    });
+    if (allSites) return allSites;
+
+    // eslint-disable-next-line security-guardrails/require-company-id -- company_id is enforced by scopedDb
+    return await db.contractorRiskScore.findFirst({
+      where: { contractor_id: input.contractor_id },
+      orderBy: { updated_at: "desc" },
+    });
+  } catch (error) {
+    handlePrismaError(error, "ContractorRiskScore");
+  }
+}
+
 export async function listContractorRiskScores(
   companyId: string,
   options?: { site_id?: string; limit?: number },
@@ -261,6 +375,44 @@ export async function listContractorRiskHistory(
       take: safeLimit,
     });
   } catch (error) {
+    handlePrismaError(error, "RiskScoreHistory");
+  }
+}
+
+export async function listRiskScoreHistoryForScoreIds(
+  companyId: string,
+  input: {
+    contractor_risk_score_ids: string[];
+    since?: Date;
+    limit?: number;
+  },
+): Promise<RiskScoreHistory[]> {
+  requireCompanyId(companyId);
+  const scoreIds = Array.from(
+    new Set(
+      input.contractor_risk_score_ids
+        .map((value) => value.trim())
+        .filter((value) => value.length > 0),
+    ),
+  );
+  if (scoreIds.length === 0) return [];
+  if (input.since && Number.isNaN(input.since.getTime())) {
+    throw new RepositoryError("since is invalid", "VALIDATION");
+  }
+  const limit = Math.max(1, Math.min(input.limit ?? 5000, 20000));
+
+  try {
+    const db = scopedDb(companyId);
+    return await db.riskScoreHistory.findMany({
+      where: {
+        contractor_risk_score_id: { in: scoreIds },
+        ...(input.since ? { calculated_at: { gte: input.since } } : {}),
+      },
+      orderBy: [{ calculated_at: "desc" }],
+      take: limit,
+    });
+  } catch (error) {
+    if (error instanceof RepositoryError) throw error;
     handlePrismaError(error, "RiskScoreHistory");
   }
 }

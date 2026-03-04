@@ -111,14 +111,88 @@ export default async function AdminLayout({
   ];
 
   if (canManageEscalations) {
-    commandItems.push({
-      id: "escalations",
-      href: "/admin/escalations",
-      title: "Review Escalations",
-      description: "Resolve high-risk sign-in responses.",
-      keywords: ["red flag", "approval", "decision"],
-      contexts: ["escalations", "dashboard"],
-    });
+    commandItems.push(
+      {
+        id: "escalations",
+        href: "/admin/escalations",
+        title: "Review Escalations",
+        description: "Resolve high-risk sign-in responses.",
+        keywords: ["red flag", "approval", "decision"],
+        contexts: ["escalations", "dashboard"],
+      },
+      {
+        id: "permits",
+        href: "/admin/permits",
+        title: "Open Permit-to-Work",
+        description: "Manage permit templates, requests, and lifecycle.",
+        keywords: ["permit", "ptw", "prequalification"],
+        contexts: ["dashboard", "sites", "escalations"],
+      },
+      {
+        id: "approvals",
+        href: "/admin/approvals",
+        title: "Open Approvals",
+        description: "Review visitor approvals, watchlists, and ID checks.",
+        keywords: ["approval", "watchlist", "identity"],
+        contexts: ["dashboard", "escalations"],
+      },
+      {
+        id: "communications",
+        href: "/admin/communications",
+        title: "Open Communications Hub",
+        description: "Launch emergency broadcasts and monitor acknowledgements.",
+        keywords: ["broadcast", "emergency", "alerts"],
+        contexts: ["dashboard", "live", "escalations"],
+      },
+      {
+        id: "channel-integrations",
+        href: "/admin/integrations/channels",
+        title: "Manage Channel Integrations",
+        description: "Configure Teams and Slack approval loops.",
+        keywords: ["teams", "slack", "integration"],
+        contexts: ["dashboard", "webhooks", "escalations"],
+      },
+      {
+        id: "mobile-ops",
+        href: "/admin/mobile",
+        title: "Open Mobile Operations",
+        description: "Manage push subscriptions and auto check-out hints.",
+        keywords: ["mobile", "push", "presence"],
+        contexts: ["dashboard", "live"],
+      },
+      {
+        id: "access-ops",
+        href: "/admin/access-ops",
+        title: "Open Access Operations",
+        description: "Trace gate decisions and resolve hardware outages.",
+        keywords: ["gate", "hardware", "turnstile"],
+        contexts: ["dashboard", "live", "escalations"],
+      },
+      {
+        id: "evidence",
+        href: "/admin/evidence",
+        title: "Open Evidence Packs",
+        description: "Verify tamper-evident compliance manifests.",
+        keywords: ["evidence", "manifest", "audit"],
+        contexts: ["dashboard", "exports"],
+      },
+      {
+        id: "policy-simulator",
+        href: "/admin/policy-simulator",
+        title: "Open Policy Simulator",
+        description: "Run what-if simulations for policy settings.",
+        keywords: ["simulator", "policy", "scenario"],
+        contexts: ["dashboard", "settings"],
+      },
+      {
+        id: "risk-passport",
+        href: "/admin/risk-passport",
+        title: "Open Risk Passport",
+        description: "Review and refresh contractor risk profiles.",
+        keywords: ["risk", "contractor", "passport"],
+        contexts: ["dashboard", "contractors"],
+      },
+    );
   }
 
   if (canManageContractors) {
@@ -190,6 +264,14 @@ export default async function AdminLayout({
         title: "Open Settings",
         description: "Adjust compliance and policy options.",
         keywords: ["settings", "compliance", "policy"],
+        contexts: ["settings", "dashboard"],
+      },
+      {
+        id: "plan-configurator",
+        href: "/admin/plan-configurator",
+        title: "Open Plan Configurator",
+        description: "Schedule and apply modular plan changes.",
+        keywords: ["plan", "pricing", "entitlements"],
         contexts: ["settings", "dashboard"],
       },
     );
@@ -282,6 +364,9 @@ export default async function AdminLayout({
               <NavLink href="/admin/command-mode">Command Mode</NavLink>
             </li>
             <li>
+              <NavLink href="/admin/communications">Communications Hub</NavLink>
+            </li>
+            <li>
               <NavLink href="/admin/history">Sign-In History</NavLink>
             </li>
             <li>
@@ -303,6 +388,30 @@ export default async function AdminLayout({
               )}
             </li>
             <li>
+              <NavLink href="/admin/permits">Permit-to-Work</NavLink>
+            </li>
+            <li>
+              <NavLink href="/admin/approvals">Approvals</NavLink>
+            </li>
+            <li>
+              <NavLink href="/admin/integrations/channels">Teams/Slack</NavLink>
+            </li>
+            <li>
+              <NavLink href="/admin/mobile">Mobile Ops</NavLink>
+            </li>
+            <li>
+              <NavLink href="/admin/access-ops">Access Ops</NavLink>
+            </li>
+            <li>
+              <NavLink href="/admin/evidence">Evidence Packs</NavLink>
+            </li>
+            <li>
+              <NavLink href="/admin/policy-simulator">Policy Simulator</NavLink>
+            </li>
+            <li>
+              <NavLink href="/admin/risk-passport">Risk Passport</NavLink>
+            </li>
+            <li>
               <NavLink href="/admin/templates">Templates</NavLink>
             </li>
             {user.role === "ADMIN" && (
@@ -320,6 +429,9 @@ export default async function AdminLayout({
                 </li>
                 <li>
                   <NavLink href="/admin/settings">Settings</NavLink>
+                </li>
+                <li>
+                  <NavLink href="/admin/plan-configurator">Plan Configurator</NavLink>
                 </li>
               </>
             )}

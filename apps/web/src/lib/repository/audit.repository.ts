@@ -91,6 +91,7 @@ export type AuditAction =
   | "emergency.rollcall.mark_all_accounted"
   | "emergency.rollcall.close"
   | "emergency.rollcall.export"
+  | "emergency.rollcall.evidence_export"
   // Incident actions
   | "incident.create"
   | "incident.resolve"

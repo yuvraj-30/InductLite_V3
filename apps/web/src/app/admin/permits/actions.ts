@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { assertOrigin, checkPermission } from "@/lib/auth";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 import { createAuditLog } from "@/lib/repository/audit.repository";
 import {
@@ -78,6 +79,13 @@ const prequalificationSchema = z.object({
 });
 
 async function ensurePermitFeatures(companyId: string): Promise<PermitActionResult | null> {
+  if (!isFeatureEnabled("PERMITS_V1")) {
+    return {
+      success: false,
+      error: "Permit workflows are disabled by rollout flag (CONTROL_ID: FLAG-ROLLOUT-001)",
+    };
+  }
+
   try {
     await assertCompanyFeatureEnabled(companyId, "PERMITS_V1");
     return null;

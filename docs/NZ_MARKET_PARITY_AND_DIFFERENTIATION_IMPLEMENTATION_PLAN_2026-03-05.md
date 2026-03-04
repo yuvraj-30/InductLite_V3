@@ -429,3 +429,26 @@ This plan is aligned to:
 4. Runbooks published for permits, emergency comms, integrations, and incident rollback.
 5. Sales enablement updated with Standard/Plus/Pro/add-on boundaries and customer-facing value narrative.
 
+## Implementation Closure Notes (2026-03-05)
+1. Phase 0 foundation controls are in place:
+   - Feature flags and entitlement keys are enforced server-side.
+   - New quota env vars are validated and control IDs are wired in guardrail responses.
+2. Phase 1 market-parity core is implemented:
+   - Permit-to-work templates, lifecycle, prequalification, and sign-in gating are active.
+   - Approval policy, watchlist screening, random checks, and identity verification records are active.
+   - Approval queue now includes SLA aging indicators.
+3. Phase 2 communications/collaboration is implemented:
+   - Unified communications hub, command-mode broadcast composer, ACK flow, and channel delivery diagnostics are active.
+   - Site-level broadcast timeline now includes pending-recipient SLA timers.
+   - Roll-call export now includes an incident evidence bundle (`/api/rollcall/[eventId]/evidence`) with related broadcasts, recipients, and communication events.
+4. Phase 3 mobile/access operations is implemented:
+   - Mobile push subscriptions, auto checkout assist hints, and access decision trace/outage operations are active.
+   - Command mode now includes a permit board widget for live operational context.
+5. Phase 4 differentiation is implemented:
+   - Tamper-evident evidence manifests + verifier API are active.
+   - Policy simulator scenario/run/export flow is active.
+   - Risk passport now includes incident and quiz-failure signals in score computation plus contractor/site trend visibility.
+   - Plan configurator scheduling/history/apply flow is active.
+6. Validation status:
+   - Passing: `npm run -w apps/web typecheck`, `npm run -w apps/web lint`, `npm run -w apps/web test`, `npm run -w apps/web test:integration`.
+   - Stable E2E still has known flaky/VRT failures in cross-browser/mobile lanes (7 failing, 7 skipped, 8 not run in latest run).

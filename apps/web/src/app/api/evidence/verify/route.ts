@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { isFeatureEnabled } from "@/lib/feature-flags";
+import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 import {
   computeEvidenceHashRoot,
   verifyEvidenceSignature,
@@ -48,6 +50,35 @@ function runVerification(input: {
   };
 }
 
+async function ensureVerificationEnabled(companyId: string): Promise<NextResponse | null> {
+  if (!isFeatureEnabled("EVIDENCE_TAMPER_V1")) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Evidence verification is disabled by rollout flag (CONTROL_ID: FLAG-ROLLOUT-001)",
+      },
+      { status: 403 },
+    );
+  }
+
+  try {
+    await assertCompanyFeatureEnabled(companyId, "EVIDENCE_TAMPER_V1");
+    return null;
+  } catch (error) {
+    if (error instanceof EntitlementDeniedError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Evidence verification is not enabled for this plan (CONTROL_ID: PLAN-ENTITLEMENT-001)",
+        },
+        { status: 403 },
+      );
+    }
+    throw error;
+  }
+}
+
 export async function GET(request: NextRequest) {
   const parsed = verificationSchema.safeParse({
     companyId: request.nextUrl.searchParams.get("companyId") ?? "",
@@ -65,6 +96,9 @@ export async function GET(request: NextRequest) {
       { status: 400 },
     );
   }
+
+  const disabledResponse = await ensureVerificationEnabled(parsed.data.companyId);
+  if (disabledResponse) return disabledResponse;
 
   const result = runVerification(parsed.data);
   return NextResponse.json({ success: true, ...result });
@@ -91,6 +125,9 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
+
+  const disabledResponse = await ensureVerificationEnabled(parsed.data.companyId);
+  if (disabledResponse) return disabledResponse;
 
   const result = runVerification(parsed.data);
   return NextResponse.json({ success: true, ...result });

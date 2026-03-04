@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { checkPermissionReadOnly } from "@/lib/auth";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 import { findAllSites } from "@/lib/repository/site.repository";
@@ -25,6 +26,17 @@ export default async function CommunicationsPage() {
   }
 
   const context = await requireAuthenticatedContextReadOnly();
+  if (!isFeatureEnabled("EMERGENCY_COMMS_V1")) {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold text-gray-900">Communications</h1>
+        <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          Emergency communication workflows are disabled by rollout flag (CONTROL_ID: FLAG-ROLLOUT-001).
+        </p>
+      </div>
+    );
+  }
+
   try {
     await assertCompanyFeatureEnabled(context.companyId, "EMERGENCY_COMMS_V1");
   } catch (error) {
@@ -58,6 +70,7 @@ export default async function CommunicationsPage() {
       await listBroadcastRecipients(context.companyId, broadcast.id),
     );
   }
+  const nowTs = Date.now();
 
   return (
     <div className="space-y-6 p-6">
@@ -157,6 +170,17 @@ export default async function CommunicationsPage() {
               const acknowledgedCount = recipients.filter(
                 (recipient) => recipient.status === "ACKNOWLEDGED",
               ).length;
+              const pendingCount = recipients.length - acknowledgedCount;
+              const elapsedMinutes = Math.max(
+                0,
+                Math.floor((nowTs - broadcast.started_at.getTime()) / 60000),
+              );
+              const slaClass =
+                pendingCount > 0 && elapsedMinutes > 30
+                  ? "bg-red-100 text-red-800"
+                  : pendingCount > 0
+                    ? "bg-amber-100 text-amber-800"
+                    : "bg-emerald-100 text-emerald-800";
               return (
                 <article key={broadcast.id} className="rounded-md border border-gray-200 p-3">
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -169,9 +193,15 @@ export default async function CommunicationsPage() {
                         {broadcast.started_at.toLocaleString("en-NZ")}
                       </p>
                     </div>
-                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
-                      Recipients: {recipients.length} | Ack: {acknowledgedCount}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-700">
+                        Recipients: {recipients.length} | Ack: {acknowledgedCount} | Pending:{" "}
+                        {pendingCount}
+                      </span>
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${slaClass}`}>
+                        SLA {elapsedMinutes}m
+                      </span>
+                    </div>
                   </div>
                   <p className="mt-2 text-sm text-gray-700">{broadcast.message}</p>
                 </article>

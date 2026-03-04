@@ -14,6 +14,7 @@ import {
   findSiteByPublicSlug,
   listSiteManagerNotificationRecipients,
 } from "@/lib/repository/site.repository";
+import { findContractorByEmail } from "@/lib/repository/contractor.repository";
 import { getActiveTemplateForSite } from "@/lib/repository/template.repository";
 import {
   createPublicSignIn,
@@ -40,6 +41,7 @@ import {
   listSiteEmergencyContacts,
   listSiteEmergencyProcedures,
 } from "@/lib/repository/emergency.repository";
+import { findContractorRiskScore } from "@/lib/repository/risk-passport.repository";
 import {
   findRequiredPermitTemplateForSite,
   findActivePermitForVisitor,
@@ -2018,12 +2020,53 @@ export async function submitSignIn(
               approvalPolicy.random_check_percentage,
             );
 
-            if (watchlistMatch.matched || randomCheck) {
+            let riskTrigger = false;
+            let riskContext:
+              | {
+                  contractor_id: string;
+                  threshold_state: string;
+                  current_score: number;
+                }
+              | null = null;
+            if (FEATURE_FLAGS.RISK_PASSPORT_V1 && parsed.data.visitorEmail?.trim()) {
+              try {
+                await assertCompanyFeatureEnabled(
+                  site.company.id,
+                  "RISK_PASSPORT_V1",
+                  site.id,
+                );
+                const contractor = await findContractorByEmail(
+                  site.company.id,
+                  parsed.data.visitorEmail.trim(),
+                );
+                if (contractor) {
+                  const riskScore = await findContractorRiskScore(site.company.id, {
+                    contractor_id: contractor.id,
+                    site_id: site.id,
+                  });
+                  if (riskScore?.threshold_state === "HIGH") {
+                    riskTrigger = true;
+                    riskContext = {
+                      contractor_id: contractor.id,
+                      threshold_state: riskScore.threshold_state ?? "HIGH",
+                      current_score: riskScore.current_score,
+                    };
+                  }
+                }
+              } catch (error) {
+                if (!(error instanceof EntitlementDeniedError)) {
+                  throw error;
+                }
+              }
+            }
+
+            if (watchlistMatch.matched || randomCheck || riskTrigger) {
               const reasons = [
                 ...(watchlistMatch.matched
                   ? [`watchlist-match(${watchlistMatch.reasons.join(",")})`]
                   : []),
                 ...(randomCheck ? ["random-check"] : []),
+                ...(riskTrigger ? ["risk-threshold-high"] : []),
               ];
 
               const approvalRequest = await createVisitorApprovalRequest(
@@ -2062,6 +2105,8 @@ export async function submitSignIn(
                   watchlist_match: watchlistMatch.matched,
                   watchlist_reasons: watchlistMatch.reasons,
                   random_check_triggered: randomCheck,
+                  risk_threshold_triggered: riskTrigger,
+                  risk_context: riskContext,
                   policy_id: approvalPolicy.id,
                 },
                 ip_address: ip,
@@ -2084,6 +2129,8 @@ export async function submitSignIn(
                   approvalRequestId: approvalRequest.id,
                   randomCheck,
                   watchlistMatch: watchlistMatch.matched,
+                  riskThreshold: riskTrigger,
+                  riskContext,
                 },
               });
 

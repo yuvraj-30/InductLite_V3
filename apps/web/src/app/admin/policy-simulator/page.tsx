@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { checkPermissionReadOnly } from "@/lib/auth";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
@@ -211,12 +212,13 @@ export default async function PolicySimulatorPage({ searchParams }: PolicySimula
                 <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Blocked Est.</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Approval Load</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">False Positives</th>
+                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Export</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
               {runs.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-3 py-3 text-sm text-gray-500">No simulation runs yet.</td>
+                  <td colSpan={6} className="px-3 py-3 text-sm text-gray-500">No simulation runs yet.</td>
                 </tr>
               ) : (
                 runs.map((run) => {
@@ -238,6 +240,18 @@ export default async function PolicySimulatorPage({ searchParams }: PolicySimula
                       </td>
                       <td className="px-3 py-3 text-sm text-gray-700">
                         {result ? result.false_positive_estimate : "-"}
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        {result ? (
+                          <Link
+                            href={`/api/policy-simulator/runs/${run.id}/export`}
+                            className="rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                          >
+                            Download JSON
+                          </Link>
+                        ) : (
+                          <span className="text-xs text-gray-500">Pending</span>
+                        )}
                       </td>
                     </tr>
                   );

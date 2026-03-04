@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { checkPermissionReadOnly } from "@/lib/auth";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 import { findAllSites } from "@/lib/repository/site.repository";
@@ -31,6 +32,17 @@ export default async function ApprovalsPage() {
 
   const context = await requireAuthenticatedContextReadOnly();
 
+  if (!isFeatureEnabled("ID_HARDENING_V1")) {
+    return (
+      <div className="p-6">
+        <h1 className="text-2xl font-bold text-gray-900">Approvals & Identity</h1>
+        <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          Approval/identity workflows are disabled by rollout flag (CONTROL_ID: FLAG-ROLLOUT-001).
+        </p>
+      </div>
+    );
+  }
+
   try {
     await assertCompanyFeatureEnabled(context.companyId, "VISITOR_APPROVALS_V1");
     await assertCompanyFeatureEnabled(context.companyId, "ID_HARDENING_V1");
@@ -60,6 +72,7 @@ export default async function ApprovalsPage() {
     ]);
 
   const templates = templatesPage.items;
+  const nowTs = Date.now();
 
   return (
     <div className="space-y-6 p-6">
@@ -165,6 +178,9 @@ export default async function ApprovalsPage() {
                 <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
                   Reason
                 </th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  SLA
+                </th>
                 <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
                   Decision
                 </th>
@@ -173,7 +189,7 @@ export default async function ApprovalsPage() {
             <tbody className="divide-y divide-gray-200 bg-white">
               {requests.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-3 py-3 text-sm text-gray-500">
+                  <td colSpan={6} className="px-3 py-3 text-sm text-gray-500">
                     No approval requests yet.
                   </td>
                 </tr>
@@ -191,6 +207,25 @@ export default async function ApprovalsPage() {
                     </td>
                     <td className="px-3 py-3 text-sm text-gray-700">{request.status}</td>
                     <td className="px-3 py-3 text-sm text-gray-700">{request.reason}</td>
+                    <td className="px-3 py-3 text-sm text-gray-700">
+                      {(() => {
+                        const queuedMinutes = Math.max(
+                          0,
+                          Math.floor((nowTs - request.requested_at.getTime()) / 60000),
+                        );
+                        const badgeClass =
+                          queuedMinutes > 30
+                            ? "bg-red-100 text-red-800"
+                            : queuedMinutes > 15
+                              ? "bg-amber-100 text-amber-800"
+                              : "bg-emerald-100 text-emerald-800";
+                        return (
+                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${badgeClass}`}>
+                            {queuedMinutes}m
+                          </span>
+                        );
+                      })()}
+                    </td>
                     <td className="px-3 py-3 text-right">
                       {request.status === "PENDING" ? (
                         <div className="flex flex-wrap justify-end gap-2">

@@ -245,6 +245,23 @@ export async function listPolicySimulationRuns(
   }
 }
 
+export async function findPolicySimulationRunById(
+  companyId: string,
+  runId: string,
+): Promise<PolicySimulationRun | null> {
+  requireCompanyId(companyId);
+  if (!runId.trim()) return null;
+
+  try {
+    const db = scopedDb(companyId);
+    return await db.policySimulationRun.findFirst({
+      where: { id: runId },
+    });
+  } catch (error) {
+    handlePrismaError(error, "PolicySimulationRun");
+  }
+}
+
 export async function findPolicySimulationResultByRunId(
   companyId: string,
   runId: string,

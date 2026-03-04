@@ -15,6 +15,8 @@ const mocks = vi.hoisted(() => {
     assertCompanyFeatureEnabled: vi.fn(),
     queueOutboundWebhookDeliveries: vi.fn(),
     createAuditLog: vi.fn(),
+    createAccessDecisionTrace: vi.fn(),
+    createHardwareOutageEvent: vi.fn(),
     EntitlementDeniedError: TestEntitlementDeniedError,
   };
 });
@@ -32,6 +34,11 @@ vi.mock("@/lib/repository/audit.repository", () => ({
   createAuditLog: mocks.createAuditLog,
 }));
 
+vi.mock("@/lib/repository/hardware-trace.repository", () => ({
+  createAccessDecisionTrace: mocks.createAccessDecisionTrace,
+  createHardwareOutageEvent: mocks.createHardwareOutageEvent,
+}));
+
 import { queueHardwareAccessDecision } from "../adapter";
 
 describe("hardware adapter queue", () => {
@@ -40,6 +47,8 @@ describe("hardware adapter queue", () => {
     mocks.assertCompanyFeatureEnabled.mockResolvedValue(undefined);
     mocks.queueOutboundWebhookDeliveries.mockResolvedValue(1);
     mocks.createAuditLog.mockResolvedValue(undefined);
+    mocks.createAccessDecisionTrace.mockResolvedValue(undefined);
+    mocks.createHardwareOutageEvent.mockResolvedValue(undefined);
   });
 
   it("queues decision when target is configured and entitlement allows", async () => {

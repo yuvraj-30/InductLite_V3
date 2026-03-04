@@ -4,6 +4,7 @@ import { randomUUID } from "crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { assertOrigin, checkPermission } from "@/lib/auth";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import { generateRequestId } from "@/lib/auth/csrf";
 import { createRequestLogger } from "@/lib/logger";
 import { checkAdminMutationRateLimit } from "@/lib/rate-limit";
@@ -12,6 +13,8 @@ import { listCurrentlyOnSite } from "@/lib/repository/signin.repository";
 import { queueEmailNotification } from "@/lib/repository/email.repository";
 import { sendSmsWithQuota } from "@/lib/sms/wrapper";
 import {
+  countCommunicationEventsSince,
+  countEmergencyBroadcastsSince,
   createBroadcastRecipient,
   createChannelDelivery,
   createCommunicationEvent,
@@ -19,6 +22,7 @@ import {
   findChannelIntegrationConfigById,
   listChannelIntegrationConfigs,
   markChannelDeliveryStatus,
+  updateBroadcastRecipientStatus,
 } from "@/lib/repository/communication.repository";
 import { createAuditLog } from "@/lib/repository/audit.repository";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
@@ -47,6 +51,14 @@ function parseOptionalDate(value: string): Date | undefined {
   if (!trimmed) return undefined;
   const parsed = new Date(trimmed);
   return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+}
+
+function startOfUtcDay(now: Date): Date {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+}
+
+function startOfUtcMonth(now: Date): Date {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 }
 
 function parseCsvChannels(value: string): BroadcastChannel[] {
@@ -99,6 +111,14 @@ async function authorizeMutation(): Promise<
 async function ensureEmergencyFeatures(
   companyId: string,
 ): Promise<CommunicationActionResult | null> {
+  if (!isFeatureEnabled("EMERGENCY_COMMS_V1")) {
+    return {
+      success: false,
+      error:
+        "Emergency communication workflows are disabled by rollout flag (CONTROL_ID: FLAG-ROLLOUT-001)",
+    };
+  }
+
   try {
     await assertCompanyFeatureEnabled(companyId, "EMERGENCY_COMMS_V1");
     await assertCompanyFeatureEnabled(companyId, "COMMUNICATION_HUB_V1");
@@ -122,6 +142,9 @@ function getBroadcastLimits() {
   const maxRecipientsPerEvent = Number(
     process.env.MAX_BROADCAST_RECIPIENTS_PER_EVENT ?? 500,
   );
+  const maxPushNotificationsPerMonth = Number(
+    process.env.MAX_PUSH_NOTIFICATIONS_PER_COMPANY_PER_MONTH ?? 2000,
+  );
   return {
     maxBroadcastsPerDay: Number.isFinite(maxBroadcastsPerDay)
       ? Math.max(1, Math.trunc(maxBroadcastsPerDay))
@@ -129,6 +152,9 @@ function getBroadcastLimits() {
     maxRecipientsPerEvent: Number.isFinite(maxRecipientsPerEvent)
       ? Math.max(1, Math.trunc(maxRecipientsPerEvent))
       : 500,
+    maxPushNotificationsPerMonth: Number.isFinite(maxPushNotificationsPerMonth)
+      ? Math.max(1, Math.trunc(maxPushNotificationsPerMonth))
+      : 2000,
   };
 }
 
@@ -228,18 +254,59 @@ export async function createEmergencyBroadcastAction(
   });
 
   try {
-    const { maxRecipientsPerEvent } = getBroadcastLimits();
+    const {
+      maxBroadcastsPerDay,
+      maxRecipientsPerEvent,
+      maxPushNotificationsPerMonth,
+    } = getBroadcastLimits();
+
+    const todaysBroadcastCount = await countEmergencyBroadcastsSince(auth.companyId, {
+      since: startOfUtcDay(new Date()),
+      site_id: parsed.data.siteId || undefined,
+    });
+    if (todaysBroadcastCount >= maxBroadcastsPerDay) {
+      return {
+        success: false,
+        error: `Daily broadcast limit reached (${maxBroadcastsPerDay}/day, CONTROL_ID: MSG-003)`,
+      };
+    }
+
     const activeRecords = await listCurrentlyOnSite(
       auth.companyId,
       parsed.data.siteId || undefined,
-      maxRecipientsPerEvent,
+      maxRecipientsPerEvent + 1,
     );
+    if (activeRecords.length > maxRecipientsPerEvent) {
+      return {
+        success: false,
+        error:
+          `Recipient limit exceeded (${maxRecipientsPerEvent}/event, CONTROL_ID: MSG-004). ` +
+          "Please narrow the site scope.",
+      };
+    }
 
     if (activeRecords.length === 0) {
       return {
         success: false,
         error: "No active attendees found for the selected scope",
       };
+    }
+
+    const pushRequested = parsed.data.channels.includes("WEB_PUSH");
+    let monthlyPushUsed = 0;
+    if (pushRequested) {
+      monthlyPushUsed = await countCommunicationEventsSince(auth.companyId, {
+        since: startOfUtcMonth(new Date()),
+        event_type: "broadcast.push.queued",
+      });
+      if (monthlyPushUsed >= maxPushNotificationsPerMonth) {
+        return {
+          success: false,
+          error:
+            `Monthly push quota reached (${maxPushNotificationsPerMonth}/month, ` +
+            "CONTROL_ID: MSG-005)",
+        };
+      }
     }
 
     const broadcast = await createEmergencyBroadcast(auth.companyId, {
@@ -274,6 +341,7 @@ export async function createEmergencyBroadcastAction(
       auth.companyId,
       parsed.data.siteId || undefined,
     );
+    let monthlyPushQueued = 0;
 
     for (const attendee of activeRecords) {
       for (const channel of parsed.data.channels) {
@@ -335,12 +403,37 @@ export async function createEmergencyBroadcastAction(
             status: smsResult.status,
           });
         } else if (channel === "WEB_PUSH") {
+          if (monthlyPushUsed + monthlyPushQueued >= maxPushNotificationsPerMonth) {
+            await updateBroadcastRecipientStatus(auth.companyId, {
+              recipient_id: recipient.id,
+              status: "FAILED",
+              error_message:
+                `Monthly push quota exceeded (${maxPushNotificationsPerMonth}/month, ` +
+                "CONTROL_ID: MSG-005)",
+            });
+            await createCommunicationEvent(auth.companyId, {
+              site_id: attendee.site_id,
+              broadcast_id: broadcast.id,
+              direction: "SYSTEM",
+              channel: "WEB_PUSH",
+              event_type: "broadcast.push.denied",
+              payload: {
+                recipient_id: recipient.id,
+                control_id: "MSG-005",
+                monthly_limit: maxPushNotificationsPerMonth,
+              },
+              status: "denied",
+            });
+            continue;
+          }
+
+          monthlyPushQueued += 1;
           await createCommunicationEvent(auth.companyId, {
             site_id: attendee.site_id,
             broadcast_id: broadcast.id,
             direction: "OUTBOUND",
             channel: "WEB_PUSH",
-            event_type: "broadcast.push.placeholder",
+            event_type: "broadcast.push.queued",
             payload: {
               recipient_id: recipient.id,
               visitor_name: attendee.visitor_name,

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { assertOrigin } from "@/lib/auth/csrf";
+import { isFeatureEnabled } from "@/lib/feature-flags";
+import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 import {
   deactivateDeviceSubscription,
@@ -33,6 +35,31 @@ export async function POST(request: NextRequest) {
     context = await requireAuthenticatedContextReadOnly();
   } catch {
     return NextResponse.json({ success: false, error: "Authentication required" }, { status: 401 });
+  }
+
+  if (!isFeatureEnabled("PWA_PUSH_V1")) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Push subscriptions are disabled by rollout flag (CONTROL_ID: FLAG-ROLLOUT-001)",
+      },
+      { status: 403 },
+    );
+  }
+  try {
+    await assertCompanyFeatureEnabled(context.companyId, "PWA_PUSH_V1");
+  } catch (error) {
+    if (error instanceof EntitlementDeniedError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Push subscriptions are not enabled for this plan (CONTROL_ID: PLAN-ENTITLEMENT-001)",
+        },
+        { status: 403 },
+      );
+    }
+    throw error;
   }
 
   let payload: PushSubscriptionPayload;
@@ -92,6 +119,31 @@ export async function DELETE(request: NextRequest) {
     context = await requireAuthenticatedContextReadOnly();
   } catch {
     return NextResponse.json({ success: false, error: "Authentication required" }, { status: 401 });
+  }
+
+  if (!isFeatureEnabled("PWA_PUSH_V1")) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Push subscriptions are disabled by rollout flag (CONTROL_ID: FLAG-ROLLOUT-001)",
+      },
+      { status: 403 },
+    );
+  }
+  try {
+    await assertCompanyFeatureEnabled(context.companyId, "PWA_PUSH_V1");
+  } catch (error) {
+    if (error instanceof EntitlementDeniedError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            "Push subscriptions are not enabled for this plan (CONTROL_ID: PLAN-ENTITLEMENT-001)",
+        },
+        { status: 403 },
+      );
+    }
+    throw error;
   }
 
   let payload: { endpoint?: string };
