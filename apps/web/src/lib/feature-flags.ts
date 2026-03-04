@@ -4,9 +4,22 @@ const toBool = (value: string | undefined, fallback: boolean): boolean => {
 };
 
 export const FEATURE_FLAGS = {
+  // Global kill switches.
   EXPORTS: toBool(process.env.FEATURE_EXPORTS_ENABLED, true),
   UPLOADS: toBool(process.env.FEATURE_UPLOADS_ENABLED, true),
+  PUBLIC_SIGNIN: toBool(process.env.FEATURE_PUBLIC_SIGNIN_ENABLED, true),
   VISUAL_REGRESSION: toBool(process.env.FEATURE_VISUAL_REGRESSION_ENABLED, false),
+
+  // Market parity + differentiation rollout flags.
+  PERMITS_V1: toBool(process.env.FF_PERMITS_V1, false),
+  ID_HARDENING_V1: toBool(process.env.FF_ID_HARDENING_V1, false),
+  EMERGENCY_COMMS_V1: toBool(process.env.FF_EMERGENCY_COMMS_V1, false),
+  TEAMS_SLACK_V1: toBool(process.env.FF_TEAMS_SLACK_V1, false),
+  PWA_PUSH_V1: toBool(process.env.FF_PWA_PUSH_V1, false),
+  EVIDENCE_TAMPER_V1: toBool(process.env.FF_EVIDENCE_TAMPER_V1, false),
+  POLICY_SIMULATOR_V1: toBool(process.env.FF_POLICY_SIMULATOR_V1, false),
+  RISK_PASSPORT_V1: toBool(process.env.FF_RISK_PASSPORT_V1, false),
+  SELF_SERVE_CONFIG_V1: toBool(process.env.FF_SELF_SERVE_CONFIG_V1, false),
 };
 
 export function isFeatureEnabled(flag: keyof typeof FEATURE_FLAGS): boolean {

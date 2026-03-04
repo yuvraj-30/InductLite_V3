@@ -243,6 +243,179 @@ export type {
   UpdateDemoBookingNotificationInput,
 } from "./demo-booking.repository";
 
+// Permit and prequalification repository
+export {
+  listPermitTemplates,
+  findRequiredPermitTemplateForSite,
+  createPermitTemplate,
+  updatePermitTemplate,
+  listPermitConditions,
+  createPermitCondition,
+  createPermitRequest,
+  listPermitRequests,
+  transitionPermitRequest,
+  createPermitApproval,
+  findActivePermitForVisitor,
+  upsertContractorPrequalification,
+  listContractorPrequalifications,
+  listPermitRequestsExpiringSoon,
+  listContractorPrequalificationsExpiringSoon,
+} from "./permit.repository";
+export type {
+  CreatePermitTemplateInput,
+  CreatePermitConditionInput,
+  CreatePermitRequestInput,
+  ListPermitRequestFilter,
+  TransitionPermitRequestInput,
+  CreatePermitApprovalInput,
+  UpsertContractorPrequalificationInput,
+} from "./permit.repository";
+
+// Visitor approval and identity hardening repository
+export {
+  shouldTriggerRandomCheck,
+  listVisitorApprovalPolicies,
+  findActiveVisitorApprovalPolicy,
+  upsertVisitorApprovalPolicy,
+  createVisitorWatchlistEntry,
+  listVisitorWatchlistEntries,
+  deactivateVisitorWatchlistEntry,
+  matchVisitorAgainstWatchlist,
+  createVisitorApprovalRequest,
+  listVisitorApprovalRequests,
+  findVisitorApprovalRequestByTokenHash,
+  findLatestVisitorApprovalDecision,
+  transitionVisitorApprovalRequest,
+  createIdentityVerificationRecord,
+  listIdentityVerificationRecords,
+} from "./visitor-approval.repository";
+export type {
+  UpsertVisitorApprovalPolicyInput,
+  CreateVisitorWatchlistEntryInput,
+  MatchVisitorAgainstWatchlistInput,
+  CreateVisitorApprovalRequestInput,
+  TransitionVisitorApprovalRequestInput,
+  CreateIdentityVerificationRecordInput,
+  WatchlistMatchResult,
+} from "./visitor-approval.repository";
+
+// Communications and channel integrations repository
+export {
+  createEmergencyBroadcast,
+  listEmergencyBroadcasts,
+  createBroadcastRecipient,
+  listBroadcastRecipients,
+  findBroadcastRecipientByTokenHash,
+  updateBroadcastRecipientStatus,
+  createCommunicationEvent,
+  listCommunicationEvents,
+  findCommunicationEventByStatus,
+  upsertChannelIntegrationConfig,
+  listChannelIntegrationConfigs,
+  findChannelIntegrationConfigById,
+  createChannelDelivery,
+  listChannelDeliveries,
+  markChannelDeliveryStatus,
+  buildBroadcastAckToken,
+} from "./communication.repository";
+export type {
+  CreateEmergencyBroadcastInput,
+  CreateBroadcastRecipientInput,
+  UpdateBroadcastRecipientStatusInput,
+  UpsertChannelIntegrationConfigInput,
+  CreateChannelDeliveryInput,
+} from "./communication.repository";
+
+// Mobile push and presence operations repository
+export {
+  upsertDeviceSubscription,
+  deactivateDeviceSubscription,
+  listActiveDeviceSubscriptions,
+  createPresenceHint,
+  listPresenceHints,
+  resolvePresenceHint,
+} from "./mobile-ops.repository";
+export type {
+  UpsertDeviceSubscriptionInput,
+  CreatePresenceHintInput,
+} from "./mobile-ops.repository";
+
+// Hardware trace and outage repository
+export {
+  createAccessDecisionTrace,
+  updateAccessDecisionTraceAck,
+  listAccessDecisionTraces,
+  createHardwareOutageEvent,
+  resolveHardwareOutageEvent,
+  listHardwareOutageEvents,
+} from "./hardware-trace.repository";
+export type {
+  CreateAccessDecisionTraceInput,
+  UpdateAccessDecisionTraceAckInput,
+  CreateHardwareOutageEventInput,
+} from "./hardware-trace.repository";
+
+// Evidence manifest repository
+export {
+  sha256Hex,
+  computeEvidenceHashRoot,
+  signEvidenceHashRoot,
+  verifyEvidenceSignature,
+  createEvidenceManifest,
+  findEvidenceManifestById,
+  findEvidenceManifestByExportJobId,
+  listEvidenceManifests,
+  createEvidenceArtifact,
+  listEvidenceArtifactsForManifest,
+} from "./evidence.repository";
+export type {
+  CreateEvidenceManifestInput,
+  CreateEvidenceArtifactInput,
+} from "./evidence.repository";
+
+// Policy simulator repository
+export {
+  createPolicySimulation,
+  listPolicySimulations,
+  findPolicySimulationById,
+  createPolicySimulationRun,
+  updatePolicySimulationRunStatus,
+  createPolicySimulationResult,
+  listPolicySimulationRuns,
+  findPolicySimulationResultByRunId,
+  estimatePolicySimulationImpact,
+  countPolicySimulationRunsSince,
+} from "./policy-simulator.repository";
+export type {
+  CreatePolicySimulationInput,
+  RunPolicySimulationInput,
+  PolicySimulationEstimate,
+} from "./policy-simulator.repository";
+
+// Risk passport repository
+export {
+  computeContractorRiskScore,
+  upsertContractorRiskScore,
+  refreshContractorRiskScore,
+  refreshAllContractorRiskScores,
+  listContractorRiskScores,
+  listContractorRiskHistory,
+  countRiskScoreHistorySince,
+} from "./risk-passport.repository";
+export type { ContractorRiskComputation } from "./risk-passport.repository";
+
+// Plan change repository
+export {
+  createPlanChangeRequest,
+  listPlanChangeRequests,
+  createPlanChangeHistoryEntry,
+  schedulePlanChangeRequest,
+  cancelPlanChangeRequest,
+  applyDuePlanChanges,
+  listPlanChangeHistory,
+} from "./plan-change.repository";
+export type { CreatePlanChangeRequestInput } from "./plan-change.repository";
+
 // Audit repository
 export {
   createAuditLog,

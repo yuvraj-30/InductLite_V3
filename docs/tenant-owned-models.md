@@ -1,7 +1,7 @@
 # Tenant Owned Models
 
 Version: `v3`
-Updated: `2026-02-22`
+Updated: `2026-03-05`
 Source: `apps/web/prisma/schema.prisma`
 
 This file is the canonical `TENANT_OWNED_MODELS` registry.
@@ -27,6 +27,33 @@ Manual edits are not allowed.
 - `IncidentReport`
 - `EmergencyDrill`
 - `LegalDocumentVersion`
+- `PermitTemplate`
+- `PermitCondition`
+- `PermitRequest`
+- `PermitApproval`
+- `ContractorPrequalification`
+- `VisitorApprovalPolicy`
+- `VisitorApprovalRequest`
+- `VisitorWatchlistEntry`
+- `IdentityVerificationRecord`
+- `EmergencyBroadcast`
+- `BroadcastRecipient`
+- `CommunicationEvent`
+- `ChannelIntegrationConfig`
+- `ChannelDelivery`
+- `DeviceSubscription`
+- `PresenceHint`
+- `AccessDecisionTrace`
+- `HardwareOutageEvent`
+- `EvidenceManifest`
+- `EvidenceArtifact`
+- `PolicySimulation`
+- `PolicySimulationRun`
+- `PolicySimulationResult`
+- `ContractorRiskScore`
+- `RiskScoreHistory`
+- `PlanChangeRequest`
+- `PlanChangeHistory`
 
 ## Child Models Without `company_id` (Parent-Scoped Only)
 

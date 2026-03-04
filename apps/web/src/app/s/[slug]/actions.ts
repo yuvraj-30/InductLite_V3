@@ -41,6 +41,17 @@ import {
   listSiteEmergencyProcedures,
 } from "@/lib/repository/emergency.repository";
 import {
+  findRequiredPermitTemplateForSite,
+  findActivePermitForVisitor,
+} from "@/lib/repository/permit.repository";
+import {
+  createVisitorApprovalRequest,
+  findActiveVisitorApprovalPolicy,
+  findLatestVisitorApprovalDecision,
+  matchVisitorAgainstWatchlist,
+  shouldTriggerRandomCheck,
+} from "@/lib/repository/visitor-approval.repository";
+import {
   buildConsentStatement,
   getOrCreateActiveLegalVersions,
 } from "@/lib/legal/consent-versioning";
@@ -93,6 +104,7 @@ import {
   parseAccessControlConfig,
   verifyGeofenceOverrideCode,
 } from "@/lib/access-control/config";
+import { FEATURE_FLAGS } from "@/lib/feature-flags";
 import { queueHardwareAccessDecision } from "@/lib/hardware/adapter";
 import { sendSmsWithQuota } from "@/lib/sms/wrapper";
 import { resolveWebhookTargetsForEvent } from "@/lib/webhook/config";
@@ -1874,6 +1886,221 @@ export async function submitSignIn(
       }
     }
 
+    let matchedPermitRequestId: string | null = null;
+    if (FEATURE_FLAGS.PERMITS_V1) {
+      let permitsFeatureEnabled = false;
+      try {
+        await assertCompanyFeatureEnabled(site.company.id, "PERMITS_V1", site.id);
+        permitsFeatureEnabled = true;
+      } catch (error) {
+        if (!(error instanceof EntitlementDeniedError)) {
+          throw error;
+        }
+      }
+
+      if (permitsFeatureEnabled) {
+        const requiredPermitTemplate = await findRequiredPermitTemplateForSite(
+          site.company.id,
+          site.id,
+        );
+
+        if (requiredPermitTemplate) {
+          const activePermit = await findActivePermitForVisitor(site.company.id, {
+            site_id: site.id,
+            visitor_phone: formattedPhone,
+            visitor_email: parsed.data.visitorEmail || undefined,
+          });
+
+          if (!activePermit) {
+            await triggerHardwareAccessDecision({
+              companyId: site.company.id,
+              siteId: site.id,
+              siteName: site.name,
+              site,
+              decision: "DENY",
+              reason: "permit_required_missing",
+              visitorName: parsed.data.visitorName,
+              visitorPhoneE164: formattedPhone,
+              requestId,
+              log,
+              metadata: {
+                permitTemplateId: requiredPermitTemplate.id,
+                permitTemplateName: requiredPermitTemplate.name,
+              },
+            });
+
+            return validationErrorResponse(
+              {
+                answers: [
+                  `Active permit required before site entry (${requiredPermitTemplate.name}). Please contact your supervisor.`,
+                ],
+              },
+              "Permit approval required before sign-in",
+            );
+          }
+
+          matchedPermitRequestId = activePermit.id;
+        }
+      }
+    }
+
+    let visitorApprovalRequestId: string | null = null;
+    if (FEATURE_FLAGS.ID_HARDENING_V1) {
+      let approvalFeatureEnabled = false;
+      try {
+        await assertCompanyFeatureEnabled(
+          site.company.id,
+          "VISITOR_APPROVALS_V1",
+          site.id,
+        );
+        await assertCompanyFeatureEnabled(site.company.id, "ID_HARDENING_V1", site.id);
+        approvalFeatureEnabled = true;
+      } catch (error) {
+        if (!(error instanceof EntitlementDeniedError)) {
+          throw error;
+        }
+      }
+
+      if (approvalFeatureEnabled) {
+        const approvalPolicy = await findActiveVisitorApprovalPolicy(
+          site.company.id,
+          site.id,
+        );
+
+        if (approvalPolicy?.is_active) {
+          const latestDecision = await findLatestVisitorApprovalDecision(
+            site.company.id,
+            {
+              site_id: site.id,
+              visitor_phone: formattedPhone,
+              visitor_email: parsed.data.visitorEmail || undefined,
+            },
+          );
+
+          if (latestDecision?.status === "DENIED") {
+            await triggerHardwareAccessDecision({
+              companyId: site.company.id,
+              siteId: site.id,
+              siteName: site.name,
+              site,
+              decision: "DENY",
+              reason: "visitor_approval_denied",
+              visitorName: parsed.data.visitorName,
+              visitorPhoneE164: formattedPhone,
+              requestId,
+              log,
+              metadata: {
+                approvalRequestId: latestDecision.id,
+              },
+            });
+
+            return validationErrorResponse(
+              {
+                answers: [
+                  "A previous visitor approval decision denied entry for this visitor. Please contact reception.",
+                ],
+              },
+              "Visitor approval denied",
+            );
+          }
+
+          if (!latestDecision || latestDecision.status !== "APPROVED") {
+            const watchlistMatch = approvalPolicy.require_watchlist_screening
+              ? await matchVisitorAgainstWatchlist(site.company.id, {
+                  full_name: parsed.data.visitorName,
+                  phone: formattedPhone,
+                  email: parsed.data.visitorEmail || undefined,
+                })
+              : { matched: false, reasons: [] as string[] };
+
+            const randomCheck = shouldTriggerRandomCheck(
+              `${site.id}:${idempotencyKey}:${formattedPhone}`,
+              approvalPolicy.random_check_percentage,
+            );
+
+            if (watchlistMatch.matched || randomCheck) {
+              const reasons = [
+                ...(watchlistMatch.matched
+                  ? [`watchlist-match(${watchlistMatch.reasons.join(",")})`]
+                  : []),
+                ...(randomCheck ? ["random-check"] : []),
+              ];
+
+              const approvalRequest = await createVisitorApprovalRequest(
+                site.company.id,
+                {
+                  site_id: site.id,
+                  visitor_name: parsed.data.visitorName,
+                  visitor_phone: formattedPhone,
+                  visitor_email: parsed.data.visitorEmail || undefined,
+                  employer_name: parsed.data.employerName || undefined,
+                  visitor_type: parsed.data.visitorType,
+                  reason: `identity-hardening:${reasons.join("|")}`,
+                  policy_id: approvalPolicy.id,
+                  random_check_triggered: randomCheck,
+                  watchlist_match: watchlistMatch.matched,
+                  watchlist_entry_id: watchlistMatch.matched_entry?.id,
+                  token_seed: idempotencyKey,
+                },
+              );
+              visitorApprovalRequestId = approvalRequest.id;
+
+              const [ip, userAgent] = await Promise.all([
+                getClientIp(),
+                getUserAgent(),
+              ]);
+              await createAuditLog(site.company.id, {
+                action: "visitor.approval_required",
+                entity_type: "VisitorApprovalRequest",
+                entity_id: approvalRequest.id,
+                user_id: undefined,
+                details: {
+                  site_id: site.id,
+                  visitor_name: parsed.data.visitorName,
+                  visitor_phone: formattedPhone,
+                  visitor_email: parsed.data.visitorEmail || null,
+                  watchlist_match: watchlistMatch.matched,
+                  watchlist_reasons: watchlistMatch.reasons,
+                  random_check_triggered: randomCheck,
+                  policy_id: approvalPolicy.id,
+                },
+                ip_address: ip,
+                user_agent: userAgent,
+                request_id: requestId,
+              });
+
+              await triggerHardwareAccessDecision({
+                companyId: site.company.id,
+                siteId: site.id,
+                siteName: site.name,
+                site,
+                decision: "DENY",
+                reason: "visitor_approval_pending",
+                visitorName: parsed.data.visitorName,
+                visitorPhoneE164: formattedPhone,
+                requestId,
+                log,
+                metadata: {
+                  approvalRequestId: approvalRequest.id,
+                  randomCheck,
+                  watchlistMatch: watchlistMatch.matched,
+                },
+              });
+
+              return validationErrorResponse(
+                {
+                  answers: [
+                    `Manual approval required before entry (ref ${approvalRequest.id.slice(0, 8)}).`,
+                  ],
+                },
+                "Visitor approval required before sign-in",
+              );
+            }
+          }
+        }
+      }
+    }
+
     const triggeredRedFlagQuestions = findTriggeredRedFlagQuestions(
       template.questions,
       parsed.data.answers,
@@ -2065,6 +2292,8 @@ export async function submitSignIn(
               hostNotificationDelivery.featureEnabled,
             host_notification_targets: hostNotificationDelivery.targets,
             host_notifications_queued: hostNotificationDelivery.queued,
+            permit_request_id: matchedPermitRequestId,
+            visitor_approval_request_id: visitorApprovalRequestId,
           },
           ip_address: ip,
           user_agent: userAgent,
@@ -2436,6 +2665,8 @@ export async function submitSignIn(
         host_notifications_enabled: hostNotificationDelivery.featureEnabled,
         host_notification_targets: hostNotificationDelivery.targets,
         host_notifications_queued: hostNotificationDelivery.queued,
+        permit_request_id: matchedPermitRequestId,
+        visitor_approval_request_id: visitorApprovalRequestId,
       },
       ip_address: ip,
       user_agent: userAgent,

@@ -46,6 +46,11 @@ This file is the machine-checkable registry for MUST-level controls.
 | COMP-003 | N/A | compliance settings changes must emit immutable audit event (`settings.update`) | N/A | `apps/web/src/app/admin/settings/actions.ts` + `apps/web/src/lib/repository/audit.repository.ts` | unit-admin-settings-actions | Security |
 | MSG-001 | MAX_EMAILS_PER_COMPANY_PER_MONTH | 500 | 500/2000/10000 | centralized message wrapper | guardrails-messaging-caps | Backend |
 | MSG-002 | MAX_EMAILS_GLOBAL_PER_DAY | 2000 | 2000/8000/40000 | centralized message wrapper | guardrails-messaging-caps | Backend |
+| MSG-003 | MAX_BROADCASTS_PER_COMPANY_PER_DAY | 3 | 3/10/50 | emergency broadcast admission checks | guardrails-broadcast-caps | Backend |
+| MSG-004 | MAX_BROADCAST_RECIPIENTS_PER_EVENT | 500 | 500/2000/10000 | emergency broadcast orchestration | guardrails-broadcast-caps | Backend |
+| MSG-005 | MAX_PUSH_NOTIFICATIONS_PER_COMPANY_PER_MONTH | 2000 | 2000/10000/50000 | push notification wrapper | guardrails-push-caps | Backend |
+| SIM-001 | MAX_POLICY_SIM_RUNS_PER_COMPANY_PER_DAY | 10 | 10/50/200 | policy simulator runner admission checks | guardrails-policy-sim-caps | Platform |
+| RISK-001 | MAX_RISK_SCORE_RECALC_JOBS_PER_DAY | 24 | 24/96/500 | risk scoring job scheduler | guardrails-risk-score-caps | Platform |
 | TENANT-001 | N/A | scopedDb only | N/A | repository and static analysis rules | guardrails-tenant-scope | Security |
 | TENANT-002 | N/A | tenant model registry required | N/A | `docs/tenant-owned-models.md` CI check | guardrails-tenant-model-registry | Security |
 | TENANT-003 | MAX_TENANT_STORAGE_GB | 5 | 5/plan-override/plan-override | quota admission checks | guardrails-tenant-quota-check | Platform |

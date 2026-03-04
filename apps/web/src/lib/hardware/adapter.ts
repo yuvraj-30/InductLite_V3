@@ -2,9 +2,14 @@ import {
   hasHardwareAccessTarget,
   parseAccessControlConfig,
 } from "@/lib/access-control/config";
+import { randomUUID } from "crypto";
 import type { Prisma } from "@prisma/client";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 import { createAuditLog } from "@/lib/repository/audit.repository";
+import {
+  createAccessDecisionTrace,
+  createHardwareOutageEvent,
+} from "@/lib/repository/hardware-trace.repository";
 import { queueOutboundWebhookDeliveries } from "@/lib/repository/webhook-delivery.repository";
 
 export type HardwareAccessDecision = "ALLOW" | "DENY";
@@ -41,6 +46,7 @@ function maskToLast4(phone: string | undefined): string | null {
 }
 
 function buildHardwarePayload(input: {
+  correlationId: string;
   provider: string | null;
   decision: HardwareAccessDecision;
   reason: string;
@@ -57,6 +63,7 @@ function buildHardwarePayload(input: {
 
   const common = {
     event: "hardware.access.decision",
+    correlationId: input.correlationId,
     provider: providerKey,
     occurredAt,
     decision: input.decision,
@@ -98,7 +105,20 @@ export async function queueHardwareAccessDecision(
   input: QueueHardwareAccessDecisionInput,
 ): Promise<QueueHardwareAccessDecisionResult> {
   const config = parseAccessControlConfig(input.accessControl);
+  const correlationId = randomUUID();
   if (!hasHardwareAccessTarget(config)) {
+    await createAccessDecisionTrace(input.companyId, {
+      site_id: input.siteId,
+      correlation_id: correlationId,
+      decision_status: "FALLBACK",
+      reason: "hardware_target_missing",
+      sign_in_record_id: input.signInRecordId,
+      fallback_mode: true,
+      request_payload: {
+        decision: input.decision,
+        reason: input.reason,
+      },
+    });
     return { queued: false, reason: "hardware_target_missing" };
   }
 
@@ -110,6 +130,18 @@ export async function queueHardwareAccessDecision(
     );
   } catch (error) {
     if (error instanceof EntitlementDeniedError) {
+      await createAccessDecisionTrace(input.companyId, {
+        site_id: input.siteId,
+        correlation_id: correlationId,
+        decision_status: "FALLBACK",
+        reason: "hardware_entitlement_disabled",
+        sign_in_record_id: input.signInRecordId,
+        fallback_mode: true,
+        request_payload: {
+          decision: input.decision,
+          reason: input.reason,
+        },
+      });
       return { queued: false, reason: "hardware_entitlement_disabled" };
     }
     throw error;
@@ -117,6 +149,7 @@ export async function queueHardwareAccessDecision(
 
   try {
     const payload = buildHardwarePayload({
+      correlationId,
       provider: config.hardware.provider,
       decision: input.decision,
       reason: input.reason,
@@ -138,6 +171,23 @@ export async function queueHardwareAccessDecision(
     ]);
 
     if (queuedCount > 0) {
+      await createAccessDecisionTrace(input.companyId, {
+        site_id: input.siteId,
+        correlation_id: correlationId,
+        decision_status: input.decision,
+        reason: input.reason,
+        sign_in_record_id: input.signInRecordId,
+        decided_at: new Date(),
+        request_payload: {
+          decision: input.decision,
+          reason: input.reason,
+          provider: config.hardware.provider,
+        },
+        response_payload: {
+          queued_count: queuedCount,
+        },
+      });
+
       await createAuditLog(input.companyId, {
         action: "hardware.access_queued",
         entity_type: "Site",
@@ -148,6 +198,7 @@ export async function queueHardwareAccessDecision(
           reason: input.reason,
           provider: config.hardware.provider,
           endpoint_url: config.hardware.endpointUrl,
+          correlation_id: correlationId,
           sign_in_record_id: input.signInRecordId ?? null,
           visitor_phone_last4: maskToLast4(input.visitorPhoneE164),
         },
@@ -157,6 +208,34 @@ export async function queueHardwareAccessDecision(
 
     return { queued: queuedCount > 0, reason: "queued" };
   } catch (error) {
+    await createAccessDecisionTrace(input.companyId, {
+      site_id: input.siteId,
+      correlation_id: correlationId,
+      decision_status: "ERROR",
+      reason: "queue_failed",
+      sign_in_record_id: input.signInRecordId,
+      fallback_mode: true,
+      request_payload: {
+        decision: input.decision,
+        reason: input.reason,
+        provider: config.hardware.provider,
+      },
+      response_payload: {
+        error: error instanceof Error ? error.message : String(error),
+      },
+    });
+
+    await createHardwareOutageEvent(input.companyId, {
+      site_id: input.siteId,
+      provider: config.hardware.provider ?? undefined,
+      severity: "DEGRADED",
+      reason: "Hardware delivery queue failure",
+      details: {
+        correlation_id: correlationId,
+        error: error instanceof Error ? error.message : String(error),
+      },
+    });
+
     await createAuditLog(input.companyId, {
       action: "hardware.access_failed",
       entity_type: "Site",
@@ -165,6 +244,7 @@ export async function queueHardwareAccessDecision(
       details: {
         decision: input.decision,
         reason: input.reason,
+        correlation_id: correlationId,
         error: error instanceof Error ? error.message : String(error),
       },
       request_id: input.requestId,

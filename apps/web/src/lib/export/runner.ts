@@ -19,12 +19,19 @@ import {
 import { findUserById } from "@/lib/repository/user.repository";
 import { createSystemAuditLog } from "@/lib/repository/audit.repository";
 import {
+  computeEvidenceHashRoot,
+  createEvidenceArtifact,
+  createEvidenceManifest,
+  sha256Hex,
+} from "@/lib/repository/evidence.repository";
+import {
   GUARDRAILS,
   getExportExpiryDate,
   isOffPeakNow,
 } from "@/lib/guardrails";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { hasPermission } from "@/lib/auth/guards";
+import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 
 export async function processNextExportJob(): Promise<null | {
   id: string;
@@ -179,6 +186,7 @@ export async function processNextExportJob(): Promise<null | {
       content,
       contentType,
     );
+    const contentBuffer = Buffer.isBuffer(content) ? content : Buffer.from(content);
 
     const elapsedMs = Date.now() - startTime;
     if (elapsedMs > GUARDRAILS.MAX_EXPORT_RUNTIME_SECONDS * 1000) {
@@ -191,6 +199,49 @@ export async function processNextExportJob(): Promise<null | {
       file_size: size,
       expires_at: getExportExpiryDate(),
     });
+
+    if (isFeatureEnabled("EVIDENCE_TAMPER_V1")) {
+      try {
+        await assertCompanyFeatureEnabled(job.company_id, "EVIDENCE_TAMPER_V1");
+
+        const artifactHash = sha256Hex(contentBuffer);
+        const hashRoot = computeEvidenceHashRoot([artifactHash]);
+        const manifest = await createEvidenceManifest(job.company_id, {
+          export_job_id: job.id,
+          hash_root: hashRoot,
+          signer: "system-export-worker",
+          expires_at: getExportExpiryDate(),
+        });
+        await createEvidenceArtifact(job.company_id, {
+          evidence_manifest_id: manifest.id,
+          artifact_path: filePath,
+          artifact_hash: artifactHash,
+          artifact_size: size,
+          artifact_type: contentType,
+        });
+
+        await createSystemAuditLog({
+          company_id: job.company_id,
+          action: "evidence.manifest.create",
+          entity_type: "EvidenceManifest",
+          entity_id: manifest.id,
+          user_id: job.requested_by ?? undefined,
+          details: {
+            export_job_id: job.id,
+            artifact_path: filePath,
+            artifact_size: size,
+            artifact_type: contentType,
+          },
+        });
+      } catch (error) {
+        if (!(error instanceof EntitlementDeniedError)) {
+          log.warn(
+            { export_job_id: job.id, error: String(error) },
+            "Evidence manifest generation failed",
+          );
+        }
+      }
+    }
 
     return { id: job.id, status: "SUCCEEDED" };
   } catch (err) {

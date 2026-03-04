@@ -197,6 +197,45 @@ function isTrustProxyEnabled(): boolean {
 }
 
 /**
+ * Get client IP from a headers collection.
+ * Mirrors the same trust-proxy validation used for server actions/routes.
+ */
+export function getClientIpFromHeaders(
+  headersList: Headers,
+): string | undefined {
+  if (isTrustProxyEnabled()) {
+    const forwardedFor = headersList.get("x-forwarded-for");
+    if (forwardedFor) {
+      const firstIp = forwardedFor.split(",")[0]?.trim();
+      if (firstIp && isValidIpFormat(firstIp)) {
+        return firstIp;
+      }
+      return undefined;
+    }
+
+    const realIp = headersList.get("x-real-ip");
+    if (realIp) {
+      const trimmed = realIp.trim();
+      if (isValidIpFormat(trimmed)) {
+        return trimmed;
+      }
+      return undefined;
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Get user agent from a headers collection.
+ */
+export function getUserAgentFromHeaders(
+  headersList: Headers,
+): string | undefined {
+  return headersList.get("user-agent") || undefined;
+}
+
+/**
  * Get client IP address from request headers.
  *
  * SECURITY: By default (TRUST_PROXY=false), proxy headers are ignored
@@ -207,36 +246,7 @@ function isTrustProxyEnabled(): boolean {
  */
 export async function getClientIp(): Promise<string | undefined> {
   const headersList = await headers();
-
-  // Only trust proxy headers if explicitly enabled
-  if (isTrustProxyEnabled()) {
-    // Check x-forwarded-for (set by most proxies)
-    const forwardedFor = headersList.get("x-forwarded-for");
-    if (forwardedFor) {
-      // x-forwarded-for can contain multiple IPs: "client, proxy1, proxy2"
-      // The leftmost IP is the original client (if proxy is trusted)
-      const firstIp = forwardedFor.split(",")[0]?.trim();
-      if (firstIp && isValidIpFormat(firstIp)) {
-        return firstIp;
-      }
-      // Invalid format - don't return potentially malicious data
-      return undefined;
-    }
-
-    // Check x-real-ip (set by some proxies like nginx)
-    const realIp = headersList.get("x-real-ip");
-    if (realIp) {
-      const trimmed = realIp.trim();
-      if (isValidIpFormat(trimmed)) {
-        return trimmed;
-      }
-      // Invalid format - don't return potentially malicious data
-      return undefined;
-    }
-  }
-
-  // No trusted IP found
-  return undefined;
+  return getClientIpFromHeaders(headersList);
 }
 
 /**
@@ -244,5 +254,5 @@ export async function getClientIp(): Promise<string | undefined> {
  */
 export async function getUserAgent(): Promise<string | undefined> {
   const headersList = await headers();
-  return headersList.get("user-agent") || undefined;
+  return getUserAgentFromHeaders(headersList);
 }

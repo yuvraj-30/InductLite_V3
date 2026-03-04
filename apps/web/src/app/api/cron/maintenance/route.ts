@@ -3,6 +3,7 @@ import { runRetentionTasks } from "@/lib/maintenance/retention";
 import { requireCronSecret } from "@/lib/cron";
 import { processEmailQueue } from "@/lib/email/worker";
 import { processOutboundWebhookQueue } from "@/lib/webhook/worker";
+import { runMarketOpsJobs } from "@/lib/operations/market-ops";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -17,10 +18,16 @@ export async function GET(req: Request) {
     await runRetentionTasks();
     await processEmailQueue();
     const webhookSummary = await processOutboundWebhookQueue();
+    const marketOpsSummary = await runMarketOpsJobs();
     const durationMs = Date.now() - startTime;
 
     auth.log.info(
-      { duration_ms: durationMs, email_queue_processed: true, webhookSummary },
+      {
+        duration_ms: durationMs,
+        email_queue_processed: true,
+        webhookSummary,
+        marketOpsSummary,
+      },
       "Maintenance cron ran",
     );
 
@@ -30,6 +37,7 @@ export async function GET(req: Request) {
         duration_ms: durationMs,
         email_queue_processed: true,
         webhook_summary: webhookSummary,
+        market_ops_summary: marketOpsSummary,
       },
       { status: 200 },
     );

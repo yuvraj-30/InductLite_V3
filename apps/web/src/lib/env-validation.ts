@@ -162,6 +162,36 @@ const ENV_CONFIG: EnvConfig[] = [
     description: "Hard SMS cap per company per month",
   },
   {
+    name: "MAX_BROADCASTS_PER_COMPANY_PER_DAY",
+    required: false,
+    production: false,
+    description: "Max emergency broadcasts per company per day",
+  },
+  {
+    name: "MAX_BROADCAST_RECIPIENTS_PER_EVENT",
+    required: false,
+    production: false,
+    description: "Max recipients per emergency broadcast",
+  },
+  {
+    name: "MAX_PUSH_NOTIFICATIONS_PER_COMPANY_PER_MONTH",
+    required: false,
+    production: false,
+    description: "Max web push notifications per company per month",
+  },
+  {
+    name: "MAX_POLICY_SIM_RUNS_PER_COMPANY_PER_DAY",
+    required: false,
+    production: false,
+    description: "Max policy simulator runs per company per day",
+  },
+  {
+    name: "MAX_RISK_SCORE_RECALC_JOBS_PER_DAY",
+    required: false,
+    production: false,
+    description: "Max risk score recalculation jobs per day",
+  },
+  {
     name: "SMS_PROVIDER_TIMEOUT_MS",
     required: false,
     production: false,
@@ -173,6 +203,13 @@ const ENV_CONFIG: EnvConfig[] = [
     production: false,
     minLength: 16,
     description: "HMAC secret used for outbound webhook signatures",
+  },
+  {
+    name: "CHANNEL_INTEGRATION_SIGNING_SECRET",
+    required: false,
+    production: false,
+    minLength: 16,
+    description: "HMAC secret for Teams/Slack callback signatures",
   },
   {
     name: "ACCOUNTING_SYNC_ENDPOINT_URL",
@@ -269,6 +306,60 @@ const ENV_CONFIG: EnvConfig[] = [
     required: false,
     production: false,
     description: "Enable/disable visual regression",
+  },
+  {
+    name: "FF_PERMITS_V1",
+    required: false,
+    production: false,
+    description: "Feature flag for permit workflows",
+  },
+  {
+    name: "FF_ID_HARDENING_V1",
+    required: false,
+    production: false,
+    description: "Feature flag for identity hardening baseline",
+  },
+  {
+    name: "FF_EMERGENCY_COMMS_V1",
+    required: false,
+    production: false,
+    description: "Feature flag for emergency communications hub",
+  },
+  {
+    name: "FF_TEAMS_SLACK_V1",
+    required: false,
+    production: false,
+    description: "Feature flag for Teams/Slack integration",
+  },
+  {
+    name: "FF_PWA_PUSH_V1",
+    required: false,
+    production: false,
+    description: "Feature flag for PWA push + presence hints",
+  },
+  {
+    name: "FF_EVIDENCE_TAMPER_V1",
+    required: false,
+    production: false,
+    description: "Feature flag for tamper-evident evidence packs",
+  },
+  {
+    name: "FF_POLICY_SIMULATOR_V1",
+    required: false,
+    production: false,
+    description: "Feature flag for policy simulator",
+  },
+  {
+    name: "FF_RISK_PASSPORT_V1",
+    required: false,
+    production: false,
+    description: "Feature flag for contractor risk passport",
+  },
+  {
+    name: "FF_SELF_SERVE_CONFIG_V1",
+    required: false,
+    production: false,
+    description: "Feature flag for self-serve plan configurator",
   },
   // Guardrails
   {
@@ -611,6 +702,11 @@ export function validateEnv(): {
     "RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN",
     "ACCOUNTING_SYNC_TIMEOUT_MS",
     "SMS_PROVIDER_TIMEOUT_MS",
+    "MAX_BROADCASTS_PER_COMPANY_PER_DAY",
+    "MAX_BROADCAST_RECIPIENTS_PER_EVENT",
+    "MAX_PUSH_NOTIFICATIONS_PER_COMPANY_PER_MONTH",
+    "MAX_POLICY_SIM_RUNS_PER_COMPANY_PER_DAY",
+    "MAX_RISK_SCORE_RECALC_JOBS_PER_DAY",
   ];
   for (const name of positiveIntEnv) {
     const value = process.env[name];

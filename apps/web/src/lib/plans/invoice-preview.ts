@@ -57,6 +57,20 @@ const FEATURE_LABELS: Record<ProductFeatureKey, string> = {
   SMS_WORKFLOWS: "SMS workflows",
   HARDWARE_ACCESS: "Hardware access integration",
   GEOFENCE_ENFORCEMENT: "Geofence enforcement",
+  PERMITS_V1: "Permit-to-work",
+  PREQUALIFICATION_V1: "Contractor prequalification",
+  VISITOR_APPROVALS_V1: "Visitor approvals",
+  ID_HARDENING_V1: "Identity hardening",
+  EMERGENCY_COMMS_V1: "Emergency communications",
+  TEAMS_SLACK_V1: "Teams and Slack integrations",
+  PWA_PUSH_V1: "PWA push notifications",
+  MOBILE_OFFLINE_ASSIST_V1: "Mobile offline assist",
+  COMMUNICATION_HUB_V1: "Unified communication hub",
+  GATEWAY_TRACE_V1: "Gate and turnstile traceability",
+  EVIDENCE_TAMPER_V1: "Tamper-evident evidence packs",
+  POLICY_SIMULATOR_V1: "Safety policy simulator",
+  RISK_PASSPORT_V1: "Contractor risk passport",
+  SELF_SERVE_CONFIG_V1: "Self-serve plan configurator",
 };
 
 export async function buildCompanyInvoicePreview(
