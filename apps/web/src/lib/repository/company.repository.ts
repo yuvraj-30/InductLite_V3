@@ -1,11 +1,11 @@
 /**
  * Company Repository
  *
- * Handles company-level compliance settings for retention and legal hold controls.
+ * Handles company-level compliance settings and identity controls.
  */
 
 import { publicDb } from "@/lib/db/public-db";
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import {
   handlePrismaError,
   RepositoryError,
@@ -24,6 +24,13 @@ const companyComplianceSelect = {
   compliance_legal_hold: true,
   compliance_legal_hold_reason: true,
   compliance_legal_hold_set_at: true,
+} satisfies Prisma.CompanySelect;
+
+const companySsoSelect = {
+  id: true,
+  name: true,
+  slug: true,
+  sso_config: true,
 } satisfies Prisma.CompanySelect;
 
 export interface CompanyComplianceSettings {
@@ -46,6 +53,13 @@ export interface UpdateCompanyComplianceSettingsInput {
   emergency_drill_retention_days: number;
   compliance_legal_hold: boolean;
   compliance_legal_hold_reason?: string | null;
+}
+
+export interface CompanySsoSettingsRecord {
+  id: string;
+  name: string;
+  slug: string;
+  sso_config: Prisma.JsonValue | null;
 }
 
 function normalizeRetentionDays(value: number, fieldName: string): number {
@@ -79,6 +93,77 @@ export async function findCompanyComplianceSettings(
 
     return company;
   } catch (error) {
+    handlePrismaError(error, "Company");
+  }
+}
+
+export async function findCompanySsoSettings(
+  companyId: string,
+): Promise<CompanySsoSettingsRecord | null> {
+  requireCompanyId(companyId);
+
+  try {
+    const company = await publicDb.company.findFirst({
+      where: { id: companyId },
+      select: companySsoSelect,
+    });
+    if (!company) return null;
+    return company as CompanySsoSettingsRecord;
+  } catch (error) {
+    handlePrismaError(error, "Company");
+  }
+}
+
+export async function findCompanySsoSettingsBySlug(
+  slug: string,
+): Promise<CompanySsoSettingsRecord | null> {
+  const normalized = slug.trim().toLowerCase();
+  if (!normalized) {
+    throw new RepositoryError("Company slug is required", "VALIDATION");
+  }
+
+  try {
+    const company = await publicDb.company.findFirst({
+      where: { slug: normalized },
+      select: companySsoSelect,
+    });
+    if (!company) return null;
+    return company as CompanySsoSettingsRecord;
+  } catch (error) {
+    handlePrismaError(error, "Company");
+  }
+}
+
+export async function updateCompanySsoSettings(
+  companyId: string,
+  ssoConfig: Prisma.InputJsonValue | null,
+): Promise<CompanySsoSettingsRecord> {
+  requireCompanyId(companyId);
+
+  try {
+    const result = await publicDb.company.updateMany({
+      where: { id: companyId },
+      data: {
+        sso_config: ssoConfig ?? Prisma.DbNull,
+      },
+    });
+
+    if (result.count === 0) {
+      throw new RepositoryError("Company not found", "NOT_FOUND");
+    }
+
+    const updated = await publicDb.company.findFirst({
+      where: { id: companyId },
+      select: companySsoSelect,
+    });
+
+    if (!updated) {
+      throw new RepositoryError("Company not found", "NOT_FOUND");
+    }
+
+    return updated as CompanySsoSettingsRecord;
+  } catch (error) {
+    if (error instanceof RepositoryError) throw error;
     handlePrismaError(error, "Company");
   }
 }

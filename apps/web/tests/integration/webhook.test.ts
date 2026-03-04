@@ -35,6 +35,12 @@ vi.mock("../../src/lib/repository/audit.repository", () => ({
 vi.mock("@/lib/repository/audit.repository", () => ({
   createAuditLog: vi.fn(),
 }));
+vi.mock("../../src/lib/repository/webhook-delivery.repository", () => ({
+  queueOutboundWebhookDeliveries: vi.fn().mockResolvedValue(1),
+}));
+vi.mock("@/lib/repository/webhook-delivery.repository", () => ({
+  queueOutboundWebhookDeliveries: vi.fn().mockResolvedValue(1),
+}));
 vi.mock("../../src/lib/rate-limit", () => ({
   checkSignInRateLimit: vi.fn(() => ({ success: true })),
 }));
@@ -42,6 +48,7 @@ vi.mock("../../src/lib/rate-limit", () => ({
 import { findSiteByPublicSlug } from "../../src/lib/repository/site.repository";
 import { getActiveTemplateForSite } from "../../src/lib/repository/template.repository";
 import { createPublicSignIn } from "../../src/lib/repository/public-signin.repository";
+import { queueOutboundWebhookDeliveries } from "../../src/lib/repository/webhook-delivery.repository";
 
 describe("Webhook Integration", () => {
   beforeAll(async () => {
@@ -54,8 +61,6 @@ describe("Webhook Integration", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock global fetch
-    global.fetch = vi.fn(() => Promise.resolve({ ok: true } as Response));
   });
 
   it("should fire webhooks when a visitor signs in", async () => {
@@ -95,9 +100,15 @@ describe("Webhook Integration", () => {
       return;
     }
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      "https://example.com/webhook",
-      expect.objectContaining({ method: "POST" }),
+    expect(queueOutboundWebhookDeliveries).toHaveBeenCalledWith(
+      "company-1",
+      expect.arrayContaining([
+        expect.objectContaining({
+          siteId: "site-1",
+          eventType: "induction.completed",
+          targetUrl: "https://example.com/webhook",
+        }),
+      ]),
     );
   });
 });

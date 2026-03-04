@@ -9,6 +9,9 @@ export type SeedPublicSiteResult = {
   templateId?: string;
   questionId?: string;
   redFlagQuestionId?: string;
+  includeMediaQuizFlow?: boolean;
+  includeGeofenceOverrideFlow?: boolean;
+  geofenceOverrideCode?: string;
   clearedRateLimit?: boolean;
   error?: string;
 };
@@ -18,6 +21,9 @@ export async function seedPublicSite(
   opts?: {
     slugPrefix?: string;
     includeRedFlagQuestion?: boolean;
+    includeLanguageVariants?: boolean;
+    includeMediaQuizFlow?: boolean;
+    includeGeofenceOverrideFlow?: boolean;
     companySlug?: string;
   },
 ): Promise<{ ok: boolean; body: SeedPublicSiteResult | null }> {

@@ -166,12 +166,12 @@ Hard disable autocomplete (autoComplete="off") on all inputs to prevent data lea
 
 Hide the "Logout" button.
 
-4.3 Offline Support (PWA)
-Library: next-pwa.
+4.3 Offline Support (Browser Queue)
+Library: browser localStorage queue (no service worker plugin).
 
 Instruction:
 
-Configure next.config.js to cache static assets.
+Rely on standard HTTP caching headers in `next.config.js` for static assets.
 
 Implement localStorage persistence for induction forms so data is saved on every keystroke.
 

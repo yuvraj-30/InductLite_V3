@@ -43,6 +43,37 @@ function formatDurationMinutes(minutes: number): string {
   return `${hours}h ${mins}m`;
 }
 
+function getLocationStatusMeta(record: SignInRecordWithDetails): {
+  label: string;
+  className: string;
+} {
+  if (!record.location_captured_at) {
+    return {
+      label: "Location unavailable",
+      className: "bg-gray-100 text-gray-700",
+    };
+  }
+
+  if (record.location_within_radius === true) {
+    return {
+      label: "Within site radius",
+      className: "bg-emerald-100 text-emerald-800",
+    };
+  }
+
+  if (record.location_within_radius === false) {
+    return {
+      label: "Outside site radius",
+      className: "bg-amber-100 text-amber-800",
+    };
+  }
+
+  return {
+    label: "Location captured",
+    className: "bg-cyan-100 text-cyan-800",
+  };
+}
+
 async function LiveRegisterContent({
   siteFilter,
 }: {
@@ -209,6 +240,7 @@ async function LiveRegisterContent({
                         );
                         const durationStr = formatDurationMinutes(durationMinutes);
                         const isLongStay = durationMinutes >= 480;
+                        const locationStatus = getLocationStatusMeta(record);
 
                         return (
                           <tr key={record.id} className="hover:bg-gray-50">
@@ -271,6 +303,16 @@ async function LiveRegisterContent({
                                   }`}
                                 >
                                   {durationStr}
+                                </span>
+                                <span
+                                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${locationStatus.className}`}
+                                >
+                                  {locationStatus.label}
+                                  {record.location_distance_m !== null && (
+                                    <span className="ml-1">
+                                      ({Math.round(record.location_distance_m)}m)
+                                    </span>
+                                  )}
                                 </span>
                               </div>
                             </td>

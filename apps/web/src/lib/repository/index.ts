@@ -62,12 +62,49 @@ export type {
 export {
   findCompanyComplianceSettings,
   updateCompanyComplianceSettings,
+  findCompanySsoSettings,
+  findCompanySsoSettingsBySlug,
+  updateCompanySsoSettings,
 } from "./company.repository";
 
 export type {
   CompanyComplianceSettings,
+  CompanySsoSettingsRecord,
   UpdateCompanyComplianceSettingsInput,
 } from "./company.repository";
+
+// Plan entitlement repository
+export {
+  findCompanyEntitlementSettings,
+  updateCompanyEntitlementSettings,
+  findSiteEntitlementOverrides,
+  updateSiteEntitlementOverrides,
+} from "./plan-entitlement.repository";
+
+export type {
+  FeatureToggleMap,
+  FeatureCreditMap,
+  CompanyEntitlementSettings,
+  SiteEntitlementOverrides,
+  UpdateCompanyEntitlementSettingsInput,
+  UpdateSiteEntitlementOverridesInput,
+} from "./plan-entitlement.repository";
+
+// Pre-registration repository
+export {
+  createPreRegistrationInvite,
+  listPreRegistrationInvites,
+  findActivePreRegistrationInviteByToken,
+  markPreRegistrationInviteUsed,
+  deactivatePreRegistrationInvite,
+} from "./pre-registration.repository";
+
+export type {
+  CreatePreRegistrationInviteInput,
+  PreRegistrationInviteRecord,
+  CreatedPreRegistrationInvite,
+  PreRegistrationInviteFilter,
+} from "./pre-registration.repository";
 
 // Site repository
 export {
@@ -100,6 +137,33 @@ export type {
 // Email repository
 export { queueEmailNotification } from "./email.repository";
 export type { QueueEmailNotificationInput } from "./email.repository";
+
+// Outbound webhook delivery repository
+export {
+  queueOutboundWebhookDeliveries,
+  listOutboundWebhookDeliveries,
+  countOutboundWebhookDeliveriesByStatus,
+  listDueOutboundWebhookDeliveries,
+  claimOutboundWebhookDelivery,
+  markOutboundWebhookDeliverySent,
+  markOutboundWebhookDeliveryRetriableFailure,
+} from "./webhook-delivery.repository";
+
+export type {
+  QueueOutboundWebhookDeliveryInput,
+  OutboundWebhookDeliveryWorkItem,
+  OutboundWebhookDeliveryListItem,
+} from "./webhook-delivery.repository";
+
+// Induction quiz attempt repository
+export {
+  findInductionQuizAttemptState,
+  upsertInductionQuizAttemptState,
+} from "./induction-quiz-attempt.repository";
+
+export type {
+  InductionQuizAttemptState,
+} from "./induction-quiz-attempt.repository";
 
 // Contractor repository
 export {
@@ -185,6 +249,10 @@ export type {
   CreateAuditLogInput,
   AuditLogFilter,
 } from "./audit.repository";
+
+// Advanced audit analytics repository
+export { getAdvancedAuditAnalytics } from "./audit-analytics.repository";
+export type { AdvancedAuditAnalytics } from "./audit-analytics.repository";
 
 // Sign-in repository
 export {
@@ -277,6 +345,14 @@ export {
   deactivateSiteEmergencyProcedure,
   listEmergencyDrills,
   createEmergencyDrill,
+  findActiveRollCallEvent,
+  listRollCallEvents,
+  listRollCallAttendances,
+  startRollCallEvent,
+  updateRollCallAttendance,
+  markAllRollCallAttendancesAccounted,
+  closeRollCallEvent,
+  getRollCallEventExportCsv,
 } from "./emergency.repository";
 
 export type {
@@ -285,6 +361,9 @@ export type {
   CreateEmergencyProcedureInput,
   UpdateEmergencyProcedureInput,
   CreateEmergencyDrillInput,
+  StartRollCallEventInput,
+  UpdateRollCallAttendanceInput,
+  CloseRollCallEventInput,
 } from "./emergency.repository";
 
 // Incident repository

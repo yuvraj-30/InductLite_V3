@@ -47,10 +47,11 @@
     "test:e2e:full:all": "playwright test e2e --project=chromium --project=firefox --project=webkit --workers=1 --reporter=line"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.975.0",
-    "@aws-sdk/s3-request-presigner": "^3.975.0",
+    "@aws-sdk/client-s3": "3.1000.0",
+    "@aws-sdk/s3-request-presigner": "3.1000.0",
     "@inductlite/shared": "file:../../packages/shared",
     "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-jaeger": "^2.2.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.57.2",
     "@opentelemetry/sdk-node": "^0.57.2",
     "@opentelemetry/semantic-conventions": "^1.26.0",
@@ -60,6 +61,7 @@
     "argon2": "^0.41.1",
     "date-fns": "^4.1.0",
     "iron-session": "^8.0.4",
+    "jose": "^6.1.3",
     "libphonenumber-js": "^1.12.35",
     "nanoid": "^5.0.9",
     "next": "16.1.5",
@@ -78,7 +80,6 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@ducanh2912/next-pwa": "^10.2.9",
     "@eslint/eslintrc": "3.2.0",
     "@eslint/js": "^9.0.0",
     "@playwright/test": "^1.49.0",

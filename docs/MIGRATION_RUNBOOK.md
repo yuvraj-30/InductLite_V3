@@ -62,9 +62,9 @@ export DATABASE_DIRECT_URL='postgresql://...-direct...:5432/...?...'
 ### 3) Apply migrations to Neon
 
 ```bash
+```
 npm run -w apps/web db:migrate
 npx prisma migrate status --schema apps/web/prisma/schema.prisma
-```
 
 Expected:
 - New migrations marked as applied.

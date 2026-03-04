@@ -29,6 +29,35 @@ import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
 import { randomBytes } from "crypto";
 
+const optionalFloatField = (min: number, max: number, label: string) =>
+  z.preprocess(
+    (value) => {
+      if (typeof value !== "string") {
+        return value;
+      }
+      const trimmed = value.trim();
+      return trimmed === "" ? undefined : trimmed;
+    },
+    z.coerce.number().min(min, `${label} is too low`).max(max, `${label} is too high`).optional(),
+  );
+
+const optionalIntField = (min: number, max: number, label: string) =>
+  z.preprocess(
+    (value) => {
+      if (typeof value !== "string") {
+        return value;
+      }
+      const trimmed = value.trim();
+      return trimmed === "" ? undefined : trimmed;
+    },
+    z.coerce
+      .number()
+      .int(`${label} must be a whole number`)
+      .min(min, `${label} is too low`)
+      .max(max, `${label} is too high`)
+      .optional(),
+  );
+
 /**
  * Site creation schema
  */
@@ -47,6 +76,28 @@ const createSiteSchema = z.object({
     .max(500, "Description must be less than 500 characters")
     .optional()
     .or(z.literal("")),
+  locationLatitude: optionalFloatField(-90, 90, "Latitude"),
+  locationLongitude: optionalFloatField(-180, 180, "Longitude"),
+  locationRadiusM: optionalIntField(25, 2000, "Radius"),
+}).superRefine((value, ctx) => {
+  const hasLatitude = value.locationLatitude !== undefined;
+  const hasLongitude = value.locationLongitude !== undefined;
+
+  if (hasLatitude !== hasLongitude) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: hasLatitude ? ["locationLongitude"] : ["locationLatitude"],
+      message: "Latitude and longitude must both be provided",
+    });
+  }
+
+  if (!hasLatitude && value.locationRadiusM !== undefined) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["locationRadiusM"],
+      message: "Set latitude and longitude before radius",
+    });
+  }
 });
 
 /**
@@ -68,6 +119,28 @@ const updateSiteSchema = z.object({
     .max(500, "Description must be less than 500 characters")
     .optional()
     .or(z.literal("")),
+  locationLatitude: optionalFloatField(-90, 90, "Latitude"),
+  locationLongitude: optionalFloatField(-180, 180, "Longitude"),
+  locationRadiusM: optionalIntField(25, 2000, "Radius"),
+}).superRefine((value, ctx) => {
+  const hasLatitude = value.locationLatitude !== undefined;
+  const hasLongitude = value.locationLongitude !== undefined;
+
+  if (hasLatitude !== hasLongitude) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: hasLatitude ? ["locationLongitude"] : ["locationLatitude"],
+      message: "Latitude and longitude must both be provided",
+    });
+  }
+
+  if (!hasLatitude && value.locationRadiusM !== undefined) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["locationRadiusM"],
+      message: "Set latitude and longitude before radius",
+    });
+  }
 });
 
 export type SiteActionResult =
@@ -113,6 +186,9 @@ export async function createSiteAction(
     name: formData.get("name")?.toString() ?? "",
     address: formData.get("address")?.toString() ?? "",
     description: formData.get("description")?.toString() ?? "",
+    locationLatitude: formData.get("locationLatitude")?.toString() ?? "",
+    locationLongitude: formData.get("locationLongitude")?.toString() ?? "",
+    locationRadiusM: formData.get("locationRadiusM")?.toString() ?? "",
   };
 
   const parsed = createSiteSchema.safeParse(rawData);
@@ -136,6 +212,12 @@ export async function createSiteAction(
       name: parsed.data.name,
       address: parsed.data.address || undefined,
       description: parsed.data.description || undefined,
+      location_latitude: parsed.data.locationLatitude ?? null,
+      location_longitude: parsed.data.locationLongitude ?? null,
+      location_radius_m:
+        parsed.data.locationLatitude !== undefined
+          ? parsed.data.locationRadiusM ?? 150
+          : null,
     });
 
     // Ensure first-run companies are immediately usable in public sign-in flows.
@@ -162,7 +244,14 @@ export async function createSiteAction(
       entity_type: "Site",
       entity_id: site.id,
       user_id: context.userId,
-      details: { name: site.name },
+      details: {
+        name: site.name,
+        location: {
+          latitude: site.location_latitude,
+          longitude: site.location_longitude,
+          radius_m: site.location_radius_m,
+        },
+      },
       request_id: requestId,
     });
 
@@ -226,6 +315,9 @@ export async function updateSiteAction(
     name: formData.get("name")?.toString() ?? "",
     address: formData.get("address")?.toString() ?? "",
     description: formData.get("description")?.toString() ?? "",
+    locationLatitude: formData.get("locationLatitude")?.toString() ?? "",
+    locationLongitude: formData.get("locationLongitude")?.toString() ?? "",
+    locationRadiusM: formData.get("locationRadiusM")?.toString() ?? "",
   };
 
   const parsed = updateSiteSchema.safeParse(rawData);
@@ -237,10 +329,33 @@ export async function updateSiteAction(
   }
 
   try {
+    const hasLocationInput =
+      parsed.data.locationLatitude !== undefined &&
+      parsed.data.locationLongitude !== undefined;
+
+    const clearLocationRequested =
+      rawData.locationLatitude.trim() === "" &&
+      rawData.locationLongitude.trim() === "" &&
+      rawData.locationRadiusM.trim() === "";
+
     const site = await updateSite(context.companyId, siteId, {
       name: parsed.data.name,
       address: parsed.data.address || undefined,
       description: parsed.data.description || undefined,
+      ...(clearLocationRequested
+        ? {
+            location_latitude: null,
+            location_longitude: null,
+            location_radius_m: null,
+          }
+        : {}),
+      ...(hasLocationInput
+        ? {
+            location_latitude: parsed.data.locationLatitude ?? null,
+            location_longitude: parsed.data.locationLongitude ?? null,
+            location_radius_m: parsed.data.locationRadiusM ?? 150,
+          }
+        : {}),
     });
 
     // Audit log
@@ -258,6 +373,14 @@ export async function updateSiteAction(
           address:
             parsed.data.address !== existingSite.address
               ? parsed.data.address
+              : undefined,
+          location:
+            clearLocationRequested || hasLocationInput
+              ? {
+                  latitude: site.location_latitude,
+                  longitude: site.location_longitude,
+                  radius_m: site.location_radius_m,
+                }
               : undefined,
         },
       },

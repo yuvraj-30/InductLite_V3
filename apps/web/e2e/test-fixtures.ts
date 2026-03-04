@@ -23,6 +23,9 @@ type MyFixtures = {
   seedPublicSite: (opts?: {
     slugPrefix?: string;
     includeRedFlagQuestion?: boolean;
+    includeLanguageVariants?: boolean;
+    includeMediaQuizFlow?: boolean;
+    includeGeofenceOverrideFlow?: boolean;
     companySlug?: string;
   }) => Promise<SeedPublicSiteResult>;
   /** Delete a previously seeded public site by slug */
@@ -210,6 +213,9 @@ export const test = base.extend<MyFixtures>({
       async (opts?: {
         slugPrefix?: string;
         includeRedFlagQuestion?: boolean;
+        includeLanguageVariants?: boolean;
+        includeMediaQuizFlow?: boolean;
+        includeGeofenceOverrideFlow?: boolean;
         companySlug?: string;
       }) => {
         let lastResult:

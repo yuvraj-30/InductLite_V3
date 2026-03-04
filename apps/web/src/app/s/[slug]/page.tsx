@@ -13,9 +13,12 @@ import { SignInFlow } from "./components/SignInFlow";
 import { PublicShell } from "@/components/ui/public-shell";
 import { Alert } from "@/components/ui/alert";
 import { checkPublicSlugRateLimit } from "@/lib/rate-limit";
+import { findActivePreRegistrationInviteByToken } from "@/lib/repository/pre-registration.repository";
+import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 
 interface PublicSignInPageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ invite?: string }>;
 }
 
 function getCachedSiteConfig(slug: string) {
@@ -86,8 +89,10 @@ export async function generateMetadata({
 
 export default async function PublicSignInPage({
   params,
+  searchParams,
 }: PublicSignInPageProps) {
   const { slug } = await params;
+  const { invite } = await searchParams;
   const retryHref = `/s/${encodeURIComponent(slug)}`;
 
   const rateLimit = await checkPublicSlugRateLimit(slug);
@@ -108,6 +113,49 @@ export default async function PublicSignInPage({
   }
 
   const { site, template } = result.data;
+  let prefillInvite:
+    | {
+        token: string;
+        visitorName: string;
+        visitorPhone: string;
+        visitorEmail?: string | null;
+        employerName?: string | null;
+        visitorType: "CONTRACTOR" | "VISITOR" | "EMPLOYEE" | "DELIVERY";
+        roleOnSite?: string | null;
+      }
+    | undefined;
+
+  if (invite?.trim()) {
+    try {
+      await assertCompanyFeatureEnabled(
+        site.companyId,
+        "PREREG_INVITES",
+        site.id,
+      );
+
+      const inviteRecord = await findActivePreRegistrationInviteByToken(
+        site.companyId,
+        site.id,
+        invite.trim(),
+      );
+
+      if (inviteRecord) {
+        prefillInvite = {
+          token: invite.trim(),
+          visitorName: inviteRecord.visitor_name,
+          visitorPhone: inviteRecord.visitor_phone,
+          visitorEmail: inviteRecord.visitor_email,
+          employerName: inviteRecord.employer_name,
+          visitorType: inviteRecord.visitor_type,
+          roleOnSite: inviteRecord.role_on_site,
+        };
+      }
+    } catch (error) {
+      if (!(error instanceof EntitlementDeniedError)) {
+        throw error;
+      }
+    }
+  }
 
   return (
     <PublicShell brand={site.companyName} subtitle={site.name}>
@@ -118,7 +166,12 @@ export default async function PublicSignInPage({
         Skip to content
       </a>
       <section id="main-content">
-        <SignInFlow slug={slug} site={site} template={template} />
+        <SignInFlow
+          slug={slug}
+          site={site}
+          template={template}
+          prefillInvite={prefillInvite}
+        />
       </section>
     </PublicShell>
   );

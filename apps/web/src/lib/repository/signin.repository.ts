@@ -46,6 +46,12 @@ const SIGN_IN_RECORD_DETAILS_SELECT = {
   employer_name: true,
   visitor_type: true,
   sign_in_ts: true,
+  location_latitude: true,
+  location_longitude: true,
+  location_accuracy_m: true,
+  location_distance_m: true,
+  location_within_radius: true,
+  location_captured_at: true,
   sign_out_ts: true,
   signed_out_by: true,
   sign_out_token: true,
@@ -71,6 +77,12 @@ export interface SignInRecordWithDetails {
   employer_name: string | null;
   visitor_type: VisitorType;
   sign_in_ts: Date;
+  location_latitude: number | null;
+  location_longitude: number | null;
+  location_accuracy_m: number | null;
+  location_distance_m: number | null;
+  location_within_radius: boolean | null;
+  location_captured_at: Date | null;
   sign_out_ts: Date | null;
   signed_out_by: string | null;
   sign_out_token: string | null;

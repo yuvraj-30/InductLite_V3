@@ -213,6 +213,128 @@ async function fillDetailsForm(
   await page.locator("#visitorType").selectOption(visitorType);
 }
 
+async function drawSignatureIfAvailable(page: Page): Promise<void> {
+  const canvas = page.locator("#signature-canvas").first();
+
+  if ((await canvas.count()) === 0) {
+    return;
+  }
+
+  await canvas.waitFor({ state: "visible", timeout: 10_000 });
+  await canvas.scrollIntoViewIfNeeded().catch(() => null);
+
+  const drawStroke = async (): Promise<boolean> => {
+    const box = await canvas.boundingBox();
+    if (!box) return false;
+
+    await page.mouse.move(box.x + 20, box.y + 20);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 140, box.y + 50, { steps: 8 });
+    await page.mouse.up();
+    return true;
+  };
+
+  // The dynamic signature canvas can hydrate a moment after the step appears.
+  // Retry briefly so we do not proceed to submit before a stroke is actually drawn.
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (await drawStroke()) {
+      return;
+    }
+    await page.waitForTimeout(250);
+  }
+}
+
+async function checkSignOffTermsIfPresent(page: Page): Promise<void> {
+  const termsByLabel = page
+    .getByLabel(
+      /I acknowledge the site safety terms and conditions|I acknowledge the site safety terms and privacy notice|I accept|terms and conditions|terms and privacy/i,
+    )
+    .first();
+
+  if ((await termsByLabel.count()) > 0) {
+    await termsByLabel.check().catch(() => null);
+    return;
+  }
+
+  const termsCheckbox = page.locator("#hasAcceptedTerms").first();
+  if ((await termsCheckbox.count()) > 0) {
+    await termsCheckbox.check().catch(() => null);
+  }
+}
+
+async function submitSignOffWithSignatureRetry(page: Page): Promise<void> {
+  const signOffHeading = page.getByRole("heading", {
+    level: 2,
+    name: /sign off/i,
+  });
+  if (!(await signOffHeading.isVisible({ timeout: 10000 }).catch(() => false))) {
+    return;
+  }
+
+  const confirmButton = page
+    .getByRole("button", { name: /confirm\s+(?:&|and)\s+sign in/i })
+    .first();
+  await confirmButton.scrollIntoViewIfNeeded().catch(() => null);
+  await confirmButton.waitFor({ state: "visible", timeout: 10000 });
+
+  const signatureAlert = page
+    .getByRole("alert")
+    .filter({ hasText: /please provide a signature/i })
+    .first();
+  const geofenceBlockedMessage = page
+    .getByText(
+      /geofence policy blocked this sign-in|please provide the supervisor geofence override code/i,
+    )
+    .first();
+  const successHeading = page.getByRole("heading", {
+    level: 2,
+    name: /signed in successfully/i,
+  });
+  const signOutLink = page.locator('a[href*="/sign-out"]').first();
+
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    await drawSignatureIfAvailable(page);
+    await checkSignOffTermsIfPresent(page);
+    await confirmButton.click({ force: true });
+
+    let reachedPostSubmitState = false;
+    for (let poll = 0; poll < 20; poll++) {
+      const needsSignature = await signatureAlert
+        .isVisible({ timeout: 200 })
+        .catch(() => false);
+      if (needsSignature) {
+        break;
+      }
+
+      const blockedByGeofence = await geofenceBlockedMessage
+        .isVisible({ timeout: 200 })
+        .catch(() => false);
+      const signedIn = await successHeading
+        .isVisible({ timeout: 200 })
+        .catch(() => false);
+      const hasSignOut = await signOutLink.isVisible({ timeout: 200 }).catch(() => false);
+      const leftSignOff = !(await signOffHeading.isVisible().catch(() => false));
+
+      if (blockedByGeofence || signedIn || hasSignOut || leftSignOff) {
+        reachedPostSubmitState = true;
+        break;
+      }
+
+      await page.waitForTimeout(150);
+    }
+
+    if (reachedPostSubmitState) {
+      return;
+    }
+
+    await page.waitForTimeout(150 * attempt);
+  }
+
+  if (await signatureAlert.isVisible().catch(() => false)) {
+    throw new Error("Unable to submit sign-off: signature was not captured");
+  }
+}
+
 test.describe.serial("Public Sign-In Flow", () => {
   // Test site slug - may be created dynamically for E2E runs
   let TEST_SITE_SLUG = "test-site";
@@ -305,6 +427,315 @@ test.describe.serial("Public Sign-In Flow", () => {
     await expect(
       page.getByRole("heading", { level: 2, name: /welcome to/i }),
     ).toBeVisible();
+  });
+
+  test("should switch induction language and render localized content", async ({
+    page,
+    seedPublicSite,
+    deletePublicSite,
+  }) => {
+    const seeded = await seedPublicSite({
+      slugPrefix: "test-site-lang-e2e",
+      includeLanguageVariants: true,
+    });
+    const languageSlug = seeded.slug;
+    expect(languageSlug).toBeTruthy();
+
+    if (!languageSlug) {
+      return;
+    }
+
+    try {
+      const ok = await openSite(page, languageSlug);
+      expect(ok).toBe(true);
+
+      await fillDetailsForm(page, {
+        name: "Language Visitor",
+        phone: uniqueNzPhone(),
+        email: "language@test.com",
+      });
+
+      await page
+        .getByRole("button", { name: /continue to induction/i })
+        .click();
+
+      const languageSelector = page.getByLabel(/induction language/i);
+      await expect(languageSelector).toBeVisible({ timeout: 10000 });
+      await languageSelector.selectOption("mi");
+
+      await expect(
+        page.getByRole("heading", { name: /whakauru pae/i }),
+      ).toBeVisible();
+      await expect(
+        page.getByText(/E whakaae ana ahau ki nga ture o te pae/i).first(),
+      ).toBeVisible();
+    } finally {
+      await deletePublicSite(languageSlug);
+    }
+  });
+
+  test("should enforce media acknowledgement and quiz pass threshold", async ({
+    page,
+    seedPublicSite,
+    deletePublicSite,
+  }) => {
+    const seeded = await seedPublicSite({
+      slugPrefix: "test-site-media-quiz-e2e",
+      includeMediaQuizFlow: true,
+    });
+    const mediaQuizSlug = seeded.slug;
+    expect(mediaQuizSlug).toBeTruthy();
+
+    if (!mediaQuizSlug) {
+      return;
+    }
+
+    try {
+      const ok = await openSite(page, mediaQuizSlug);
+      expect(ok).toBe(true);
+
+      await fillDetailsForm(page, {
+        name: "Media Quiz Visitor",
+        phone: uniqueNzPhone(),
+        email: "media.quiz@test.com",
+      });
+
+      await page
+        .getByRole("button", { name: /continue to induction/i })
+        .click();
+
+      await expect(
+        page.getByRole("heading", { name: /induction material/i }),
+      ).toBeVisible();
+
+      await page
+        .getByRole("button", { name: /continue to sign off/i })
+        .click();
+
+      await expect(
+        page.getByText(/please review and acknowledge the induction media/i),
+      ).toBeVisible();
+
+      await page
+        .getByRole("checkbox", {
+          name: /I have reviewed the induction material before continuing/i,
+        })
+        .check();
+
+      const failedQuizOption = page
+        .locator('input[type="radio"][value="no"]')
+        .first();
+      await failedQuizOption.scrollIntoViewIfNeeded().catch(() => null);
+      await failedQuizOption.check({ force: true });
+      await page
+        .getByRole("button", { name: /continue to sign off/i })
+        .click();
+
+      await expect(
+        page.getByRole("heading", { level: 2, name: /sign off/i }),
+      ).toBeVisible();
+
+      await drawSignatureIfAvailable(page);
+
+      await page.locator("#hasAcceptedTerms").check();
+      await page.getByRole("button", { name: /confirm and sign in/i }).click();
+
+      await expect(
+        page.getByText(/quiz pass threshold not met|below the required/i).first(),
+      ).toBeVisible();
+    } finally {
+      await deletePublicSite(mediaQuizSlug);
+    }
+  });
+
+  test("should complete media-first quiz flow when acknowledgement and answers pass", async ({
+    page,
+    seedPublicSite,
+    deletePublicSite,
+  }) => {
+    const seeded = await seedPublicSite({
+      slugPrefix: "test-site-media-quiz-pass-e2e",
+      includeMediaQuizFlow: true,
+    });
+    const mediaQuizSlug = seeded.slug;
+    expect(mediaQuizSlug).toBeTruthy();
+
+    if (!mediaQuizSlug) {
+      return;
+    }
+
+    try {
+      const ok = await openSite(page, mediaQuizSlug);
+      expect(ok).toBe(true);
+
+      await fillDetailsForm(page, {
+        name: "Media Quiz Pass Visitor",
+        phone: uniqueNzPhone(),
+        email: "media.quiz.pass@test.com",
+      });
+
+      await page
+        .getByRole("button", { name: /continue to induction/i })
+        .click();
+
+      await expect(
+        page.getByRole("heading", { name: /induction material/i }),
+      ).toBeVisible();
+
+      await page
+        .getByRole("checkbox", {
+          name: /I have reviewed the induction material before continuing/i,
+        })
+        .check();
+
+      const passingQuizOption = page
+        .locator('input[type="radio"][value="yes"]')
+        .first();
+      await passingQuizOption.scrollIntoViewIfNeeded().catch(() => null);
+      await passingQuizOption.check({ force: true });
+      await page
+        .getByRole("button", { name: /continue to sign off/i })
+        .click();
+
+      await expect(
+        page.getByRole("heading", { level: 2, name: /sign off/i }),
+      ).toBeVisible();
+
+      await drawSignatureIfAvailable(page);
+
+      await page.locator("#hasAcceptedTerms").check();
+      await page.getByRole("button", { name: /confirm and sign in/i }).click();
+
+      const signOutLink = page.locator('a[href*="/sign-out"]');
+      const successHeading = page.getByRole("heading", {
+        level: 2,
+        name: /signed in successfully/i,
+      });
+
+      await expect
+        .poll(async () => {
+          const hasSignOutLink = await signOutLink
+            .first()
+            .isVisible()
+            .catch(() => false);
+          const hasSuccessHeading = await successHeading
+            .isVisible()
+            .catch(() => false);
+          return hasSignOutLink || hasSuccessHeading;
+        })
+        .toBe(true);
+    } finally {
+      await deletePublicSite(mediaQuizSlug);
+    }
+  });
+
+  test("should block sign-in when geofence override is required but missing", async ({
+    page,
+    seedPublicSite,
+    deletePublicSite,
+  }) => {
+    const seeded = await seedPublicSite({
+      slugPrefix: "test-site-geofence-block-e2e",
+      includeGeofenceOverrideFlow: true,
+    });
+    const geofenceSlug = seeded.slug;
+    expect(geofenceSlug).toBeTruthy();
+
+    if (!geofenceSlug) {
+      return;
+    }
+
+    try {
+      const ok = await openSite(page, geofenceSlug);
+      expect(ok).toBe(true);
+
+      await fillDetailsForm(page, {
+        name: "Geofence Block Visitor",
+        phone: uniqueNzPhone(),
+        email: "geofence.block@test.com",
+      });
+
+      await expect(
+        page.getByLabel(/supervisor geofence override code/i),
+      ).toBeVisible();
+
+      await page
+        .getByRole("button", { name: /continue to induction/i })
+        .click();
+
+      await page
+        .getByLabel(/I acknowledge and agree to the above/i)
+        .first()
+        .check();
+      await page
+        .getByRole("button", { name: /continue to sign off/i })
+        .click();
+      await submitSignOffWithSignatureRetry(page);
+
+      await expect(
+        page
+          .getByText(
+            /geofence policy blocked this sign-in|please provide the supervisor geofence override code/i,
+          )
+          .first(),
+      ).toBeVisible();
+    } finally {
+      await deletePublicSite(geofenceSlug);
+    }
+  });
+
+  test("should allow sign-in when geofence override code is provided", async ({
+    page,
+    seedPublicSite,
+    deletePublicSite,
+  }) => {
+    const seeded = await seedPublicSite({
+      slugPrefix: "test-site-geofence-override-e2e",
+      includeGeofenceOverrideFlow: true,
+    });
+    const geofenceSlug = seeded.slug;
+    expect(geofenceSlug).toBeTruthy();
+
+    if (!geofenceSlug) {
+      return;
+    }
+
+    try {
+      const ok = await openSite(page, geofenceSlug);
+      expect(ok).toBe(true);
+
+      await fillDetailsForm(page, {
+        name: "Geofence Override Visitor",
+        phone: uniqueNzPhone(),
+        email: "geofence.override@test.com",
+      });
+
+      await page
+        .getByLabel(/supervisor geofence override code/i)
+        .fill(seeded.geofenceOverrideCode ?? "123456");
+
+      await page
+        .getByRole("button", { name: /continue to induction/i })
+        .click();
+
+      await page
+        .getByLabel(/I acknowledge and agree to the above/i)
+        .first()
+        .check();
+      await page
+        .getByRole("button", { name: /continue to sign off/i })
+        .click();
+      await submitSignOffWithSignatureRetry(page);
+
+      await expect(
+        page.getByRole("heading", {
+          level: 2,
+          name: /signed in successfully/i,
+        }),
+      ).toBeVisible();
+    } finally {
+      await deletePublicSite(geofenceSlug);
+    }
   });
 
   test("should show 404 for invalid site slug", async ({ page }) => {

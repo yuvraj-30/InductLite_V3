@@ -61,6 +61,12 @@ export interface CreateSiteInput {
   name: string;
   address?: string;
   description?: string;
+  location_latitude?: number | null;
+  location_longitude?: number | null;
+  location_radius_m?: number | null;
+  access_control?: Prisma.InputJsonValue | null;
+  webhooks?: Prisma.InputJsonValue | null;
+  lms_connector?: Prisma.InputJsonValue | null;
   is_active?: boolean;
 }
 
@@ -71,6 +77,12 @@ export interface UpdateSiteInput {
   name?: string;
   address?: string;
   description?: string;
+  location_latitude?: number | null;
+  location_longitude?: number | null;
+  location_radius_m?: number | null;
+  access_control?: Prisma.InputJsonValue | null;
+  webhooks?: Prisma.InputJsonValue | null;
+  lms_connector?: Prisma.InputJsonValue | null;
   is_active?: boolean;
 }
 
@@ -441,6 +453,12 @@ export async function createSite(
         name: input.name,
         address: input.address,
         description: input.description,
+        location_latitude: input.location_latitude ?? null,
+        location_longitude: input.location_longitude ?? null,
+        location_radius_m: input.location_radius_m ?? null,
+        access_control: input.access_control ?? null,
+        webhooks: input.webhooks ?? null,
+        lms_connector: input.lms_connector ?? null,
         is_active: input.is_active ?? true,
       },
     });
@@ -475,6 +493,24 @@ export async function updateSite(
         ...(input.address !== undefined && { address: input.address }),
         ...(input.description !== undefined && {
           description: input.description,
+        }),
+        ...(input.location_latitude !== undefined && {
+          location_latitude: input.location_latitude,
+        }),
+        ...(input.location_longitude !== undefined && {
+          location_longitude: input.location_longitude,
+        }),
+        ...(input.location_radius_m !== undefined && {
+          location_radius_m: input.location_radius_m,
+        }),
+        ...(input.access_control !== undefined && {
+          access_control: input.access_control,
+        }),
+        ...(input.webhooks !== undefined && {
+          webhooks: input.webhooks,
+        }),
+        ...(input.lms_connector !== undefined && {
+          lms_connector: input.lms_connector,
         }),
         ...(input.is_active !== undefined && { is_active: input.is_active }),
       },

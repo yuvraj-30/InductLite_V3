@@ -38,6 +38,14 @@ export interface SessionData {
   csrfToken?: string;
   createdAt?: number;
   lastActivity?: number;
+  pendingSso?: {
+    companyId: string;
+    companySlug: string;
+    state: string;
+    nonce: string;
+    returnTo: string;
+    createdAt: number;
+  };
 }
 
 // Helper to get runtime env to avoid Next.js build-time inlining

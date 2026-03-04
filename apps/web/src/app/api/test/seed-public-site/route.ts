@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { PrismaClient, QuestionType } from "@prisma/client";
 import { __test_clearInMemoryStore } from "@/lib/rate-limit";
 import { ensureTestRouteAccess } from "../_guard";
+import { hashGeofenceOverrideCode } from "@/lib/access-control/config";
 
 const prisma = new PrismaClient();
 
@@ -18,6 +19,33 @@ export async function POST(req: Request) {
       body.includeRedFlagQuestion === "true" ||
       body.includeRedFlagQuestion === 1 ||
       body.includeRedFlagQuestion === "1";
+    const includeLanguageVariants =
+      body.includeLanguageVariants === true ||
+      body.includeLanguageVariants === "true" ||
+      body.includeLanguageVariants === 1 ||
+      body.includeLanguageVariants === "1";
+    const includeMediaQuizFlow =
+      body.includeMediaQuizFlow === true ||
+      body.includeMediaQuizFlow === "true" ||
+      body.includeMediaQuizFlow === 1 ||
+      body.includeMediaQuizFlow === "1";
+    const includeGeofenceOverrideFlow =
+      body.includeGeofenceOverrideFlow === true ||
+      body.includeGeofenceOverrideFlow === "true" ||
+      body.includeGeofenceOverrideFlow === 1 ||
+      body.includeGeofenceOverrideFlow === "1";
+
+    const siteFeatureOverrides: Record<string, boolean> = {};
+    if (includeLanguageVariants) {
+      siteFeatureOverrides.MULTI_LANGUAGE = true;
+    }
+    if (includeMediaQuizFlow) {
+      siteFeatureOverrides.QUIZ_SCORING_V2 = true;
+      siteFeatureOverrides.CONTENT_BLOCKS = true;
+    }
+    if (includeGeofenceOverrideFlow) {
+      siteFeatureOverrides.GEOFENCE_ENFORCEMENT = true;
+    }
     // Use a random suffix to avoid collisions when running tests in parallel locally
     const suffix = Math.random().toString(36).slice(2, 8);
     const slug = `${slugPrefix}-${suffix}`;
@@ -50,7 +78,32 @@ export async function POST(req: Request) {
         name: `E2E Site ${suffix}`,
         address: "",
         description: "Temporary E2E site",
+        location_latitude: includeGeofenceOverrideFlow ? -36.8485 : null,
+        location_longitude: includeGeofenceOverrideFlow ? 174.7633 : null,
+        location_radius_m: includeGeofenceOverrideFlow ? 120 : null,
+        access_control: includeGeofenceOverrideFlow
+          ? {
+              version: 1,
+              geofence: {
+                mode: "OVERRIDE",
+                allowMissingLocation: false,
+                overrideCodeHash: hashGeofenceOverrideCode("123456"),
+                updatedAt: new Date().toISOString(),
+              },
+              hardware: {
+                enabled: false,
+                provider: null,
+                endpointUrl: null,
+                authToken: null,
+                updatedAt: null,
+              },
+            }
+          : undefined,
         is_active: true,
+        feature_overrides:
+          Object.keys(siteFeatureOverrides).length > 0
+            ? siteFeatureOverrides
+            : undefined,
       },
     });
 
@@ -73,19 +126,92 @@ export async function POST(req: Request) {
         version: 1,
         is_published: true,
         published_at: new Date(),
+        quiz_scoring_enabled: includeMediaQuizFlow,
+        quiz_pass_threshold: includeMediaQuizFlow ? 100 : 80,
+        quiz_max_attempts: includeMediaQuizFlow ? 2 : 3,
+        quiz_cooldown_minutes: includeMediaQuizFlow ? 0 : 15,
+        quiz_required_for_entry: includeMediaQuizFlow,
+        induction_media: includeMediaQuizFlow
+          ? {
+              version: 1,
+              requireAcknowledgement: true,
+              acknowledgementLabel:
+                "I have reviewed the induction material before continuing.",
+              blocks: [
+                {
+                  id: "media-1",
+                  type: "TEXT",
+                  title: "Site Safety Briefing",
+                  body: "Review this briefing before continuing to the quiz.",
+                  sortOrder: 1,
+                },
+              ],
+            }
+          : undefined,
+        induction_languages: includeLanguageVariants
+          ? {
+              version: 1,
+              defaultLanguage: "en",
+              variants: [
+                {
+                  languageCode: "mi",
+                  label: "Te Reo Maori",
+                  templateName: "Whakauru Pae",
+                  templateDescription: "Whakaotia nga patai haumaru katoa.",
+                  acknowledgementLabel:
+                    "Kua panui ahau i nga rauemi whakangungu i mua i te haere tonu.",
+                  questions: [],
+                },
+              ],
+            }
+          : undefined,
       },
     });
 
-    // Add a required acknowledgment question so the flow can proceed
+    // Add at least one required question so the flow can proceed.
     const question = await prisma.inductionQuestion.create({
       data: {
         template_id: template.id,
-        question_text: "I agree to follow site rules",
-        question_type: QuestionType.ACKNOWLEDGMENT,
+        question_text: includeMediaQuizFlow
+          ? "Are you wearing the required PPE on site?"
+          : "I agree to follow site rules",
+        question_type: includeMediaQuizFlow
+          ? QuestionType.YES_NO
+          : QuestionType.ACKNOWLEDGMENT,
         is_required: true,
         display_order: 1,
+        ...(includeMediaQuizFlow ? { correct_answer: "yes" } : {}),
       },
     });
+
+    if (includeLanguageVariants) {
+      await prisma.inductionTemplate.updateMany({
+        where: { id: template.id },
+        data: {
+          induction_languages: {
+            version: 1,
+            defaultLanguage: "en",
+            variants: [
+              {
+                languageCode: "mi",
+                label: "Te Reo Maori",
+                templateName: "Whakauru Pae",
+                templateDescription: "Whakaotia nga patai haumaru katoa.",
+                acknowledgementLabel:
+                  "Kua panui ahau i nga rauemi whakangungu i mua i te haere tonu.",
+                questions: [
+                  {
+                    questionId: question.id,
+                    questionText: "E whakaae ana ahau ki nga ture o te pae",
+                    optionLabels: null,
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      });
+    }
 
     let redFlagQuestionId: string | undefined;
     if (includeRedFlagQuestion) {
@@ -119,6 +245,10 @@ export async function POST(req: Request) {
       templateId: template.id,
       questionId: question.id,
       redFlagQuestionId,
+      includeLanguageVariants,
+      includeMediaQuizFlow,
+      includeGeofenceOverrideFlow,
+      geofenceOverrideCode: includeGeofenceOverrideFlow ? "123456" : undefined,
       clearedRateLimit,
     });
   } catch (err: unknown) {

@@ -13,6 +13,8 @@ const TENANT_MODELS = [
   "siteEmergencyContact",
   "siteEmergencyProcedure",
   "emergencyDrill",
+  "evacuationEvent",
+  "evacuationAttendance",
   "incidentReport",
   "legalDocumentVersion",
   "siteManagerAssignment",
@@ -20,7 +22,10 @@ const TENANT_MODELS = [
   "exportJob",
   "auditLog",
   "emailNotification",
+  "outboundWebhookDelivery",
+  "inductionQuizAttempt",
   "pendingSignInEscalation",
+  "preRegistrationInvite",
 ] as const;
 
 function andWhere(companyGuard: object, where?: any) {
@@ -282,6 +287,22 @@ export function scopedDb(
       updateMany: (args?: any) => Promise<{ count: number }>;
       deleteMany: (args?: any) => Promise<any>;
     };
+    evacuationEvent: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    evacuationAttendance: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
     incidentReport: {
       findFirst: (args?: any) => Promise<any>;
       findMany: (args?: any) => Promise<any[]>;
@@ -336,7 +357,32 @@ export function scopedDb(
       updateMany: (args?: any) => Promise<{ count: number }>;
       deleteMany: (args?: any) => Promise<any>;
     };
+    outboundWebhookDelivery: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+      groupBy: (args?: any) => Promise<any>;
+    };
+    inductionQuizAttempt: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
     pendingSignInEscalation: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    preRegistrationInvite: {
       findFirst: (args?: any) => Promise<any>;
       findMany: (args?: any) => Promise<any[]>;
       count: (args?: any) => Promise<number>;

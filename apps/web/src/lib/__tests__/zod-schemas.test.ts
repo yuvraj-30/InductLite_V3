@@ -183,6 +183,94 @@ describe("Public Sign-In Schema Validation", () => {
         ).toBe(true);
       }
     });
+
+    it("should accept optional location payload", () => {
+      const result = signInSchema.safeParse({
+        ...validInput,
+        location: {
+          latitude: -36.8485,
+          longitude: 174.7633,
+          accuracyMeters: 24.5,
+          capturedAt: "2026-02-28T00:00:00.000Z",
+        },
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should reject invalid location payload", () => {
+      const result = signInSchema.safeParse({
+        ...validInput,
+        location: {
+          latitude: 95,
+          longitude: 174.7633,
+        },
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("should accept optional host recipient id", () => {
+      const result = signInSchema.safeParse({
+        ...validInput,
+        hostRecipientId: "c123456789012345678901234",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should reject invalid host recipient id", () => {
+      const result = signInSchema.safeParse({
+        ...validInput,
+        hostRecipientId: "not-a-cuid",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("should accept optional media acknowledgement flag", () => {
+      const result = signInSchema.safeParse({
+        ...validInput,
+        mediaAcknowledged: true,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should reject invalid media acknowledgement flag type", () => {
+      const result = signInSchema.safeParse({
+        ...validInput,
+        mediaAcknowledged: "yes",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("should accept optional geofence override code", () => {
+      const result = signInSchema.safeParse({
+        ...validInput,
+        geofenceOverrideCode: "123456",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should reject invalid geofence override code", () => {
+      const result = signInSchema.safeParse({
+        ...validInput,
+        geofenceOverrideCode: "a",
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it("should accept optional language code", () => {
+      const result = signInSchema.safeParse({
+        ...validInput,
+        languageCode: "mi",
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it("should reject invalid language code", () => {
+      const result = signInSchema.safeParse({
+        ...validInput,
+        languageCode: "english!!!",
+      });
+      expect(result.success).toBe(false);
+    });
   });
 
   describe("signOutSchema", () => {

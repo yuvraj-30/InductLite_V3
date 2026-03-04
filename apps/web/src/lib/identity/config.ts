@@ -1,0 +1,260 @@
+import { createHash, randomBytes, timingSafeEqual } from "crypto";
+import type { UserRole } from "@prisma/client";
+import { decryptString, encryptString } from "@/lib/security/data-protection";
+
+export type SsoProvider = "OIDC_GENERIC" | "MICROSOFT_ENTRA";
+
+export interface RoleMapping {
+  ADMIN: string[];
+  SITE_MANAGER: string[];
+  VIEWER: string[];
+}
+
+export interface DirectorySyncConfig {
+  enabled: boolean;
+  tokenHash: string | null;
+}
+
+export interface CompanySsoConfig {
+  enabled: boolean;
+  provider: SsoProvider;
+  displayName: string;
+  issuerUrl: string;
+  clientId: string;
+  clientSecretEncrypted: string | null;
+  scopes: string[];
+  autoProvisionUsers: boolean;
+  defaultRole: UserRole;
+  roleClaimPath: string;
+  roleMapping: RoleMapping;
+  allowedEmailDomains: string[];
+  directorySync: DirectorySyncConfig;
+}
+
+const DEFAULT_SCOPES = ["openid", "profile", "email"];
+const DEFAULT_ROLE_MAPPING: RoleMapping = {
+  ADMIN: ["admin", "admins"],
+  SITE_MANAGER: ["site_manager", "site-managers", "manager"],
+  VIEWER: ["viewer", "users", "read_only"],
+};
+
+function normalizeString(value: unknown, maxLength = 2000): string | null {
+  if (typeof value !== "string") return null;
+  const normalized = value.trim();
+  if (!normalized) return null;
+  return normalized.slice(0, maxLength);
+}
+
+function normalizeUrl(value: unknown): string {
+  const raw = normalizeString(value, 2000);
+  if (!raw) return "";
+
+  try {
+    const parsed = new URL(raw);
+    if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return "";
+    return parsed.toString().replace(/\/$/, "");
+  } catch {
+    return "";
+  }
+}
+
+function normalizeRole(value: unknown): UserRole {
+  if (value === "ADMIN" || value === "SITE_MANAGER" || value === "VIEWER") {
+    return value;
+  }
+  return "VIEWER";
+}
+
+function normalizeStringArray(
+  value: unknown,
+  maxItems = 20,
+  maxItemLength = 120,
+): string[] {
+  if (!Array.isArray(value)) return [];
+  const deduped = new Set<string>();
+  for (const item of value) {
+    const normalized = normalizeString(item, maxItemLength);
+    if (!normalized) continue;
+    deduped.add(normalized);
+    if (deduped.size >= maxItems) break;
+  }
+  return Array.from(deduped);
+}
+
+function normalizeEmailDomainArray(value: unknown): string[] {
+  const domains = normalizeStringArray(value, 20, 190);
+  return domains
+    .map((domain) => domain.toLowerCase().replace(/^@/, ""))
+    .filter((domain) => /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(domain));
+}
+
+function normalizeRoleMapping(value: unknown): RoleMapping {
+  if (!value || typeof value !== "object") {
+    return { ...DEFAULT_ROLE_MAPPING };
+  }
+
+  const raw = value as Record<string, unknown>;
+  return {
+    ADMIN: normalizeStringArray(raw.ADMIN ?? DEFAULT_ROLE_MAPPING.ADMIN),
+    SITE_MANAGER: normalizeStringArray(
+      raw.SITE_MANAGER ?? DEFAULT_ROLE_MAPPING.SITE_MANAGER,
+    ),
+    VIEWER: normalizeStringArray(raw.VIEWER ?? DEFAULT_ROLE_MAPPING.VIEWER),
+  };
+}
+
+export function parseCompanySsoConfig(raw: unknown): CompanySsoConfig {
+  const base =
+    raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const directoryRaw =
+    base.directorySync && typeof base.directorySync === "object"
+      ? (base.directorySync as Record<string, unknown>)
+      : {};
+
+  return {
+    enabled: base.enabled === true,
+    provider:
+      base.provider === "MICROSOFT_ENTRA" ? "MICROSOFT_ENTRA" : "OIDC_GENERIC",
+    displayName: normalizeString(base.displayName, 120) ?? "Company SSO",
+    issuerUrl: normalizeUrl(base.issuerUrl),
+    clientId: normalizeString(base.clientId, 300) ?? "",
+    clientSecretEncrypted:
+      normalizeString(base.clientSecretEncrypted, 4000) ?? null,
+    scopes: (() => {
+      const scopes = normalizeStringArray(base.scopes, 20, 80);
+      return scopes.length > 0 ? scopes : [...DEFAULT_SCOPES];
+    })(),
+    autoProvisionUsers: base.autoProvisionUsers !== false,
+    defaultRole: normalizeRole(base.defaultRole),
+    roleClaimPath: normalizeString(base.roleClaimPath, 120) ?? "roles",
+    roleMapping: normalizeRoleMapping(base.roleMapping),
+    allowedEmailDomains: normalizeEmailDomainArray(base.allowedEmailDomains),
+    directorySync: {
+      enabled: directoryRaw.enabled === true,
+      tokenHash: normalizeString(directoryRaw.tokenHash, 160) ?? null,
+    },
+  };
+}
+
+export function serializeCompanySsoConfig(
+  input: CompanySsoConfig,
+): Record<string, unknown> {
+  return {
+    enabled: input.enabled,
+    provider: input.provider,
+    displayName: input.displayName,
+    issuerUrl: input.issuerUrl,
+    clientId: input.clientId,
+    clientSecretEncrypted: input.clientSecretEncrypted,
+    scopes: input.scopes,
+    autoProvisionUsers: input.autoProvisionUsers,
+    defaultRole: input.defaultRole,
+    roleClaimPath: input.roleClaimPath,
+    roleMapping: input.roleMapping,
+    allowedEmailDomains: input.allowedEmailDomains,
+    directorySync: {
+      enabled: input.directorySync.enabled,
+      tokenHash: input.directorySync.tokenHash,
+    },
+  };
+}
+
+export function setClientSecret(
+  config: CompanySsoConfig,
+  plainSecret: string | null,
+): CompanySsoConfig {
+  if (!plainSecret) return config;
+
+  return {
+    ...config,
+    clientSecretEncrypted: encryptString(plainSecret.trim()),
+  };
+}
+
+export function decryptClientSecret(config: CompanySsoConfig): string | null {
+  if (!config.clientSecretEncrypted) return null;
+  try {
+    return decryptString(config.clientSecretEncrypted);
+  } catch {
+    return null;
+  }
+}
+
+export function generateDirectorySyncApiKey(): string {
+  return `idsync_${randomBytes(24).toString("base64url")}`;
+}
+
+function hashToken(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+export function hashDirectorySyncApiKey(apiKey: string): string {
+  return hashToken(apiKey);
+}
+
+export function verifyDirectorySyncApiKey(
+  apiKey: string,
+  expectedHash: string | null,
+): boolean {
+  if (!expectedHash) return false;
+  const providedHash = hashToken(apiKey);
+  const expected = Buffer.from(expectedHash, "hex");
+  const provided = Buffer.from(providedHash, "hex");
+  if (expected.length === 0 || provided.length === 0) return false;
+  if (expected.length !== provided.length) return false;
+  return timingSafeEqual(expected, provided);
+}
+
+function normalizeClaimValue(value: unknown): string[] {
+  if (typeof value === "string") return [value];
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((entry) => typeof entry === "string")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+}
+
+function getClaimByPath(
+  claims: Record<string, unknown>,
+  path: string,
+): unknown {
+  const segments = path.split(".").map((segment) => segment.trim()).filter(Boolean);
+  if (segments.length === 0) return undefined;
+
+  let cursor: unknown = claims;
+  for (const segment of segments) {
+    if (!cursor || typeof cursor !== "object") return undefined;
+    cursor = (cursor as Record<string, unknown>)[segment];
+  }
+  return cursor;
+}
+
+export function resolveRoleFromClaims(
+  claims: Record<string, unknown>,
+  config: CompanySsoConfig,
+): UserRole {
+  const claimValues = normalizeClaimValue(
+    getClaimByPath(claims, config.roleClaimPath),
+  ).map((value) => value.toLowerCase());
+
+  const matchesRole = (role: UserRole): boolean => {
+    const mapping = config.roleMapping[role].map((value) => value.toLowerCase());
+    return mapping.some((mapped) => claimValues.includes(mapped));
+  };
+
+  if (matchesRole("ADMIN")) return "ADMIN";
+  if (matchesRole("SITE_MANAGER")) return "SITE_MANAGER";
+  if (matchesRole("VIEWER")) return "VIEWER";
+  return config.defaultRole;
+}
+
+export function isEmailDomainAllowed(
+  email: string,
+  config: CompanySsoConfig,
+): boolean {
+  if (config.allowedEmailDomains.length === 0) return true;
+
+  const [, domain = ""] = email.toLowerCase().split("@");
+  if (!domain) return false;
+  return config.allowedEmailDomains.includes(domain);
+}

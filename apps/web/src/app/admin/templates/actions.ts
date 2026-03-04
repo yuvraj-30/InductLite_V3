@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { checkAdmin, assertOrigin } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
@@ -31,6 +32,15 @@ import {
 import { createAuditLog } from "@/lib/repository/audit.repository";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
+import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
+import {
+  hasInductionMedia,
+  parseInductionMediaConfig,
+} from "@/lib/template/media-config";
+import {
+  hasInductionLanguageVariants,
+  parseInductionLanguageConfig,
+} from "@/lib/template/language-config";
 import {
   type ApiResponse,
   successResponse,
@@ -115,6 +125,28 @@ const createTemplateSchema = z.object({
   description: z.string().max(500, "Description too long").optional(),
   site_id: z.string().cuid("Invalid site ID").optional(),
   is_default: z.boolean().optional(),
+  quiz_scoring_enabled: z.boolean().optional(),
+  quiz_pass_threshold: z
+    .number()
+    .int()
+    .min(1, "Pass threshold must be between 1 and 100")
+    .max(100, "Pass threshold must be between 1 and 100")
+    .optional(),
+  quiz_max_attempts: z
+    .number()
+    .int()
+    .min(1, "Max attempts must be between 1 and 10")
+    .max(10, "Max attempts must be between 1 and 10")
+    .optional(),
+  quiz_cooldown_minutes: z
+    .number()
+    .int()
+    .min(0, "Cooldown must be between 0 and 1440 minutes")
+    .max(1440, "Cooldown must be between 0 and 1440 minutes")
+    .optional(),
+  quiz_required_for_entry: z.boolean().optional(),
+  induction_media: z.unknown().optional().nullable(),
+  induction_languages: z.unknown().optional().nullable(),
 });
 
 const updateTemplateSchema = z.object({
@@ -125,6 +157,28 @@ const updateTemplateSchema = z.object({
     .optional(),
   description: z.string().max(500, "Description too long").optional(),
   is_default: z.boolean().optional(),
+  quiz_scoring_enabled: z.boolean().optional(),
+  quiz_pass_threshold: z
+    .number()
+    .int()
+    .min(1, "Pass threshold must be between 1 and 100")
+    .max(100, "Pass threshold must be between 1 and 100")
+    .optional(),
+  quiz_max_attempts: z
+    .number()
+    .int()
+    .min(1, "Max attempts must be between 1 and 10")
+    .max(10, "Max attempts must be between 1 and 10")
+    .optional(),
+  quiz_cooldown_minutes: z
+    .number()
+    .int()
+    .min(0, "Cooldown must be between 0 and 1440 minutes")
+    .max(1440, "Cooldown must be between 0 and 1440 minutes")
+    .optional(),
+  quiz_required_for_entry: z.boolean().optional(),
+  induction_media: z.unknown().optional().nullable(),
+  induction_languages: z.unknown().optional().nullable(),
 });
 
 const createQuestionSchema = z.object({
@@ -168,6 +222,101 @@ const reorderSchema = z.array(
   }),
 );
 
+function normalizeInductionMediaInput(
+  raw: unknown | null | undefined,
+): Prisma.InputJsonValue | null | undefined {
+  if (raw === undefined) {
+    return undefined;
+  }
+
+  if (raw === null) {
+    return null;
+  }
+
+  const parsed = parseInductionMediaConfig(raw);
+  if (!hasInductionMedia(parsed)) {
+    return null;
+  }
+
+  return parsed as unknown as Prisma.InputJsonValue;
+}
+
+function normalizeInductionLanguageInput(
+  raw: unknown | null | undefined,
+): Prisma.InputJsonValue | null | undefined {
+  if (raw === undefined) {
+    return undefined;
+  }
+
+  if (raw === null) {
+    return null;
+  }
+
+  const parsed = parseInductionLanguageConfig(raw);
+  if (!hasInductionLanguageVariants(parsed)) {
+    return null;
+  }
+
+  return parsed as unknown as Prisma.InputJsonValue;
+}
+
+async function enforceTemplateFeatureEntitlements(input: {
+  companyId: string;
+  siteId?: string;
+  quizScoringEnabled?: boolean;
+  inductionMedia?: Prisma.InputJsonValue | null;
+  inductionLanguages?: Prisma.InputJsonValue | null;
+}): Promise<ApiResponse<never> | null> {
+  const checks: Array<{
+    enabled: boolean;
+    featureKey: "QUIZ_SCORING_V2" | "CONTENT_BLOCKS" | "MULTI_LANGUAGE";
+    deniedMessage: string;
+  }> = [
+    {
+      enabled: input.quizScoringEnabled === true,
+      featureKey: "QUIZ_SCORING_V2",
+      deniedMessage:
+        "Quiz scoring is not enabled for this site plan (CONTROL_ID: PLAN-ENTITLEMENT-001)",
+    },
+    {
+      enabled:
+        input.inductionMedia !== undefined && input.inductionMedia !== null,
+      featureKey: "CONTENT_BLOCKS",
+      deniedMessage:
+        "Media-first induction blocks are not enabled for this site plan (CONTROL_ID: PLAN-ENTITLEMENT-001)",
+    },
+    {
+      enabled:
+        input.inductionLanguages !== undefined &&
+        input.inductionLanguages !== null,
+      featureKey: "MULTI_LANGUAGE",
+      deniedMessage:
+        "Multi-language packs are not enabled for this site plan (CONTROL_ID: PLAN-ENTITLEMENT-001)",
+    },
+  ];
+
+  for (const check of checks) {
+    if (!check.enabled) {
+      continue;
+    }
+
+    try {
+      await assertCompanyFeatureEnabled(
+        input.companyId,
+        check.featureKey,
+        input.siteId,
+      );
+    } catch (error) {
+      if (error instanceof EntitlementDeniedError) {
+        return errorResponse("FORBIDDEN", check.deniedMessage);
+      }
+      throw error;
+    }
+  }
+
+  return null;
+}
+
 // ============================================================================
 // TEMPLATE ACTIONS
 // ============================================================================
@@ -209,7 +358,28 @@ export async function createTemplateAction(
   const context = await requireAuthenticatedContextReadOnly();
 
   try {
-    const template = await createTemplate(context.companyId, parsed.data);
+    const normalizedInductionMedia = normalizeInductionMediaInput(
+      parsed.data.induction_media,
+    );
+    const normalizedInductionLanguages = normalizeInductionLanguageInput(
+      parsed.data.induction_languages,
+    );
+    const entitlementError = await enforceTemplateFeatureEntitlements({
+      companyId: context.companyId,
+      siteId: parsed.data.site_id,
+      quizScoringEnabled: parsed.data.quiz_scoring_enabled,
+      inductionMedia: normalizedInductionMedia,
+      inductionLanguages: normalizedInductionLanguages,
+    });
+    if (entitlementError) {
+      return entitlementError;
+    }
+
+    const template = await createTemplate(context.companyId, {
+      ...parsed.data,
+      induction_media: normalizedInductionMedia,
+      induction_languages: normalizedInductionLanguages,
+    });
 
     await createAuditLog(context.companyId, {
       action: "template.create",
@@ -285,18 +455,50 @@ export async function updateTemplateAction(
   const context = await requireAuthenticatedContextReadOnly();
 
   try {
+    const existingTemplate = await findTemplateById(context.companyId, templateId);
+    if (!existingTemplate) {
+      return errorResponse("NOT_FOUND", "Template not found");
+    }
+
+    const normalizedInductionMedia = normalizeInductionMediaInput(
+      parsed.data.induction_media,
+    );
+    const normalizedInductionLanguages = normalizeInductionLanguageInput(
+      parsed.data.induction_languages,
+    );
+    const entitlementError = await enforceTemplateFeatureEntitlements({
+      companyId: context.companyId,
+      siteId: existingTemplate.site_id ?? undefined,
+      quizScoringEnabled: parsed.data.quiz_scoring_enabled,
+      inductionMedia: normalizedInductionMedia,
+      inductionLanguages: normalizedInductionLanguages,
+    });
+    if (entitlementError) {
+      return entitlementError;
+    }
+
+    const normalizedInput: UpdateTemplateInput = {
+      ...parsed.data,
+      induction_media: normalizedInductionMedia,
+      induction_languages: normalizedInductionLanguages,
+    };
+
     const template = await updateTemplate(
       context.companyId,
       templateId,
-      parsed.data,
+      normalizedInput,
     );
+
+    const changesForAudit = JSON.parse(
+      JSON.stringify(normalizedInput),
+    ) as Prisma.InputJsonValue;
 
     await createAuditLog(context.companyId, {
       action: "template.update",
       entity_type: "InductionTemplate",
       entity_id: template.id,
       user_id: context.userId,
-      details: { changes: parsed.data },
+      details: { changes: changesForAudit },
       request_id: requestId,
     });
 

@@ -9,6 +9,21 @@
 
 import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 
+const entitlementDeniedError = vi.hoisted(
+  () =>
+    class EntitlementDeniedError extends Error {
+      featureKey: string;
+      controlId: string;
+
+      constructor(featureKey: string) {
+        super(`Feature is not enabled for this tenant: ${featureKey}`);
+        this.name = "EntitlementDeniedError";
+        this.featureKey = featureKey;
+        this.controlId = "PLAN-ENTITLEMENT-001";
+      }
+    },
+);
+
 // Mock all dependencies before importing the module under test
 vi.mock("@/lib/repository/site.repository", () => ({
   findSiteByPublicSlug: vi.fn(),
@@ -22,6 +37,47 @@ vi.mock("@/lib/repository/template.repository", () => ({
 vi.mock("@/lib/repository/public-signin.repository", () => ({
   createPublicSignIn: vi.fn(),
   signOutWithToken: vi.fn(),
+}));
+
+vi.mock("@/lib/repository/signin.repository", () => ({
+  findSignInById: vi.fn(),
+}));
+
+vi.mock("@/lib/repository/pre-registration.repository", () => ({
+  findActivePreRegistrationInviteByToken: vi.fn().mockResolvedValue(null),
+  markPreRegistrationInviteUsed: vi.fn().mockResolvedValue(true),
+}));
+
+vi.mock("@/lib/repository/induction-quiz-attempt.repository", () => ({
+  findInductionQuizAttemptState: vi.fn().mockResolvedValue(null),
+  upsertInductionQuizAttemptState: vi.fn().mockResolvedValue({
+    id: "quiz-attempt-1",
+    company_id: "company-123",
+    site_id: "site-123",
+    template_id: "template-123",
+    visitor_phone_hash: "hash",
+    failed_attempts: 0,
+    cooldown_until: null,
+    last_attempt_at: new Date("2026-02-22T10:00:00Z"),
+    last_score_percent: 100,
+    last_passed: true,
+    created_at: new Date("2026-02-22T10:00:00Z"),
+    updated_at: new Date("2026-02-22T10:00:00Z"),
+  }),
+}));
+
+vi.mock("@/lib/repository/webhook-delivery.repository", () => ({
+  queueOutboundWebhookDeliveries: vi.fn().mockResolvedValue(0),
+}));
+
+vi.mock("@/lib/hardware/adapter", () => ({
+  queueHardwareAccessDecision: vi
+    .fn()
+    .mockResolvedValue({ queued: false, reason: "disabled" }),
+}));
+
+vi.mock("@/lib/sms/wrapper", () => ({
+  sendSmsWithQuota: vi.fn().mockResolvedValue({ status: "DISABLED" }),
 }));
 
 vi.mock("@/lib/repository/email.repository", () => ({
@@ -82,12 +138,31 @@ vi.mock("@/lib/auth/csrf", () => ({
   getUserAgent: vi.fn().mockResolvedValue("test-agent"),
 }));
 
+vi.mock("@/lib/plans", () => ({
+  EntitlementDeniedError: entitlementDeniedError,
+  assertCompanyFeatureEnabled: vi.fn().mockResolvedValue(undefined),
+}));
+
 // Import after mocks are set up
-import { submitSignIn, submitSignOut, getSiteForSignIn } from "./actions";
+import {
+  submitSignIn,
+  submitSignOut,
+  getSiteForSignIn,
+  submitBadgePrintAudit,
+} from "./actions";
 import {
   findSiteByPublicSlug,
   listSiteManagerNotificationRecipients,
 } from "@/lib/repository/site.repository";
+import { findSignInById } from "@/lib/repository/signin.repository";
+import {
+  findActivePreRegistrationInviteByToken,
+  markPreRegistrationInviteUsed,
+} from "@/lib/repository/pre-registration.repository";
+import {
+  findInductionQuizAttemptState,
+  upsertInductionQuizAttemptState,
+} from "@/lib/repository/induction-quiz-attempt.repository";
 import { getActiveTemplateForSite } from "@/lib/repository/template.repository";
 import {
   createPublicSignIn,
@@ -99,11 +174,32 @@ import {
   createPendingSignInEscalation,
   setSignInEscalationNotificationCounts,
 } from "@/lib/repository/signin-escalation.repository";
+import { queueOutboundWebhookDeliveries } from "@/lib/repository/webhook-delivery.repository";
 import { createRequestLogger } from "@/lib/logger";
+import { assertCompanyFeatureEnabled } from "@/lib/plans";
 
 describe("Public Actions Error Handling", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    (listSiteManagerNotificationRecipients as Mock).mockResolvedValue([]);
+    (assertCompanyFeatureEnabled as Mock).mockResolvedValue(undefined);
+    (findActivePreRegistrationInviteByToken as Mock).mockResolvedValue(null);
+    (markPreRegistrationInviteUsed as Mock).mockResolvedValue(true);
+    (findInductionQuizAttemptState as Mock).mockResolvedValue(null);
+    (upsertInductionQuizAttemptState as Mock).mockResolvedValue({
+      id: "quiz-attempt-1",
+      company_id: "company-123",
+      site_id: "site-123",
+      template_id: "template-123",
+      visitor_phone_hash: "hash",
+      failed_attempts: 0,
+      cooldown_until: null,
+      last_attempt_at: new Date("2026-02-22T10:00:00Z"),
+      last_score_percent: 100,
+      last_passed: true,
+      created_at: new Date("2026-02-22T10:00:00Z"),
+      updated_at: new Date("2026-02-22T10:00:00Z"),
+    });
   });
 
   // ============================================================================
@@ -127,13 +223,18 @@ describe("Public Actions Error Handling", () => {
       name: "Test Site",
       address: "123 Test St",
       description: null,
+      location_latitude: null,
+      location_longitude: null,
+      location_radius_m: null,
       company: { id: "company-123", name: "Test Company" },
     };
 
     const mockTemplate = {
       id: "template-123",
       name: "Test Template",
+      description: null,
       version: 1,
+      induction_languages: null,
       questions: [],
     };
 
@@ -172,6 +273,403 @@ describe("Public Actions Error Handling", () => {
       if (!result.success) {
         expect(result.error.code).toBe("VALIDATION_ERROR");
       }
+    });
+
+    it("requires media acknowledgement when template media is configured", async () => {
+      (findSiteByPublicSlug as Mock).mockResolvedValue(mockSite);
+      (getActiveTemplateForSite as Mock).mockResolvedValue({
+        ...mockTemplate,
+        induction_media: {
+          version: 1,
+          requireAcknowledgement: true,
+          acknowledgementLabel:
+            "I have reviewed the induction material before continuing.",
+          blocks: [
+            {
+              id: "media-1",
+              type: "PDF",
+              title: "Site Safety PDF",
+              url: "https://example.com/safety.pdf",
+              sortOrder: 1,
+            },
+          ],
+        },
+      });
+
+      const result = await submitSignIn(validInput);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe("VALIDATION_ERROR");
+        expect(result.error.message).toBe(
+          "Induction media acknowledgement required",
+        );
+      }
+      expect(createPublicSignIn).not.toHaveBeenCalled();
+    });
+
+    it("skips media acknowledgement when content-block entitlement is disabled", async () => {
+      (findSiteByPublicSlug as Mock).mockResolvedValue(mockSite);
+      (getActiveTemplateForSite as Mock).mockResolvedValue({
+        ...mockTemplate,
+        induction_media: {
+          version: 1,
+          requireAcknowledgement: true,
+          acknowledgementLabel:
+            "I have reviewed the induction material before continuing.",
+          blocks: [
+            {
+              id: "media-1",
+              type: "PDF",
+              title: "Site Safety PDF",
+              url: "https://example.com/safety.pdf",
+              sortOrder: 1,
+            },
+          ],
+        },
+      });
+      (assertCompanyFeatureEnabled as Mock).mockImplementation(
+        async (_companyId: string, featureKey: string) => {
+          if (featureKey === "CONTENT_BLOCKS") {
+            throw new entitlementDeniedError("CONTENT_BLOCKS");
+          }
+          return undefined;
+        },
+      );
+      (createPublicSignIn as Mock).mockResolvedValue({
+        signInRecordId: "signin-1",
+        signOutToken: "token-1",
+        signOutTokenExpiresAt: new Date("2026-02-23T10:00:00Z"),
+        visitorName: "John Doe",
+        siteName: "Test Site",
+        signInTime: new Date("2026-02-22T10:00:00Z"),
+      });
+
+      const result = await submitSignIn(validInput);
+
+      expect(result.success).toBe(true);
+      expect(createPublicSignIn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          mediaEvidence: expect.objectContaining({
+            enabled: false,
+          }),
+        }),
+      );
+    });
+
+    it("persists media evidence in completion payload when media is configured", async () => {
+      (findSiteByPublicSlug as Mock).mockResolvedValue(mockSite);
+      (getActiveTemplateForSite as Mock).mockResolvedValue({
+        ...mockTemplate,
+        induction_media: {
+          version: 1,
+          requireAcknowledgement: true,
+          acknowledgementLabel:
+            "I have reviewed the induction material before continuing.",
+          blocks: [
+            {
+              id: "media-1",
+              type: "TEXT",
+              title: "Safety Notes",
+              body: "Read this before entering.",
+              sortOrder: 1,
+            },
+          ],
+        },
+      });
+      (createPublicSignIn as Mock).mockResolvedValue({
+        signInRecordId: "signin-1",
+        signOutToken: "token-1",
+        signOutTokenExpiresAt: new Date("2026-02-23T10:00:00Z"),
+        visitorName: "John Doe",
+        siteName: "Test Site",
+        signInTime: new Date("2026-02-22T10:00:00Z"),
+      });
+
+      const result = await submitSignIn({
+        ...validInput,
+        mediaAcknowledged: true,
+      });
+
+      expect(result.success).toBe(true);
+      expect(createPublicSignIn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          mediaEvidence: expect.objectContaining({
+            enabled: true,
+            requireAcknowledgement: true,
+            acknowledged: true,
+            blocks: expect.arrayContaining([
+              expect.objectContaining({
+                id: "media-1",
+                type: "TEXT",
+                title: "Safety Notes",
+              }),
+            ]),
+          }),
+        }),
+      );
+    });
+
+    it("rejects unavailable language selection", async () => {
+      (findSiteByPublicSlug as Mock).mockResolvedValue(mockSite);
+      (getActiveTemplateForSite as Mock).mockResolvedValue({
+        ...mockTemplate,
+        induction_languages: {
+          defaultLanguage: "en",
+          variants: [
+            {
+              languageCode: "mi",
+              label: "Te Reo Maori",
+              templateName: "Whakauru Pae",
+            },
+          ],
+        },
+      });
+
+      const result = await submitSignIn({
+        ...validInput,
+        languageCode: "fr",
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe("VALIDATION_ERROR");
+        expect(result.error.message).toBe("Selected language is unavailable");
+      }
+      expect(createPublicSignIn).not.toHaveBeenCalled();
+    });
+
+    it("enforces entitlement when non-default language is requested", async () => {
+      (findSiteByPublicSlug as Mock).mockResolvedValue(mockSite);
+      (getActiveTemplateForSite as Mock).mockResolvedValue({
+        ...mockTemplate,
+        induction_languages: {
+          defaultLanguage: "en",
+          variants: [
+            {
+              languageCode: "mi",
+              label: "Te Reo Maori",
+              templateName: "Whakauru Pae",
+            },
+          ],
+        },
+      });
+      (assertCompanyFeatureEnabled as Mock).mockImplementation(
+        async (_companyId: string, featureKey: string) => {
+          if (featureKey === "MULTI_LANGUAGE") {
+            throw new entitlementDeniedError("MULTI_LANGUAGE");
+          }
+          return undefined;
+        },
+      );
+
+      const result = await submitSignIn({
+        ...validInput,
+        languageCode: "mi",
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe("FORBIDDEN");
+        expect(result.error.message).toContain(
+          "Multi-language packs are not enabled",
+        );
+      }
+      expect(createPublicSignIn).not.toHaveBeenCalled();
+    });
+
+    it("passes selected language evidence into sign-in snapshot payload", async () => {
+      (findSiteByPublicSlug as Mock).mockResolvedValue(mockSite);
+      (getActiveTemplateForSite as Mock).mockResolvedValue({
+        ...mockTemplate,
+        induction_languages: {
+          defaultLanguage: "en",
+          variants: [
+            {
+              languageCode: "mi",
+              label: "Te Reo Maori",
+              templateName: "Whakauru Pae",
+            },
+          ],
+        },
+      });
+      (createPublicSignIn as Mock).mockResolvedValue({
+        signInRecordId: "signin-1",
+        signOutToken: "token-1",
+        signOutTokenExpiresAt: new Date("2026-02-23T10:00:00Z"),
+        visitorName: "John Doe",
+        siteName: "Test Site",
+        signInTime: new Date("2026-02-22T10:00:00Z"),
+      });
+
+      const result = await submitSignIn({
+        ...validInput,
+        languageCode: "mi",
+      });
+
+      expect(result.success).toBe(true);
+      expect(createPublicSignIn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          languageSelection: {
+            code: "mi",
+            label: "Te Reo Maori",
+            usedVariant: true,
+          },
+        }),
+      );
+    });
+
+    it("blocks quiz attempts while cooldown is active", async () => {
+      const questionId = "c123456789012345678901234";
+      (findSiteByPublicSlug as Mock).mockResolvedValue(mockSite);
+      (getActiveTemplateForSite as Mock).mockResolvedValue({
+        ...mockTemplate,
+        quiz_scoring_enabled: true,
+        quiz_pass_threshold: 80,
+        quiz_max_attempts: 3,
+        quiz_cooldown_minutes: 30,
+        quiz_required_for_entry: true,
+        questions: [
+          {
+            id: questionId,
+            question_text: "Are you wearing PPE?",
+            question_type: "YES_NO",
+            options: null,
+            is_required: true,
+            display_order: 1,
+            red_flag: false,
+            correct_answer: "yes",
+          },
+        ],
+      });
+      (findInductionQuizAttemptState as Mock).mockResolvedValue({
+        id: "quiz-attempt-1",
+        company_id: "company-123",
+        site_id: "site-123",
+        template_id: "template-123",
+        visitor_phone_hash: "hash",
+        failed_attempts: 0,
+        cooldown_until: new Date(Date.now() + 60_000),
+        last_attempt_at: new Date(),
+        last_score_percent: 0,
+        last_passed: false,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+
+      const result = await submitSignIn({
+        ...validInput,
+        answers: [{ questionId, answer: "yes" }],
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.message).toBe("Quiz retry cooldown active");
+      }
+      expect(createPublicSignIn).not.toHaveBeenCalled();
+    });
+
+    it("blocks sign-in when quiz pass threshold is not met", async () => {
+      const questionId = "c123456789012345678901234";
+      (findSiteByPublicSlug as Mock).mockResolvedValue(mockSite);
+      (getActiveTemplateForSite as Mock).mockResolvedValue({
+        ...mockTemplate,
+        quiz_scoring_enabled: true,
+        quiz_pass_threshold: 100,
+        quiz_max_attempts: 2,
+        quiz_cooldown_minutes: 30,
+        quiz_required_for_entry: true,
+        questions: [
+          {
+            id: questionId,
+            question_text: "Are you wearing PPE?",
+            question_type: "YES_NO",
+            options: null,
+            is_required: true,
+            display_order: 1,
+            red_flag: false,
+            correct_answer: "yes",
+          },
+        ],
+      });
+
+      const result = await submitSignIn({
+        ...validInput,
+        answers: [{ questionId, answer: "no" }],
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.message).toBe("Quiz pass threshold not met");
+      }
+      expect(createPublicSignIn).not.toHaveBeenCalled();
+      expect(upsertInductionQuizAttemptState).toHaveBeenCalledWith(
+        "company-123",
+        expect.objectContaining({
+          siteId: "site-123",
+          templateId: "template-123",
+          failedAttempts: 1,
+          lastPassed: false,
+          lastScorePercent: 0,
+        }),
+      );
+    });
+
+    it("records and passes quiz evaluation when threshold is met", async () => {
+      const questionId = "c123456789012345678901234";
+      (findSiteByPublicSlug as Mock).mockResolvedValue(mockSite);
+      (getActiveTemplateForSite as Mock).mockResolvedValue({
+        ...mockTemplate,
+        quiz_scoring_enabled: true,
+        quiz_pass_threshold: 80,
+        quiz_max_attempts: 3,
+        quiz_cooldown_minutes: 15,
+        quiz_required_for_entry: true,
+        questions: [
+          {
+            id: questionId,
+            question_text: "Are you wearing PPE?",
+            question_type: "YES_NO",
+            options: null,
+            is_required: true,
+            display_order: 1,
+            red_flag: false,
+            correct_answer: "yes",
+          },
+        ],
+      });
+      (createPublicSignIn as Mock).mockResolvedValue({
+        signInRecordId: "signin-1",
+        signOutToken: "token-1",
+        signOutTokenExpiresAt: new Date("2026-02-23T10:00:00Z"),
+        visitorName: "John Doe",
+        siteName: "Test Site",
+        signInTime: new Date("2026-02-22T10:00:00Z"),
+      });
+
+      const result = await submitSignIn({
+        ...validInput,
+        answers: [{ questionId, answer: "yes" }],
+      });
+
+      expect(result.success).toBe(true);
+      expect(upsertInductionQuizAttemptState).toHaveBeenCalledWith(
+        "company-123",
+        expect.objectContaining({
+          failedAttempts: 0,
+          lastPassed: true,
+          lastScorePercent: 100,
+        }),
+      );
+      expect(createPublicSignIn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          quizResult: expect.objectContaining({
+            passed: true,
+            scorePercent: 100,
+            thresholdPercent: 80,
+          }),
+        }),
+      );
     });
 
     it("should block sign-in when a red-flag answer requires supervisor escalation", async () => {
@@ -341,6 +839,325 @@ describe("Public Actions Error Handling", () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(result.error.message).toBe("Supervisor denied site entry");
+      }
+      expect(createPublicSignIn).not.toHaveBeenCalled();
+    });
+
+    it("queues host arrival notifications for successful sign-ins", async () => {
+      (findSiteByPublicSlug as Mock).mockResolvedValue(mockSite);
+      (getActiveTemplateForSite as Mock).mockResolvedValue(mockTemplate);
+      (listSiteManagerNotificationRecipients as Mock).mockResolvedValue([
+        {
+          userId: "manager-1",
+          email: "manager@example.com",
+          name: "Manager One",
+        },
+      ]);
+      (createPublicSignIn as Mock).mockResolvedValue({
+        signInRecordId: "signin-1",
+        signOutToken: "token-1",
+        signOutTokenExpiresAt: new Date("2026-02-23T10:00:00Z"),
+        visitorName: "John Doe",
+        siteName: "Test Site",
+        signInTime: new Date("2026-02-22T10:00:00Z"),
+      });
+
+      const result = await submitSignIn(validInput);
+
+      expect(result.success).toBe(true);
+      expect(assertCompanyFeatureEnabled).toHaveBeenCalledWith(
+        "company-123",
+        "HOST_NOTIFICATIONS",
+        "site-123",
+      );
+      expect(queueEmailNotification).toHaveBeenCalledWith(
+        "company-123",
+        expect.objectContaining({
+          user_id: "manager-1",
+          to: "manager@example.com",
+          subject: expect.stringContaining("Arrival"),
+        }),
+      );
+    });
+
+    it("queues host notification to selected host when hostRecipientId is provided", async () => {
+      (findSiteByPublicSlug as Mock).mockResolvedValue(mockSite);
+      (getActiveTemplateForSite as Mock).mockResolvedValue(mockTemplate);
+      (listSiteManagerNotificationRecipients as Mock).mockResolvedValue([
+        {
+          userId: "c123456789012345678901234",
+          email: "manager-1@example.com",
+          name: "Manager One",
+        },
+        {
+          userId: "c223456789012345678901234",
+          email: "manager-2@example.com",
+          name: "Manager Two",
+        },
+      ]);
+      (createPublicSignIn as Mock).mockResolvedValue({
+        signInRecordId: "signin-1",
+        signOutToken: "token-1",
+        signOutTokenExpiresAt: new Date("2026-02-23T10:00:00Z"),
+        visitorName: "John Doe",
+        siteName: "Test Site",
+        signInTime: new Date("2026-02-22T10:00:00Z"),
+      });
+
+      const result = await submitSignIn({
+        ...validInput,
+        hostRecipientId: "c123456789012345678901234",
+      });
+
+      expect(result.success).toBe(true);
+      expect(queueEmailNotification).toHaveBeenCalledTimes(1);
+      expect(queueEmailNotification).toHaveBeenCalledWith(
+        "company-123",
+        expect.objectContaining({
+          user_id: "c123456789012345678901234",
+          to: "manager-1@example.com",
+        }),
+      );
+    });
+
+    it("queues outbound webhook deliveries when configured for the site", async () => {
+      (findSiteByPublicSlug as Mock).mockResolvedValue({
+        ...mockSite,
+        webhooks: [
+          "https://hooks.example.com/signins",
+          { url: "https://hooks.example.com/signins" },
+          { url: "invalid-url" },
+        ],
+      });
+      (getActiveTemplateForSite as Mock).mockResolvedValue(mockTemplate);
+      (createPublicSignIn as Mock).mockResolvedValue({
+        signInRecordId: "signin-1",
+        signOutToken: "token-1",
+        signOutTokenExpiresAt: new Date("2026-02-23T10:00:00Z"),
+        visitorName: "John Doe",
+        siteName: "Test Site",
+        signInTime: new Date("2026-02-22T10:00:00Z"),
+      });
+
+      const result = await submitSignIn(validInput);
+
+      expect(result.success).toBe(true);
+      expect(assertCompanyFeatureEnabled).toHaveBeenCalledWith(
+        "company-123",
+        "WEBHOOKS_OUTBOUND",
+        "site-123",
+      );
+      expect(queueOutboundWebhookDeliveries).toHaveBeenCalledWith(
+        "company-123",
+        expect.arrayContaining([
+          expect.objectContaining({
+            siteId: "site-123",
+            eventType: "induction.completed",
+            targetUrl: "https://hooks.example.com/signins",
+          }),
+        ]),
+      );
+    });
+
+    it("queues lms completion sync delivery when lms connector is enabled", async () => {
+      (findSiteByPublicSlug as Mock).mockResolvedValue({
+        ...mockSite,
+        lms_connector: {
+          enabled: true,
+          endpointUrl: "https://lms.example.test/sync",
+          provider: "Moodle",
+          authToken: "lms-token-123456",
+          courseCode: "SITE-101",
+        },
+      });
+      (getActiveTemplateForSite as Mock).mockResolvedValue(mockTemplate);
+      (createPublicSignIn as Mock).mockResolvedValue({
+        signInRecordId: "signin-1",
+        signOutToken: "token-1",
+        signOutTokenExpiresAt: new Date("2026-02-23T10:00:00Z"),
+        visitorName: "John Doe",
+        siteName: "Test Site",
+        signInTime: new Date("2026-02-22T10:00:00Z"),
+      });
+
+      const result = await submitSignIn(validInput);
+
+      expect(result.success).toBe(true);
+      expect(assertCompanyFeatureEnabled).toHaveBeenCalledWith(
+        "company-123",
+        "LMS_CONNECTOR",
+        "site-123",
+      );
+      expect(queueOutboundWebhookDeliveries).toHaveBeenCalledWith(
+        "company-123",
+        expect.arrayContaining([
+          expect.objectContaining({
+            siteId: "site-123",
+            eventType: "lms.completion",
+            targetUrl: "https://lms.example.test/sync",
+          }),
+        ]),
+      );
+    });
+
+    it("skips lms completion sync when lms entitlement is disabled", async () => {
+      (findSiteByPublicSlug as Mock).mockResolvedValue({
+        ...mockSite,
+        lms_connector: {
+          enabled: true,
+          endpointUrl: "https://lms.example.test/sync",
+          provider: "Moodle",
+          authToken: "lms-token-123456",
+        },
+      });
+      (getActiveTemplateForSite as Mock).mockResolvedValue(mockTemplate);
+      (createPublicSignIn as Mock).mockResolvedValue({
+        signInRecordId: "signin-1",
+        signOutToken: "token-1",
+        signOutTokenExpiresAt: new Date("2026-02-23T10:00:00Z"),
+        visitorName: "John Doe",
+        siteName: "Test Site",
+        signInTime: new Date("2026-02-22T10:00:00Z"),
+      });
+      (assertCompanyFeatureEnabled as Mock).mockImplementation(
+        async (_companyId: string, featureKey: string) => {
+          if (featureKey === "LMS_CONNECTOR") {
+            throw new entitlementDeniedError("LMS_CONNECTOR");
+          }
+          return undefined;
+        },
+      );
+
+      const result = await submitSignIn(validInput);
+
+      expect(result.success).toBe(true);
+      expect(queueOutboundWebhookDeliveries).not.toHaveBeenCalled();
+    });
+
+    it("captures location audit data and evaluates radius when enabled", async () => {
+      (findSiteByPublicSlug as Mock).mockResolvedValue({
+        ...mockSite,
+        location_latitude: -36.8485,
+        location_longitude: 174.7633,
+        location_radius_m: 200,
+      });
+      (getActiveTemplateForSite as Mock).mockResolvedValue(mockTemplate);
+      (createPublicSignIn as Mock).mockResolvedValue({
+        signInRecordId: "signin-1",
+        signOutToken: "token-1",
+        signOutTokenExpiresAt: new Date("2026-02-23T10:00:00Z"),
+        visitorName: "John Doe",
+        siteName: "Test Site",
+        signInTime: new Date("2026-02-22T10:00:00Z"),
+      });
+
+      const result = await submitSignIn({
+        ...validInput,
+        location: {
+          latitude: -36.8485,
+          longitude: 174.7633,
+          accuracyMeters: 20,
+          capturedAt: "2026-02-28T00:00:00.000Z",
+        },
+      });
+
+      expect(result.success).toBe(true);
+      expect(assertCompanyFeatureEnabled).toHaveBeenCalledWith(
+        "company-123",
+        "LOCATION_AUDIT",
+        "site-123",
+      );
+      const createArgs = (createPublicSignIn as Mock).mock.calls.at(-1)?.[0];
+      expect(createArgs.locationAudit).toEqual(
+        expect.objectContaining({
+          latitude: -36.8485,
+          longitude: 174.7633,
+          withinSiteRadius: true,
+          accuracyMeters: 20,
+        }),
+      );
+    });
+
+    it("skips host arrival notifications when entitlement is disabled", async () => {
+      (findSiteByPublicSlug as Mock).mockResolvedValue(mockSite);
+      (getActiveTemplateForSite as Mock).mockResolvedValue(mockTemplate);
+      (listSiteManagerNotificationRecipients as Mock).mockResolvedValue([
+        {
+          userId: "manager-1",
+          email: "manager@example.com",
+          name: "Manager One",
+        },
+      ]);
+      (assertCompanyFeatureEnabled as Mock).mockImplementation(
+        async (_companyId: string, featureKey: string) => {
+          if (featureKey === "HOST_NOTIFICATIONS") {
+            throw new entitlementDeniedError("HOST_NOTIFICATIONS");
+          }
+          return undefined;
+        },
+      );
+      (createPublicSignIn as Mock).mockResolvedValue({
+        signInRecordId: "signin-1",
+        signOutToken: "token-1",
+        signOutTokenExpiresAt: new Date("2026-02-23T10:00:00Z"),
+        visitorName: "John Doe",
+        siteName: "Test Site",
+        signInTime: new Date("2026-02-22T10:00:00Z"),
+      });
+
+      const result = await submitSignIn(validInput);
+
+      expect(result.success).toBe(true);
+      expect(queueEmailNotification).not.toHaveBeenCalled();
+    });
+
+    it("marks invite as used after successful sign-in when invite token is present", async () => {
+      (findSiteByPublicSlug as Mock).mockResolvedValue(mockSite);
+      (getActiveTemplateForSite as Mock).mockResolvedValue(mockTemplate);
+      (findActivePreRegistrationInviteByToken as Mock).mockResolvedValue({
+        id: "invite-1",
+      });
+      (createPublicSignIn as Mock).mockResolvedValue({
+        signInRecordId: "signin-1",
+        signOutToken: "token-1",
+        signOutTokenExpiresAt: new Date("2026-02-23T10:00:00Z"),
+        visitorName: "John Doe",
+        siteName: "Test Site",
+        signInTime: new Date("2026-02-22T10:00:00Z"),
+      });
+
+      const result = await submitSignIn({
+        ...validInput,
+        inviteToken: "invite-token-1234567890",
+      });
+
+      expect(result.success).toBe(true);
+      expect(assertCompanyFeatureEnabled).toHaveBeenCalledWith(
+        "company-123",
+        "PREREG_INVITES",
+        "site-123",
+      );
+      expect(markPreRegistrationInviteUsed).toHaveBeenCalledWith(
+        "company-123",
+        "invite-1",
+        "signin-1",
+      );
+    });
+
+    it("rejects invalid invite token before sign-in creation", async () => {
+      (findSiteByPublicSlug as Mock).mockResolvedValue(mockSite);
+      (getActiveTemplateForSite as Mock).mockResolvedValue(mockTemplate);
+      (findActivePreRegistrationInviteByToken as Mock).mockResolvedValue(null);
+
+      const result = await submitSignIn({
+        ...validInput,
+        inviteToken: "invite-token-1234567890",
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe("VALIDATION_ERROR");
+        expect(result.error.message).toBe("Invalid invite link");
       }
       expect(createPublicSignIn).not.toHaveBeenCalled();
     });
@@ -516,6 +1333,69 @@ describe("Public Actions Error Handling", () => {
   });
 
   // ============================================================================
+  // getSiteForSignIn entitlement behavior
+  // ============================================================================
+
+  describe("getSiteForSignIn entitlement behavior", () => {
+    it("disables quiz metadata when quiz scoring entitlement is denied", async () => {
+      (findSiteByPublicSlug as Mock).mockResolvedValue({
+        id: "site-123",
+        name: "Test Site",
+        address: null,
+        description: null,
+        location_latitude: null,
+        location_longitude: null,
+        location_radius_m: null,
+        company: { id: "company-123", name: "Test Company" },
+      });
+      (getActiveTemplateForSite as Mock).mockResolvedValue({
+        id: "template-123",
+        name: "Test Template",
+        description: null,
+        version: 1,
+        induction_media: null,
+        induction_languages: null,
+        quiz_scoring_enabled: true,
+        quiz_pass_threshold: 90,
+        quiz_max_attempts: 2,
+        quiz_cooldown_minutes: 30,
+        quiz_required_for_entry: true,
+        questions: [
+          {
+            id: "q-1",
+            question_text: "Are you fit for work?",
+            question_type: "YES_NO",
+            options: null,
+            is_required: true,
+            red_flag: false,
+            display_order: 1,
+          },
+        ],
+      });
+      (assertCompanyFeatureEnabled as Mock).mockImplementation(
+        async (_companyId: string, featureKey: string) => {
+          if (featureKey === "QUIZ_SCORING_V2") {
+            throw new entitlementDeniedError("QUIZ_SCORING_V2");
+          }
+          return undefined;
+        },
+      );
+
+      const result = await getSiteForSignIn("test-slug");
+
+      expect(result.success).toBe(true);
+      if (result.success && !("notFound" in result.data)) {
+        expect(result.data.template.quiz?.enabled).toBe(false);
+      }
+      expect(assertCompanyFeatureEnabled).toHaveBeenCalledWith(
+        "company-123",
+        "QUIZ_SCORING_V2",
+        "site-123",
+      );
+    });
+  });
+
+  // ============================================================================
   // getSiteForSignIn error handling
   // ============================================================================
 
@@ -634,6 +1514,73 @@ describe("Public Actions Error Handling", () => {
           "Your session has expired. Please try again.",
         );
       }
+    });
+  });
+
+  describe("submitBadgePrintAudit", () => {
+    it("records badge print audit when entitlement is enabled", async () => {
+      (findSiteByPublicSlug as Mock).mockResolvedValue({
+        id: "site-123",
+        name: "Test Site",
+        address: null,
+        description: null,
+        company: { id: "company-123", name: "Test Company" },
+      });
+      (findSignInById as Mock).mockResolvedValue({
+        id: "c123456789012345678901234",
+        site_id: "site-123",
+      });
+
+      const result = await submitBadgePrintAudit({
+        slug: "test-site",
+        signInRecordId: "c123456789012345678901234",
+      });
+
+      expect(result.success).toBe(true);
+      expect(assertCompanyFeatureEnabled).toHaveBeenCalledWith(
+        "company-123",
+        "BADGE_PRINTING",
+        "site-123",
+      );
+      expect(createAuditLog).toHaveBeenCalledWith(
+        "company-123",
+        expect.objectContaining({
+          action: "visitor.badge_print",
+          entity_type: "SignInRecord",
+          entity_id: "c123456789012345678901234",
+          details: expect.objectContaining({
+            print_method: "browser",
+            site_id: "site-123",
+          }),
+        }),
+      );
+    });
+
+    it("returns forbidden when badge printing entitlement is disabled", async () => {
+      (findSiteByPublicSlug as Mock).mockResolvedValue({
+        id: "site-123",
+        name: "Test Site",
+        address: null,
+        description: null,
+        company: { id: "company-123", name: "Test Company" },
+      });
+      (assertCompanyFeatureEnabled as Mock).mockRejectedValueOnce(
+        new entitlementDeniedError("BADGE_PRINTING"),
+      );
+
+      const result = await submitBadgePrintAudit({
+        slug: "test-site",
+        signInRecordId: "c123456789012345678901234",
+      });
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe("FORBIDDEN");
+        expect(result.error.message).toContain(
+          "Badge printing is not enabled for this site plan",
+        );
+      }
+      expect(createAuditLog).not.toHaveBeenCalled();
     });
   });
 });

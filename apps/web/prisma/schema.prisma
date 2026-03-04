@@ -17,19 +17,23 @@ datasource db {
 // ============================================================================
 
 model Company {
-  id                             String    @id @default(cuid())
+  id                             String      @id @default(cuid())
   name                           String
-  slug                           String    @unique
-  retention_days                 Int       @default(365) // Sign-in register retention policy
-  induction_retention_days       Int       @default(365) // Induction evidence retention policy
-  audit_retention_days           Int       @default(90) // Audit trail retention policy
-  incident_retention_days        Int       @default(1825) // 5 years default for incident evidence
-  emergency_drill_retention_days Int       @default(1825) // 5 years default for drill evidence
-  compliance_legal_hold          Boolean   @default(false)
+  slug                           String      @unique
+  product_plan                   CompanyPlan @default(STANDARD)
+  sso_config                     Json?
+  feature_overrides              Json?
+  feature_credit_overrides       Json?
+  retention_days                 Int         @default(365) // Sign-in register retention policy
+  induction_retention_days       Int         @default(365) // Induction evidence retention policy
+  audit_retention_days           Int         @default(90) // Audit trail retention policy
+  incident_retention_days        Int         @default(1825) // 5 years default for incident evidence
+  emergency_drill_retention_days Int         @default(1825) // 5 years default for drill evidence
+  compliance_legal_hold          Boolean     @default(false)
   compliance_legal_hold_reason   String?
   compliance_legal_hold_set_at   DateTime?
-  created_at                     DateTime  @default(now())
-  updated_at                     DateTime  @updatedAt
+  created_at                     DateTime    @default(now())
+  updated_at                     DateTime    @updatedAt
 
   // Relations
   users                       User[]
@@ -40,33 +44,41 @@ model Company {
   emergency_contacts          SiteEmergencyContact[]
   emergency_procedures        SiteEmergencyProcedure[]
   emergency_drills            EmergencyDrill[]
+  evacuation_events           EvacuationEvent[]
+  evacuation_attendances      EvacuationAttendance[]
   pending_sign_in_escalations PendingSignInEscalation[]
   incident_reports            IncidentReport[]
   legal_document_versions     LegalDocumentVersion[]
   site_manager_assignments    SiteManagerAssignment[]
   magic_link_tokens           MagicLinkToken[]
+  pre_registration_invites    PreRegistrationInvite[]
   sign_in_records             SignInRecord[]
   export_jobs                 ExportJob[]
   audit_logs                  AuditLog[]
   email_notifications         EmailNotification[]
+  outbound_webhook_deliveries OutboundWebhookDelivery[]
+  induction_quiz_attempts     InductionQuizAttempt[]
 
   @@index([slug])
 }
 
 model User {
-  id            String    @id @default(cuid())
-  company_id    String
-  email         String    @unique
-  password_hash String
-  totp_secret   String?
-  name          String
-  role          UserRole  @default(VIEWER)
-  is_active     Boolean   @default(true)
-  failed_logins Int       @default(0)
-  locked_until  DateTime?
-  last_login_at DateTime?
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
+  id                  String    @id @default(cuid())
+  company_id          String
+  email               String    @unique
+  password_hash       String
+  totp_secret         String?
+  identity_provider   String?
+  identity_subject    String?
+  directory_synced_at DateTime?
+  name                String
+  role                UserRole  @default(VIEWER)
+  is_active           Boolean   @default(true)
+  failed_logins       Int       @default(0)
+  locked_until        DateTime?
+  last_login_at       DateTime?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
 
   // Relations
   company                      Company                   @relation(fields: [company_id], references: [id], onDelete: Cascade)
@@ -78,13 +90,19 @@ model User {
   incidents_resolved           IncidentReport[]          @relation("incident_resolved_by")
   incidents_worksafe_notified  IncidentReport[]          @relation("incident_worksafe_notified_by")
   emergency_drills_tested      EmergencyDrill[]          @relation("emergency_drill_tested_by")
+  evacuation_events_started    EvacuationEvent[]         @relation("evacuation_event_started_by")
+  evacuation_events_closed     EvacuationEvent[]         @relation("evacuation_event_closed_by")
+  evacuation_attendance_marked EvacuationAttendance[]    @relation("evacuation_attendance_accounted_by")
   sign_in_escalations_reviewed PendingSignInEscalation[] @relation("sign_in_escalation_reviewed_by")
   legal_documents_authored     LegalDocumentVersion[]    @relation("legal_document_author")
   sites_managed                SiteManagerAssignment[]   @relation("site_manager_user")
+  pre_registration_invites     PreRegistrationInvite[]   @relation("pre_registration_invite_creator")
   notifications                EmailNotification[]
 
   @@unique([company_id, email])
+  @@unique([company_id, identity_provider, identity_subject])
   @@index([company_id])
+  @@index([company_id, identity_subject])
   @@index([email])
 }
 
@@ -94,20 +112,33 @@ enum UserRole {
   VIEWER
 }
 
+enum CompanyPlan {
+  STANDARD
+  PLUS
+  PRO
+}
+
 // ============================================================================
 // SITES & PUBLIC LINKS
 // ============================================================================
 
 model Site {
-  id          String   @id @default(cuid())
-  company_id  String
-  name        String
-  address     String?
-  description String?
-  is_active   Boolean  @default(true)
-  webhooks    Json?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  id                       String   @id @default(cuid())
+  company_id               String
+  name                     String
+  address                  String?
+  description              String?
+  location_latitude        Float?
+  location_longitude       Float?
+  location_radius_m        Int?
+  feature_overrides        Json?
+  feature_credit_overrides Json?
+  is_active                Boolean  @default(true)
+  access_control           Json?
+  webhooks                 Json?
+  lms_connector            Json?
+  created_at               DateTime @default(now())
+  updated_at               DateTime @updatedAt
 
   // Relations
   company                     Company                   @relation(fields: [company_id], references: [id], onDelete: Cascade)
@@ -118,9 +149,14 @@ model Site {
   emergency_contacts          SiteEmergencyContact[]
   emergency_procedures        SiteEmergencyProcedure[]
   emergency_drills            EmergencyDrill[]
+  evacuation_events           EvacuationEvent[]
+  evacuation_attendances      EvacuationAttendance[]
   pending_sign_in_escalations PendingSignInEscalation[]
   incident_reports            IncidentReport[]
   site_managers               SiteManagerAssignment[]   @relation("site_manager_site")
+  pre_registration_invites    PreRegistrationInvite[]
+  outbound_webhook_deliveries OutboundWebhookDelivery[]
+  induction_quiz_attempts     InductionQuizAttempt[]
 
   @@unique([company_id, name])
   @@index([company_id])
@@ -148,25 +184,33 @@ model SitePublicLink {
 // ============================================================================
 
 model InductionTemplate {
-  id                String    @id @default(cuid())
-  company_id        String
-  site_id           String? // null = company-wide default template
-  name              String
-  description       String?
-  version           Int       @default(1)
-  is_published      Boolean   @default(false)
-  is_default        Boolean   @default(false) // Company-wide default (only when site_id is null)
-  is_archived       Boolean   @default(false) // Immutable once archived (old versions)
-  published_at      DateTime?
-  force_reinduction Boolean   @default(false)
-  created_at        DateTime  @default(now())
-  updated_at        DateTime  @updatedAt
+  id                      String    @id @default(cuid())
+  company_id              String
+  site_id                 String? // null = company-wide default template
+  name                    String
+  description             String?
+  version                 Int       @default(1)
+  is_published            Boolean   @default(false)
+  is_default              Boolean   @default(false) // Company-wide default (only when site_id is null)
+  is_archived             Boolean   @default(false) // Immutable once archived (old versions)
+  published_at            DateTime?
+  force_reinduction       Boolean   @default(false)
+  quiz_scoring_enabled    Boolean   @default(false)
+  quiz_pass_threshold     Int       @default(80)
+  quiz_max_attempts       Int       @default(3)
+  quiz_cooldown_minutes   Int       @default(15)
+  quiz_required_for_entry Boolean   @default(true)
+  induction_media         Json?
+  induction_languages     Json?
+  created_at              DateTime  @default(now())
+  updated_at              DateTime  @updatedAt
 
   // Relations
-  company   Company             @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  site      Site?               @relation("template_site", fields: [site_id], references: [id], onDelete: Cascade)
-  questions InductionQuestion[]
-  responses InductionResponse[]
+  company       Company                @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  site          Site?                  @relation("template_site", fields: [site_id], references: [id], onDelete: Cascade)
+  questions     InductionQuestion[]
+  responses     InductionResponse[]
+  quiz_attempts InductionQuizAttempt[]
 
   // Business rules enforced via repository layer:
   // - At most one is_published=true template per site (where site_id is not null)
@@ -212,37 +256,44 @@ enum QuestionType {
 // ============================================================================
 
 model SignInRecord {
-  id                 String      @id @default(cuid())
-  company_id         String
-  site_id            String
-  idempotency_key    String? // Public sign-in dedupe key (client generated)
-  visitor_name       String
-  visitor_phone      String
-  visitor_email      String?
-  employer_name      String? // For contractor matching
-  visitor_type       VisitorType @default(CONTRACTOR)
-  hasAcceptedTerms   Boolean     @default(false)
-  termsAcceptedAt    DateTime?
-  terms_version_id   String?
-  privacy_version_id String?
-  consent_statement  String?
-  sign_in_ts         DateTime    @default(now())
-  sign_out_ts        DateTime? // null = currently on site
-  signed_out_by      String? // User ID who signed out the visitor (null = self-signout)
-  sign_out_token     String? // Hashed token for self sign-out
-  sign_out_token_exp DateTime? // Token expiry
-  notes              String?
-  created_at         DateTime    @default(now())
+  id                     String      @id @default(cuid())
+  company_id             String
+  site_id                String
+  idempotency_key        String? // Public sign-in dedupe key (client generated)
+  visitor_name           String
+  visitor_phone          String
+  visitor_email          String?
+  employer_name          String? // For contractor matching
+  visitor_type           VisitorType @default(CONTRACTOR)
+  hasAcceptedTerms       Boolean     @default(false)
+  termsAcceptedAt        DateTime?
+  terms_version_id       String?
+  privacy_version_id     String?
+  consent_statement      String?
+  sign_in_ts             DateTime    @default(now())
+  location_latitude      Float?
+  location_longitude     Float?
+  location_accuracy_m    Float?
+  location_distance_m    Float?
+  location_within_radius Boolean?
+  location_captured_at   DateTime?
+  sign_out_ts            DateTime? // null = currently on site
+  signed_out_by          String? // User ID who signed out the visitor (null = self-signout)
+  sign_out_token         String? // Hashed token for self sign-out
+  sign_out_token_exp     DateTime? // Token expiry
+  notes                  String?
+  created_at             DateTime    @default(now())
 
   // Relations
-  company             Company                  @relation(fields: [company_id], references: [id], onDelete: Cascade)
-  site                Site                     @relation(fields: [site_id], references: [id], onDelete: Cascade)
-  terms_version       LegalDocumentVersion?    @relation("sign_in_terms_version", fields: [terms_version_id], references: [id], onDelete: SetNull)
-  privacy_version     LegalDocumentVersion?    @relation("sign_in_privacy_version", fields: [privacy_version_id], references: [id], onDelete: SetNull)
-  signed_out_user     User?                    @relation("signed_out_by", fields: [signed_out_by], references: [id], onDelete: SetNull)
-  induction_response  InductionResponse?
-  approved_escalation PendingSignInEscalation? @relation("escalation_approved_signin")
-  incident_reports    IncidentReport[]
+  company                Company                  @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  site                   Site                     @relation(fields: [site_id], references: [id], onDelete: Cascade)
+  terms_version          LegalDocumentVersion?    @relation("sign_in_terms_version", fields: [terms_version_id], references: [id], onDelete: SetNull)
+  privacy_version        LegalDocumentVersion?    @relation("sign_in_privacy_version", fields: [privacy_version_id], references: [id], onDelete: SetNull)
+  signed_out_user        User?                    @relation("signed_out_by", fields: [signed_out_by], references: [id], onDelete: SetNull)
+  induction_response     InductionResponse?
+  approved_escalation    PendingSignInEscalation? @relation("escalation_approved_signin")
+  incident_reports       IncidentReport[]
+  evacuation_attendances EvacuationAttendance[]
 
   @@unique([company_id, idempotency_key])
   @@index([company_id])
@@ -321,6 +372,38 @@ model PendingSignInEscalation {
   @@index([reviewed_by])
 }
 
+model PreRegistrationInvite {
+  id                     String      @id @default(cuid())
+  company_id             String
+  site_id                String
+  created_by             String?
+  token_hash             String      @unique
+  visitor_name           String
+  visitor_phone          String
+  visitor_email          String?
+  employer_name          String?
+  visitor_type           VisitorType @default(CONTRACTOR)
+  role_on_site           String?
+  notes                  String?
+  is_active              Boolean     @default(true)
+  expires_at             DateTime
+  used_at                DateTime?
+  used_sign_in_record_id String?
+  created_at             DateTime    @default(now())
+  updated_at             DateTime    @updatedAt
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  site    Site    @relation(fields: [site_id], references: [id], onDelete: Cascade)
+  creator User?   @relation("pre_registration_invite_creator", fields: [created_by], references: [id], onDelete: SetNull)
+
+  @@index([company_id])
+  @@index([company_id, site_id])
+  @@index([company_id, site_id, is_active])
+  @@index([company_id, expires_at])
+  @@index([company_id, used_at])
+  @@index([created_by])
+}
+
 model InductionResponse {
   id                       String                    @id @default(cuid())
   sign_in_record_id        String                    @unique
@@ -352,6 +435,30 @@ model InductionResponse {
   @@index([competency_status])
   @@index([refresher_due_at])
   @@index([supervisor_verified_by])
+}
+
+model InductionQuizAttempt {
+  id                 String    @id @default(cuid())
+  company_id         String
+  site_id            String
+  template_id        String
+  visitor_phone_hash String
+  failed_attempts    Int       @default(0)
+  cooldown_until     DateTime?
+  last_attempt_at    DateTime?
+  last_score_percent Int?
+  last_passed        Boolean?
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
+
+  company  Company           @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  site     Site              @relation(fields: [site_id], references: [id], onDelete: Cascade)
+  template InductionTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
+
+  @@unique([company_id, site_id, template_id, visitor_phone_hash])
+  @@index([company_id])
+  @@index([company_id, site_id, template_id])
+  @@index([company_id, cooldown_until])
 }
 
 model HazardRegisterEntry {
@@ -542,6 +649,73 @@ model EmergencyDrill {
   @@index([tested_by])
 }
 
+model EvacuationEvent {
+  id              String                @id @default(cuid())
+  company_id      String
+  site_id         String
+  status          EvacuationEventStatus @default(ACTIVE)
+  started_at      DateTime              @default(now())
+  started_by      String?
+  closed_at       DateTime?
+  closed_by       String?
+  notes           String?
+  total_people    Int                   @default(0)
+  accounted_count Int                   @default(0)
+  missing_count   Int                   @default(0)
+  created_at      DateTime              @default(now())
+  updated_at      DateTime              @updatedAt
+
+  company         Company                @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  site            Site                   @relation(fields: [site_id], references: [id], onDelete: Cascade)
+  started_by_user User?                  @relation("evacuation_event_started_by", fields: [started_by], references: [id], onDelete: SetNull)
+  closed_by_user  User?                  @relation("evacuation_event_closed_by", fields: [closed_by], references: [id], onDelete: SetNull)
+  attendances     EvacuationAttendance[]
+
+  @@index([company_id])
+  @@index([company_id, site_id, status])
+  @@index([company_id, started_at])
+  @@index([started_by])
+  @@index([closed_by])
+}
+
+model EvacuationAttendance {
+  id                String                     @id @default(cuid())
+  company_id        String
+  event_id          String
+  site_id           String
+  sign_in_record_id String
+  visitor_name      String
+  visitor_type      VisitorType
+  status            EvacuationAttendanceStatus @default(MISSING)
+  accounted_at      DateTime?
+  accounted_by      String?
+  created_at        DateTime                   @default(now())
+  updated_at        DateTime                   @updatedAt
+
+  company           Company         @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  site              Site            @relation(fields: [site_id], references: [id], onDelete: Cascade)
+  event             EvacuationEvent @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  sign_in_record    SignInRecord    @relation(fields: [sign_in_record_id], references: [id], onDelete: Cascade)
+  accounted_by_user User?           @relation("evacuation_attendance_accounted_by", fields: [accounted_by], references: [id], onDelete: SetNull)
+
+  @@unique([event_id, sign_in_record_id])
+  @@index([company_id])
+  @@index([company_id, event_id])
+  @@index([company_id, site_id, status])
+  @@index([sign_in_record_id])
+  @@index([accounted_by])
+}
+
+enum EvacuationEventStatus {
+  ACTIVE
+  CLOSED
+}
+
+enum EvacuationAttendanceStatus {
+  ACCOUNTED
+  MISSING
+}
+
 enum EmergencyDrillType {
   EVACUATION
   FIRE
@@ -595,6 +769,43 @@ enum NotificationStatus {
   PENDING
   SENT
   FAILED
+}
+
+model OutboundWebhookDelivery {
+  id                 String                @id @default(cuid())
+  company_id         String
+  site_id            String
+  event_type         String
+  target_url         String
+  payload            Json
+  status             WebhookDeliveryStatus @default(PENDING)
+  attempts           Int                   @default(0)
+  max_attempts       Int                   @default(5)
+  next_attempt_at    DateTime              @default(now())
+  last_attempt_at    DateTime?
+  last_status_code   Int?
+  last_error         String?
+  last_response_body String?
+  sent_at            DateTime?
+  created_at         DateTime              @default(now())
+  updated_at         DateTime              @updatedAt
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  site    Site    @relation(fields: [site_id], references: [id], onDelete: Cascade)
+
+  @@index([company_id])
+  @@index([company_id, status])
+  @@index([status, next_attempt_at])
+  @@index([site_id, status])
+  @@index([created_at])
+}
+
+enum WebhookDeliveryStatus {
+  PENDING
+  PROCESSING
+  RETRYING
+  SENT
+  DEAD
 }
 
 // ============================================================================

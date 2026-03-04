@@ -10,7 +10,14 @@
 ## Automated Jobs
 
 - Maintenance retention job: `npm run run:maintenance`
+- Maintenance flow also processes the email queue (host notifications + pre-registration reminder batches + contractor document expiry reminders).
+- Maintenance flow also processes the outbound webhook queue (signed delivery, retry/backoff, dead-letter transitions).
 - Export scheduler: `npm run run:export-scheduler`
+
+## Feature State Maintenance Notes
+
+- Quiz scoring retry/cooldown state is persisted per visitor/site/template in `InductionQuizAttempt` and updated inline during public sign-in submissions (no separate cron required).
+- Template quiz policy changes (`quiz_scoring_enabled`, threshold, attempts, cooldown, required-for-entry) should be rolled out with draft-template edits first, then publish/version promotion.
 
 ## Upgrade Strategy
 

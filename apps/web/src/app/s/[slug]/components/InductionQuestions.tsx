@@ -19,6 +19,7 @@ interface InductionQuestionsProps {
   onAnswerChange: (questionId: string, answer: unknown) => void;
   fieldErrors: Record<string, string[]>;
   missingRequiredQuestionIds?: string[];
+  localizedOptionLabels?: Record<string, string[]>;
 }
 
 export function InductionQuestions({
@@ -27,6 +28,7 @@ export function InductionQuestions({
   onAnswerChange,
   fieldErrors,
   missingRequiredQuestionIds = [],
+  localizedOptionLabels = {},
 }: InductionQuestionsProps) {
   return (
     <div className="space-y-6">
@@ -76,7 +78,7 @@ export function InductionQuestions({
           {/* MULTIPLE_CHOICE question */}
           {question.questionType === "MULTIPLE_CHOICE" && question.options && (
             <div className="space-y-2">
-              {question.options.map((option) => (
+              {question.options.map((option, optionIndex) => (
                 <label
                   key={option}
                   className="flex min-h-[48px] cursor-pointer items-center rounded-lg border border-white/35 bg-white/45 p-3 hover:bg-white/70"
@@ -89,7 +91,9 @@ export function InductionQuestions({
                     onChange={() => onAnswerChange(question.id, option)}
                     className="h-5 w-5 text-indigo-600 focus:ring-indigo-500"
                   />
-                  <span className="ml-3 text-base text-secondary">{option}</span>
+                  <span className="ml-3 text-base text-secondary">
+                    {localizedOptionLabels[question.id]?.[optionIndex] ?? option}
+                  </span>
                 </label>
               ))}
             </div>
@@ -98,7 +102,7 @@ export function InductionQuestions({
           {/* CHECKBOX question */}
           {question.questionType === "CHECKBOX" && question.options && (
             <div className="space-y-2">
-              {question.options.map((option) => {
+              {question.options.map((option, optionIndex) => {
                 const currentAnswers = (answers[question.id] as string[]) || [];
                 const isChecked = currentAnswers.includes(option);
                 return (
@@ -117,7 +121,9 @@ export function InductionQuestions({
                       }}
                       className="h-5 w-5 rounded text-indigo-600 focus:ring-indigo-500"
                     />
-                    <span className="ml-3 text-base text-secondary">{option}</span>
+                    <span className="ml-3 text-base text-secondary">
+                      {localizedOptionLabels[question.id]?.[optionIndex] ?? option}
+                    </span>
                   </label>
                 );
               })}

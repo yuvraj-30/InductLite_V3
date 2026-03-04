@@ -52,6 +52,32 @@ interface Site {
 
 const DEFAULT_COMPANY_TIMEZONE = "Pacific/Auckland";
 
+function getLocationStatus(record: {
+  location_captured_at: Date | null;
+  location_within_radius: boolean | null;
+  location_distance_m: number | null;
+}): { label: string; tone: string } {
+  if (!record.location_captured_at) {
+    return { label: "Unavailable", tone: "text-gray-500" };
+  }
+
+  if (record.location_within_radius === true) {
+    return {
+      label: `Within radius${record.location_distance_m !== null ? ` (${Math.round(record.location_distance_m)}m)` : ""}`,
+      tone: "text-emerald-700",
+    };
+  }
+
+  if (record.location_within_radius === false) {
+    return {
+      label: `Outside radius${record.location_distance_m !== null ? ` (${Math.round(record.location_distance_m)}m)` : ""}`,
+      tone: "text-amber-700",
+    };
+  }
+
+  return { label: "Captured", tone: "text-cyan-700" };
+}
+
 async function HistoryContent({
   filters,
 }: {
@@ -231,6 +257,9 @@ async function HistoryContent({
                     <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                       Duration
                     </th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                      Location
+                    </th>
                     <th className="px-6 py-3 text-right text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                       Actions
                     </th>
@@ -239,6 +268,7 @@ async function HistoryContent({
                 <tbody className="bg-white divide-y divide-gray-200">
                   {historyResult.items.map((record) => {
                     const isOnSite = !record.sign_out_ts;
+                    const locationStatus = getLocationStatus(record);
 
                     // Avoid calling Date.now() during render (purity rule).
                     // If the visitor is still on-site, we show an explicit status
@@ -339,6 +369,11 @@ async function HistoryContent({
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           {durationStr}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className={locationStatus.tone}>
+                            {locationStatus.label}
+                          </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           {isOnSite && (

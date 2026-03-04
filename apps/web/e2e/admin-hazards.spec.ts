@@ -7,10 +7,21 @@ function uniqueSuffix() {
 async function createSite(page: any, name: string) {
   await page.goto("/admin/sites/new");
   await page.getByLabel(/site name/i).fill(name);
+  const createButton = page.getByRole("button", { name: "Create Site" });
+  await createButton.scrollIntoViewIfNeeded().catch(() => undefined);
+  const submitRequest = page
+    .waitForResponse(
+      (response: any) =>
+        response.request().method() === "POST" &&
+        /\/admin\/sites\/new(?:\?|$)/.test(response.url()),
+      { timeout: 15000 },
+    )
+    .catch(() => null);
   await Promise.all([
     page.waitForURL(/\/admin\/sites(?:\?.*)?$/, { timeout: 30000 }),
-    page.getByRole("button", { name: "Create Site" }).click(),
+    createButton.click({ force: true }),
   ]);
+  await submitRequest;
 }
 
 async function submitHazardsForm(page: any, form: any) {

@@ -1,5 +1,6 @@
 import { scopedDb } from "@/lib/db/scoped-db";
 import { requireCompanyId, handlePrismaError } from "./base";
+import type { UserRole } from "@prisma/client";
 
 export interface DashboardMetrics {
   activeSitesCount: number;
@@ -8,6 +9,57 @@ export interface DashboardMetrics {
   signInsToday: number;
   signInsSevenDays: number;
   documentsExpiringSoon: number;
+  documentExpiryWindows: {
+    overdue: number;
+    dueIn1Day: number;
+    dueIn7Days: number;
+    dueIn14Days: number;
+    dueIn30Days: number;
+  };
+  locationAuditSummary: {
+    totalSignIns30Days: number;
+    captured: number;
+    withinRadius: number;
+    outsideRadius: number;
+    withoutCapture: number;
+  };
+  rollCallSummary: {
+    activeEvents: number;
+    activeSites: number;
+    trackedPeople: number;
+    missingPeople: number;
+    closedEventsLast7Days: number;
+  };
+  drillSummary: {
+    drillsLast30Days: number;
+    overdueDrills: number;
+    dueIn7Days: number;
+  };
+  quizSummary: {
+    scoredResponses30Days: number;
+    passedResponses30Days: number;
+    failedResponses30Days: number;
+    passRatePercent: number;
+    activeCooldowns: number;
+    profilesAttempted30Days: number;
+    profilesWithRecentFailures: number;
+    topRiskTemplateSites: Array<{
+      template_id: string;
+      template_name: string;
+      site_id: string;
+      site_name: string;
+      recent_attempt_profiles: number;
+      recent_fail_profiles: number;
+      active_cooldowns: number;
+    }>;
+  };
+  hostArrivalNotifications: Array<{
+    id: string;
+    created_at: Date;
+    visitor_name: string;
+    site_name: string;
+    targeted: boolean;
+  }>;
   recentSignIns: Array<{
     id: string;
     visitor_name: string;
@@ -36,7 +88,7 @@ export interface OnboardingProgress {
 
 export async function getDashboardMetrics(
   companyId: string,
-  opts: { now?: Date } = {},
+  opts: { now?: Date; userId?: string; userRole?: UserRole } = {},
 ): Promise<DashboardMetrics> {
   requireCompanyId(companyId);
 
@@ -47,8 +99,18 @@ export async function getDashboardMetrics(
   );
   const sevenDaysAgoUtc = new Date(todayStartUtc);
   sevenDaysAgoUtc.setUTCDate(sevenDaysAgoUtc.getUTCDate() - 7);
+  const thirtyDaysAgoUtc = new Date(todayStartUtc);
+  thirtyDaysAgoUtc.setUTCDate(thirtyDaysAgoUtc.getUTCDate() - 30);
   const thirtyDaysFromNow = new Date(now);
   thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+  const fourteenDaysFromNow = new Date(now);
+  fourteenDaysFromNow.setDate(fourteenDaysFromNow.getDate() + 14);
+  const sevenDaysFromNow = new Date(now);
+  sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+  const oneDayFromNow = new Date(now);
+  oneDayFromNow.setDate(oneDayFromNow.getDate() + 1);
+  const userRole = opts.userRole ?? "VIEWER";
+  const userId = opts.userId;
 
   try {
     const [
@@ -57,7 +119,22 @@ export async function getDashboardMetrics(
       currentlyOnSiteCount,
       signInsToday,
       signInsSevenDays,
-      documentsExpiringSoon,
+      signInsThirtyDays,
+      locationCapturedThirtyDays,
+      locationWithinRadiusThirtyDays,
+      locationOutsideRadiusThirtyDays,
+      expiringDocuments,
+      activeRollCallEvents,
+      closedRollCallsLast7Days,
+      drillsLast30Days,
+      overdueDrills,
+      dueDrillsIn7Days,
+      quizActiveCooldowns,
+      quizProfilesAttempted30Days,
+      quizProfilesWithRecentFailures,
+      quizAttemptProfiles30Days,
+      quizSignInAuditLogs,
+      hostArrivalAuditLogs,
       recentSignIns,
       recentAuditLogs,
     ] = await Promise.all([
@@ -72,10 +149,140 @@ export async function getDashboardMetrics(
       db.signInRecord.count({
         where: { company_id: companyId, sign_in_ts: { gte: sevenDaysAgoUtc } },
       }),
-      db.contractorDocument.count({
+      db.signInRecord.count({
+        where: { company_id: companyId, sign_in_ts: { gte: thirtyDaysAgoUtc } },
+      }),
+      db.signInRecord.count({
+        where: {
+          company_id: companyId,
+          sign_in_ts: { gte: thirtyDaysAgoUtc },
+          location_captured_at: { not: null },
+        },
+      }),
+      db.signInRecord.count({
+        where: {
+          company_id: companyId,
+          sign_in_ts: { gte: thirtyDaysAgoUtc },
+          location_within_radius: true,
+        },
+      }),
+      db.signInRecord.count({
+        where: {
+          company_id: companyId,
+          sign_in_ts: { gte: thirtyDaysAgoUtc },
+          location_within_radius: false,
+        },
+      }),
+      db.contractorDocument.findMany({
         where: {
           contractor: { company_id: companyId },
-          expires_at: { lte: thirtyDaysFromNow, gte: now },
+          expires_at: { lte: thirtyDaysFromNow },
+        },
+        select: { expires_at: true },
+      }),
+      db.evacuationEvent.findMany({
+        where: {
+          company_id: companyId,
+          status: "ACTIVE",
+        },
+        select: {
+          site_id: true,
+          total_people: true,
+          missing_count: true,
+        },
+      }),
+      db.evacuationEvent.count({
+        where: {
+          company_id: companyId,
+          status: "CLOSED",
+          closed_at: { gte: sevenDaysAgoUtc },
+        },
+      }),
+      db.emergencyDrill.count({
+        where: {
+          company_id: companyId,
+          conducted_at: { gte: thirtyDaysAgoUtc },
+        },
+      }),
+      db.emergencyDrill.count({
+        where: {
+          company_id: companyId,
+          next_due_at: { lt: now },
+        },
+      }),
+      db.emergencyDrill.count({
+        where: {
+          company_id: companyId,
+          next_due_at: {
+            gte: now,
+            lte: sevenDaysFromNow,
+          },
+        },
+      }),
+      db.inductionQuizAttempt.count({
+        where: {
+          cooldown_until: { gt: now },
+        },
+      }),
+      db.inductionQuizAttempt.count({
+        where: {
+          last_attempt_at: { gte: thirtyDaysAgoUtc },
+        },
+      }),
+      db.inductionQuizAttempt.count({
+        where: {
+          last_attempt_at: { gte: thirtyDaysAgoUtc },
+          last_passed: false,
+        },
+      }),
+      db.inductionQuizAttempt.findMany({
+        where: {
+          last_attempt_at: { gte: thirtyDaysAgoUtc },
+        },
+        select: {
+          template_id: true,
+          site_id: true,
+          last_passed: true,
+          cooldown_until: true,
+          template: {
+            select: {
+              name: true,
+            },
+          },
+          site: {
+            select: {
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          last_attempt_at: "desc",
+        },
+        take: 2_000,
+      }),
+      db.auditLog.findMany({
+        where: {
+          company_id: companyId,
+          action: "visitor.sign_in",
+          created_at: { gte: thirtyDaysAgoUtc },
+        },
+        select: {
+          details: true,
+        },
+        orderBy: { created_at: "desc" },
+        take: 2_000,
+      }),
+      db.auditLog.findMany({
+        where: {
+          company_id: companyId,
+          action: "visitor.sign_in",
+        },
+        orderBy: { created_at: "desc" },
+        take: 40,
+        select: {
+          id: true,
+          created_at: true,
+          details: true,
         },
       }),
       db.signInRecord.findMany({
@@ -104,13 +311,237 @@ export async function getDashboardMetrics(
       }),
     ]);
 
+    const documentExpiryWindows = expiringDocuments.reduce(
+      (acc, row) => {
+        if (!row.expires_at) {
+          return acc;
+        }
+
+        if (row.expires_at < now) {
+          acc.overdue += 1;
+          return acc;
+        }
+
+        if (row.expires_at <= oneDayFromNow) {
+          acc.dueIn1Day += 1;
+        }
+        if (row.expires_at <= sevenDaysFromNow) {
+          acc.dueIn7Days += 1;
+        }
+        if (row.expires_at <= fourteenDaysFromNow) {
+          acc.dueIn14Days += 1;
+        }
+        if (row.expires_at <= thirtyDaysFromNow) {
+          acc.dueIn30Days += 1;
+        }
+
+        return acc;
+      },
+      {
+        overdue: 0,
+        dueIn1Day: 0,
+        dueIn7Days: 0,
+        dueIn14Days: 0,
+        dueIn30Days: 0,
+      },
+    );
+
+    const rollCallSummary = {
+      activeEvents: activeRollCallEvents.length,
+      activeSites: new Set(activeRollCallEvents.map((event) => event.site_id)).size,
+      trackedPeople: activeRollCallEvents.reduce(
+        (acc, event) => acc + event.total_people,
+        0,
+      ),
+      missingPeople: activeRollCallEvents.reduce(
+        (acc, event) => acc + event.missing_count,
+        0,
+      ),
+      closedEventsLast7Days: closedRollCallsLast7Days,
+    };
+
+    const drillSummary = {
+      drillsLast30Days,
+      overdueDrills,
+      dueIn7Days: dueDrillsIn7Days,
+    };
+    const quizScoredResponses30Days = quizSignInAuditLogs.reduce(
+      (acc: number, row: { details: unknown }) => {
+        const details =
+          row.details && typeof row.details === "object" && !Array.isArray(row.details)
+            ? (row.details as Record<string, unknown>)
+            : null;
+        if (!details || details.quiz_scoring_enabled !== true) {
+          return acc;
+        }
+        return acc + 1;
+      },
+      0,
+    );
+    const quizPassedResponses30Days = quizSignInAuditLogs.reduce(
+      (acc: number, row: { details: unknown }) => {
+        const details =
+          row.details && typeof row.details === "object" && !Array.isArray(row.details)
+            ? (row.details as Record<string, unknown>)
+            : null;
+        if (!details || details.quiz_scoring_enabled !== true) {
+          return acc;
+        }
+        return acc + (details.quiz_passed === true ? 1 : 0);
+      },
+      0,
+    );
+    const quizFailedResponses30Days = Math.max(
+      quizScoredResponses30Days - quizPassedResponses30Days,
+      0,
+    );
+    const quizPassRatePercent =
+      quizScoredResponses30Days > 0
+        ? Math.round((quizPassedResponses30Days / quizScoredResponses30Days) * 100)
+        : 0;
+    const topRiskTemplateSiteMap = new Map<
+      string,
+      {
+        template_id: string;
+        template_name: string;
+        site_id: string;
+        site_name: string;
+        recent_attempt_profiles: number;
+        recent_fail_profiles: number;
+        active_cooldowns: number;
+      }
+    >();
+
+    for (const row of quizAttemptProfiles30Days) {
+      const key = `${row.template_id}:${row.site_id}`;
+      const existing = topRiskTemplateSiteMap.get(key);
+      const next = existing ?? {
+        template_id: row.template_id,
+        template_name: row.template.name,
+        site_id: row.site_id,
+        site_name: row.site.name,
+        recent_attempt_profiles: 0,
+        recent_fail_profiles: 0,
+        active_cooldowns: 0,
+      };
+
+      next.recent_attempt_profiles += 1;
+      if (row.last_passed === false) {
+        next.recent_fail_profiles += 1;
+      }
+      if (row.cooldown_until && row.cooldown_until.getTime() > now.getTime()) {
+        next.active_cooldowns += 1;
+      }
+
+      topRiskTemplateSiteMap.set(key, next);
+    }
+
+    const topRiskTemplateSites = [...topRiskTemplateSiteMap.values()]
+      .sort((left, right) => {
+        if (right.recent_fail_profiles !== left.recent_fail_profiles) {
+          return right.recent_fail_profiles - left.recent_fail_profiles;
+        }
+        if (right.active_cooldowns !== left.active_cooldowns) {
+          return right.active_cooldowns - left.active_cooldowns;
+        }
+        return right.recent_attempt_profiles - left.recent_attempt_profiles;
+      })
+      .slice(0, 5);
+
+    const quizSummary = {
+      scoredResponses30Days: quizScoredResponses30Days,
+      passedResponses30Days: quizPassedResponses30Days,
+      failedResponses30Days: quizFailedResponses30Days,
+      passRatePercent: quizPassRatePercent,
+      activeCooldowns: quizActiveCooldowns,
+      profilesAttempted30Days: quizProfilesAttempted30Days,
+      profilesWithRecentFailures: quizProfilesWithRecentFailures,
+      topRiskTemplateSites,
+    };
+    const locationAuditSummary = {
+      totalSignIns30Days: signInsThirtyDays,
+      captured: locationCapturedThirtyDays,
+      withinRadius: locationWithinRadiusThirtyDays,
+      outsideRadius: locationOutsideRadiusThirtyDays,
+      withoutCapture: Math.max(signInsThirtyDays - locationCapturedThirtyDays, 0),
+    };
+
+    const hostArrivalNotifications = hostArrivalAuditLogs
+      .map((row) => {
+        const details =
+          row.details && typeof row.details === "object" && !Array.isArray(row.details)
+            ? (row.details as Record<string, unknown>)
+            : null;
+        if (!details) {
+          return null;
+        }
+
+        const visitorName =
+          typeof details.visitor_name === "string" ? details.visitor_name : null;
+        const siteName =
+          typeof details.site_name === "string" ? details.site_name : null;
+        const queuedCount =
+          typeof details.host_notifications_queued === "number"
+            ? details.host_notifications_queued
+            : 0;
+        const notificationsEnabled = details.host_notifications_enabled === true;
+        const hostRecipientId =
+          typeof details.host_recipient_id === "string"
+            ? details.host_recipient_id
+            : null;
+
+        if (!notificationsEnabled || queuedCount <= 0 || !visitorName || !siteName) {
+          return null;
+        }
+
+        const targeted =
+          hostRecipientId !== null && userId !== undefined && hostRecipientId === userId;
+
+        const visibleToUser =
+          userRole === "ADMIN"
+            ? true
+            : hostRecipientId
+              ? targeted
+              : userRole === "SITE_MANAGER";
+
+        if (!visibleToUser) {
+          return null;
+        }
+
+        return {
+          id: row.id,
+          created_at: row.created_at,
+          visitor_name: visitorName,
+          site_name: siteName,
+          targeted,
+        };
+      })
+      .filter(
+        (
+          row,
+        ): row is {
+          id: string;
+          created_at: Date;
+          visitor_name: string;
+          site_name: string;
+          targeted: boolean;
+        } => row !== null,
+      )
+      .slice(0, 8);
+
     return {
       activeSitesCount,
       totalSitesCount,
       currentlyOnSiteCount,
       signInsToday,
       signInsSevenDays,
-      documentsExpiringSoon,
+      documentsExpiringSoon: documentExpiryWindows.dueIn30Days,
+      documentExpiryWindows,
+      locationAuditSummary,
+      rollCallSummary,
+      drillSummary,
+      quizSummary,
+      hostArrivalNotifications,
       recentSignIns,
       recentAuditLogs,
     };

@@ -14,7 +14,7 @@ test.describe("Admin Command Mode", () => {
     });
 
     await expect(
-      page.getByRole("heading", { name: /Foreman Command Mode/i }),
+      page.getByRole("heading", { name: /(?:Foreman )?Command Mode/i }),
     ).toBeVisible();
     await expect(page.getByText(/On Site Now/i)).toBeVisible();
     await expect(

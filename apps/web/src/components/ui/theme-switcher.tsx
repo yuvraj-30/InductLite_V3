@@ -50,7 +50,10 @@ export function ThemeSwitcher() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-[120] rounded-xl border ring-soft bg-glass-strong p-1.5 shadow-float">
+    <aside
+      aria-label="Theme controls"
+      className="fixed bottom-4 right-4 z-[120] hidden rounded-xl border ring-soft bg-glass-strong p-1.5 shadow-float md:block"
+    >
       <div
         className="inline-flex items-center gap-1 rounded-lg border ring-soft bg-glass px-1 py-1"
         role="group"
@@ -75,7 +78,6 @@ export function ThemeSwitcher() {
           );
         })}
       </div>
-    </div>
+    </aside>
   );
 }
-

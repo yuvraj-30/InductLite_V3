@@ -109,6 +109,43 @@ export const signInSchema = z.object({
       `Signature payload exceeds ${MAX_SIGNATURE_DATA_LENGTH} characters`,
     )
     .optional(),
+  location: z
+    .object({
+      latitude: z.number().min(-90, "Invalid latitude").max(90, "Invalid latitude"),
+      longitude: z
+        .number()
+        .min(-180, "Invalid longitude")
+        .max(180, "Invalid longitude"),
+      accuracyMeters: z
+        .number()
+        .min(0, "Invalid location accuracy")
+        .max(10_000, "Invalid location accuracy")
+        .optional(),
+      capturedAt: z.string().datetime().optional(),
+    })
+    .optional(),
+  inviteToken: z
+    .string()
+    .min(16, "Invalid invite token")
+    .max(64, "Invalid invite token")
+    .regex(/^[A-Za-z0-9_-]+$/, "Invalid invite token")
+    .optional(),
+  hostRecipientId: z.string().cuid("Invalid host recipient").optional(),
+  languageCode: z
+    .string()
+    .min(2, "Invalid language code")
+    .max(20, "Invalid language code")
+    .regex(
+      /^[A-Za-z]{2,3}(?:[-_][A-Za-z0-9]{2,8})*$/,
+      "Invalid language code",
+    )
+    .optional(),
+  mediaAcknowledged: z.boolean().optional(),
+  geofenceOverrideCode: z
+    .string()
+    .min(4, "Invalid geofence override code")
+    .max(64, "Invalid geofence override code")
+    .optional(),
   idempotencyKey: z
     .string()
     .min(16, "Invalid idempotency key")

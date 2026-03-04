@@ -42,6 +42,11 @@ Note: IP allowlist matching supports IPv4 and IPv6 CIDR entries.
 - UPSTASH_REDIS_REST_URL
 - UPSTASH_REDIS_REST_TOKEN
 
+### Outbound Webhooks
+
+- WEBHOOK_SIGNING_SECRET (optional, min 16 chars; enables `X-InductLite-Signature` HMAC header on outbound webhook deliveries)
+- Site-level webhook endpoints and signing-secret overrides are managed in admin at `/admin/sites/:siteId/webhooks`; if site secret is unset, deliveries fall back to `WEBHOOK_SIGNING_SECRET`.
+
 ### Sentry
 
 - SENTRY_DSN
@@ -52,6 +57,7 @@ Note: IP allowlist matching supports IPv4 and IPv6 CIDR entries.
 - Keep R2 buckets private; use signed URLs only.
 - Single Render service keeps free-tier hours under control.
 - GitHub Actions cron triggers export + maintenance via API routes.
+  - Maintenance route now runs retention tasks plus queued-email processing (including pre-registration reminder batches and contractor document expiry reminders) and outbound webhook queue processing (retry/backoff/dead-letter handling).
 - Apply schema migrations before first traffic after deploy:
   - One-off command: `cd apps/web && npm run db:migrate`
 - For production migration/rollback operations (including Render free tier without shell), use:

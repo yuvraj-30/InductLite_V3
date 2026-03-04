@@ -131,6 +131,21 @@ export interface LoginResult {
   requiresMfa?: boolean;
 }
 
+export async function establishAuthenticatedSession(
+  user: SessionUser,
+): Promise<void> {
+  const session = await getSession();
+  const now = Date.now();
+
+  session.user = user;
+  session.csrfToken = generateCsrfToken();
+  session.createdAt = now;
+  session.lastActivity = now;
+  delete session.pendingSso;
+
+  await session.save();
+}
+
 /**
  * Brute force protection constants
  */
@@ -331,10 +346,6 @@ export async function login(
     data: updateData,
   });
 
-  // Create session
-  const session = await getSession();
-  const now = Date.now();
-
   const sessionUser: SessionUser = {
     id: user.id,
     email: user.email,
@@ -345,11 +356,7 @@ export async function login(
     companySlug: user.company.slug,
   };
 
-  session.user = sessionUser;
-  session.csrfToken = generateCsrfToken();
-  session.createdAt = now;
-  session.lastActivity = now;
-  await session.save();
+  await establishAuthenticatedSession(sessionUser);
 
   try {
     await db.auditLog.create({

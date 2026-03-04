@@ -1,6 +1,7 @@
 import { setIntervalAsync, clearIntervalAsync } from "set-interval-async/fixed";
 import { runRetentionTasks } from "./retention";
 import { processEmailQueue } from "@/lib/email/worker";
+import { processOutboundWebhookQueue } from "@/lib/webhook/worker";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
 
@@ -17,7 +18,8 @@ export function startMaintenanceScheduler(
     try {
       await runRetentionTasks();
       await processEmailQueue();
-      log.info({}, "Maintenance and email queue tasks completed");
+      await processOutboundWebhookQueue();
+      log.info({}, "Maintenance, email queue, and webhook queue tasks completed");
     } catch (err) {
       log.error({ err: String(err) }, "Maintenance scheduler error");
     }

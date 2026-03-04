@@ -113,6 +113,13 @@ export interface TemplateWithCounts {
   is_archived: boolean;
   published_at: Date | null;
   force_reinduction: boolean;
+  quiz_scoring_enabled: boolean;
+  quiz_pass_threshold: number;
+  quiz_max_attempts: number;
+  quiz_cooldown_minutes: number;
+  quiz_required_for_entry: boolean;
+  induction_media: JsonValue | null;
+  induction_languages: JsonValue | null;
   created_at: Date;
   updated_at: Date;
   site: { id: string; name: string } | null;
@@ -136,11 +143,18 @@ export interface TemplateWithQuestions {
   is_default: boolean;
   is_archived: boolean;
   published_at: Date | null;
+  force_reinduction: boolean;
+  quiz_scoring_enabled: boolean;
+  quiz_pass_threshold: number;
+  quiz_max_attempts: number;
+  quiz_cooldown_minutes: number;
+  quiz_required_for_entry: boolean;
+  induction_media: JsonValue | null;
+  induction_languages: JsonValue | null;
   created_at: Date;
   updated_at: Date;
   site: { id: string; name: string } | null;
   questions: QuestionData[];
-  force_reinduction: boolean;
 }
 
 /**
@@ -254,6 +268,13 @@ export interface CreateTemplateInput {
   description?: string;
   site_id?: string; // null = company default
   is_default?: boolean;
+  quiz_scoring_enabled?: boolean;
+  quiz_pass_threshold?: number;
+  quiz_max_attempts?: number;
+  quiz_cooldown_minutes?: number;
+  quiz_required_for_entry?: boolean;
+  induction_media?: Prisma.InputJsonValue | null;
+  induction_languages?: Prisma.InputJsonValue | null;
 }
 
 /**
@@ -263,6 +284,13 @@ export interface UpdateTemplateInput {
   name?: string;
   description?: string;
   is_default?: boolean;
+  quiz_scoring_enabled?: boolean;
+  quiz_pass_threshold?: number;
+  quiz_max_attempts?: number;
+  quiz_cooldown_minutes?: number;
+  quiz_required_for_entry?: boolean;
+  induction_media?: Prisma.InputJsonValue | null;
+  induction_languages?: Prisma.InputJsonValue | null;
 }
 
 // ============================================================================
@@ -530,6 +558,13 @@ export async function createTemplate(
         version: 1,
         is_published: false,
         is_archived: false,
+        quiz_scoring_enabled: input.quiz_scoring_enabled ?? false,
+        quiz_pass_threshold: input.quiz_pass_threshold ?? 80,
+        quiz_max_attempts: input.quiz_max_attempts ?? 3,
+        quiz_cooldown_minutes: input.quiz_cooldown_minutes ?? 15,
+        quiz_required_for_entry: input.quiz_required_for_entry ?? true,
+        induction_media: input.induction_media ?? null,
+        induction_languages: input.induction_languages ?? null,
       },
       include: {
         site: { select: { id: true, name: true } },
@@ -719,6 +754,13 @@ export async function updateTemplate(
         name: input.name,
         description: input.description,
         is_default: input.is_default,
+        quiz_scoring_enabled: input.quiz_scoring_enabled,
+        quiz_pass_threshold: input.quiz_pass_threshold,
+        quiz_max_attempts: input.quiz_max_attempts,
+        quiz_cooldown_minutes: input.quiz_cooldown_minutes,
+        quiz_required_for_entry: input.quiz_required_for_entry,
+        induction_media: input.induction_media,
+        induction_languages: input.induction_languages,
       },
     });
 
@@ -963,6 +1005,13 @@ export async function createNewVersion(
         is_default: source.is_default,
         is_published: false,
         is_archived: false,
+        quiz_scoring_enabled: source.quiz_scoring_enabled,
+        quiz_pass_threshold: source.quiz_pass_threshold,
+        quiz_max_attempts: source.quiz_max_attempts,
+        quiz_cooldown_minutes: source.quiz_cooldown_minutes,
+        quiz_required_for_entry: source.quiz_required_for_entry,
+        induction_media: source.induction_media,
+        induction_languages: source.induction_languages,
       },
     });
 

@@ -134,6 +134,88 @@ export default function CreateSiteForm() {
               </p>
             )}
           </div>
+
+          <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
+            <h3 className="text-sm font-semibold text-gray-900">
+              Location Audit (Optional)
+            </h3>
+            <p className="mt-1 text-xs text-gray-600">
+              Configure site coordinates to show in-radius/out-of-radius status during sign-in.
+            </p>
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
+              <div>
+                <label
+                  htmlFor="locationLatitude"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Latitude
+                </label>
+                <input
+                  type="number"
+                  id="locationLatitude"
+                  name="locationLatitude"
+                  step="0.000001"
+                  min="-90"
+                  max="90"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  placeholder="-36.8485"
+                />
+                {getFieldError("locationLatitude") && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {getFieldError("locationLatitude")}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="locationLongitude"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Longitude
+                </label>
+                <input
+                  type="number"
+                  id="locationLongitude"
+                  name="locationLongitude"
+                  step="0.000001"
+                  min="-180"
+                  max="180"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  placeholder="174.7633"
+                />
+                {getFieldError("locationLongitude") && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {getFieldError("locationLongitude")}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="locationRadiusM"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Radius (m)
+                </label>
+                <input
+                  type="number"
+                  id="locationRadiusM"
+                  name="locationRadiusM"
+                  step="1"
+                  min="25"
+                  max="2000"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  placeholder="150"
+                />
+                {getFieldError("locationRadiusM") && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {getFieldError("locationRadiusM")}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
         </>
       )}
 

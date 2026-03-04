@@ -6,7 +6,16 @@ const mocks = vi.hoisted(() => ({
   requireAuthenticatedContextReadOnly: vi.fn(),
   findCompanyComplianceSettings: vi.fn(),
   updateCompanyComplianceSettings: vi.fn(),
+  findCompanySsoSettings: vi.fn(),
+  updateCompanySsoSettings: vi.fn(),
   createAuditLog: vi.fn(),
+  buildCompanyInvoicePreview: vi.fn(),
+  syncCompanyInvoicePreviewToAccounting: vi.fn(),
+  parseCompanySsoConfig: vi.fn(),
+  serializeCompanySsoConfig: vi.fn(),
+  setClientSecret: vi.fn(),
+  generateDirectorySyncApiKey: vi.fn(),
+  hashDirectorySyncApiKey: vi.fn(),
   revalidatePath: vi.fn(),
   generateRequestId: vi.fn(),
   logger: {
@@ -34,10 +43,25 @@ vi.mock("@/lib/tenant/context", () => ({
 vi.mock("@/lib/repository/company.repository", () => ({
   findCompanyComplianceSettings: mocks.findCompanyComplianceSettings,
   updateCompanyComplianceSettings: mocks.updateCompanyComplianceSettings,
+  findCompanySsoSettings: mocks.findCompanySsoSettings,
+  updateCompanySsoSettings: mocks.updateCompanySsoSettings,
 }));
 
 vi.mock("@/lib/repository/audit.repository", () => ({
   createAuditLog: mocks.createAuditLog,
+}));
+
+vi.mock("@/lib/plans", () => ({
+  buildCompanyInvoicePreview: mocks.buildCompanyInvoicePreview,
+  syncCompanyInvoicePreviewToAccounting: mocks.syncCompanyInvoicePreviewToAccounting,
+}));
+
+vi.mock("@/lib/identity", () => ({
+  parseCompanySsoConfig: mocks.parseCompanySsoConfig,
+  serializeCompanySsoConfig: mocks.serializeCompanySsoConfig,
+  setClientSecret: mocks.setClientSecret,
+  generateDirectorySyncApiKey: mocks.generateDirectorySyncApiKey,
+  hashDirectorySyncApiKey: mocks.hashDirectorySyncApiKey,
 }));
 
 vi.mock("@/lib/auth/csrf", () => ({
@@ -48,7 +72,12 @@ vi.mock("@/lib/logger", () => ({
   createRequestLogger: mocks.createRequestLogger,
 }));
 
-import { updateComplianceSettingsAction } from "./actions";
+import {
+  rotateDirectorySyncApiKeyAction,
+  syncBillingPreviewAction,
+  updateComplianceSettingsAction,
+  updateSsoSettingsAction,
+} from "./actions";
 
 function buildValidFormData(): FormData {
   const formData = new FormData();
@@ -94,6 +123,86 @@ describe("updateComplianceSettingsAction", () => {
       compliance_legal_hold_set_at: new Date("2026-02-23T00:00:00.000Z"),
     });
     mocks.createAuditLog.mockResolvedValue(undefined);
+    mocks.buildCompanyInvoicePreview.mockResolvedValue({
+      companyId: "company-1",
+      currency: "NZD",
+      generatedAt: new Date("2026-03-01T00:00:00.000Z"),
+      activeSiteCount: 2,
+      baseTotalCents: 10_000,
+      creditTotalCents: 500,
+      finalTotalCents: 9_500,
+      siteInvoices: [],
+    });
+    mocks.syncCompanyInvoicePreviewToAccounting.mockResolvedValue({
+      endpointUrl: "https://accounting.example.test/sync",
+      statusCode: 200,
+      payloadBytes: 1024,
+      responseBody: null,
+      sentAt: new Date("2026-03-01T00:05:00.000Z"),
+    });
+    mocks.findCompanySsoSettings.mockResolvedValue({
+      id: "company-1",
+      name: "BuildRight NZ",
+      slug: "buildright-nz",
+      sso_config: {
+        enabled: false,
+        provider: "OIDC_GENERIC",
+        displayName: "BuildRight SSO",
+        issuerUrl: "",
+        clientId: "",
+        clientSecretEncrypted: null,
+        scopes: ["openid", "profile", "email"],
+        autoProvisionUsers: true,
+        defaultRole: "VIEWER",
+        roleClaimPath: "roles",
+        roleMapping: {
+          ADMIN: ["admin"],
+          SITE_MANAGER: ["manager"],
+          VIEWER: ["viewer"],
+        },
+        allowedEmailDomains: [],
+        directorySync: { enabled: false, tokenHash: null },
+      },
+    });
+    mocks.updateCompanySsoSettings.mockResolvedValue({
+      id: "company-1",
+      name: "BuildRight NZ",
+      slug: "buildright-nz",
+      sso_config: {
+        enabled: true,
+      },
+    });
+    mocks.parseCompanySsoConfig.mockImplementation((raw: any) => ({
+      enabled: raw?.enabled === true,
+      provider:
+        raw?.provider === "MICROSOFT_ENTRA" ? "MICROSOFT_ENTRA" : "OIDC_GENERIC",
+      displayName: raw?.displayName ?? "Company SSO",
+      issuerUrl: raw?.issuerUrl ?? "",
+      clientId: raw?.clientId ?? "",
+      clientSecretEncrypted: raw?.clientSecretEncrypted ?? null,
+      scopes: Array.isArray(raw?.scopes)
+        ? raw.scopes
+        : ["openid", "profile", "email"],
+      autoProvisionUsers: raw?.autoProvisionUsers !== false,
+      defaultRole: raw?.defaultRole ?? "VIEWER",
+      roleClaimPath: raw?.roleClaimPath ?? "roles",
+      roleMapping: raw?.roleMapping ?? {
+        ADMIN: ["admin"],
+        SITE_MANAGER: ["manager"],
+        VIEWER: ["viewer"],
+      },
+      allowedEmailDomains: Array.isArray(raw?.allowedEmailDomains)
+        ? raw.allowedEmailDomains
+        : [],
+      directorySync: raw?.directorySync ?? { enabled: false, tokenHash: null },
+    }));
+    mocks.serializeCompanySsoConfig.mockImplementation((value: unknown) => value);
+    mocks.setClientSecret.mockImplementation((config: any) => ({
+      ...config,
+      clientSecretEncrypted: "enc-secret",
+    }));
+    mocks.generateDirectorySyncApiKey.mockReturnValue("idsync_generated_key");
+    mocks.hashDirectorySyncApiKey.mockReturnValue("hashed-directory-key");
     mocks.generateRequestId.mockReturnValue("req-1");
     mocks.createRequestLogger.mockReturnValue(mocks.logger);
   });
@@ -148,5 +257,249 @@ describe("updateComplianceSettingsAction", () => {
       }),
     );
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/settings");
+  });
+
+  it("syncs billing preview and records audit evidence", async () => {
+    const result = await syncBillingPreviewAction();
+
+    expect(result.success).toBe(true);
+    expect(mocks.buildCompanyInvoicePreview).toHaveBeenCalledWith("company-1");
+    expect(mocks.syncCompanyInvoicePreviewToAccounting).toHaveBeenCalledWith(
+      expect.objectContaining({
+        invoicePreview: expect.objectContaining({
+          companyId: "company-1",
+        }),
+      }),
+    );
+    expect(mocks.createAuditLog).toHaveBeenCalledWith(
+      "company-1",
+      expect.objectContaining({
+        action: "billing.invoice_sync",
+      }),
+    );
+  });
+
+  it("returns error when accounting endpoint is not configured", async () => {
+    mocks.syncCompanyInvoicePreviewToAccounting.mockRejectedValue(
+      new Error("ACCOUNTING_SYNC_ENDPOINT_URL is not configured"),
+    );
+
+    const result = await syncBillingPreviewAction();
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain("ACCOUNTING_SYNC_ENDPOINT_URL");
+    }
+    expect(mocks.createAuditLog).not.toHaveBeenCalledWith(
+      "company-1",
+      expect.objectContaining({ action: "billing.invoice_sync" }),
+    );
+  });
+});
+
+function buildValidSsoFormData(): FormData {
+  const formData = new FormData();
+  formData.set("enabled", "true");
+  formData.set("provider", "MICROSOFT_ENTRA");
+  formData.set("displayName", "BuildRight SSO");
+  formData.set("issuerUrl", "https://login.microsoftonline.com/tenant/v2.0");
+  formData.set("clientId", "entra-client-id");
+  formData.set("clientSecret", "new-secret-value");
+  formData.set("scopes", "openid, profile, email");
+  formData.set("autoProvisionUsers", "true");
+  formData.set("defaultRole", "VIEWER");
+  formData.set("roleClaimPath", "roles");
+  formData.set("roleMappingAdmin", "admin, administrators");
+  formData.set("roleMappingSiteManager", "manager");
+  formData.set("roleMappingViewer", "viewer");
+  formData.set("allowedEmailDomains", "example.com");
+  formData.set("directorySyncEnabled", "true");
+  return formData;
+}
+
+describe("SSO settings actions", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.assertOrigin.mockResolvedValue(undefined);
+    mocks.checkPermission.mockResolvedValue({ success: true });
+    mocks.requireAuthenticatedContextReadOnly.mockResolvedValue({
+      companyId: "company-1",
+      userId: "user-1",
+    });
+    mocks.findCompanySsoSettings.mockResolvedValue({
+      id: "company-1",
+      name: "BuildRight NZ",
+      slug: "buildright-nz",
+      sso_config: {
+        enabled: false,
+        provider: "OIDC_GENERIC",
+        displayName: "BuildRight SSO",
+        issuerUrl: "",
+        clientId: "",
+        clientSecretEncrypted: null,
+        scopes: ["openid", "profile", "email"],
+        autoProvisionUsers: true,
+        defaultRole: "VIEWER",
+        roleClaimPath: "roles",
+        roleMapping: {
+          ADMIN: ["admin"],
+          SITE_MANAGER: ["manager"],
+          VIEWER: ["viewer"],
+        },
+        allowedEmailDomains: [],
+        directorySync: { enabled: false, tokenHash: null },
+      },
+    });
+    mocks.parseCompanySsoConfig.mockImplementation((raw: any) => ({
+      enabled: raw?.enabled === true,
+      provider:
+        raw?.provider === "MICROSOFT_ENTRA" ? "MICROSOFT_ENTRA" : "OIDC_GENERIC",
+      displayName: raw?.displayName ?? "Company SSO",
+      issuerUrl: raw?.issuerUrl ?? "",
+      clientId: raw?.clientId ?? "",
+      clientSecretEncrypted: raw?.clientSecretEncrypted ?? null,
+      scopes: Array.isArray(raw?.scopes)
+        ? raw.scopes
+        : ["openid", "profile", "email"],
+      autoProvisionUsers: raw?.autoProvisionUsers !== false,
+      defaultRole: raw?.defaultRole ?? "VIEWER",
+      roleClaimPath: raw?.roleClaimPath ?? "roles",
+      roleMapping: raw?.roleMapping ?? {
+        ADMIN: ["admin"],
+        SITE_MANAGER: ["manager"],
+        VIEWER: ["viewer"],
+      },
+      allowedEmailDomains: Array.isArray(raw?.allowedEmailDomains)
+        ? raw.allowedEmailDomains
+        : [],
+      directorySync: raw?.directorySync ?? { enabled: false, tokenHash: null },
+    }));
+    mocks.serializeCompanySsoConfig.mockImplementation((value: unknown) => value);
+    mocks.setClientSecret.mockImplementation((config: any) => ({
+      ...config,
+      clientSecretEncrypted: "enc-secret",
+    }));
+    mocks.generateDirectorySyncApiKey.mockReturnValue("idsync_generated_key");
+    mocks.hashDirectorySyncApiKey.mockReturnValue("hashed-directory-key");
+    mocks.createRequestLogger.mockReturnValue(mocks.logger);
+    mocks.generateRequestId.mockReturnValue("req-1");
+    mocks.createAuditLog.mockResolvedValue(undefined);
+  });
+
+  it("updates SSO settings and records audit trail", async () => {
+    const result = await updateSsoSettingsAction(null, buildValidSsoFormData());
+
+    expect(result.success).toBe(true);
+    expect(mocks.updateCompanySsoSettings).toHaveBeenCalledWith(
+      "company-1",
+      expect.objectContaining({
+        enabled: true,
+        provider: "MICROSOFT_ENTRA",
+        clientId: "entra-client-id",
+      }),
+    );
+    expect(mocks.createAuditLog).toHaveBeenCalledWith(
+      "company-1",
+      expect.objectContaining({
+        action: "settings.update",
+        details: expect.objectContaining({
+          area: "sso",
+        }),
+      }),
+    );
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/settings");
+  });
+
+  it("requires client secret when enabling SSO", async () => {
+    const formData = buildValidSsoFormData();
+    formData.set("clientSecret", "");
+    mocks.findCompanySsoSettings.mockResolvedValueOnce({
+      id: "company-1",
+      name: "BuildRight NZ",
+      slug: "buildright-nz",
+      sso_config: {
+        enabled: false,
+        provider: "OIDC_GENERIC",
+        displayName: "BuildRight SSO",
+        issuerUrl: "https://login.example.com",
+        clientId: "client-id",
+        clientSecretEncrypted: null,
+        scopes: ["openid", "profile", "email"],
+        autoProvisionUsers: true,
+        defaultRole: "VIEWER",
+        roleClaimPath: "roles",
+        roleMapping: {
+          ADMIN: ["admin"],
+          SITE_MANAGER: ["manager"],
+          VIEWER: ["viewer"],
+        },
+        allowedEmailDomains: [],
+        directorySync: { enabled: false, tokenHash: null },
+      },
+    });
+    mocks.parseCompanySsoConfig.mockImplementationOnce(() => ({
+      enabled: false,
+      provider: "OIDC_GENERIC",
+      displayName: "BuildRight SSO",
+      issuerUrl: "https://login.example.com",
+      clientId: "client-id",
+      clientSecretEncrypted: null,
+      scopes: ["openid", "profile", "email"],
+      autoProvisionUsers: true,
+      defaultRole: "VIEWER",
+      roleClaimPath: "roles",
+      roleMapping: {
+        ADMIN: ["admin"],
+        SITE_MANAGER: ["manager"],
+        VIEWER: ["viewer"],
+      },
+      allowedEmailDomains: [],
+      directorySync: { enabled: false, tokenHash: null },
+    }));
+    mocks.parseCompanySsoConfig.mockImplementationOnce((raw: any) => ({
+      ...raw,
+      clientSecretEncrypted: null,
+    }));
+
+    const result = await updateSsoSettingsAction(null, formData);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain("Client secret is required");
+      expect(result.fieldErrors?.clientSecret?.[0]).toContain("required");
+    }
+    expect(mocks.updateCompanySsoSettings).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid SSO origin", async () => {
+    mocks.assertOrigin.mockRejectedValueOnce(new Error("Invalid request origin"));
+
+    const result = await updateSsoSettingsAction(null, buildValidSsoFormData());
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain("Invalid request origin");
+    }
+    expect(mocks.updateCompanySsoSettings).not.toHaveBeenCalled();
+  });
+
+  it("rotates directory sync key and stores hashed token", async () => {
+    const result = await rotateDirectorySyncApiKeyAction();
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.apiKey).toBe("idsync_generated_key");
+    }
+    expect(mocks.hashDirectorySyncApiKey).toHaveBeenCalledWith(
+      "idsync_generated_key",
+    );
+    expect(mocks.updateCompanySsoSettings).toHaveBeenCalledWith(
+      "company-1",
+      expect.objectContaining({
+        directorySync: expect.objectContaining({
+          tokenHash: "hashed-directory-key",
+        }),
+      }),
+    );
   });
 });

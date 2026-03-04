@@ -1,9 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mocks = vi.hoisted(() => ({
+  EntitlementDeniedError: class EntitlementDeniedError extends Error {
+    featureKey: string;
+    controlId: string;
+
+    constructor(featureKey: string) {
+      super(`Feature is not enabled for this tenant: ${featureKey}`);
+      this.name = "EntitlementDeniedError";
+      this.featureKey = featureKey;
+      this.controlId = "PLAN-ENTITLEMENT-001";
+    }
+  },
   assertOrigin: vi.fn(),
   checkAdmin: vi.fn(),
   requireAuthenticatedContextReadOnly: vi.fn(),
+  assertCompanyFeatureEnabled: vi.fn(),
   queueExportJobWithLimits: vi.fn(),
   createAuditLog: vi.fn(),
   revalidatePath: vi.fn(),
@@ -57,6 +69,11 @@ vi.mock("@/lib/feature-flags", () => ({
   isFeatureEnabled: mocks.isFeatureEnabled,
 }));
 
+vi.mock("@/lib/plans", () => ({
+  EntitlementDeniedError: mocks.EntitlementDeniedError,
+  assertCompanyFeatureEnabled: mocks.assertCompanyFeatureEnabled,
+}));
+
 import { createExportAction } from "./actions";
 import { ExportGlobalBytesLimitReachedError } from "@/lib/repository/export.repository";
 
@@ -69,6 +86,7 @@ describe("createExportAction guardrails", () => {
       companyId: "company-1",
       userId: "user-1",
     });
+    mocks.assertCompanyFeatureEnabled.mockResolvedValue(undefined);
     mocks.queueExportJobWithLimits.mockResolvedValue({ id: "job-1" });
     mocks.createAuditLog.mockResolvedValue(undefined);
     mocks.generateRequestId.mockReturnValue("req-1");
@@ -96,5 +114,23 @@ describe("createExportAction guardrails", () => {
 
     expect(mocks.createAuditLog).not.toHaveBeenCalled();
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
+  });
+
+  it("denies advanced exports when EXPORTS_ADVANCED entitlement is disabled", async () => {
+    mocks.assertCompanyFeatureEnabled.mockRejectedValue(
+      new mocks.EntitlementDeniedError("EXPORTS_ADVANCED"),
+    );
+
+    const result = await createExportAction({ exportType: "COMPLIANCE_ZIP" });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("FORBIDDEN");
+      expect(result.error.message).toBe(
+        "Advanced export bundles are disabled for your current plan",
+      );
+    }
+
+    expect(mocks.queueExportJobWithLimits).not.toHaveBeenCalled();
   });
 });

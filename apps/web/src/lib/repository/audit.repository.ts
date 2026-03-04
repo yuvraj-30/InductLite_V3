@@ -31,6 +31,10 @@ export type AuditAction =
   | "auth.password_change"
   | "auth.login_failed"
   | "auth.lockout"
+  | "auth.sso_start"
+  | "auth.sso_login"
+  | "auth.sso_failed"
+  | "auth.directory_sync"
   // User actions
   | "user.create"
   | "user.update"
@@ -42,6 +46,10 @@ export type AuditAction =
   | "site.update"
   | "site.deactivate"
   | "site.reactivate"
+  | "site.access_control_update"
+  | "site.webhooks_update"
+  | "site.webhooks_secret_rotate"
+  | "site.lms_connector_update"
   // Template actions
   | "template.create"
   | "template.update"
@@ -78,6 +86,11 @@ export type AuditAction =
   | "emergency.procedure.update"
   | "emergency.procedure.deactivate"
   | "emergency.drill.create"
+  | "emergency.rollcall.start"
+  | "emergency.rollcall.attendance_update"
+  | "emergency.rollcall.mark_all_accounted"
+  | "emergency.rollcall.close"
+  | "emergency.rollcall.export"
   // Incident actions
   | "incident.create"
   | "incident.resolve"
@@ -90,7 +103,17 @@ export type AuditAction =
   | "visitor.sign_in_escalation_submitted"
   | "visitor.sign_in_escalation_approved"
   | "visitor.sign_in_escalation_denied"
+  | "visitor.badge_print"
   | "visitor.sign_out"
+  // SMS + hardware add-on actions
+  | "sms.sent"
+  | "sms.failed"
+  | "sms.denied"
+  | "hardware.access_queued"
+  | "hardware.access_failed"
+  // Pre-registration invite actions
+  | "preregistration.create"
+  | "preregistration.deactivate"
   // Export actions
   | "export.create"
   | "export.complete"
@@ -100,7 +123,8 @@ export type AuditAction =
   | "publiclink.create"
   | "publiclink.deactivate"
   // Settings actions
-  | "settings.update";
+  | "settings.update"
+  | "billing.invoice_sync";
 
 /**
  * Audit log entry input

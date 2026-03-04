@@ -44,6 +44,7 @@ function getContextKey(pathname: string): string {
   if (pathname.startsWith("/admin/templates")) return "templates";
   if (pathname.startsWith("/admin/history")) return "history";
   if (pathname.startsWith("/admin/exports")) return "exports";
+  if (pathname.startsWith("/admin/webhooks")) return "webhooks";
   if (pathname.startsWith("/admin/escalations")) return "escalations";
   if (pathname.startsWith("/admin/settings")) return "settings";
   if (pathname.startsWith("/admin/users")) return "users";

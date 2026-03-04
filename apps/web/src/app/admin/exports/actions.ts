@@ -23,6 +23,7 @@ import { createRequestLogger } from "@/lib/logger";
 import { revalidatePath } from "next/cache";
 import { GUARDRAILS, isOffPeakNow } from "@/lib/guardrails";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 
 export async function createExportAction(
   input: z.infer<typeof createExportSchema>,
@@ -56,6 +57,33 @@ export async function createExportAction(
 
   // Tenant context
   const context = await requireAuthenticatedContextReadOnly();
+
+  const requiresAdvancedExport =
+    parsed.data.exportType === "SITE_PACK_PDF" ||
+    parsed.data.exportType === "COMPLIANCE_ZIP";
+  if (requiresAdvancedExport) {
+    try {
+      await assertCompanyFeatureEnabled(context.companyId, "EXPORTS_ADVANCED");
+    } catch (error) {
+      if (error instanceof EntitlementDeniedError) {
+        return errorResponse(
+          "FORBIDDEN",
+          "Advanced export bundles are disabled for your current plan",
+        );
+      }
+
+      log.error(
+        {
+          requestId,
+          companyId: context.companyId,
+          exportType: parsed.data.exportType,
+          errorType: error instanceof Error ? error.name : "unknown",
+        },
+        "Failed to evaluate export entitlements",
+      );
+      return errorResponse("INTERNAL_ERROR", "Failed to queue export job");
+    }
+  }
 
   if (GUARDRAILS.EXPORT_OFFPEAK_ONLY && !isOffPeakNow()) {
     return errorResponse(

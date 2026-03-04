@@ -60,6 +60,43 @@ export default async function AdminDashboardPage({
     signInsToday: 0,
     signInsSevenDays: 0,
     documentsExpiringSoon: 0,
+    documentExpiryWindows: {
+      overdue: 0,
+      dueIn1Day: 0,
+      dueIn7Days: 0,
+      dueIn14Days: 0,
+      dueIn30Days: 0,
+    },
+    locationAuditSummary: {
+      totalSignIns30Days: 0,
+      captured: 0,
+      withinRadius: 0,
+      outsideRadius: 0,
+      withoutCapture: 0,
+    },
+    rollCallSummary: {
+      activeEvents: 0,
+      activeSites: 0,
+      trackedPeople: 0,
+      missingPeople: 0,
+      closedEventsLast7Days: 0,
+    },
+    drillSummary: {
+      drillsLast30Days: 0,
+      overdueDrills: 0,
+      dueIn7Days: 0,
+    },
+    quizSummary: {
+      scoredResponses30Days: 0,
+      passedResponses30Days: 0,
+      failedResponses30Days: 0,
+      passRatePercent: 0,
+      activeCooldowns: 0,
+      profilesAttempted30Days: 0,
+      profilesWithRecentFailures: 0,
+      topRiskTemplateSites: [],
+    },
+    hostArrivalNotifications: [],
     recentSignIns: [],
     recentAuditLogs: [],
   };
@@ -74,7 +111,10 @@ export default async function AdminDashboardPage({
   };
 
   const [metrics, onboardingProgress] = await Promise.all([
-    getDashboardMetrics(companyId).catch((error) => {
+    getDashboardMetrics(companyId, {
+      userId: result.user.id,
+      userRole: result.user.role,
+    }).catch((error) => {
       metricsLoadFailed = true;
       log.error(
         { company_id: companyId, error: String(error) },
@@ -98,6 +138,12 @@ export default async function AdminDashboardPage({
     signInsToday,
     signInsSevenDays,
     documentsExpiringSoon,
+    documentExpiryWindows,
+    locationAuditSummary,
+    rollCallSummary,
+    drillSummary,
+    quizSummary,
+    hostArrivalNotifications,
     recentSignIns,
     recentAuditLogs,
   } = metrics;
@@ -107,6 +153,14 @@ export default async function AdminDashboardPage({
     100,
     Math.round((currentlyOnSiteCount / totalVisitorsWindow) * 100),
   );
+  const locationCaptureRate =
+    locationAuditSummary.totalSignIns30Days > 0
+      ? Math.round(
+          (locationAuditSummary.captured /
+            locationAuditSummary.totalSignIns30Days) *
+            100,
+        )
+      : 0;
 
   return (
     <div className="space-y-6 p-2 sm:p-3">
@@ -246,6 +300,12 @@ export default async function AdminDashboardPage({
                 {documentsExpiringSoon}
               </p>
               <p className="mt-1 text-sm text-secondary">Due within the next 30 days.</p>
+              <div className="mt-2 text-xs text-secondary">
+                <p>1 day: {documentExpiryWindows.dueIn1Day}</p>
+                <p>7 days: {documentExpiryWindows.dueIn7Days}</p>
+                <p>14 days: {documentExpiryWindows.dueIn14Days}</p>
+                <p>Overdue: {documentExpiryWindows.overdue}</p>
+              </div>
             </div>
             <div
               className={`rounded-2xl border p-3 ${documentsExpiringSoon > 0 ? "border-amber-400/45 bg-amber-500/18" : "border-white/35 bg-white/45"}`}
@@ -269,6 +329,278 @@ export default async function AdminDashboardPage({
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="bento-grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+        <Link
+          href="/admin/live-register"
+          className="kinetic-hover bento-card border-amber-300/40 bg-amber-500/10"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                Roll-Call Command
+              </p>
+              <p className="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100">
+                {rollCallSummary.activeEvents}
+              </p>
+              <p className="mt-1 text-sm text-secondary">
+                Active events across {rollCallSummary.activeSites} site
+                {rollCallSummary.activeSites === 1 ? "" : "s"}.
+              </p>
+              <p className="mt-1 text-xs text-secondary">
+                Tracked: {rollCallSummary.trackedPeople} | Missing:{" "}
+                {rollCallSummary.missingPeople} | Closed (7d):{" "}
+                {rollCallSummary.closedEventsLast7Days}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-amber-400/45 bg-amber-500/18 p-3">
+              <svg
+                className="h-6 w-6 text-amber-900 dark:text-amber-100"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-7.938 4h15.876c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L2.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
+          </div>
+        </Link>
+
+        <Link
+          href="/admin/sites"
+          className="kinetic-hover bento-card border-cyan-300/40 bg-cyan-500/10"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                Drill Readiness
+              </p>
+              <p className="mt-2 text-3xl font-black text-cyan-900 dark:text-cyan-100">
+                {drillSummary.drillsLast30Days}
+              </p>
+              <p className="mt-1 text-sm text-secondary">
+                Emergency drills recorded in the last 30 days.
+              </p>
+              <p className="mt-1 text-xs text-secondary">
+                Due in 7d: {drillSummary.dueIn7Days} | Overdue:{" "}
+                {drillSummary.overdueDrills}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-cyan-400/40 bg-cyan-500/16 p-3">
+              <svg
+                className="h-6 w-6 text-cyan-900 dark:text-cyan-100"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+          </div>
+        </Link>
+
+        <Link
+          href="/admin/history"
+          className="kinetic-hover bento-card border-indigo-300/40 bg-indigo-500/10"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                Location Verification
+              </p>
+              <p className="mt-2 text-3xl font-black text-indigo-900 dark:text-indigo-100">
+                {locationCaptureRate}%
+              </p>
+              <p className="mt-1 text-sm text-secondary">
+                Capture rate in the last 30 days ({locationAuditSummary.captured}/
+                {locationAuditSummary.totalSignIns30Days}).
+              </p>
+              <p className="mt-1 text-xs text-secondary">
+                Within: {locationAuditSummary.withinRadius} | Outside:{" "}
+                {locationAuditSummary.outsideRadius} | Missing:{" "}
+                {locationAuditSummary.withoutCapture}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-indigo-400/40 bg-indigo-500/16 p-3">
+              <svg
+                className="h-6 w-6 text-indigo-900 dark:text-indigo-100"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"
+                />
+              </svg>
+            </div>
+          </div>
+        </Link>
+
+        <Link
+          href="/admin/templates"
+          className="kinetic-hover bento-card border-violet-300/40 bg-violet-500/10"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                Quiz Compliance
+              </p>
+              <p className="mt-2 text-3xl font-black text-violet-900 dark:text-violet-100">
+                {quizSummary.passRatePercent}%
+              </p>
+              <p className="mt-1 text-sm text-secondary">
+                Pass rate for quiz-scored inductions in the last 30 days.
+              </p>
+              <p className="mt-1 text-xs text-secondary">
+                Passed: {quizSummary.passedResponses30Days} | Failed:{" "}
+                {quizSummary.failedResponses30Days}
+              </p>
+              <p className="mt-1 text-xs text-secondary">
+                Cooldowns: {quizSummary.activeCooldowns} | Risk profiles:{" "}
+                {quizSummary.profilesWithRecentFailures}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-violet-400/40 bg-violet-500/16 p-3">
+              <svg
+                className="h-6 w-6 text-violet-900 dark:text-violet-100"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 17v-2a4 4 0 014-4h4m0 0l-3-3m3 3l-3 3M5 3h12a2 2 0 012 2v5M7 21H5a2 2 0 01-2-2V9a2 2 0 012-2h2"
+                />
+              </svg>
+            </div>
+          </div>
+        </Link>
+      </section>
+
+      <section className="surface-panel overflow-hidden">
+        <div className="flex items-center justify-between border-b border-white/25 px-5 py-4">
+          <div>
+            <h2 className="kinetic-title text-xl font-black text-[color:var(--text-primary)]">
+              Quiz Performance Signals (30 Days)
+            </h2>
+            <p className="mt-1 text-sm text-secondary">
+              Monitors pass/fail outcomes and cooldown pressure from current quiz
+              attempt profiles.
+            </p>
+          </div>
+          <Link
+            href="/admin/templates"
+            className="inline-flex min-h-[38px] items-center rounded-lg border border-white/35 bg-white/45 px-3 py-2 text-xs font-semibold text-[color:var(--text-primary)] hover:bg-white/60"
+          >
+            Manage Templates
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 p-5 lg:grid-cols-4">
+          <div className="rounded-lg border border-white/25 bg-white/45 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+              Scored Responses
+            </p>
+            <p className="mt-2 text-3xl font-black text-[color:var(--text-primary)]">
+              {quizSummary.scoredResponses30Days}
+            </p>
+          </div>
+          <div className="rounded-lg border border-emerald-400/35 bg-emerald-500/14 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-emerald-900 dark:text-emerald-100">
+              Passed
+            </p>
+            <p className="mt-2 text-3xl font-black text-emerald-900 dark:text-emerald-100">
+              {quizSummary.passedResponses30Days}
+            </p>
+          </div>
+          <div className="rounded-lg border border-rose-400/35 bg-rose-500/14 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-rose-900 dark:text-rose-100">
+              Failed
+            </p>
+            <p className="mt-2 text-3xl font-black text-rose-900 dark:text-rose-100">
+              {quizSummary.failedResponses30Days}
+            </p>
+          </div>
+          <div className="rounded-lg border border-amber-400/35 bg-amber-500/16 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-amber-900 dark:text-amber-100">
+              Active Cooldowns
+            </p>
+            <p className="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100">
+              {quizSummary.activeCooldowns}
+            </p>
+            <p className="mt-1 text-xs text-secondary">
+              {quizSummary.profilesAttempted30Days} recent attempt profile
+              {quizSummary.profilesAttempted30Days === 1 ? "" : "s"} tracked.
+            </p>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto px-5 pb-5">
+          <table className="min-w-full divide-y divide-white/25 rounded-xl border border-white/20">
+            <thead className="bg-white/45">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+                  Template
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+                  Site
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+                  Attempt Profiles
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+                  Fail Profiles
+                </th>
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+                  Active Cooldowns
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/20 bg-white/20">
+              {quizSummary.topRiskTemplateSites.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-4 py-6 text-center text-sm text-secondary">
+                    No recent quiz attempt pressure detected.
+                  </td>
+                </tr>
+              ) : (
+                quizSummary.topRiskTemplateSites.map((row) => (
+                  <tr key={`${row.template_id}:${row.site_id}`}>
+                    <td className="px-4 py-3 text-sm font-medium text-[color:var(--text-primary)]">
+                      {row.template_name}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-secondary">{row.site_name}</td>
+                    <td className="px-4 py-3 text-right text-sm text-[color:var(--text-primary)]">
+                      {row.recent_attempt_profiles}
+                    </td>
+                    <td className="px-4 py-3 text-right text-sm text-rose-900 dark:text-rose-100">
+                      {row.recent_fail_profiles}
+                    </td>
+                    <td className="px-4 py-3 text-right text-sm text-amber-900 dark:text-amber-100">
+                      {row.active_cooldowns}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -314,7 +646,7 @@ export default async function AdminDashboardPage({
         </section>
       )}
 
-      <section className="bento-grid grid-cols-1 lg:grid-cols-2">
+      <section className="bento-grid grid-cols-1 lg:grid-cols-3">
         <div className="surface-panel overflow-hidden">
           <div className="border-b border-white/25 px-5 py-4">
             <h2 className="kinetic-title text-xl font-black text-[color:var(--text-primary)]">
@@ -385,6 +717,45 @@ export default async function AdminDashboardPage({
                       </div>
                       <p className="text-xs text-muted">
                         {new Date(log.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        <div className="surface-panel overflow-hidden">
+          <div className="flex items-center justify-between border-b border-white/25 px-5 py-4">
+            <h2 className="kinetic-title text-xl font-black text-[color:var(--text-primary)]">
+              Arrival Alerts
+            </h2>
+            <span className="rounded-lg border border-cyan-400/35 bg-cyan-500/16 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-cyan-900 dark:text-cyan-100">
+              In-app
+            </span>
+          </div>
+          <div className="p-5">
+            {hostArrivalNotifications.length === 0 ? (
+              <p className="text-sm text-secondary">No host arrival alerts yet.</p>
+            ) : (
+              <ul className="divide-y divide-white/20">
+                {hostArrivalNotifications.map((notification) => (
+                  <li key={notification.id} className="py-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-[color:var(--text-primary)]">
+                          {notification.visitor_name}
+                        </p>
+                        <p className="text-sm text-secondary">{notification.site_name}</p>
+                        <p className="mt-1 text-xs text-muted">
+                          {notification.targeted
+                            ? "Targeted to you"
+                            : "Broadcast to site managers"}
+                        </p>
+                      </div>
+                      <p className="text-xs text-muted">
+                        {new Date(notification.created_at).toLocaleString()}
                       </p>
                     </div>
                   </li>

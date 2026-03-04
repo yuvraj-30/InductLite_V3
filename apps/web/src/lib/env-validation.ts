@@ -123,6 +123,71 @@ const ENV_CONFIG: EnvConfig[] = [
     production: true,
     description: "Resend from address (verified sender)",
   },
+  {
+    name: "SMS_ENABLED",
+    required: false,
+    production: false,
+    description: "Enable/disable SMS workflows (default false)",
+  },
+  {
+    name: "SMS_PROVIDER",
+    required: false,
+    production: false,
+    description: "SMS provider adapter key (webhook|mock)",
+  },
+  {
+    name: "SMS_WEBHOOK_URL",
+    required: false,
+    production: false,
+    pattern: /^https?:\/\//,
+    description: "Optional webhook endpoint for SMS provider dispatch",
+  },
+  {
+    name: "SMS_WEBHOOK_AUTH_TOKEN",
+    required: false,
+    production: false,
+    minLength: 12,
+    description: "Optional bearer token for SMS webhook provider",
+  },
+  {
+    name: "MAX_MESSAGES_PER_COMPANY_PER_MONTH",
+    required: false,
+    production: false,
+    description: "Hard SMS cap per company per month",
+  },
+  {
+    name: "SMS_PROVIDER_TIMEOUT_MS",
+    required: false,
+    production: false,
+    description: "SMS provider request timeout in milliseconds",
+  },
+  {
+    name: "WEBHOOK_SIGNING_SECRET",
+    required: false,
+    production: false,
+    minLength: 16,
+    description: "HMAC secret used for outbound webhook signatures",
+  },
+  {
+    name: "ACCOUNTING_SYNC_ENDPOINT_URL",
+    required: false,
+    production: false,
+    pattern: /^https?:\/\//,
+    description: "Optional accounting endpoint URL for billing preview sync",
+  },
+  {
+    name: "ACCOUNTING_SYNC_SHARED_SECRET",
+    required: false,
+    production: false,
+    minLength: 16,
+    description: "Optional HMAC secret for billing preview sync signatures",
+  },
+  {
+    name: "ACCOUNTING_SYNC_TIMEOUT_MS",
+    required: false,
+    production: false,
+    description: "Optional timeout for accounting sync HTTP requests",
+  },
 
   // S3 storage (required for production)
   {
@@ -531,6 +596,8 @@ export function validateEnv(): {
     "RL_ADMIN_PER_USER_PER_MIN",
     "RL_ADMIN_PER_IP_PER_MIN",
     "RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN",
+    "ACCOUNTING_SYNC_TIMEOUT_MS",
+    "SMS_PROVIDER_TIMEOUT_MS",
   ];
   for (const name of positiveIntEnv) {
     const value = process.env[name];
@@ -543,6 +610,34 @@ export function validateEnv(): {
         error: `${name} must be a positive integer`,
       });
     }
+  }
+
+  const smsEnabledRaw = (process.env.SMS_ENABLED ?? "").trim().toLowerCase();
+  const smsEnabled = smsEnabledRaw === "true" || smsEnabledRaw === "1";
+  const maxMessagesPerCompanyRaw = process.env.MAX_MESSAGES_PER_COMPANY_PER_MONTH;
+  if (
+    maxMessagesPerCompanyRaw !== undefined &&
+    maxMessagesPerCompanyRaw !== ""
+  ) {
+    const parsed = Number(maxMessagesPerCompanyRaw);
+    if (!Number.isFinite(parsed) || parsed < 0 || !Number.isInteger(parsed)) {
+      errors.push({
+        name: "MAX_MESSAGES_PER_COMPANY_PER_MONTH",
+        error: "MAX_MESSAGES_PER_COMPANY_PER_MONTH must be a non-negative integer",
+      });
+    } else if (smsEnabled && parsed === 0) {
+      errors.push({
+        name: "MAX_MESSAGES_PER_COMPANY_PER_MONTH",
+        error:
+          "MAX_MESSAGES_PER_COMPANY_PER_MONTH must be greater than 0 when SMS_ENABLED=true",
+      });
+    }
+  } else if (smsEnabled) {
+    errors.push({
+      name: "MAX_MESSAGES_PER_COMPANY_PER_MONTH",
+      error:
+        "MAX_MESSAGES_PER_COMPANY_PER_MONTH is required when SMS_ENABLED=true",
+    });
   }
 
   // Production-specific warnings

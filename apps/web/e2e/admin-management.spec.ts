@@ -182,10 +182,37 @@ test.describe.serial("Admin Management", () => {
     await page.getByLabel("Contact Email").fill(`contractor-${suffix}@test.nz`);
     await page.getByLabel("Contact Phone").fill("+64211234567");
     await page.getByLabel("Notes").fill("Initial onboarding");
+    const createContractorButton = page.getByRole("button", {
+      name: "Create Contractor",
+    });
+    await createContractorButton.scrollIntoViewIfNeeded().catch(() => undefined);
+    const createContractorForm = page
+      .locator("form")
+      .filter({ has: createContractorButton })
+      .first();
+    const createSubmit = page
+      .waitForResponse(
+        (response: any) =>
+          response.request().method() === "POST" &&
+          /\/admin\/contractors\/new(?:\?|$)/.test(response.url()),
+        { timeout: 15000 },
+      )
+      .catch(() => null);
     await Promise.all([
       page.waitForURL(/\/admin\/contractors(?:\?.*)?$/, { timeout: 30000 }),
-      page.getByRole("button", { name: "Create Contractor" }).click(),
+      (async () => {
+        try {
+          await createContractorButton.click({ force: true });
+        } catch {
+          await createContractorForm.evaluate((form: Element) => {
+            if (form instanceof HTMLFormElement) {
+              form.requestSubmit();
+            }
+          });
+        }
+      })(),
     ]);
+    await createSubmit;
     await expect
       .poll(
         async () => {

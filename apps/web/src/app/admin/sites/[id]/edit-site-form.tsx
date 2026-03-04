@@ -13,6 +13,9 @@ interface Site {
   name: string;
   address: string | null;
   description: string | null;
+  location_latitude: number | null;
+  location_longitude: number | null;
+  location_radius_m: number | null;
 }
 
 interface EditSiteFormProps {
@@ -80,6 +83,76 @@ function FormFields({ site }: { site: Site }) {
           disabled={pending}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
         />
+      </div>
+
+      <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
+        <h3 className="text-sm font-semibold text-gray-900">
+          Location Audit
+        </h3>
+        <p className="mt-1 text-xs text-gray-600">
+          Leave all location fields blank to disable location verification for this site.
+        </p>
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
+          <div>
+            <label
+              htmlFor="locationLatitude"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Latitude
+            </label>
+            <input
+              type="number"
+              id="locationLatitude"
+              name="locationLatitude"
+              defaultValue={site.location_latitude ?? ""}
+              step="0.000001"
+              min="-90"
+              max="90"
+              disabled={pending}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="locationLongitude"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Longitude
+            </label>
+            <input
+              type="number"
+              id="locationLongitude"
+              name="locationLongitude"
+              defaultValue={site.location_longitude ?? ""}
+              step="0.000001"
+              min="-180"
+              max="180"
+              disabled={pending}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="locationRadiusM"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Radius (m)
+            </label>
+            <input
+              type="number"
+              id="locationRadiusM"
+              name="locationRadiusM"
+              defaultValue={site.location_radius_m ?? ""}
+              step="1"
+              min="25"
+              max="2000"
+              disabled={pending}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+            />
+          </div>
+        </div>
       </div>
 
       <div className="flex justify-end pt-4">

@@ -100,6 +100,41 @@ describe("validateEnv", () => {
         result.errors.some((e) => e.name === "RL_ADMIN_PER_USER_PER_MIN"),
       ).toBe(true);
     });
+
+    it("should allow zero MAX_MESSAGES_PER_COMPANY_PER_MONTH when SMS is disabled", () => {
+      process.env.DATABASE_URL = "postgresql://test@localhost/test";
+      process.env.SESSION_SECRET =
+        "dev-secret-at-least-32-characters-long-here";
+      process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";
+      process.env.SMS_ENABLED = "false";
+      process.env.MAX_MESSAGES_PER_COMPANY_PER_MONTH = "0";
+
+      const result = validateEnv();
+
+      expect(result.errors.some((e) => e.name === "MAX_MESSAGES_PER_COMPANY_PER_MONTH")).toBe(
+        false,
+      );
+    });
+
+    it("should require positive MAX_MESSAGES_PER_COMPANY_PER_MONTH when SMS is enabled", () => {
+      process.env.DATABASE_URL = "postgresql://test@localhost/test";
+      process.env.SESSION_SECRET =
+        "dev-secret-at-least-32-characters-long-here";
+      process.env.NEXT_PUBLIC_APP_URL = "http://localhost:3000";
+      process.env.SMS_ENABLED = "true";
+      process.env.MAX_MESSAGES_PER_COMPANY_PER_MONTH = "0";
+
+      const result = validateEnv();
+
+      expect(result.valid).toBe(false);
+      expect(
+        result.errors.some(
+          (e) =>
+            e.name === "MAX_MESSAGES_PER_COMPANY_PER_MONTH" &&
+            e.error.includes("greater than 0"),
+        ),
+      ).toBe(true);
+    });
   });
 
   describe("in production mode", () => {

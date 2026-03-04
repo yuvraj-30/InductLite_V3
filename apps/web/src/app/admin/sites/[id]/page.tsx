@@ -231,6 +231,16 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
                 {site.description}
               </p>
             )}
+            {site.location_latitude !== null &&
+              site.location_longitude !== null && (
+                <p className="text-gray-600 mt-2">
+                  <span className="font-medium">Location Audit:</span>{" "}
+                  {site.location_latitude.toFixed(6)},{" "}
+                  {site.location_longitude.toFixed(6)}
+                  {" | "}
+                  Radius {site.location_radius_m ?? 150}m
+                </p>
+              )}
             <p className="text-sm text-gray-400 mt-4">
               Created: {formatNzDate(site.created_at)}
             </p>
@@ -270,6 +280,9 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
                       <th className="px-3 py-2 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
                         Signed Out
                       </th>
+                      <th className="px-3 py-2 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                        Location
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
@@ -291,6 +304,17 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
                               On site
                             </span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 whitespace-nowrap text-sm">
+                          {!record.location_captured_at ? (
+                            <span className="text-gray-500">Unavailable</span>
+                          ) : record.location_within_radius === true ? (
+                            <span className="text-emerald-700">Within radius</span>
+                          ) : record.location_within_radius === false ? (
+                            <span className="text-amber-700">Outside radius</span>
+                          ) : (
+                            <span className="text-cyan-700">Captured</span>
                           )}
                         </td>
                       </tr>
@@ -401,6 +425,79 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
                 className="mt-4 inline-flex min-h-[44px] items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
               >
                 Manage Emergency Setup
+              </Link>
+            </div>
+          )}
+
+          {canManageSites && (
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-3">
+                Webhook Integrations
+              </h2>
+              <p className="text-sm text-gray-600">
+                Configure endpoint delivery and signing for
+                <code className="mx-1 rounded bg-gray-100 px-1 py-0.5 text-xs">
+                  induction.completed
+                </code>
+                events.
+              </p>
+              <Link
+                href={`/admin/sites/${siteId}/webhooks`}
+                className="mt-4 inline-flex min-h-[44px] items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                Manage Webhooks
+              </Link>
+            </div>
+          )}
+
+          {canManageSites && (
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-3">
+                LMS Connector
+              </h2>
+              <p className="text-sm text-gray-600">
+                Configure one-way induction completion sync to your LMS endpoint.
+              </p>
+              <Link
+                href={`/admin/sites/${siteId}/lms`}
+                className="mt-4 inline-flex min-h-[44px] items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                Manage LMS Connector
+              </Link>
+            </div>
+          )}
+
+          {canManageSites && (
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-3">
+                Access Controls
+              </h2>
+              <p className="text-sm text-gray-600">
+                Configure optional geofence enforcement and hardware gate/turnstile
+                decision integrations.
+              </p>
+              <Link
+                href={`/admin/sites/${siteId}/access`}
+                className="mt-4 inline-flex min-h-[44px] items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                Manage Access Controls
+              </Link>
+            </div>
+          )}
+
+          {canManageSites && (
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-lg font-medium text-gray-900 mb-3">
+                Pre-Registrations
+              </h2>
+              <p className="text-sm text-gray-600">
+                Create invite links with prefilled visitor details before arrival.
+              </p>
+              <Link
+                href={`/admin/pre-registrations?siteId=${siteId}`}
+                className="mt-4 inline-flex min-h-[44px] items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                Manage Pre-Registrations
               </Link>
             </div>
           )}

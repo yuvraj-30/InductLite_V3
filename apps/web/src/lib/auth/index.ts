@@ -11,6 +11,7 @@ export {
   getSessionUser,
   getSessionUserReadOnly,
   login,
+  establishAuthenticatedSession,
   logout,
   changePassword,
   requireAuth,

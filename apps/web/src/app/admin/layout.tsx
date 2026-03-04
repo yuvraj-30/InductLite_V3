@@ -37,6 +37,14 @@ export default async function AdminLayout({
       contexts: ["sites", "dashboard"],
     },
     {
+      id: "pre-registrations",
+      href: "/admin/pre-registrations",
+      title: "Manage Pre-Registrations",
+      description: "Create invite links and QR-ready arrivals.",
+      keywords: ["invite", "pre-register", "arrival"],
+      contexts: ["sites", "dashboard", "live"],
+    },
+    {
       id: "live-register",
       href: "/admin/live-register",
       title: "Open Live Register",
@@ -61,12 +69,28 @@ export default async function AdminLayout({
       contexts: ["history", "dashboard", "exports"],
     },
     {
+      id: "audit-analytics",
+      href: "/admin/audit-analytics",
+      title: "Open Audit Analytics",
+      description: "Review advanced audit trends and security signals.",
+      keywords: ["analytics", "security", "audit"],
+      contexts: ["dashboard", "history", "exports"],
+    },
+    {
       id: "exports",
       href: "/admin/exports",
       title: "Go to Exports",
       description: "Queue and review compliance exports.",
       keywords: ["csv", "audit pack", "download"],
       contexts: ["exports", "dashboard", "history"],
+    },
+    {
+      id: "webhooks",
+      href: "/admin/webhooks",
+      title: "Review Webhooks",
+      description: "Inspect outbound webhook retries and dead-letter events.",
+      keywords: ["integration", "delivery", "retry"],
+      contexts: ["webhooks", "exports", "dashboard"],
     },
     {
       id: "hazards",
@@ -234,6 +258,9 @@ export default async function AdminLayout({
               <NavLink href="/admin/sites">Sites</NavLink>
             </li>
             <li>
+              <NavLink href="/admin/pre-registrations">Pre-Registrations</NavLink>
+            </li>
+            <li>
               <NavLink href="/admin/hazards">Hazard Register</NavLink>
             </li>
             <li>
@@ -258,7 +285,13 @@ export default async function AdminLayout({
               <NavLink href="/admin/history">Sign-In History</NavLink>
             </li>
             <li>
+              <NavLink href="/admin/audit-analytics">Audit Analytics</NavLink>
+            </li>
+            <li>
               <NavLink href="/admin/exports">Exports</NavLink>
+            </li>
+            <li>
+              <NavLink href="/admin/webhooks">Webhooks</NavLink>
             </li>
             <li>
               {canManageContractors ? (

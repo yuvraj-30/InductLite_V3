@@ -3,4 +3,9 @@ h1,
 h2 {
   display: inline-block !important;
   width: fit-content !important;
+  font-family: Arial, sans-serif !important;
+  font-kerning: none !important;
+  font-feature-settings: "liga" 0 !important;
+  letter-spacing: 0 !important;
+  text-rendering: geometricPrecision !important;
 }

@@ -56,12 +56,49 @@ export interface PublicSignInInput {
   termsVersionId?: string;
   privacyVersionId?: string;
   consentStatement?: string;
+  locationAudit?: {
+    latitude: number;
+    longitude: number;
+    accuracyMeters?: number;
+    distanceMeters?: number | null;
+    withinSiteRadius?: boolean | null;
+    capturedAt?: Date;
+  };
   competencyEvidence?: {
     status: InductionCompetencyStatus;
     supervisorVerifiedBy?: string;
     supervisorVerifiedAt?: Date;
     briefingAcknowledgedAt?: Date;
     refresherDueAt?: Date;
+  };
+  quizResult?: {
+    passed: boolean;
+    scorePercent: number;
+    thresholdPercent: number;
+    gradedQuestionCount: number;
+    correctCount: number;
+    requiredForEntry: boolean;
+    maxAttempts: number;
+    cooldownMinutes: number;
+  };
+  languageSelection?: {
+    code: string;
+    label?: string | null;
+    usedVariant: boolean;
+  };
+  mediaEvidence?: {
+    enabled: boolean;
+    requireAcknowledgement: boolean;
+    acknowledged: boolean;
+    acknowledgementLabel?: string | null;
+    blocks: Array<{
+      id: string;
+      type: "TEXT" | "PDF" | "IMAGE";
+      title: string;
+      body?: string | null;
+      url?: string | null;
+      sortOrder: number;
+    }>;
   };
 }
 
@@ -312,6 +349,12 @@ export async function createPublicSignIn(
             input.consentStatement ??
             "I acknowledge the site safety terms and conditions.",
           notes: input.roleOnSite ? `Role: ${input.roleOnSite}` : null,
+          location_latitude: input.locationAudit?.latitude ?? null,
+          location_longitude: input.locationAudit?.longitude ?? null,
+          location_accuracy_m: input.locationAudit?.accuracyMeters ?? null,
+          location_distance_m: input.locationAudit?.distanceMeters ?? null,
+          location_within_radius: input.locationAudit?.withinSiteRadius ?? null,
+          location_captured_at: input.locationAudit?.capturedAt ?? null,
           // Token fields will be set after transaction
           sign_out_token: null,
           sign_out_token_exp: null,
@@ -423,6 +466,45 @@ export async function createPublicSignIn(
           supervisor_verified_at:
             competencyEvidence.supervisorVerifiedAt?.toISOString() ?? null,
         },
+        quiz: input.quizResult
+          ? {
+              enabled: true,
+              passed: input.quizResult.passed,
+              score_percent: input.quizResult.scorePercent,
+              pass_threshold_percent: input.quizResult.thresholdPercent,
+              graded_question_count: input.quizResult.gradedQuestionCount,
+              correct_count: input.quizResult.correctCount,
+              required_for_entry: input.quizResult.requiredForEntry,
+              max_attempts: input.quizResult.maxAttempts,
+              cooldown_minutes: input.quizResult.cooldownMinutes,
+            }
+          : {
+              enabled: false,
+            },
+        language: {
+          code: input.languageSelection?.code ?? "en",
+          label: input.languageSelection?.label ?? null,
+          used_variant: input.languageSelection?.usedVariant ?? false,
+        },
+        media: input.mediaEvidence
+          ? {
+              enabled: input.mediaEvidence.enabled,
+              require_acknowledgement:
+                input.mediaEvidence.requireAcknowledgement,
+              acknowledged: input.mediaEvidence.acknowledged,
+              acknowledgement_label: input.mediaEvidence.acknowledgementLabel ?? null,
+              blocks: input.mediaEvidence.blocks.map((block) => ({
+                id: block.id,
+                type: block.type,
+                title: block.title,
+                body: block.body ?? null,
+                url: block.url ?? null,
+                sort_order: block.sortOrder,
+              })),
+            }
+          : {
+              enabled: false,
+            },
       };
 
       // 4. Create induction response
@@ -440,7 +522,7 @@ export async function createPublicSignIn(
           signature_mime_type: signatureMeta?.mimeType ?? null,
           signature_size_bytes: signatureMeta?.sizeBytes ?? null,
           signature_captured_at: signatureCapturedAt,
-          passed: true, // All required fields validated before this point
+          passed: input.quizResult?.passed ?? true,
           competency_status: competencyEvidence.status,
           briefing_acknowledged_at: competencyEvidence.briefingAcknowledgedAt,
           refresher_due_at: competencyEvidence.refresherDueAt,

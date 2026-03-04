@@ -54,6 +54,9 @@
     "@aws-sdk/xml-builder": {
       "fast-xml-parser": "5.3.8"
     },
+    "@aws-sdk/xml-builder@3.972.8": {
+      "fast-xml-parser": "5.3.8"
+    },
     "terser-webpack-plugin": {
       "serialize-javascript": "7.0.3"
     },
