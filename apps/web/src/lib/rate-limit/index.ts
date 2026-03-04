@@ -112,6 +112,7 @@ export async function __test_clearInMemoryStoreForClient(clientKey: string) {
   inMemoryStore.clearPrefix(`${runPrefix}signout:${clientKey}:`);
   inMemoryStore.clearPrefix(`${runPrefix}admin-ip:${clientKey}`);
   inMemoryStore.clearPrefix(`${runPrefix}magic-verify:${clientKey}:`);
+  inMemoryStore.clearPrefix(`${runPrefix}demo-booking:${clientKey}`);
   inMemoryStore.clearPrefix(`${runPrefix}ready:${clientKey}`);
 
   // If Redis is available, try to remove keys with these prefixes as well.
@@ -192,6 +193,9 @@ const RL_SIGNOUT_PER_IP_PER_MIN = Number(
 );
 const RL_CONTRACTOR_MAGIC_LINK_PER_IP_PER_HOUR = Number(
   process.env.RL_CONTRACTOR_MAGIC_LINK_PER_IP_PER_HOUR ?? 3,
+);
+const RL_DEMO_BOOKING_PER_IP_PER_HOUR = Number(
+  process.env.RL_DEMO_BOOKING_PER_IP_PER_HOUR ?? 6,
 );
 const RL_ADMIN_PER_USER_PER_MIN = Number(
   process.env.RL_ADMIN_PER_USER_PER_MIN ?? 60,
@@ -541,6 +545,94 @@ export async function checkContractorMagicLinkRateLimit(options?: {
     );
     recordRateLimitBlocked({
       kind: "contractor-magic-link",
+      clientKey,
+    });
+  }
+
+  return {
+    success,
+    limit,
+    remaining,
+    reset: Date.now() + windowMs,
+  };
+}
+
+/**
+ * Check rate limit for public demo booking submissions.
+ * Default: 6 requests per 60 minutes per client key.
+ */
+export async function checkDemoBookingRateLimit(options?: {
+  requestId?: string;
+  clientKey?: string;
+}): Promise<RateLimitResult> {
+  const requestId = options?.requestId ?? generateRequestId();
+  const log = createRequestLogger(requestId);
+
+  let clientKey: string;
+  if (options?.clientKey) {
+    clientKey = options.clientKey;
+  } else {
+    const headersList = await headers();
+    const headersObj: Record<string, string | undefined> = {
+      "x-forwarded-for": headersList.get("x-forwarded-for") ?? undefined,
+      "x-real-ip": headersList.get("x-real-ip") ?? undefined,
+      "user-agent": headersList.get("user-agent") ?? undefined,
+      accept: headersList.get("accept") ?? undefined,
+    };
+
+    clientKey = getStableClientKey(headersObj, {
+      trustProxy: process.env.TRUST_PROXY === "1",
+    });
+  }
+
+  const key = `${TEST_RUN_PREFIX}demo-booking:${clientKey}`;
+
+  const redis = getRateLimitRedisClient();
+  if (redis) {
+    try {
+      const limiter = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(RL_DEMO_BOOKING_PER_IP_PER_HOUR, "60 m"),
+        analytics: RATE_LIMIT_ANALYTICS_ENABLED,
+        prefix: "inductlite:demo-booking-ratelimit",
+      });
+
+      const result = await limiter.limit(key);
+      if (!result.success) {
+        log.warn({ clientKey }, "Demo booking rate limit exceeded");
+        recordRateLimitBlocked({
+          kind: "demo-booking",
+          clientKey,
+        });
+      }
+
+      return {
+        success: result.success,
+        limit: result.limit,
+        remaining: result.remaining,
+        reset: result.reset,
+      };
+    } catch (error) {
+      log.warn(
+        {
+          clientKey,
+          error: error instanceof Error ? error.message : String(error),
+        },
+        "Redis demo booking limiter unavailable, falling back to in-memory",
+      );
+    }
+  }
+
+  const windowMs = 60 * 60 * 1000;
+  const limit = RL_DEMO_BOOKING_PER_IP_PER_HOUR;
+  const count = await inMemoryStore.incr(key, windowMs);
+  const remaining = Math.max(0, limit - count);
+  const success = count <= limit;
+
+  if (!success) {
+    log.warn({ clientKey }, "Demo booking rate limit exceeded (in-memory)");
+    recordRateLimitBlocked({
+      kind: "demo-booking",
       clientKey,
     });
   }

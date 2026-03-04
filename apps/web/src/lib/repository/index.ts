@@ -233,6 +233,16 @@ export type { CreateExportJobInput, ExportJobFilter } from "./export.repository"
 export { listActiveSitemapPublicLinks } from "./sitemap.repository";
 export type { SitemapPublicLink } from "./sitemap.repository";
 
+// Public demo booking repository
+export {
+  createDemoBookingRequest,
+  updateDemoBookingNotificationStatus,
+} from "./demo-booking.repository";
+export type {
+  CreateDemoBookingRequestInput,
+  UpdateDemoBookingNotificationInput,
+} from "./demo-booking.repository";
+
 // Audit repository
 export {
   createAuditLog,

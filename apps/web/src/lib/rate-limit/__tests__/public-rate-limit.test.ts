@@ -12,6 +12,7 @@ describe("Public rate-limit guardrails", () => {
       RL_SIGNIN_PER_IP_PER_MIN: "2",
       RL_SIGNIN_PER_SITE_PER_MIN: "2",
       RL_SIGNOUT_PER_IP_PER_MIN: "2",
+      RL_DEMO_BOOKING_PER_IP_PER_HOUR: "2",
       RL_ADMIN_PER_USER_PER_MIN: "2",
       RL_ADMIN_PER_IP_PER_MIN: "2",
       RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN: "2",
@@ -72,6 +73,25 @@ describe("Public rate-limit guardrails", () => {
     });
     const third = await rateLimit.checkSignOutRateLimit("token-1", {
       clientKey: "client-3",
+    });
+
+    expect(first.success).toBe(true);
+    expect(second.success).toBe(true);
+    expect(third.success).toBe(false);
+  });
+
+  it("enforces demo booking rate limit", async () => {
+    const rateLimit = await import("../index");
+    await rateLimit.__test_clearInMemoryStoreForClient("client-demo");
+
+    const first = await rateLimit.checkDemoBookingRateLimit({
+      clientKey: "client-demo",
+    });
+    const second = await rateLimit.checkDemoBookingRateLimit({
+      clientKey: "client-demo",
+    });
+    const third = await rateLimit.checkDemoBookingRateLimit({
+      clientKey: "client-demo",
     });
 
     expect(first.success).toBe(true);

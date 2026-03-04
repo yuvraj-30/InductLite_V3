@@ -124,6 +124,12 @@ const ENV_CONFIG: EnvConfig[] = [
     description: "Resend from address (verified sender)",
   },
   {
+    name: "DEMO_BOOKING_NOTIFY_TO",
+    required: false,
+    production: false,
+    description: "Comma-separated recipients for public demo booking notifications",
+  },
+  {
     name: "SMS_ENABLED",
     required: false,
     production: false,
@@ -471,6 +477,12 @@ const ENV_CONFIG: EnvConfig[] = [
     description: "Sign-out rate limit per IP per minute",
   },
   {
+    name: "RL_DEMO_BOOKING_PER_IP_PER_HOUR",
+    required: false,
+    production: false,
+    description: "Demo booking submission rate limit per IP per hour",
+  },
+  {
     name: "RL_ADMIN_PER_USER_PER_MIN",
     required: false,
     production: false,
@@ -593,6 +605,7 @@ export function validateEnv(): {
 
   // Validate critical numeric guardrails for admin/auth abuse controls.
   const positiveIntEnv = [
+    "RL_DEMO_BOOKING_PER_IP_PER_HOUR",
     "RL_ADMIN_PER_USER_PER_MIN",
     "RL_ADMIN_PER_IP_PER_MIN",
     "RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN",

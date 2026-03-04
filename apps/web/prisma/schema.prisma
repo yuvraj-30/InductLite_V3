@@ -771,6 +771,36 @@ enum NotificationStatus {
   FAILED
 }
 
+enum DemoBookingNotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model DemoBookingRequest {
+  id                         String                        @id @default(cuid())
+  full_name                  String
+  work_email                 String
+  company_name               String
+  phone                      String?
+  site_count                 Int?
+  target_go_live_date        DateTime?
+  requirements               String
+  source_path                String                        @default("/demo")
+  ip_hash                    String?
+  user_agent                 String?
+  notification_status        DemoBookingNotificationStatus @default(PENDING)
+  notification_recipients    Json?
+  notification_attempted_at  DateTime?
+  notification_sent_at       DateTime?
+  notification_error_message String?
+  created_at                 DateTime                      @default(now())
+  updated_at                 DateTime                      @updatedAt
+
+  @@index([created_at])
+  @@index([notification_status, created_at])
+}
+
 model OutboundWebhookDelivery {
   id                 String                @id @default(cuid())
   company_id         String

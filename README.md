@@ -60,7 +60,15 @@ Create `.env` file (see `.env.example`):
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/inductlite?schema=public
 SESSION_SECRET=your-32-char-minimum-secret-here
 ADMIN_PASSWORD=changeme-in-production
+DEMO_BOOKING_NOTIFY_TO=sales@inductlite.nz,support@inductlite.nz
 ```
+
+Public marketing routes:
+
+- `/` homepage
+- `/pricing` plan and add-on overview
+- `/demo` demo-booking form (DB persisted + email notifications)
+- `/compare` competitor comparison snapshot page
 
 ## Production Deployment
 
