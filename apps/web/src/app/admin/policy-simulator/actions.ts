@@ -246,12 +246,21 @@ export async function runPolicySimulationAction(formData: FormData): Promise<voi
       random_check_percentage: scenario.randomCheckPercentage,
       stricter_quiz_threshold_delta: scenario.stricterQuizThresholdDelta,
       permit_required: scenario.permitRequired,
+      snapshot_end_at: run.snapshot_generated_at ?? undefined,
     });
+    const snapshotEnd = run.snapshot_generated_at ?? new Date();
+    const snapshotStart = new Date(
+      snapshotEnd.getTime() - scenario.lookbackDays * 24 * 60 * 60 * 1000,
+    );
 
     await createPolicySimulationResult(context.companyId, {
       policy_simulation_run_id: run.id,
       summary: {
         scenario,
+        snapshot_window: {
+          from: snapshotStart.toISOString(),
+          to: snapshotEnd.toISOString(),
+        },
         generated_at: new Date().toISOString(),
       },
       breakdown: {

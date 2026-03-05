@@ -66,8 +66,117 @@ export interface CreateChannelDeliveryInput {
   idempotency_key?: string;
 }
 
+export interface ChannelIntegrationEventFilterInput {
+  event_type: string;
+  site_id?: string;
+  provider?: ChannelProvider;
+  require_active?: boolean;
+}
+
+interface ListChannelIntegrationConfigsOptions {
+  site_id?: string;
+  include_global_for_site?: boolean;
+  only_active?: boolean;
+  provider?: ChannelProvider;
+}
+
+export interface ChannelIntegrationConfigLike {
+  is_active: boolean;
+  provider: ChannelProvider;
+  site_id: string | null;
+  mappings?: unknown;
+}
+
 function hashRecipientToken(value: string): string {
   return createHash("sha256").update(value).digest("hex");
+}
+
+function normalizeStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
+    .filter((entry) => entry.length > 0);
+}
+
+function toMappingsRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  return value as Record<string, unknown>;
+}
+
+function parseEventRule(value: unknown): boolean | null {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value > 0;
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) return null;
+    if (["off", "disable", "disabled", "false", "0", "deny"].includes(normalized)) {
+      return false;
+    }
+    return true;
+  }
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const row = value as Record<string, unknown>;
+    if (typeof row.enabled === "boolean") return row.enabled;
+    if (typeof row.disabled === "boolean") return !row.disabled;
+  }
+  return null;
+}
+
+export function isChannelIntegrationConfigEnabledForEvent(
+  config: ChannelIntegrationConfigLike,
+  input: ChannelIntegrationEventFilterInput,
+): boolean {
+  const requireActive = input.require_active !== false;
+  if (requireActive && !config.is_active) return false;
+  if (input.provider && config.provider !== input.provider) return false;
+  if (!input.event_type.trim()) return false;
+
+  if (input.site_id && config.site_id && config.site_id !== input.site_id) {
+    return false;
+  }
+
+  const mappings = toMappingsRecord(config.mappings);
+  if (!mappings) return true;
+
+  if (input.site_id) {
+    const includeSiteIds = normalizeStringArray(mappings.siteIds);
+    if (includeSiteIds.length > 0 && !includeSiteIds.includes(input.site_id)) {
+      return false;
+    }
+    const excludeSiteIds = normalizeStringArray(mappings.excludeSiteIds);
+    if (excludeSiteIds.includes(input.site_id)) {
+      return false;
+    }
+  }
+
+  const disabledEvents = normalizeStringArray(mappings.disabledEvents);
+  if (disabledEvents.includes(input.event_type)) return false;
+
+  const enabledEvents = normalizeStringArray(mappings.enabledEvents);
+  if (enabledEvents.length > 0 && !enabledEvents.includes(input.event_type)) {
+    return false;
+  }
+
+  const events = toMappingsRecord(mappings.events);
+  if (!events) return true;
+
+  const eventRule =
+    parseEventRule(events[input.event_type]) ?? parseEventRule(events["*"]);
+  if (eventRule === null) return true;
+  return eventRule;
+}
+
+export function filterChannelIntegrationConfigsForEvent<
+  T extends ChannelIntegrationConfigLike,
+>(
+  configs: T[],
+  input: ChannelIntegrationEventFilterInput,
+): T[] {
+  return configs.filter((config) =>
+    isChannelIntegrationConfigEnabledForEvent(config, input),
+  );
 }
 
 export async function createEmergencyBroadcast(
@@ -534,14 +643,30 @@ export async function upsertChannelIntegrationConfig(
 
 export async function listChannelIntegrationConfigs(
   companyId: string,
-  siteId?: string,
+  siteIdOrOptions?: string | ListChannelIntegrationConfigsOptions,
 ): Promise<ChannelIntegrationConfig[]> {
   requireCompanyId(companyId);
+
+  const options: ListChannelIntegrationConfigsOptions =
+    typeof siteIdOrOptions === "string"
+      ? { site_id: siteIdOrOptions, include_global_for_site: true }
+      : siteIdOrOptions ?? {};
+  const siteId = options.site_id?.trim() || undefined;
+  const includeGlobalForSite = options.include_global_for_site !== false;
+
   try {
     const db = scopedDb(companyId);
+    const siteWhere = siteId
+      ? includeGlobalForSite
+        ? { OR: [{ site_id: siteId }, { site_id: null }] }
+        : { site_id: siteId }
+      : {};
+
     return await db.channelIntegrationConfig.findMany({
       where: {
-        ...(siteId ? { site_id: siteId } : {}),
+        ...siteWhere,
+        ...(options.only_active ? { is_active: true } : {}),
+        ...(options.provider ? { provider: options.provider } : {}),
       },
       orderBy: [{ is_active: "desc" }, { updated_at: "desc" }],
     });

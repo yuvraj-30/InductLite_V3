@@ -440,15 +440,17 @@ This plan is aligned to:
 3. Phase 2 communications/collaboration is implemented:
    - Unified communications hub, command-mode broadcast composer, ACK flow, and channel delivery diagnostics are active.
    - Site-level broadcast timeline now includes pending-recipient SLA timers.
+   - Teams/Slack delivery now enforces per-site + global scope routing and event-level mapping rules (`enabledEvents`, `disabledEvents`, and `events` map).
+   - Channel notifications now cover emergency broadcasts, visitor arrivals, and approval-required events with actionable approve/deny payload contracts.
    - Roll-call export now includes an incident evidence bundle (`/api/rollcall/[eventId]/evidence`) with related broadcasts, recipients, and communication events.
 4. Phase 3 mobile/access operations is implemented:
    - Mobile push subscriptions, auto checkout assist hints, and access decision trace/outage operations are active.
    - Command mode now includes a permit board widget for live operational context.
 5. Phase 4 differentiation is implemented:
    - Tamper-evident evidence manifests + verifier API are active.
-   - Policy simulator scenario/run/export flow is active.
+   - Policy simulator scenario/run/export flow is active and run estimates are now tied to stored snapshot windows for reproducible replays.
    - Risk passport now includes incident and quiz-failure signals in score computation plus contractor/site trend visibility.
    - Plan configurator scheduling/history/apply flow is active.
 6. Validation status:
    - Passing: `npm run -w apps/web typecheck`, `npm run -w apps/web lint`, `npm run -w apps/web test`, `npm run -w apps/web test:integration`.
-   - Stable E2E still has known flaky/VRT failures in cross-browser/mobile lanes (7 failing, 7 skipped, 8 not run in latest run).
+   - Stable E2E lane remains long-running/flaky in cross-browser/mobile VRT lanes and exceeded local command timeout during this verification pass.

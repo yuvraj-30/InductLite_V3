@@ -25,6 +25,13 @@ import {
 import { findSignInById } from "@/lib/repository/signin.repository";
 import { queueEmailNotification } from "@/lib/repository/email.repository";
 import {
+  createChannelDelivery,
+  createCommunicationEvent,
+  filterChannelIntegrationConfigsForEvent,
+  listChannelIntegrationConfigs,
+  markChannelDeliveryStatus,
+} from "@/lib/repository/communication.repository";
+import {
   createPendingSignInEscalation,
   setSignInEscalationNotificationCounts,
 } from "@/lib/repository/signin-escalation.repository";
@@ -837,6 +844,129 @@ async function queueHostArrivalNotifications(input: {
       "Failed to resolve or queue host arrival notifications",
     );
     return { featureEnabled: true, targets: 0, queued: 0 };
+  }
+}
+
+function resolveAppUrlBase(): string | null {
+  const value = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (!value) return null;
+  return value.replace(/\/$/, "");
+}
+
+async function sendChannelEventsForSite(input: {
+  companyId: string;
+  siteId: string;
+  eventType: string;
+  payload?: Record<string, unknown>;
+  payloadForConfig?: (
+    config: Awaited<ReturnType<typeof listChannelIntegrationConfigs>>[number],
+  ) => Record<string, unknown>;
+  provider?: "TEAMS" | "SLACK";
+  requestId: string;
+  log: ReturnType<typeof createRequestLogger>;
+}) {
+  if (!FEATURE_FLAGS.TEAMS_SLACK_V1) {
+    return;
+  }
+
+  try {
+    await assertCompanyFeatureEnabled(input.companyId, "TEAMS_SLACK_V1", input.siteId);
+  } catch (error) {
+    if (error instanceof EntitlementDeniedError) {
+      return;
+    }
+    throw error;
+  }
+
+  const configs = await listChannelIntegrationConfigs(input.companyId, {
+    site_id: input.siteId,
+    include_global_for_site: true,
+    only_active: true,
+    ...(input.provider ? { provider: input.provider } : {}),
+  });
+
+  const targets = filterChannelIntegrationConfigsForEvent(configs, {
+    event_type: input.eventType,
+    site_id: input.siteId,
+    ...(input.provider ? { provider: input.provider } : {}),
+  });
+  if (targets.length === 0) {
+    return;
+  }
+
+  const deliveries = await Promise.allSettled(
+    targets.map(async (config) => {
+      const payload =
+        input.payloadForConfig?.(config) ??
+        input.payload ?? {
+          event_type: input.eventType,
+        };
+
+      const delivery = await createChannelDelivery(input.companyId, {
+        integration_config_id: config.id,
+        event_type: input.eventType,
+        payload,
+      });
+
+      try {
+        const headers: Record<string, string> = {
+          "content-type": "application/json",
+          "x-inductlite-event-type": input.eventType,
+          "x-inductlite-delivery-id": delivery.id,
+        };
+        if (config.auth_token) {
+          headers.authorization = `Bearer ${config.auth_token}`;
+        }
+
+        const response = await fetch(config.endpoint_url, {
+          method: "POST",
+          headers,
+          body: JSON.stringify(payload),
+        });
+        const responseBody = await response.text();
+        await markChannelDeliveryStatus(input.companyId, {
+          delivery_id: delivery.id,
+          status: response.ok ? "SENT" : "FAILED",
+          response_status_code: response.status,
+          response_body: responseBody.slice(0, 1500),
+          increment_retry: !response.ok,
+        });
+
+        await createCommunicationEvent(input.companyId, {
+          site_id: input.siteId,
+          direction: "OUTBOUND",
+          channel: config.provider,
+          event_type: `${input.eventType}.dispatch`,
+          status: response.ok ? "sent" : "failed",
+          payload: {
+            integration_config_id: config.id,
+            response_status_code: response.status,
+          },
+        });
+      } catch (error) {
+        await markChannelDeliveryStatus(input.companyId, {
+          delivery_id: delivery.id,
+          status: "FAILED",
+          response_body:
+            error instanceof Error ? error.message : "Channel dispatch failed",
+          increment_retry: true,
+        });
+      }
+    }),
+  );
+
+  const failed = deliveries.filter((result) => result.status === "rejected").length;
+  if (failed > 0) {
+    input.log.error(
+      {
+        requestId: input.requestId,
+        companyId: input.companyId,
+        siteId: input.siteId,
+        eventType: input.eventType,
+        failedDeliveries: failed,
+      },
+      "One or more channel event deliveries failed",
+    );
   }
 }
 
@@ -2114,6 +2244,67 @@ export async function submitSignIn(
                 request_id: requestId,
               });
 
+              try {
+                const appUrl = resolveAppUrlBase();
+                const channelActionUrl = appUrl
+                  ? `${appUrl}/api/integrations/channels/actions`
+                  : "/api/integrations/channels/actions";
+
+                await sendChannelEventsForSite({
+                  companyId: site.company.id,
+                  siteId: site.id,
+                  eventType: "visitor.approval.required",
+                  requestId,
+                  log,
+                  payloadForConfig: (config) => ({
+                    event_type: "visitor.approval.required",
+                    site_id: site.id,
+                    site_name: site.name,
+                    approval_request_id: approvalRequest.id,
+                    visitor_name: parsed.data.visitorName,
+                    visitor_phone: formattedPhone,
+                    visitor_email: parsed.data.visitorEmail || null,
+                    visitor_type: parsed.data.visitorType,
+                    reason: `identity-hardening:${reasons.join("|")}`,
+                    policy_id: approvalPolicy.id,
+                    action_url: channelActionUrl,
+                    actions: [
+                      {
+                        label: "Approve",
+                        decision: "APPROVED",
+                        body: {
+                          integrationConfigId: config.id,
+                          actionId: `${approvalRequest.id}:${config.id}:approve:${requestId}`,
+                          approvalRequestId: approvalRequest.id,
+                          decision: "APPROVED",
+                        },
+                      },
+                      {
+                        label: "Deny",
+                        decision: "DENIED",
+                        body: {
+                          integrationConfigId: config.id,
+                          actionId: `${approvalRequest.id}:${config.id}:deny:${requestId}`,
+                          approvalRequestId: approvalRequest.id,
+                          decision: "DENIED",
+                        },
+                      },
+                    ],
+                  }),
+                });
+              } catch (channelError) {
+                log.error(
+                  {
+                    requestId,
+                    siteId: site.id,
+                    approvalRequestId: approvalRequest.id,
+                    errorType:
+                      channelError instanceof Error ? channelError.name : "unknown",
+                  },
+                  "Failed to dispatch channel approval-required notifications",
+                );
+              }
+
               await triggerHardwareAccessDecision({
                 companyId: site.company.id,
                 siteId: site.id,
@@ -2382,6 +2573,40 @@ export async function submitSignIn(
           requestId,
           log,
         });
+
+        try {
+          await sendChannelEventsForSite({
+            companyId: site.company.id,
+            siteId: site.id,
+            eventType: "visitor.arrival",
+            requestId,
+            log,
+            payload: {
+              event_type: "visitor.arrival",
+              site_id: site.id,
+              site_name: site.name,
+              sign_in_record_id: approvedResult.signInRecordId,
+              sign_in_time: approvedResult.signInTime.toISOString(),
+              visitor_name: parsed.data.visitorName,
+              visitor_phone: formattedPhone,
+              visitor_email: parsed.data.visitorEmail || null,
+              visitor_type: parsed.data.visitorType,
+              employer_name: parsed.data.employerName || null,
+              role_on_site: parsed.data.roleOnSite || null,
+            },
+          });
+        } catch (channelError) {
+          log.error(
+            {
+              requestId,
+              siteId: site.id,
+              signInRecordId: approvedResult.signInRecordId,
+              errorType:
+                channelError instanceof Error ? channelError.name : "unknown",
+            },
+            "Failed to dispatch channel arrival notifications",
+          );
+        }
 
         await triggerOutboundWebhooks({
           companyId: site.company.id,
@@ -2755,6 +2980,39 @@ export async function submitSignIn(
       requestId,
       log,
     });
+
+    try {
+      await sendChannelEventsForSite({
+        companyId: site.company.id,
+        siteId: site.id,
+        eventType: "visitor.arrival",
+        requestId,
+        log,
+        payload: {
+          event_type: "visitor.arrival",
+          site_id: site.id,
+          site_name: site.name,
+          sign_in_record_id: result.signInRecordId,
+          sign_in_time: result.signInTime.toISOString(),
+          visitor_name: parsed.data.visitorName,
+          visitor_phone: formattedPhone,
+          visitor_email: parsed.data.visitorEmail || null,
+          visitor_type: parsed.data.visitorType,
+          employer_name: parsed.data.employerName || null,
+          role_on_site: parsed.data.roleOnSite || null,
+        },
+      });
+    } catch (channelError) {
+      log.error(
+        {
+          requestId,
+          siteId: site.id,
+          signInRecordId: result.signInRecordId,
+          errorType: channelError instanceof Error ? channelError.name : "unknown",
+        },
+        "Failed to dispatch channel arrival notifications",
+      );
+    }
 
     log.info(
       {

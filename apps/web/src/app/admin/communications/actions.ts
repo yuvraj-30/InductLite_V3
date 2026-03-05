@@ -19,6 +19,7 @@ import {
   createChannelDelivery,
   createCommunicationEvent,
   createEmergencyBroadcast,
+  filterChannelIntegrationConfigsForEvent,
   findChannelIntegrationConfigById,
   listChannelIntegrationConfigs,
   markChannelDeliveryStatus,
@@ -337,10 +338,26 @@ export async function createEmergencyBroadcastAction(
     });
 
     const appUrl = getAppUrl();
-    const channelConfigs = await listChannelIntegrationConfigs(
-      auth.companyId,
-      parsed.data.siteId || undefined,
-    );
+    const channelConfigs = await listChannelIntegrationConfigs(auth.companyId, {
+      only_active: true,
+      include_global_for_site: true,
+    });
+    const channelTargetCache = new Map<string, typeof channelConfigs>();
+
+    const getTargetsForChannel = (channel: "TEAMS" | "SLACK", siteId: string) => {
+      const cacheKey = `${channel}:${siteId}`;
+      const cached = channelTargetCache.get(cacheKey);
+      if (cached) return cached;
+
+      const filtered = filterChannelIntegrationConfigsForEvent(channelConfigs, {
+        provider: channel,
+        site_id: siteId,
+        event_type: "emergency.broadcast",
+      });
+      channelTargetCache.set(cacheKey, filtered);
+      return filtered;
+    };
+
     let monthlyPushQueued = 0;
 
     for (const attendee of activeRecords) {
@@ -442,9 +459,7 @@ export async function createEmergencyBroadcastAction(
             status: "queued",
           });
         } else if (channel === "TEAMS" || channel === "SLACK") {
-          const targets = channelConfigs.filter(
-            (config) => config.provider === channel && config.is_active,
-          );
+          const targets = getTargetsForChannel(channel, attendee.site_id);
           for (const target of targets) {
             await deliverChannelWebhook({
               companyId: auth.companyId,

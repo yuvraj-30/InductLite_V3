@@ -286,11 +286,18 @@ export async function estimatePolicySimulationImpact(
     random_check_percentage?: number;
     stricter_quiz_threshold_delta?: number;
     permit_required?: boolean;
+    snapshot_end_at?: Date;
   },
 ): Promise<PolicySimulationEstimate> {
   requireCompanyId(companyId);
   const lookbackDays = Math.max(1, Math.min(input.lookback_days ?? 30, 365));
-  const since = new Date(Date.now() - lookbackDays * 24 * 60 * 60 * 1000);
+  const snapshotEndAt =
+    input.snapshot_end_at && !Number.isNaN(input.snapshot_end_at.getTime())
+      ? input.snapshot_end_at
+      : new Date();
+  const since = new Date(
+    snapshotEndAt.getTime() - lookbackDays * 24 * 60 * 60 * 1000,
+  );
   const randomCheckPercentage = Math.max(
     0,
     Math.min(100, Math.trunc(input.random_check_percentage ?? 0)),
@@ -305,14 +312,14 @@ export async function estimatePolicySimulationImpact(
     const db = scopedDb(companyId);
     const [signInCount, escalationCount, failedQuizAttempts] = await Promise.all([
       db.signInRecord.count({
-        where: { sign_in_ts: { gte: since } },
+        where: { sign_in_ts: { gte: since, lte: snapshotEndAt } },
       }),
       db.pendingSignInEscalation.count({
-        where: { submitted_at: { gte: since } },
+        where: { submitted_at: { gte: since, lte: snapshotEndAt } },
       }),
       db.inductionQuizAttempt.count({
         where: {
-          last_attempt_at: { gte: since },
+          last_attempt_at: { gte: since, lte: snapshotEndAt },
           last_passed: false,
         },
       }),
