@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { spawn, execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { chromium, webkit, devices } from 'playwright';
@@ -8,7 +8,7 @@ const appDir = path.join(root, 'apps', 'web');
 const outDir = path.join(root, 'apps', 'web', 'manual-evidence');
 const logPath = path.join(outDir, 'manual-dev.log');
 const secret = 'manual-e2e-secret';
-const baseUrl = 'http://localhost:3000';
+const baseUrl = 'http://127.0.0.1:3000';
 
 fs.mkdirSync(outDir, { recursive: true });
 
@@ -25,11 +25,145 @@ function runCommand(command, args, options = {}) {
       shell: options.shell ?? false,
     });
 
+    if (child.stdout && typeof options.onStdout === "function") {
+      child.stdout.on("data", options.onStdout);
+    }
+    if (child.stderr && typeof options.onStderr === "function") {
+      child.stderr.on("data", options.onStderr);
+    }
+
     child.on("error", reject);
     child.on("close", (code, signal) => {
       resolve({ code, signal });
     });
   });
+}
+
+function killPort3000ListenersWin() {
+  if (process.platform !== "win32") return;
+  try {
+    const output = execSync(
+      'netstat -ano | findstr LISTENING | findstr :3000',
+      { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
+    );
+    const pids = Array.from(
+      new Set(
+        output
+          .split(/\r?\n/)
+          .map((line) => line.trim())
+          .filter(Boolean)
+          .map((line) => line.split(/\s+/).pop())
+          .filter((value) => !!value && /^\d+$/.test(value)),
+      ),
+    );
+    for (const pid of pids) {
+      if (!pid) continue;
+      try {
+        execSync(`taskkill /PID ${pid} /F`, {
+          stdio: ["ignore", "ignore", "ignore"],
+        });
+      } catch {
+        // Best-effort cleanup only.
+      }
+    }
+  } catch {
+    // No listener found or netstat unavailable; continue.
+  }
+}
+
+async function runDbPreflight() {
+  const isWindows = process.platform === "win32";
+  const command = isWindows ? "cmd.exe" : "npx";
+  const args = isWindows
+    ? [
+        "/d",
+        "/s",
+        "/c",
+        "npx",
+        "prisma",
+        "migrate",
+        "status",
+        "--schema",
+        "apps/web/prisma/schema.prisma",
+      ]
+    : [
+        "prisma",
+        "migrate",
+        "status",
+        "--schema",
+        "apps/web/prisma/schema.prisma",
+      ];
+
+  const result = await runCommand(command, args, {
+    cwd: root,
+    stdio: "inherit",
+  });
+
+  if (!result || result.code !== 0) {
+    throw new Error(
+      `Database preflight failed (exitCode=${String(result?.code)} signal=${String(result?.signal)}). Ensure Postgres is reachable before running full E2E.`,
+    );
+  }
+}
+
+function formatRunStamp(date = new Date()) {
+  return date.toISOString().replace(/[:.]/g, "-");
+}
+
+function walkFiles(dir) {
+  if (!fs.existsSync(dir)) return [];
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  const files = [];
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...walkFiles(fullPath));
+      continue;
+    }
+    if (entry.isFile()) {
+      files.push(fullPath);
+    }
+  }
+  return files;
+}
+
+function copyAllE2EScreenshots({ runStamp, startedAtMs }) {
+  const testResultsDir = path.join(appDir, "test-results");
+  if (!fs.existsSync(testResultsDir)) {
+    return { copied: 0, sourceDir: testResultsDir, destinationDir: null };
+  }
+
+  const screenshotExts = new Set([".png", ".jpg", ".jpeg", ".webp"]);
+  const screenshotSources = walkFiles(testResultsDir).filter((filePath) => {
+    if (!screenshotExts.has(path.extname(filePath).toLowerCase())) {
+      return false;
+    }
+    try {
+      const stats = fs.statSync(filePath);
+      // Keep only screenshots written during this run (small skew allowance).
+      return stats.mtimeMs >= (startedAtMs - 1000);
+    } catch {
+      return false;
+    }
+  });
+
+  if (screenshotSources.length === 0) {
+    return { copied: 0, sourceDir: testResultsDir, destinationDir: null };
+  }
+
+  const screenshotDir = path.join(outDir, "e2e-screenshots", runStamp);
+  for (const sourcePath of screenshotSources) {
+    const rel = path.relative(testResultsDir, sourcePath);
+    const destination = path.join(screenshotDir, rel);
+    fs.mkdirSync(path.dirname(destination), { recursive: true });
+    fs.copyFileSync(sourcePath, destination);
+  }
+
+  return {
+    copied: screenshotSources.length,
+    sourceDir: testResultsDir,
+    destinationDir: screenshotDir,
+  };
 }
 
 async function fetchJson(url, init = {}, timeoutMs = 10000) {
@@ -584,6 +718,9 @@ async function runManualFlow() {
 }
 
 async function runAllE2E(extraArgs = []) {
+  await runDbPreflight();
+  killPort3000ListenersWin();
+
   const isWindows = process.platform === "win32";
   const npmArgs = ["run", "-w", "apps/web", "test:e2e"];
   if (extraArgs.length > 0) {
@@ -592,7 +729,29 @@ async function runAllE2E(extraArgs = []) {
 
   const command = isWindows ? "cmd.exe" : "npm";
   const args = isWindows ? ["/d", "/s", "/c", "npm", ...npmArgs] : npmArgs;
+  const runStamp = formatRunStamp();
+  const runLogPath = path.join(outDir, `all-e2e-${runStamp}.log`);
+  const e2eServerMode = process.env.E2E_SERVER_MODE ?? "dev";
+  const ciEnvForLocalRun = process.env.E2E_FORCE_CI === "1" ? "true" : "";
+  const sharedLogStream = fs.createWriteStream(logPath, { flags: "a" });
+  const runLogStream = fs.createWriteStream(runLogPath, { flags: "a" });
+  const logChunk = (chunk, toStderr = false) => {
+    const text = chunk instanceof Buffer ? chunk.toString("utf8") : String(chunk);
+    if (toStderr) {
+      process.stderr.write(text);
+    } else {
+      process.stdout.write(text);
+    }
+    sharedLogStream.write(text);
+    runLogStream.write(text);
+  };
+  const writeRunHeader = (label) => {
+    const header = `\n========== ${label} ${new Date().toISOString()} ==========\n`;
+    sharedLogStream.write(header);
+    runLogStream.write(header);
+  };
 
+  writeRunHeader("FULL_E2E_RUN_START");
   console.log("FULL_E2E_RUN_START");
   console.log(
     JSON.stringify(
@@ -601,40 +760,77 @@ async function runAllE2E(extraArgs = []) {
         args: npmArgs,
         runner: command,
         runnerArgs: args,
+        runLogPath,
+        sharedLogPath: logPath,
       },
       null,
       2,
     ),
   );
 
+  let result = null;
+  let runError = null;
   const startedAt = Date.now();
-  const result = await runCommand(command, args, {
-    cwd: root,
-    env: {
-      E2E_QUIET: process.env.E2E_QUIET ?? "1",
-      TEST_RUNNER_SECRET_KEY:
-        process.env.TEST_RUNNER_SECRET_KEY ?? "e2e-test-runner-secret-3b0f2cbf5de0416ebf958e8d",
-      SESSION_COOKIE_SECURE: process.env.SESSION_COOKIE_SECURE ?? "0",
-    },
-  });
+  try {
+    result = await runCommand(command, args, {
+      cwd: root,
+      env: {
+        BASE_URL: process.env.BASE_URL ?? "http://127.0.0.1:3000",
+        CI: ciEnvForLocalRun,
+        E2E_QUIET: process.env.E2E_QUIET ?? "1",
+        E2E_SERVER_MODE: e2eServerMode,
+        E2E_WEB_SERVER_TIMEOUT_MS:
+          process.env.E2E_WEB_SERVER_TIMEOUT_MS ?? "600000",
+        E2E_TEST_TIMEOUT_MS:
+          process.env.E2E_TEST_TIMEOUT_MS ?? "60000",
+        E2E_RETRIES: process.env.E2E_RETRIES ?? "1",
+        E2E_NODE_OPTIONS:
+          process.env.E2E_NODE_OPTIONS ?? "--max-old-space-size=6144",
+        PW_REUSE_EXISTING_SERVER:
+          process.env.PW_REUSE_EXISTING_SERVER ?? "0",
+        TEST_RUNNER_SECRET_KEY:
+          process.env.TEST_RUNNER_SECRET_KEY ?? "e2e-test-runner-secret-3b0f2cbf5de0416ebf958e8d",
+        SESSION_COOKIE_SECURE: process.env.SESSION_COOKIE_SECURE ?? "0",
+      },
+      stdio: "pipe",
+      onStdout: (chunk) => logChunk(chunk, false),
+      onStderr: (chunk) => logChunk(chunk, true),
+    });
+  } catch (error) {
+    runError = error;
+  } finally {
+    writeRunHeader("FULL_E2E_RUN_END");
+    sharedLogStream.end();
+    runLogStream.end();
+  }
+
   const durationMs = Date.now() - startedAt;
+  const screenshotSummary = copyAllE2EScreenshots({
+    runStamp,
+    startedAtMs: startedAt,
+  });
 
   console.log("FULL_E2E_RUN_END");
   console.log(
     JSON.stringify(
       {
-        code: result.code,
-        signal: result.signal,
+        code: result?.code ?? null,
+        signal: result?.signal ?? null,
         durationMs,
+        screenshotSummary,
       },
       null,
       2,
     ),
   );
 
-  if (result.code !== 0) {
+  if (runError) {
+    throw runError;
+  }
+
+  if (!result || result.code !== 0) {
     throw new Error(
-      `Full E2E run failed (exitCode=${String(result.code)} signal=${String(result.signal)})`,
+      `Full E2E run failed (exitCode=${String(result?.code)} signal=${String(result?.signal)})`,
     );
   }
 }
@@ -645,18 +841,22 @@ async function main() {
   if (showHelp) {
     console.log("Usage:");
     console.log("  node tools/manual-flow-verify.mjs");
-    console.log("    Runs manual kiosk/escalation flow verification");
+    console.log("    Runs full apps/web Playwright E2E suite (305 tests) [default]");
     console.log("  node tools/manual-flow-verify.mjs --all-e2e [-- <playwright-args>]");
-    console.log("    Runs full apps/web Playwright E2E suite (305 tests)");
+    console.log("    Runs full apps/web Playwright E2E suite (explicit mode)");
+    console.log("  node tools/manual-flow-verify.mjs --manual-flow");
+    console.log("    Runs manual kiosk/escalation flow verification");
     return;
   }
 
   const separatorIndex = args.indexOf("--");
   const passthroughArgs =
     separatorIndex >= 0 ? args.slice(separatorIndex + 1) : [];
-  const runAll = args.includes("--all-e2e");
+  const runManualFlow = args.includes("--manual-flow");
+  const runAllE2EDefault =
+    args.includes("--all-e2e") || !runManualFlow;
 
-  if (runAll) {
+  if (runAllE2EDefault) {
     await runAllE2E(passthroughArgs);
     return;
   }

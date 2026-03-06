@@ -23,6 +23,7 @@ import { submitSignIn, type SiteInfo, type TemplateInfo } from "../actions";
 import { InductionQuestions } from "./InductionQuestions";
 import { SuccessScreen } from "./SuccessScreen";
 import { isValidPhoneE164, formatToE164 } from "@inductlite/shared";
+import { shouldSkipQuestions } from "@/lib/logic/evaluator";
 import {
   clearQueuedSignIn,
   hasQueuedSignIn,
@@ -137,10 +138,10 @@ function isAnswerPresent(answer: unknown): boolean {
 }
 
 function getMissingRequiredQuestionIds(
-  template: TemplateInfo,
+  questions: TemplateInfo["questions"],
   answers: Record<string, unknown>,
 ): string[] {
-  return template.questions
+  return questions
     .filter((question) => question.isRequired)
     .filter((question) => {
       const value = answers[question.id];
@@ -298,6 +299,35 @@ export function SignInFlow({
       questions: localizedQuestions,
     }),
     [localizedQuestions, template],
+  );
+  const visibleQuestions = useMemo(() => {
+    const allQuestions = templateForInduction.questions;
+    const visible: typeof allQuestions = [];
+
+    for (let index = 0; index < allQuestions.length; ) {
+      const question = allQuestions[index];
+      if (!question) break;
+
+      visible.push(question);
+
+      const answer = answers[question.id];
+      const skipCountRaw = shouldSkipQuestions(question.logic, answer);
+      const skipCount =
+        Number.isFinite(skipCountRaw) && skipCountRaw > 0
+          ? Math.trunc(skipCountRaw)
+          : 0;
+
+      index += 1 + skipCount;
+    }
+
+    return visible;
+  }, [answers, templateForInduction.questions]);
+  const visibleTemplateForInduction = useMemo(
+    () => ({
+      ...templateForInduction,
+      questions: visibleQuestions,
+    }),
+    [templateForInduction, visibleQuestions],
   );
   const mediaAcknowledgementLabel =
     selectedLanguageVariant?.acknowledgementLabel ??
@@ -493,6 +523,14 @@ export function SignInFlow({
     reuseSavedSignature,
     step,
   ]);
+
+  useEffect(() => {
+    setMissingRequiredQuestionIds((prev) =>
+      prev.filter((questionId) =>
+        visibleQuestions.some((question) => question.id === questionId),
+      ),
+    );
+  }, [visibleQuestions]);
 
   useEffect(() => {
     if (!isKiosk || step !== "success") return;
@@ -723,7 +761,7 @@ export function SignInFlow({
       return;
     }
 
-    const missing = getMissingRequiredQuestionIds(template, answers);
+    const missing = getMissingRequiredQuestionIds(visibleQuestions, answers);
     setMissingRequiredQuestionIds(missing);
 
     if (missing.length > 0) {
@@ -1419,7 +1457,7 @@ export function SignInFlow({
           )}
 
           <InductionQuestions
-            template={templateForInduction}
+            template={visibleTemplateForInduction}
             answers={answers}
             onAnswerChange={handleAnswerChange}
             fieldErrors={fieldErrors}

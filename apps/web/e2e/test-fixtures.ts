@@ -26,6 +26,7 @@ type MyFixtures = {
     includeLanguageVariants?: boolean;
     includeMediaQuizFlow?: boolean;
     includeGeofenceOverrideFlow?: boolean;
+    includeSkipLogicFlow?: boolean;
     companySlug?: string;
   }) => Promise<SeedPublicSiteResult>;
   /** Delete a previously seeded public site by slug */
@@ -135,13 +136,13 @@ export const test = base.extend<MyFixtures>({
         page: Page,
         maxAttempts: number,
       ): Promise<Error | null> => {
-        const base = process.env.BASE_URL ?? "http://localhost:3000";
+        const base = process.env.BASE_URL ?? "http://127.0.0.1:3000";
         let lastErr: Error | null = null;
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
           try {
             await page.goto(`${base}/admin`, {
               waitUntil: "domcontentloaded",
-              timeout: 10000,
+              timeout: 20000,
             });
             const currentUrl = page.url();
             if (/\/login(?:\?|$)/i.test(currentUrl)) {
@@ -164,6 +165,9 @@ export const test = base.extend<MyFixtures>({
             throw new Error(`unexpected URL after login verification: ${currentUrl}`);
           } catch (err) {
             lastErr = err instanceof Error ? err : new Error(String(err));
+            if (page.isClosed()) {
+              return lastErr;
+            }
             await page.waitForTimeout(500);
           }
         }
@@ -174,10 +178,11 @@ export const test = base.extend<MyFixtures>({
       // and fallback to UI login when the session cookie is not applied (common on WebKit/mobile Safari).
       const page = await openClientPage();
       try {
-        const maxAttempts = skipVerify
-          ? 1
-          : (usedUiFallback ? 1 : 2);
-        let verifyErr = await verifySession(page, maxAttempts);
+        let verifyErr: Error | null = null;
+        if (!(skipVerify && !usedUiFallback)) {
+          const maxAttempts = usedUiFallback ? 1 : 2;
+          verifyErr = await verifySession(page, maxAttempts);
+        }
 
         if (verifyErr) {
           await uiLogin(page, email, password);
@@ -191,7 +196,7 @@ export const test = base.extend<MyFixtures>({
           );
         }
 
-        const base = process.env.BASE_URL ?? "http://localhost:3000";
+        const base = process.env.BASE_URL ?? "http://127.0.0.1:3000";
         const cookies = await (context as BrowserContext).cookies([base]);
         const hasSessionCookie = cookies.some(
           (cookie) =>
@@ -216,13 +221,19 @@ export const test = base.extend<MyFixtures>({
         includeLanguageVariants?: boolean;
         includeMediaQuizFlow?: boolean;
         includeGeofenceOverrideFlow?: boolean;
+        includeSkipLogicFlow?: boolean;
         companySlug?: string;
       }) => {
         let lastResult:
-          | { ok: boolean; body: SeedPublicSiteResult | null }
+          | {
+              ok: boolean;
+              status: number | null;
+              body: SeedPublicSiteResult | null;
+              rawText?: string;
+            }
           | null = null;
 
-        for (let attempt = 1; attempt <= 8; attempt++) {
+        for (let attempt = 1; attempt <= 16; attempt++) {
           const result = await _seedPublicSite(
             request as APIRequestContext,
             opts,
@@ -233,23 +244,46 @@ export const test = base.extend<MyFixtures>({
             return result.body;
           }
 
-          const serialized = JSON.stringify(result.body ?? {});
+          const serialized = JSON.stringify({
+            status: result.status,
+            body: result.body ?? {},
+            rawText: result.rawText ?? "",
+          });
+          const html404Response =
+            result.status === 404 &&
+            typeof result.rawText === "string" &&
+            /<!DOCTYPE html>|<html/i.test(result.rawText);
           const isTransient =
             !result.ok ||
             !result.body ||
+            html404Response ||
             /404|503|not found|fetch failed|ECONNRESET|socket hang up/i.test(
               serialized,
             );
 
-          if (!isTransient || attempt === 8) {
+          if (!isTransient || attempt === 16) {
             break;
           }
 
-          await new Promise((r) => setTimeout(r, 400 * attempt));
+          // Best-effort route warmups: helps Next.js dev route compilation settle
+          // before the next seed attempt, especially in long local runs.
+          await (request as APIRequestContext)
+            .get("/api/test/runtime", { headers: getTestRouteHeaders() })
+            .catch(() => null);
+          await (request as APIRequestContext)
+            .post("/api/test/clear-rate-limit", { headers: getTestRouteHeaders() })
+            .catch(() => null);
+
+          const backoffMs = Math.min(1200 * attempt, 6000);
+          await new Promise((r) => setTimeout(r, backoffMs));
         }
 
+        const rawTextSample =
+          typeof lastResult?.rawText === "string"
+            ? lastResult.rawText.slice(0, 240)
+            : "";
         throw new Error(
-          `seedPublicSite: failed after retries: ${JSON.stringify(lastResult?.body ?? null)}`,
+          `seedPublicSite: failed after retries: status=${String(lastResult?.status ?? "n/a")} body=${JSON.stringify(lastResult?.body ?? null)} rawText=${JSON.stringify(rawTextSample)} (hint: ensure Playwright webServer is controlling the app with ALLOW_TEST_RUNNER=1 and matching TEST_RUNNER_SECRET_KEY)`,
         );
       },
     );
@@ -292,6 +326,21 @@ export const test = base.extend<MyFixtures>({
           break;
         }
         await new Promise((r) => setTimeout(r, 500 * attempt));
+      }
+
+      // Cleanup calls can race test teardown when Playwright is already closing
+      // request context/page objects. Treat those as non-fatal cleanup misses.
+      const closedContext =
+        !!lastBody?.error &&
+        /Target page, context or browser has been closed|context.*closed|apiRequestContext\..*closed/i.test(
+          lastBody.error,
+        );
+      if (closedContext) {
+        return {
+          success: false,
+          deleted: false,
+          error: lastBody?.error,
+        };
       }
 
       throw new Error(
@@ -419,7 +468,7 @@ export const test = base.extend<MyFixtures>({
     ) {
       // On Windows default to using a shared server to avoid spawn/shell issues
       // in test workers (local dev machines commonly hit these constraints).
-      const baseUrl = process.env.BASE_URL ?? "http://localhost:3000";
+      const baseUrl = process.env.BASE_URL ?? "http://127.0.0.1:3000";
 
       // Best-effort diagnostics for shared-server runtime. We do not gate on this
       // endpoint because some dev-server states can transiently 404 it while test
@@ -554,7 +603,7 @@ export const test = base.extend<MyFixtures>({
         }
       }
 
-      const sharedWarmupTimeoutMs = 30000;
+      const sharedWarmupTimeoutMs = 120000;
       let clearRateLimitReady = true;
       try {
         await waitForUrl(`${baseUrl}/api/test/clear-rate-limit`, 45000);
@@ -564,37 +613,38 @@ export const test = base.extend<MyFixtures>({
           `E2E: clear-rate-limit readiness check failed in shared mode (${String(err)}). Proceeding with route warmup checks.`,
         );
       }
-      // Warm critical test routes concurrently so the worker fixture remains under timeout.
-      await Promise.all([
-        warmRoute({
-          url: `${baseUrl}/api/test/runtime`,
-          method: "GET",
-          okStatuses: [200],
-          timeoutMs: sharedWarmupTimeoutMs,
-        }),
-        warmRoute({
-          url: `${baseUrl}/api/test/create-session?email=${encodeURIComponent("warmup@example.test")}&json=1`,
-          method: "GET",
-          okStatuses: [200, 404],
-          timeoutMs: sharedWarmupTimeoutMs,
-        }),
-        warmRoute({
-          url: `${baseUrl}/api/test/seed-public-site`,
-          method: "POST",
-          body: {
-            slugPrefix: "warmup-e2e",
-            includeRedFlagQuestion: false,
-          },
-          okStatuses: [200],
-          timeoutMs: sharedWarmupTimeoutMs,
-        }),
-        warmRoute({
-          url: `${baseUrl}/api/test/seed-public-site?slug=${encodeURIComponent("warmup-missing-site")}`,
-          method: "DELETE",
-          okStatuses: [200],
-          timeoutMs: sharedWarmupTimeoutMs,
-        }),
-      ]);
+      // Warm critical test routes sequentially to avoid route-compilation contention
+      // in local shared-server mode on Windows.
+      await warmRoute({
+        url: `${baseUrl}/api/test/runtime`,
+        method: "GET",
+        okStatuses: [200],
+        timeoutMs: sharedWarmupTimeoutMs,
+      });
+      await warmRoute({
+        url: `${baseUrl}/api/test/create-session?email=${encodeURIComponent("warmup@example.test")}&json=1`,
+        method: "GET",
+        okStatuses: [200, 404],
+        timeoutMs: sharedWarmupTimeoutMs,
+      });
+      await warmRoute({
+        url: `${baseUrl}/api/test/seed-public-site`,
+        method: "POST",
+        body: {
+          slugPrefix: "warmup-e2e",
+          includeRedFlagQuestion: false,
+        },
+        okStatuses: [200],
+        timeoutMs: sharedWarmupTimeoutMs,
+      });
+      await warmRoute({
+        url: `${baseUrl}/api/test/seed-public-site?slug=${encodeURIComponent("warmup-missing-site")}`,
+        method: "DELETE",
+        // DELETE warmup is non-critical and can intermittently return framework-level 404
+        // during route compilation in long dev runs; tolerate it.
+        okStatuses: [200, 404],
+        timeoutMs: sharedWarmupTimeoutMs,
+      });
       if (!clearRateLimitReady) {
         console.warn(
           "E2E: clear-rate-limit endpoint was not ready, but core test routes are available; continuing.",
@@ -1293,7 +1343,7 @@ export const test = base.extend<MyFixtures>({
     } catch (e) {
       console.warn("Failed to drop worker schema:", String(e));
     }
-  }, { scope: "worker", timeout: 180000 }],
+  }, { scope: "worker", timeout: 300000 }],
 
   // Worker-scoped user fixture: creates a unique user/company per worker and exposes a clientKey
   workerUser: [async ({ workerServer }, playUse, testInfo) => {
@@ -1457,10 +1507,26 @@ export const test = base.extend<MyFixtures>({
       goto: (url: string | URL, options?: any) => Promise<any>;
     };
     const origGoto = p.goto.bind(page as unknown as Page);
+    const isTransientNavigationError = (value: unknown): boolean => {
+      const message = value instanceof Error ? value.message : String(value);
+      return /Could not connect to server|ECONNRESET|ECONNREFUSED|ERR_CONNECTION_RESET|ERR_CONNECTION_REFUSED|ERR_ABORTED|NS_BINDING_ABORTED|aborted/i.test(
+        message,
+      );
+    };
 
     p.goto = async function (url: string | URL, options?: any) {
       if (typeof url === "string" && url.startsWith("/")) {
         url = `${workerServer.baseUrl}${url}`;
+      }
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          return await origGoto(url as any, options);
+        } catch (error) {
+          if (!isTransientNavigationError(error) || attempt === 3) {
+            throw error;
+          }
+          await page.waitForTimeout(350 * attempt);
+        }
       }
       return origGoto(url as any, options);
     };

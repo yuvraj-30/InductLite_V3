@@ -16,46 +16,21 @@ test.describe("CSRF Protection", () => {
     page,
     loginAs,
     workerUser,
-    browserName,
   }) => {
     // Programmatic login for stability and speed (use dynamically created worker user)
     await loginAs(workerUser.email);
 
-    // Make a same-origin POST request.
-    // WebKit can intermittently fail page-evaluate fetch in CI, so use request API there.
-    await page.goto("/");
-
-    let res: number;
-    if (browserName === "webkit") {
-      const response = await page.request.post(`${BASE_URL}/api/admin/sites`, {
-        headers: {
-          "Content-Type": "application/json",
-          Origin: BASE_URL,
-          Referer: `${BASE_URL}/`,
-        },
-        data: { name: `e2e-same-origin-${Date.now()}` },
-      });
-      res = response.status();
-    } else {
-      let status: number | undefined;
-      for (let attempt = 0; attempt < 2 && status === undefined; attempt++) {
-        try {
-          status = await page.evaluate(async () => {
-            const r = await fetch("/api/admin/sites", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ name: "e2e-same-origin" }),
-            });
-            return r.status;
-          });
-        } catch (error) {
-          if (attempt === 1) throw error;
-          await page.reload({ waitUntil: "domcontentloaded" });
-        }
-      }
-      expect(status).toBeDefined();
-      res = status as number;
-    }
+    // Use APIRequestContext via the authenticated page context. This is stable across
+    // desktop/mobile projects and still validates same-origin POST acceptance semantics.
+    const response = await page.request.post(`${BASE_URL}/api/admin/sites`, {
+      headers: {
+        "Content-Type": "application/json",
+        Origin: BASE_URL,
+        Referer: `${BASE_URL}/`,
+      },
+      data: { name: `e2e-same-origin-${Date.now()}` },
+    });
+    const res = response.status();
 
     // Should not be 403 Forbidden
     expect(res).not.toBe(403);

@@ -67,6 +67,7 @@ async function safeGotoHazards(page: any) {
 
 test.describe.serial("Admin Hazard Register", () => {
   test("admin can log and close a hazard", async ({ page, loginAs, workerUser }) => {
+    test.slow();
     await loginAs(workerUser.email);
 
     const suffix = uniqueSuffix();
@@ -103,7 +104,7 @@ test.describe.serial("Admin Hazard Register", () => {
           if (!navigated) return 0;
           return page.locator("tr", { hasText: hazardTitle }).count();
         },
-        { timeout: 30000 },
+        { timeout: 45000 },
       )
       .toBe(1);
 

@@ -1,6 +1,8 @@
 import { test, expect } from "./test-fixtures";
 
 test.describe.serial("Admin Settings", () => {
+  test.describe.configure({ timeout: 90000 });
+
   async function setNumericField(page: any, label: string, value: string) {
     const field = page.getByLabel(label);
     await field.fill("");
@@ -92,9 +94,10 @@ test.describe.serial("Admin Settings", () => {
 
     await legalHoldCheckbox.check();
     await expect(legalHoldCheckbox).toBeChecked();
-    await legalHoldReason.click();
-    await legalHoldReason.press("Control+A");
-    await legalHoldReason.press("Backspace");
+    await legalHoldReason.waitFor({ state: "visible", timeout: 15000 });
+    // Use fill() to clear value instead of keyboard shortcuts for mobile Safari stability.
+    await legalHoldReason.fill(`temporary-${Date.now()}`);
+    await legalHoldReason.fill("");
     await expect(legalHoldReason).toHaveValue("");
 
     await submitSettingsForm(page, saveButton);

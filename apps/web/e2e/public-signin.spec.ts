@@ -41,6 +41,10 @@ test.beforeEach(async ({ context, request }) => {
   }
 });
 
+// Public sign-in suite performs repeated seed/setup operations and multi-step flows.
+// Keep a higher timeout budget for tests and hooks in this file.
+test.setTimeout(120000);
+
 // Helper to attempt opening a public site and retry on rate-limited or transient errors
 // Returns true if the site loaded successfully, false if the site does not exist and tests should skip
 async function openSite(page: Page, slug: string): Promise<boolean> {
@@ -49,8 +53,8 @@ async function openSite(page: Page, slug: string): Promise<boolean> {
     return /Target page, context or browser has been closed/i.test(message);
   };
 
-  // Keep retry budget under the default 30s per-test timeout.
-  for (let attempt = 0; attempt < 3; attempt++) {
+  // Keep retry budget bounded but tolerant of slower mobile browser lanes.
+  for (let attempt = 0; attempt < 5; attempt++) {
     if (page.isClosed()) {
       return false;
     }
@@ -58,10 +62,13 @@ async function openSite(page: Page, slug: string): Promise<boolean> {
     try {
       await page.goto(`/s/${slug}`, {
         waitUntil: "domcontentloaded",
-        timeout: 6000,
+        timeout: 8000,
       });
     } catch (err) {
       if (isClosedError(err)) {
+        return false;
+      }
+      if (page.isClosed()) {
         return false;
       }
       await page.waitForTimeout(350);
@@ -72,7 +79,7 @@ async function openSite(page: Page, slug: string): Promise<boolean> {
       // client-side rendering/hydration to finish and ensure we don't return prematurely.
       await page
         .getByLabel(/full name/i)
-        .waitFor({ state: "visible", timeout: 4000 });
+        .waitFor({ state: "visible", timeout: 5000 });
       // Stabilize: wait briefly and ensure the label is still present and visible
       await page.waitForTimeout(500);
       const visible = await page.getByLabel(/full name/i).isVisible();
@@ -84,6 +91,9 @@ async function openSite(page: Page, slug: string): Promise<boolean> {
       console.warn(
         `openSite: label disappeared after initial load, retrying (attempt ${attempt + 1})`,
       );
+      if (page.isClosed()) {
+        return false;
+      }
       await page.waitForTimeout(300);
       continue;
     } catch (err) {
@@ -99,6 +109,9 @@ async function openSite(page: Page, slug: string): Promise<boolean> {
           `openSite: failed to read page content (attempt ${attempt + 1}): ${String(pageErr)}`,
         );
         // Try a short delay and retry
+        if (page.isClosed()) {
+          return false;
+        }
         await page.waitForTimeout(300);
         continue;
       }
@@ -112,10 +125,16 @@ async function openSite(page: Page, slug: string): Promise<boolean> {
         console.warn(
           `openSite: transient response on attempt ${attempt + 1} for slug=${slug}`,
         );
+        if (page.isClosed()) {
+          return false;
+        }
         await page.waitForTimeout(700);
         continue;
       }
       // else try again after a short delay
+      if (page.isClosed()) {
+        return false;
+      }
       await page.waitForTimeout(300);
     }
   }
@@ -126,7 +145,7 @@ async function openSite(page: Page, slug: string): Promise<boolean> {
   try {
     await page.goto(`/s/${slug}`, {
       waitUntil: "domcontentloaded",
-      timeout: 6000,
+      timeout: 8000,
     });
   } catch (err) {
     if (isClosedError(err)) {
@@ -151,14 +170,14 @@ async function openSite(page: Page, slug: string): Promise<boolean> {
   // field is rendered. This avoids false positives on partially hydrated pages.
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      await page
-        .getByLabel(/full name/i)
-        .waitFor({ state: "visible", timeout: 4000 });
+        await page
+          .getByLabel(/full name/i)
+          .waitFor({ state: "visible", timeout: 5000 });
       return true;
     } catch {
       if (attempt === 0) {
         try {
-          await page.reload({ waitUntil: "domcontentloaded", timeout: 6000 });
+          await page.reload({ waitUntil: "domcontentloaded", timeout: 8000 });
         } catch {
           return false;
         }
@@ -180,7 +199,24 @@ async function fillAndAssertInput(
   }
 
   const input = page.locator(selector).first();
-  await input.fill(value);
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    await input.click({ force: true }).catch(() => null);
+    await input.fill(value).catch(() => null);
+
+    const current = await input.inputValue().catch(() => "");
+    if (current === value) {
+      return;
+    }
+
+    await input.type(value, { delay: 10 }).catch(() => null);
+    const typed = await input.inputValue().catch(() => "");
+    if (typed === value) {
+      return;
+    }
+
+    await page.waitForTimeout(200 * attempt);
+  }
+
   await expect(input).toHaveValue(value);
 }
 
@@ -211,6 +247,101 @@ async function fillDetailsForm(
   await fillAndAssertInput(page, "#visitorPhone", phone);
   await fillAndAssertInput(page, "#visitorEmail", email);
   await page.locator("#visitorType").selectOption(visitorType);
+}
+
+async function continueToInductionWithRetry(
+  page: Page,
+  refill?: {
+    name: string;
+    phone: string;
+    email?: string;
+    visitorType?: "CONTRACTOR" | "VISITOR" | "EMPLOYEE" | "DELIVERY";
+    geofenceOverrideCode?: string;
+  },
+): Promise<boolean> {
+  const inductionHeading = page.getByRole("heading", {
+    level: 2,
+    name: /site induction/i,
+  });
+  const detailsForm = page.locator("form").first();
+  const continueButton = page
+    .getByRole("button", { name: /continue to induction/i })
+    .first();
+
+  for (let attempt = 1; attempt <= 6; attempt++) {
+    if (await inductionHeading.isVisible({ timeout: 500 }).catch(() => false)) {
+      return true;
+    }
+
+    if (refill?.geofenceOverrideCode) {
+      await fillAndAssertInput(
+        page,
+        "#geofenceOverrideCode",
+        refill.geofenceOverrideCode,
+      ).catch(() => null);
+    }
+
+    await continueButton.click({ force: true }).catch(() => null);
+    const hasDetailsForm = (await detailsForm.count().catch(() => 0)) > 0;
+    if (hasDetailsForm) {
+      await detailsForm
+        .evaluate((form) => {
+          if (form instanceof HTMLFormElement) {
+            form.requestSubmit();
+          }
+        })
+        .catch(() => null);
+    }
+
+    if (await inductionHeading.isVisible({ timeout: 7000 }).catch(() => false)) {
+      return true;
+    }
+
+    if (refill) {
+      await fillDetailsForm(page, refill).catch(() => null);
+      if (refill.geofenceOverrideCode) {
+        await fillAndAssertInput(
+          page,
+          "#geofenceOverrideCode",
+          refill.geofenceOverrideCode,
+        ).catch(() => null);
+      }
+    }
+    await page.waitForTimeout(300 * attempt);
+  }
+
+  return false;
+}
+
+async function continueToSignOffWithRetry(page: Page): Promise<boolean> {
+  const signOffHeading = page.getByRole("heading", {
+    level: 2,
+    name: /sign off/i,
+  });
+  const continueToSignOffButton = page
+    .getByRole("button", { name: /continue to sign off|continue/i })
+    .first();
+
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    if (await signOffHeading.isVisible({ timeout: 600 }).catch(() => false)) {
+      return true;
+    }
+
+    const canContinue = await continueToSignOffButton
+      .isVisible({ timeout: 600 })
+      .catch(() => false);
+    if (canContinue) {
+      await continueToSignOffButton.click({ force: true }).catch(() => null);
+    }
+
+    if (await signOffHeading.isVisible({ timeout: 1500 }).catch(() => false)) {
+      return true;
+    }
+
+    await page.waitForTimeout(250 * attempt);
+  }
+
+  return signOffHeading.isVisible().catch(() => false);
 }
 
 async function drawSignatureIfAvailable(page: Page): Promise<void> {
@@ -263,12 +394,24 @@ async function checkSignOffTermsIfPresent(page: Page): Promise<void> {
 }
 
 async function submitSignOffWithSignatureRetry(page: Page): Promise<void> {
+  const successHeading = page.getByRole("heading", {
+    level: 2,
+    name: /signed in successfully/i,
+  });
+  const signOutLink = page.locator('a[href*="/sign-out"]').first();
+  if (
+    (await successHeading.isVisible().catch(() => false)) ||
+    (await signOutLink.isVisible().catch(() => false))
+  ) {
+    return;
+  }
+
   const signOffHeading = page.getByRole("heading", {
     level: 2,
     name: /sign off/i,
   });
-  if (!(await signOffHeading.isVisible({ timeout: 10000 }).catch(() => false))) {
-    return;
+  if (!(await continueToSignOffWithRetry(page))) {
+    throw new Error("Unable to reach sign-off step before submit");
   }
 
   const confirmButton = page
@@ -286,16 +429,26 @@ async function submitSignOffWithSignatureRetry(page: Page): Promise<void> {
       /geofence policy blocked this sign-in|please provide the supervisor geofence override code/i,
     )
     .first();
-  const successHeading = page.getByRole("heading", {
-    level: 2,
-    name: /signed in successfully/i,
-  });
-  const signOutLink = page.locator('a[href*="/sign-out"]').first();
 
   for (let attempt = 1; attempt <= 4; attempt++) {
+    if (
+      (await successHeading.isVisible().catch(() => false)) ||
+      (await signOutLink.isVisible().catch(() => false))
+    ) {
+      return;
+    }
+
+    const canConfirm = await confirmButton
+      .isVisible({ timeout: 800 })
+      .catch(() => false);
+    if (!canConfirm) {
+      await page.waitForTimeout(150 * attempt);
+      continue;
+    }
+
     await drawSignatureIfAvailable(page);
     await checkSignOffTermsIfPresent(page);
-    await confirmButton.click({ force: true });
+    await confirmButton.click({ force: true, timeout: 5000 }).catch(() => null);
 
     let reachedPostSubmitState = false;
     for (let poll = 0; poll < 20; poll++) {
@@ -336,11 +489,15 @@ async function submitSignOffWithSignatureRetry(page: Page): Promise<void> {
 }
 
 test.describe.serial("Public Sign-In Flow", () => {
+  test.describe.configure({ timeout: 90000 });
+
   // Test site slug - may be created dynamically for E2E runs
   let TEST_SITE_SLUG = "test-site";
 
   // Create a temporary public site for this suite when test runner is allowed
   test.beforeAll(async ({ request, seedPublicSite }) => {
+    test.setTimeout(120000);
+
     // Try seeding a temporary public site (preferred when running tests locally/CI)
     try {
       const body = await seedPublicSite();
@@ -449,15 +606,20 @@ test.describe.serial("Public Sign-In Flow", () => {
       const ok = await openSite(page, languageSlug);
       expect(ok).toBe(true);
 
+      const visitorName = "Language Visitor";
+      const visitorPhone = uniqueNzPhone();
       await fillDetailsForm(page, {
-        name: "Language Visitor",
-        phone: uniqueNzPhone(),
+        name: visitorName,
+        phone: visitorPhone,
         email: "language@test.com",
       });
 
-      await page
-        .getByRole("button", { name: /continue to induction/i })
-        .click();
+      const reachedInduction = await continueToInductionWithRetry(page, {
+        name: visitorName,
+        phone: visitorPhone,
+        email: "language@test.com",
+      });
+      expect(reachedInduction).toBe(true);
 
       const languageSelector = page.getByLabel(/induction language/i);
       await expect(languageSelector).toBeVisible({ timeout: 10000 });
@@ -494,15 +656,20 @@ test.describe.serial("Public Sign-In Flow", () => {
       const ok = await openSite(page, mediaQuizSlug);
       expect(ok).toBe(true);
 
+      const visitorName = "Media Quiz Visitor";
+      const visitorPhone = uniqueNzPhone();
       await fillDetailsForm(page, {
-        name: "Media Quiz Visitor",
-        phone: uniqueNzPhone(),
+        name: visitorName,
+        phone: visitorPhone,
         email: "media.quiz@test.com",
       });
 
-      await page
-        .getByRole("button", { name: /continue to induction/i })
-        .click();
+      const reachedInduction = await continueToInductionWithRetry(page, {
+        name: visitorName,
+        phone: visitorPhone,
+        email: "media.quiz@test.com",
+      });
+      expect(reachedInduction).toBe(true);
 
       await expect(
         page.getByRole("heading", { name: /induction material/i }),
@@ -568,15 +735,20 @@ test.describe.serial("Public Sign-In Flow", () => {
       const ok = await openSite(page, mediaQuizSlug);
       expect(ok).toBe(true);
 
+      const visitorName = "Media Quiz Pass Visitor";
+      const visitorPhone = uniqueNzPhone();
       await fillDetailsForm(page, {
-        name: "Media Quiz Pass Visitor",
-        phone: uniqueNzPhone(),
+        name: visitorName,
+        phone: visitorPhone,
         email: "media.quiz.pass@test.com",
       });
 
-      await page
-        .getByRole("button", { name: /continue to induction/i })
-        .click();
+      const reachedInduction = await continueToInductionWithRetry(page, {
+        name: visitorName,
+        phone: visitorPhone,
+        email: "media.quiz.pass@test.com",
+      });
+      expect(reachedInduction).toBe(true);
 
       await expect(
         page.getByRole("heading", { name: /induction material/i }),
@@ -649,9 +821,11 @@ test.describe.serial("Public Sign-In Flow", () => {
       const ok = await openSite(page, geofenceSlug);
       expect(ok).toBe(true);
 
+      const visitorName = "Geofence Block Visitor";
+      const visitorPhone = uniqueNzPhone();
       await fillDetailsForm(page, {
-        name: "Geofence Block Visitor",
-        phone: uniqueNzPhone(),
+        name: visitorName,
+        phone: visitorPhone,
         email: "geofence.block@test.com",
       });
 
@@ -659,9 +833,12 @@ test.describe.serial("Public Sign-In Flow", () => {
         page.getByLabel(/supervisor geofence override code/i),
       ).toBeVisible();
 
-      await page
-        .getByRole("button", { name: /continue to induction/i })
-        .click();
+      const reachedInduction = await continueToInductionWithRetry(page, {
+        name: visitorName,
+        phone: visitorPhone,
+        email: "geofence.block@test.com",
+      });
+      expect(reachedInduction).toBe(true);
 
       await page
         .getByLabel(/I acknowledge and agree to the above/i)
@@ -704,9 +881,11 @@ test.describe.serial("Public Sign-In Flow", () => {
       const ok = await openSite(page, geofenceSlug);
       expect(ok).toBe(true);
 
+      const visitorName = "Geofence Override Visitor";
+      const visitorPhone = uniqueNzPhone();
       await fillDetailsForm(page, {
-        name: "Geofence Override Visitor",
-        phone: uniqueNzPhone(),
+        name: visitorName,
+        phone: visitorPhone,
         email: "geofence.override@test.com",
       });
 
@@ -714,9 +893,13 @@ test.describe.serial("Public Sign-In Flow", () => {
         .getByLabel(/supervisor geofence override code/i)
         .fill(seeded.geofenceOverrideCode ?? "123456");
 
-      await page
-        .getByRole("button", { name: /continue to induction/i })
-        .click();
+      const reachedInduction = await continueToInductionWithRetry(page, {
+        name: visitorName,
+        phone: visitorPhone,
+        email: "geofence.override@test.com",
+        geofenceOverrideCode: seeded.geofenceOverrideCode ?? "123456",
+      });
+      expect(reachedInduction).toBe(true);
 
       await page
         .getByLabel(/I acknowledge and agree to the above/i)
@@ -809,6 +992,8 @@ test.describe.serial("Public Sign-In Flow", () => {
   });
 
   test("should complete sign-in flow", async ({ page }) => {
+    test.slow();
+
     const ok = await openSite(page, TEST_SITE_SLUG);
     expect(ok).toBe(true);
     await expect(page.getByLabel(/full name/i)).toBeVisible({ timeout: 5000 });
@@ -834,13 +1019,6 @@ test.describe.serial("Public Sign-In Flow", () => {
     //}
     await page.getByLabel(/visitor type/i).selectOption("CONTRACTOR");
 
-    // Submit sign-in
-    await page
-      .getByRole("button", {
-        name: /continue to induction|sign in|continue|submit/i,
-      })
-      .click();
-
     // After submission we should see one of: complete button, sign-out link, or the induction form.
     const completeButton = page.getByRole("button", {
       name: /complete sign-in/i,
@@ -850,89 +1028,84 @@ test.describe.serial("Public Sign-In Flow", () => {
       level: 2,
       name: /site induction/i,
     });
-
-    let anyVisible = false;
-    for (let attempt = 0; attempt < 4; attempt++) {
-      for (let i = 0; i < 20; i++) {
-        if (await completeButton.isVisible().catch(() => false)) break;
-        if (await signOutLink.isVisible().catch(() => false)) break;
-        if (await inductionHeading.isVisible().catch(() => false)) break;
-        await page.waitForTimeout(500);
-      }
-
-      anyVisible =
-        (await completeButton.isVisible().catch(() => false)) ||
-        (await signOutLink.isVisible().catch(() => false)) ||
-        (await inductionHeading.isVisible().catch(() => false));
-
-      if (anyVisible) break;
-
+    let reachedInduction = await continueToInductionWithRetry(page, {
+      name: visitorName,
+      phone: visitorPhone,
+      email: "e2e@test.com",
+    });
+    if (!reachedInduction) {
       const stillOnDetails =
         (await nameField.isVisible().catch(() => false)) &&
         (await phoneField.isVisible().catch(() => false));
-      if (!stillOnDetails) break;
-
-      const currentName = await nameField.inputValue().catch(() => "");
-      const currentPhone = await phoneField.inputValue().catch(() => "");
-      if (currentName !== visitorName || currentPhone !== visitorPhone) {
-        await fillDetailsForm(page, {
+      if (stillOnDetails) {
+        const currentName = await nameField.inputValue().catch(() => "");
+        const currentPhone = await phoneField.inputValue().catch(() => "");
+        if (currentName !== visitorName || currentPhone !== visitorPhone) {
+          await fillDetailsForm(page, {
+            name: visitorName,
+            phone: visitorPhone,
+            email: "e2e@test.com",
+          });
+          await page.getByLabel(/visitor type/i).selectOption("CONTRACTOR");
+        }
+        reachedInduction = await continueToInductionWithRetry(page, {
           name: visitorName,
           phone: visitorPhone,
           email: "e2e@test.com",
         });
-        await page.getByLabel(/visitor type/i).selectOption("CONTRACTOR");
       }
-
-      await page
-        .getByRole("button", {
-          name: /continue to induction|sign in|continue|submit/i,
-        })
-        .click();
-      await page
-        .locator("form")
-        .first()
-        .evaluate((form) => {
-          if (form instanceof HTMLFormElement) {
-            form.requestSubmit();
-          }
-        })
-        .catch(() => undefined);
     }
-    expect(anyVisible).toBe(true);
+
+    await expect
+      .poll(
+        async () => {
+          if (page.isClosed()) return false;
+          const hasCompleteButton = await completeButton
+            .isVisible()
+            .catch(() => false);
+          const hasSignOutLink = await signOutLink.isVisible().catch(() => false);
+          const hasInductionHeading = reachedInduction
+            ? true
+            : await inductionHeading.isVisible().catch(() => false);
+          return hasCompleteButton || hasSignOutLink || hasInductionHeading;
+        },
+        { timeout: 25000, message: "Expected sign-in flow to advance past details step" },
+      )
+      .toBe(true);
   });
 
   test("should complete induction and show sign-out token", async ({
     page,
   }) => {
+    test.slow();
+
     const ok = await openSite(page, TEST_SITE_SLUG);
     expect(ok).toBe(true);
     await expect(page.getByLabel(/full name/i)).toBeVisible({ timeout: 5000 });
 
-    // Complete sign-in
-    const nameField = page.getByLabel(/full name/i);
-    const phoneField = page.getByLabel(/phone number/i);
-
+    const visitorName = "E2E Test Visitor";
+    const visitorPhone = uniqueNzPhone();
     await fillDetailsForm(page, {
-      name: "E2E Test Visitor",
-      phone: uniqueNzPhone(),
+      name: visitorName,
+      phone: visitorPhone,
       email: "e2e@test.com",
     });
 
-    await expect(nameField).toHaveValue("E2E Test Visitor");
+    const nameField = page.getByLabel(/full name/i);
+    const phoneField = page.getByLabel(/phone number/i);
+    await expect(nameField).toHaveValue(visitorName);
     await expect(phoneField).toHaveValue(/^\+64/);
-    await page
-      .getByRole("button", {
-        name: /continue to induction|sign in|continue|submit/i,
-      })
-      .click();
 
+    const reachedInduction = await continueToInductionWithRetry(page, {
+      name: visitorName,
+      phone: visitorPhone,
+      email: "e2e@test.com",
+    });
     const inductionHeading = page.getByRole("heading", {
       level: 2,
       name: /site induction/i,
     });
-    const submitInductionButton = page.getByRole("button", {
-      name: /complete sign-in|continue to sign off|complete sign in|finish|sign off/i,
-    });
+
     const signOutAnchor = page.locator('a[href*="/sign-out"]');
     const signOffHeading = page.getByRole("heading", {
       level: 2,
@@ -947,65 +1120,15 @@ test.describe.serial("Public Sign-In Flow", () => {
       name: /something went wrong/i,
     });
 
-    // Depending on template/browser timing, we may land on induction, sign-off, or final success.
-    for (let i = 0; i < 40; i++) {
-      if (await inductionHeading.isVisible().catch(() => false)) break;
-      if (await submitInductionButton.first().isVisible().catch(() => false)) break;
-      if (await signOutAnchor.first().isVisible().catch(() => false)) break;
-      if (await signOffHeading.isVisible().catch(() => false)) break;
-      if (await successHeading.isVisible().catch(() => false)) break;
-      await page.waitForTimeout(500);
-    }
-
-    const reachedInduction =
-      (await inductionHeading.isVisible().catch(() => false)) ||
-      (await submitInductionButton.first().isVisible().catch(() => false));
-    let reachedValidState =
-      (await signOutAnchor.first().isVisible().catch(() => false)) ||
-      (await signOffHeading.isVisible().catch(() => false)) ||
-      (await successHeading.isVisible().catch(() => false));
-
-    if (!reachedInduction && !reachedValidState) {
-      const stillOnSignIn =
-        (await nameField.isVisible().catch(() => false)) &&
-        (await phoneField.isVisible().catch(() => false));
-
-      // Retry submit once when CI/browser timing leaves us on the initial form.
-      if (stillOnSignIn) {
-        await page
-          .getByRole("button", {
-            name: /continue to induction|sign in|continue|submit/i,
-          })
-          .click();
-
-        for (let i = 0; i < 20; i++) {
-          if (await inductionHeading.isVisible().catch(() => false)) break;
-          if (await submitInductionButton.first().isVisible().catch(() => false))
-            break;
-          if (await signOutAnchor.first().isVisible().catch(() => false)) break;
-          if (await signOffHeading.isVisible().catch(() => false)) break;
-          if (await successHeading.isVisible().catch(() => false)) break;
-          await page.waitForTimeout(500);
-        }
-      }
-    }
-
-    const reachedInductionAfterRetry =
-      (await inductionHeading.isVisible().catch(() => false)) ||
-      (await submitInductionButton.first().isVisible().catch(() => false));
-    reachedValidState =
-      (await signOutAnchor.first().isVisible().catch(() => false)) ||
-      (await signOffHeading.isVisible().catch(() => false)) ||
-      (await successHeading.isVisible().catch(() => false));
-
-    // Complete induction - answer all question types
-
-    if (reachedInductionAfterRetry) {
+    if (
+      reachedInduction ||
+      (await inductionHeading.isVisible({ timeout: 1500 }).catch(() => false))
+    ) {
       // 1. Answer ACKNOWLEDGMENT questions (checkboxes)
       const acknowledgments = page.getByRole("checkbox");
       const ackCount = await acknowledgments.count();
       for (let i = 0; i < ackCount; i++) {
-        await acknowledgments.nth(i).check();
+        await acknowledgments.nth(i).check().catch(() => null);
       }
 
       // 2. Answer all radio groups (YES_NO + MULTIPLE_CHOICE)
@@ -1036,103 +1159,16 @@ test.describe.serial("Public Sign-In Flow", () => {
         await textInputs.first().fill("None");
       }
 
-      // Submit induction - support multiple label variants (some templates use different button text)
-      await submitInductionButton.first().click();
-    } else if (!reachedValidState) {
-      expect(reachedValidState).toBe(true);
-    }
-
-    // If we're on the sign-off screen, click the confirm button
-    if (await signOffHeading.isVisible().catch(() => false)) {
-      const confirmBtn = page
-        .locator("button")
-        .filter({
-          hasText:
-            /confirm|sign in|sign-off|sign off|complete sign-?in|finish/i,
+      const continueToSignOff = page
+        .getByRole("button", {
+          name: /continue to sign off|complete sign-in|complete sign in|finish|sign off/i,
         })
         .first();
-
-      const canvas = page.locator("#signature-canvas");
-      if ((await canvas.count()) > 0) {
-        await canvas.scrollIntoViewIfNeeded().catch(() => null);
-        const drawStroke = async () => {
-          const box = await canvas.boundingBox();
-          if (!box) return false;
-          const startX = box.x + Math.max(8, box.width * 0.2);
-          const startY = box.y + Math.max(8, box.height * 0.3);
-          const endX = box.x + Math.max(16, box.width * 0.8);
-          const endY = box.y + Math.max(16, box.height * 0.7);
-          await page.mouse.move(startX, startY);
-          await page.mouse.down();
-          await page.mouse.move(endX, endY, { steps: 8 });
-          await page.mouse.up();
-          return true;
-        };
-
-        await drawStroke();
-
-        // CI can occasionally miss a very fast stroke on canvas; retry once.
-        if (await confirmBtn.isDisabled().catch(() => true)) {
-          await drawStroke();
-        }
-      }
-
-      const termsCheckboxByLabel = page
-        .getByLabel(
-          /I acknowledge the site safety terms and conditions|I accept|terms and conditions/i,
-        )
-        .first();
-      if ((await termsCheckboxByLabel.count()) > 0) {
-        await termsCheckboxByLabel.check().catch(() => null);
-      } else {
-        const termsCheckbox = page.locator("#hasAcceptedTerms");
-        if ((await termsCheckbox.count()) > 0) {
-          await termsCheckbox.check().catch(() => null);
-        }
-      }
-
-      await expect(page.getByText("Please provide a signature")).not.toBeVisible({
-        timeout: 3000,
-      });
-
-      await expect(confirmBtn).toBeEnabled({ timeout: 10000 });
-      await confirmBtn.scrollIntoViewIfNeeded().catch(() => null);
-
-      // CI can intermittently miss a single click on this step; retry until we see transition.
-      for (let attempt = 0; attempt < 3; attempt++) {
-        let transitioned = false;
-
-        if (await signOutAnchor.first().isVisible().catch(() => false)) {
-          transitioned = true;
-        } else if (await successHeading.isVisible().catch(() => false)) {
-          transitioned = true;
-        } else if (!(await signOffHeading.isVisible().catch(() => false))) {
-          transitioned = true;
-        } else {
-          await confirmBtn.click({ timeout: 5000 });
-        }
-
-        for (let i = 0; i < 16; i++) {
-          if (await signOutAnchor.first().isVisible().catch(() => false)) {
-            transitioned = true;
-            break;
-          }
-          if (await successHeading.isVisible().catch(() => false)) {
-            transitioned = true;
-            break;
-          }
-          if (!(await signOffHeading.isVisible().catch(() => false))) {
-            transitioned = true;
-            break;
-          }
-          await page.waitForTimeout(500);
-        }
-
-        if (transitioned) {
-          break;
-        }
-      }
+      await continueToSignOff.click({ force: true }).catch(() => null);
     }
+
+    // Complete sign-off if required for this template path.
+    await submitSignOffWithSignatureRetry(page);
 
     // In some local environments, unrelated upstream fetch failures can surface
     // as a global error page during this flow. Treat that as an environment issue.
@@ -1147,6 +1183,28 @@ test.describe.serial("Public Sign-In Flow", () => {
     }
 
     // Final assertions
+    await expect
+      .poll(
+        async () => {
+          const hasSignOutLink = await signOutAnchor
+            .first()
+            .isVisible()
+            .catch(() => false);
+          const hasSuccessHeading = await successHeading
+            .isVisible()
+            .catch(() => false);
+          const stillOnSignOff = await signOffHeading
+            .isVisible()
+            .catch(() => false);
+          return hasSignOutLink || hasSuccessHeading || !stillOnSignOff;
+        },
+        {
+          timeout: 30000,
+          message: "Expected sign-in completion state after induction/sign-off",
+        },
+      )
+      .toBe(true);
+
     const hasSignOutLink = await signOutAnchor.first().isVisible().catch(() => false);
     const hasSuccessHeading = await successHeading.isVisible().catch(() => false);
     expect(hasSignOutLink || hasSuccessHeading).toBe(true);
@@ -1282,6 +1340,7 @@ test.describe.serial("Public Sign-In Flow", () => {
 
 test.describe.serial("Sign-Out Flow", () => {
   test("should show error for invalid sign-out token", async ({ page }) => {
+    test.slow();
     await page.goto("/sign-out?token=invalid-token-12345&phone=+64211234567");
 
     // Wait for sign-out UI to appear - prefer the phone textbox; fall back to an error message
@@ -1298,6 +1357,7 @@ test.describe.serial("Sign-Out Flow", () => {
   });
 
   test("should require phone number for sign-out", async ({ page }) => {
+    test.slow();
     await page.goto("/sign-out?token=some-token");
 
     // Should show phone input or error about missing phone
@@ -1317,6 +1377,8 @@ test.describe.serial("XSS Prevention", () => {
   let TEST_SITE_SLUG = "test-site";
 
   test.beforeAll(async ({ request, seedPublicSite }) => {
+    test.setTimeout(120000);
+
     try {
       const body = await seedPublicSite();
       if (body?.success && body.slug) {

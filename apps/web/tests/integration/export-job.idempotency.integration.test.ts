@@ -1,4 +1,12 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
+import {
+  describe,
+  it,
+  expect,
+  beforeAll,
+  afterAll,
+  beforeEach,
+  vi,
+} from "vitest";
 import { PrismaClient } from "@prisma/client";
 import {
   setupTestDatabase,
@@ -20,6 +28,8 @@ describe("Export Job claim idempotency", () => {
   beforeAll(async () => {
     await setupTestDatabase();
     prisma = globalAny.prisma;
+    // Ensure repository modules bind to the fresh per-suite test Prisma client.
+    vi.resetModules();
     exportRepo = await import("@/lib/repository/export.repository");
   });
 

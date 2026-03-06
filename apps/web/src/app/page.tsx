@@ -33,6 +33,21 @@ const STANDARD_FEATURES = [
       "Run muster events, mark attendance, and export roll-call evidence for incident follow-up.",
   },
   {
+    title: "Permit-to-work controls",
+    detail:
+      "Issue permit templates, run approval/activation lifecycle, and enforce permit-gated sign-in rules.",
+  },
+  {
+    title: "Visitor approvals + ID hardening",
+    detail:
+      "Use policy-based approvals, watchlist screening, random checks, and identity verification records.",
+  },
+  {
+    title: "Emergency broadcasts with ACK",
+    detail:
+      "Send emergency broadcasts, track recipient acknowledgements, and monitor pending-response SLA timers.",
+  },
+  {
     title: "Contractor compliance tracking",
     detail:
       "Store contractor documents, expiry dates, and reminders to reduce expired access risk.",
@@ -45,8 +60,10 @@ const STANDARD_FEATURES = [
 ];
 
 const INTEGRATION_FEATURES = [
+  "Teams/Slack channel notifications with actionable approval callbacks",
   "Outbound webhooks for external systems",
   "LMS connector configuration per site",
+  "Unified communication event feed and delivery diagnostics",
   "Hardware access decision adapter (entitlement-gated)",
   "Email and SMS workflow support (plan/add-on controlled)",
 ];
@@ -84,17 +101,23 @@ const PLAN_CARDS = [
       "Everything in Plus",
       "LMS connector",
       "Advanced analytics surfaces",
+      "Policy simulator and risk passport",
+      "Plan configurator with scheduled entitlement changes",
       "Best fit for multi-site scale",
     ],
     cta: "Start Pro",
   },
 ];
 
-const MARKET_TREND_ROADMAP = [
+const LATEST_RELEASES = [
   "Permit-to-Work / Control-of-Work workflows",
-  "Identity hardening (watchlists and random checks)",
-  "Emergency broadcast + acknowledgement layer",
-  "Teams/Slack approval loops and notifications",
+  "Identity hardening (watchlists, random checks, verification records)",
+  "Emergency broadcast + acknowledgement + incident evidence linkage",
+  "Teams/Slack notifications with approval action callbacks",
+  "Safety policy simulator with exportable run reports",
+  "Cross-site contractor risk passport with trend views",
+  "Tamper-evident compliance evidence verification APIs",
+  "Self-serve plan configurator with scheduled plan changes",
 ];
 
 export default function HomePage() {
@@ -265,12 +288,12 @@ export default function HomePage() {
         </section>
 
         <section className="surface-panel px-5 py-6 sm:px-6">
-          <h2 className="text-2xl font-bold">Market Trend Roadmap</h2>
+          <h2 className="text-2xl font-bold">Latest Releases</h2>
           <p className="mt-2 text-sm text-secondary">
-            Planned next wave based on current NZ buyer demand signals.
+            Recently delivered features aligned to current NZ buyer demand.
           </p>
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            {MARKET_TREND_ROADMAP.map((item) => (
+            {LATEST_RELEASES.map((item) => (
               <p
                 key={item}
                 className="rounded-lg border border-white/25 bg-white/35 px-3 py-2 text-sm text-secondary"

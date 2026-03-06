@@ -9,6 +9,9 @@ try {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Avoid dev cross-origin warnings when E2E uses 127.0.0.1 while Next
+  // may initialize with localhost during local tooling runs.
+  allowedDevOrigins: ["localhost", "127.0.0.1"],
   // Ensure a standalone build so the Dockerfile can COPY the standalone output
   // and include serverExternalPackages with native/binary deps so they are included
   // in the standalone bundle.

@@ -1394,6 +1394,7 @@ export interface TemplateInfo {
     isRequired: boolean;
     redFlag: boolean;
     displayOrder: number;
+    logic?: unknown;
   }>;
 }
 
@@ -1617,6 +1618,7 @@ export async function getSiteForSignIn(
           isRequired: q.is_required,
           redFlag: q.red_flag,
           displayOrder: q.display_order,
+          logic: q.logic,
         })),
       },
     });

@@ -32,6 +32,8 @@ const testRunnerSecret =
   process.env.TEST_RUNNER_SECRET_KEY ||
   "e2e-test-runner-secret-3b0f2cbf5de0416ebf958e8d";
 process.env.TEST_RUNNER_SECRET_KEY = testRunnerSecret;
+const defaultBaseUrl = process.env.BASE_URL || "http://127.0.0.1:3000";
+process.env.BASE_URL = defaultBaseUrl;
 process.env.E2E_QUIET = process.env.E2E_QUIET || "1";
 process.env.E2E_SKIP_LOGIN_VERIFY = process.env.E2E_SKIP_LOGIN_VERIFY || "1";
 // E2E runs execute over HTTP localhost; secure cookies would be dropped in WebKit.
@@ -39,6 +41,10 @@ process.env.SESSION_COOKIE_SECURE = process.env.SESSION_COOKIE_SECURE || "0";
 
 const e2eServerMode = process.env.E2E_SERVER_MODE ?? "dev";
 const useDevServer = e2eServerMode === "dev";
+const e2eNodeOptions =
+  process.env.E2E_NODE_OPTIONS ??
+  process.env.NODE_OPTIONS ??
+  "--max-old-space-size=6144";
 const disableExternalRateLimit =
   process.env.E2E_ALLOW_EXTERNAL_RATE_LIMIT !== "1";
 const productionSessionSecret =
@@ -90,12 +96,12 @@ export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: Number(process.env.E2E_RETRIES ?? (process.env.CI ? 2 : 0)),
   // Keep local defaults conservative to avoid overloading the app server.
   workers: process.env.CI ? 1 : Number(process.env.E2E_WORKERS || 1),
   reporter: [["html", { open: "never" }], ["list"]],
   use: {
-    baseURL: process.env.BASE_URL || "http://localhost:3000",
+    baseURL: defaultBaseUrl,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "on-first-retry",
@@ -132,7 +138,7 @@ export default defineConfig({
         command: useDevServer
           ? "npm run dev"
           : "npm run build && npm run start",
-        url: "http://localhost:3000",
+        url: defaultBaseUrl,
         // Default to false so we don't accidentally reuse a stale local server
         // missing E2E env flags (ALLOW_TEST_RUNNER/TRUST_PROXY).
         reuseExistingServer: process.env.PW_REUSE_EXISTING_SERVER === "1",
@@ -144,6 +150,7 @@ export default defineConfig({
           E2E_SERVER_MODE: e2eServerMode,
           NODE_ENV: useDevServer ? "development" : "production",
           CI: useDevServer ? (process.env.CI ?? "false") : "true",
+          NODE_OPTIONS: e2eNodeOptions,
           TEST_RUNNER_SECRET_KEY: testRunnerSecret,
           // Stable test session secret (must be >= 32 chars)
           SESSION_SECRET: e2eRequiredSecrets.sessionSecret,

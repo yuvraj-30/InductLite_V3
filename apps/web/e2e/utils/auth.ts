@@ -12,7 +12,7 @@ export async function programmaticLogin(
   options?: { clientKey?: string },
 ) {
   // Request JSON response so we can read the cookie value directly
-  const base = process.env.BASE_URL ?? "http://localhost:3000";
+  const base = process.env.BASE_URL ?? "http://127.0.0.1:3000";
   const headers = getTestRouteHeaders(
     options?.clientKey ? { "x-e2e-client": options.clientKey } : undefined,
   );
@@ -74,7 +74,7 @@ export async function programmaticLogin(
     {
       name: json.cookieName,
       value: json.cookieValue,
-      url: process.env.BASE_URL || "http://localhost:3000",
+      url: base,
       httpOnly: true,
       sameSite: "Lax",
       expires: Math.floor(Date.now() / 1000) + 60 * 60 * 8,
@@ -111,7 +111,28 @@ export async function uiLogin(
   await emailField.fill(email);
   await page.getByLabel("Password").waitFor({ state: "visible", timeout: 10000 });
   await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: /Sign in/i }).click();
-  // Wait for navigation to admin or some indicator of success
-  await page.waitForURL(/\/admin/, { timeout: 15000 });
+  await page.getByRole("button", { name: /Sign in/i }).click({ force: true });
+  await page.waitForLoadState("domcontentloaded").catch(() => null);
+
+  // Wait for navigation to admin or an already-authenticated control.
+  const deadline = Date.now() + 20000;
+  while (Date.now() < deadline) {
+    if (/\/admin(?:\/|$)/i.test(page.url())) {
+      return;
+    }
+    const hasSignOut = await page
+      .locator('button:has-text("Sign Out"), a:has-text("Sign Out")')
+      .first()
+      .isVisible()
+      .catch(() => false);
+    if (hasSignOut) {
+      return;
+    }
+    if (page.isClosed()) {
+      throw new Error("UI login failed: page closed before admin navigation");
+    }
+    await page.waitForTimeout(300);
+  }
+
+  throw new Error(`UI login failed: did not reach /admin (finalUrl=${page.url()})`);
 }

@@ -34,6 +34,11 @@ export async function POST(req: Request) {
       body.includeGeofenceOverrideFlow === "true" ||
       body.includeGeofenceOverrideFlow === 1 ||
       body.includeGeofenceOverrideFlow === "1";
+    const includeSkipLogicFlow =
+      body.includeSkipLogicFlow === true ||
+      body.includeSkipLogicFlow === "true" ||
+      body.includeSkipLogicFlow === 1 ||
+      body.includeSkipLogicFlow === "1";
 
     const siteFeatureOverrides: Record<string, boolean> = {};
     if (includeLanguageVariants) {
@@ -169,20 +174,56 @@ export async function POST(req: Request) {
     });
 
     // Add at least one required question so the flow can proceed.
+    // Optional skip-logic seed creates a deterministic branch for E2E validation.
+    let skipLogicSourceQuestionId: string | undefined;
     const question = await prisma.inductionQuestion.create({
-      data: {
-        template_id: template.id,
-        question_text: includeMediaQuizFlow
-          ? "Are you wearing the required PPE on site?"
-          : "I agree to follow site rules",
-        question_type: includeMediaQuizFlow
-          ? QuestionType.YES_NO
-          : QuestionType.ACKNOWLEDGMENT,
-        is_required: true,
-        display_order: 1,
-        ...(includeMediaQuizFlow ? { correct_answer: "yes" } : {}),
-      },
+      data: includeSkipLogicFlow
+        ? {
+            template_id: template.id,
+            question_text: "Have you completed this site induction before?",
+            question_type: QuestionType.YES_NO,
+            is_required: true,
+            display_order: 1,
+            logic: {
+              trigger: "yes",
+              action: "skip",
+              count: 1,
+            },
+          }
+        : {
+            template_id: template.id,
+            question_text: includeMediaQuizFlow
+              ? "Are you wearing the required PPE on site?"
+              : "I agree to follow site rules",
+            question_type: includeMediaQuizFlow
+              ? QuestionType.YES_NO
+              : QuestionType.ACKNOWLEDGMENT,
+            is_required: true,
+            display_order: 1,
+            ...(includeMediaQuizFlow ? { correct_answer: "yes" } : {}),
+          },
     });
+    if (includeSkipLogicFlow) {
+      skipLogicSourceQuestionId = question.id;
+      await prisma.inductionQuestion.create({
+        data: {
+          template_id: template.id,
+          question_text: "What is your site supervisor name?",
+          question_type: QuestionType.TEXT,
+          is_required: true,
+          display_order: 2,
+        },
+      });
+      await prisma.inductionQuestion.create({
+        data: {
+          template_id: template.id,
+          question_text: "I understand emergency muster requirements.",
+          question_type: QuestionType.ACKNOWLEDGMENT,
+          is_required: true,
+          display_order: 3,
+        },
+      });
+    }
 
     if (includeLanguageVariants) {
       await prisma.inductionTemplate.updateMany({
@@ -248,6 +289,8 @@ export async function POST(req: Request) {
       includeLanguageVariants,
       includeMediaQuizFlow,
       includeGeofenceOverrideFlow,
+      includeSkipLogicFlow,
+      skipLogicSourceQuestionId,
       geofenceOverrideCode: includeGeofenceOverrideFlow ? "123456" : undefined,
       clearedRateLimit,
     });

@@ -1,4 +1,4 @@
-import { test, expect } from "./test-fixtures";
+﻿import { test, expect } from "./test-fixtures";
 
 async function drawSignatureOnCanvas(
   page: import("@playwright/test").Page,
@@ -35,18 +35,49 @@ async function drawSignatureOnCanvas(
   return false;
 }
 
+async function fillInputWithRetry(input: {
+  page: import("@playwright/test").Page;
+  selector: string;
+  value: string;
+}): Promise<void> {
+  const { page, selector, value } = input;
+  const field = page.locator(selector).first();
+  await field.waitFor({ state: "visible", timeout: 10000 });
+
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    await field.click({ force: true }).catch(() => null);
+    await field.fill(value).catch(() => null);
+    const current = await field.inputValue().catch(() => "");
+    if (current === value) {
+      return;
+    }
+
+    await field.type(value, { delay: 10 }).catch(() => null);
+    const typed = await field.inputValue().catch(() => "");
+    if (typed === value) {
+      return;
+    }
+
+    await page.waitForTimeout(200 * attempt);
+  }
+
+  throw new Error(`Unable to set input ${selector}`);
+}
+
 test.describe("Kiosk Mode", () => {
   let TEST_SITE_SLUG = "test-site";
 
-  test.beforeAll(async ({ request, seedPublicSite }) => {
+  test.beforeAll(async ({ request, seedPublicSite, workerUser }) => {
     try {
-      const body = await seedPublicSite({ slugPrefix: "test-site-e2e-kiosk" });
+      const body = await seedPublicSite({
+        slugPrefix: "test-site-e2e-kiosk",
+        companySlug: `test-company-kiosk-${workerUser.clientKey}`,
+      });
       if (body?.success && body.slug) {
         TEST_SITE_SLUG = body.slug;
         return;
       }
     } catch (error) {
-      // fallback to existing seed below
       console.warn(
         "kiosk seedPublicSite failed, trying fallback seeded slug:",
         String(error),
@@ -68,95 +99,126 @@ test.describe("Kiosk Mode", () => {
     }
   });
 
-  test("should auto-refresh after 10 seconds on success screen", async (
-    { page },
-    testInfo,
-  ) => {
-    if (process.platform === "win32") {
-      test.skip(
-        true,
-        "Kiosk success-screen auto-refresh is flaky under Windows local Playwright/dev-server runtime.",
-      );
-    }
-
-    if (
-      testInfo.project.name === "mobile-chrome" ||
-      testInfo.project.name === "mobile-safari"
-    ) {
-      test.skip(
-        true,
-        "Kiosk signature canvas flow is flaky under mobile emulation in full-suite runs.",
-      );
-    }
-
-    test.setTimeout(120000);
+  test("should auto-refresh after 10 seconds on success screen", async ({ page }) => {
+    test.setTimeout(150000);
     const slug = TEST_SITE_SLUG;
+
+    await page.context().grantPermissions(["geolocation"], {
+      origin: "http://localhost:3000",
+    });
+    await page.context().setGeolocation({
+      latitude: -36.8485,
+      longitude: 174.7633,
+    });
+
     await page.goto(`/s/${slug}/kiosk`);
 
-    // Fail fast if kiosk route is unavailable to avoid burning full test timeout.
     await expect(page.locator('input[id="visitorName"]')).toBeVisible({
       timeout: 10000,
     });
 
-    // 1. Fill in visitor details
-    const visitorNameInput = page.locator('input[id="visitorName"]');
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      await visitorNameInput.click();
-      await visitorNameInput.fill("Kiosk Tester");
-      const retained = await visitorNameInput.inputValue();
-      if (retained) break;
-      // WebKit can occasionally clear this field during hydration.
-      await visitorNameInput.type("Kiosk Tester").catch(() => null);
-      if (attempt < 3) {
-        await page.waitForTimeout(250 * attempt);
-      }
-    }
-    await expect(visitorNameInput).toHaveValue("Kiosk Tester");
-    await page.fill('input[id="visitorPhone"]', "+64211111111");
-    const employerField = page.locator('input[id="employerName"]');
-    if ((await employerField.count()) > 0) {
-      await employerField.first().fill("E2E Employer");
-    }
-    const roleField = page.locator('input[id="roleOnSite"]');
-    if ((await roleField.count()) > 0) {
-      await roleField.first().fill("Contractor");
+    await fillInputWithRetry({
+      page,
+      selector: 'input[id="visitorName"]',
+      value: "Kiosk Tester",
+    });
+    await fillInputWithRetry({
+      page,
+      selector: 'input[id="visitorPhone"]',
+      value: "+64211111111",
+    });
+
+    const employerField = page.locator('input[id="employerName"]').first();
+    if (await employerField.isVisible().catch(() => false)) {
+      await employerField.fill("E2E Employer").catch(() => null);
     }
 
-    // Fill optional email if present
-    const emailField = page.locator('input[type="email"], input[name="email"]');
-    if ((await emailField.count()) > 0) {
-      await emailField.first().fill("kiosk@test.com");
+    const roleField = page.locator('input[id="roleOnSite"]').first();
+    if (await roleField.isVisible().catch(() => false)) {
+      await roleField.fill("Contractor").catch(() => null);
     }
 
-    // Select visitor type if present (some kiosk templates require selecting a type)
-    // Try multiple selector strategies to ensure we satisfy the required enum schema
-    const visitorTypeSelect = page.locator(
-      'select[name="visitorType"], select[id*="visitorType"], select[aria-label*="visitor type"]',
-    );
-    if ((await visitorTypeSelect.count()) > 0) {
-      await visitorTypeSelect
-        .first()
-        .selectOption({ value: "CONTRACTOR" })
-        .catch(() => null);
+    const emailField = page
+      .locator('input[type="email"], input[name="email"]')
+      .first();
+    if (await emailField.isVisible().catch(() => false)) {
+      await emailField.fill("kiosk@test.com").catch(() => null);
+    }
+
+    const visitorTypeSelect = page
+      .locator(
+        'select[name="visitorType"], select[id*="visitorType"], select[aria-label*="visitor type"]',
+      )
+      .first();
+    if (await visitorTypeSelect.isVisible().catch(() => false)) {
+      await visitorTypeSelect.selectOption({ value: "CONTRACTOR" }).catch(() => null);
     } else {
-      // Try radio option fallback
-      const contractorRadio = page
-        .getByRole("radio", { name: /contractor/i })
-        .first();
-      if ((await contractorRadio.count()) > 0) {
+      const contractorRadio = page.getByRole("radio", { name: /contractor/i }).first();
+      if (await contractorRadio.isVisible().catch(() => false)) {
         await contractorRadio.check().catch(() => null);
       }
     }
 
-    await page.click('button[type="submit"]', { force: true });
+    const locationButton = page
+      .getByRole("button", { name: /capture location|refresh location/i })
+      .first();
+    if (await locationButton.isVisible().catch(() => false)) {
+      await locationButton.click({ force: true }).catch(() => null);
+      await page.waitForTimeout(1200);
+    }
 
-    // 2. Complete induction (assume some questions exist)
-    // For the sake of this test, we expect to be on the induction step
-    await expect(page.locator("h2")).toContainText(/site induction/i, {
-      timeout: 15000,
+    const detailsContinue = page.getByRole("button", {
+      name: /continue to induction/i,
+    });
+    const inductionHeading = page.getByRole("heading", {
+      level: 2,
+      name: /site induction/i,
     });
 
-    // Check all checkboxes/radios if any
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      await detailsContinue.click({ force: true, timeout: 4000 }).catch(() => null);
+      if (await inductionHeading.isVisible().catch(() => false)) {
+        break;
+      }
+
+      const detailsError = page.getByRole("alert").first();
+      const detailsErrorText = (await detailsError.textContent().catch(() => "")) ?? "";
+      if (/requires location capture/i.test(detailsErrorText)) {
+        if (await locationButton.isVisible().catch(() => false)) {
+          await locationButton.click({ force: true }).catch(() => null);
+          await page.waitForTimeout(1500);
+        }
+      }
+
+      const nameVal = await page
+        .locator('input[id="visitorName"]')
+        .inputValue()
+        .catch(() => "");
+      if (nameVal !== "Kiosk Tester") {
+        await fillInputWithRetry({
+          page,
+          selector: 'input[id="visitorName"]',
+          value: "Kiosk Tester",
+        });
+      }
+
+      const phoneVal = await page
+        .locator('input[id="visitorPhone"]')
+        .inputValue()
+        .catch(() => "");
+      if (phoneVal !== "+64211111111") {
+        await fillInputWithRetry({
+          page,
+          selector: 'input[id="visitorPhone"]',
+          value: "+64211111111",
+        });
+      }
+
+      await page.waitForTimeout(350 * attempt);
+    }
+
+    await expect(inductionHeading).toBeVisible({ timeout: 12000 });
+
     const inputs = await page
       .locator('input[type="checkbox"], input[type="radio"]')
       .all();
@@ -166,36 +228,58 @@ test.describe("Kiosk Mode", () => {
       if (!isVisible || !isEnabled) {
         continue;
       }
-      await input.check({ force: true, timeout: 2000 }).catch(() => null);
+      await input.check({ force: true, timeout: 1000 }).catch(() => null);
     }
 
-    // Fill any text inputs (required text answers) with a default value
-    const textInputs = page.locator('input[type="text"]');
+    const textInputs = page.locator(
+      'input[type="text"]:not(#visitorName):not(#visitorPhone):not(#employerName):not(#roleOnSite)',
+    );
     const textCount = await textInputs.count();
     for (let i = 0; i < textCount; i++) {
       const txt = textInputs.nth(i);
-      if (await txt.isVisible()) {
-        await txt.fill("None");
+      if (await txt.isVisible().catch(() => false)) {
+        await txt.fill("None").catch(() => null);
       }
     }
 
-    // Wait for the button to be stable and click it
-    const continueBtn = page.getByRole("button", {
-      name: /continue|continue to sign off|continue to sign off/i,
+    const textareas = page.locator("textarea");
+    const textareaCount = await textareas.count();
+    for (let i = 0; i < textareaCount; i++) {
+      const field = textareas.nth(i);
+      if (await field.isVisible().catch(() => false)) {
+        await field.fill("N/A").catch(() => null);
+      }
+    }
+
+    await page
+      .getByRole("button", { name: /continue to sign off/i })
+      .click({ force: true, timeout: 4000 });
+
+    const signOffHeading = page.getByRole("heading", {
+      level: 2,
+      name: /sign off/i,
     });
-    await continueBtn.waitFor({ state: "visible" });
-    await continueBtn.click({ force: true });
+    await expect(signOffHeading).toBeVisible({ timeout: 12000 });
 
-    // 3. Signature Step
-    await expect(page.locator("h2")).toContainText("Sign Off");
-
-    // Simulate signature (drawing on canvas)
     const initialSignature = await drawSignatureOnCanvas(page);
     expect(initialSignature).toBe(true);
 
+    const termsCheckboxByLabel = page
+      .getByLabel(
+        /I acknowledge the site safety terms and conditions|I accept|terms and conditions/i,
+      )
+      .first();
+    if (await termsCheckboxByLabel.isVisible().catch(() => false)) {
+      await termsCheckboxByLabel.check().catch(() => null);
+    } else {
+      const termsCheckbox = page.locator("#hasAcceptedTerms").first();
+      if (await termsCheckbox.isVisible().catch(() => false)) {
+        await termsCheckbox.check().catch(() => null);
+      }
+    }
+
     const submitStartedAt = Date.now();
 
-    // Submit
     const signBtn = page.getByRole("button", {
       name: /confirm\s+(?:&|and)\s+sign in/i,
     });
@@ -203,75 +287,45 @@ test.describe("Kiosk Mode", () => {
       .getByRole("alert")
       .filter({ hasText: /please provide a signature/i })
       .first();
-    const termsCheckboxByLabel = page
-      .getByLabel(
-        /I acknowledge the site safety terms and conditions|I accept|terms and conditions/i,
-      )
-      .first();
-    if ((await termsCheckboxByLabel.count()) > 0) {
-      await termsCheckboxByLabel.check().catch(() => null);
-    } else {
-      const termsCheckbox = page.locator("#hasAcceptedTerms");
-      if ((await termsCheckbox.count()) > 0) {
-        await termsCheckbox.check().catch(() => null);
-      }
-    }
-    await signBtn.scrollIntoViewIfNeeded();
-    await signBtn.waitFor({ state: "visible", timeout: 15000 });
     const successHeading = page.getByRole("heading", {
       name: /signed in successfully/i,
     });
-    const signOffHeading = page.getByRole("heading", {
-      name: /sign off/i,
-    });
+    const detailsNameInput = page.locator('input[id="visitorName"]').first();
 
-    for (let attempt = 1; attempt <= 4; attempt++) {
-      await signBtn.click({ force: true });
-      await signBtn
-        .evaluate((button) => {
-          const form = (button as HTMLElement).closest("form");
-          if (form instanceof HTMLFormElement) {
-            form.requestSubmit();
-          }
-        })
-        .catch(() => null);
-
-      const needsSignature = await signatureAlert.isVisible().catch(() => false);
-      if (!needsSignature) {
-        const reachedSuccess = await successHeading
-          .isVisible({ timeout: 2000 })
-          .catch(() => false);
-        const leftSignOffStep = !(await signOffHeading.isVisible().catch(() => false));
-        if (reachedSuccess || leftSignOffStep) {
-          break;
-        }
-        // Still on sign-off without explicit signature alert; retry submit.
-        await page.waitForTimeout(300);
-        continue;
-      }
-      const stillOnSignOff = await signOffHeading.isVisible().catch(() => false);
-      if (!stillOnSignOff) {
-        break;
-      }
+    await signBtn.click({ force: true, timeout: 4000 }).catch(() => null);
+    if (await signatureAlert.isVisible().catch(() => false)) {
       await drawSignatureOnCanvas(page);
+      await signBtn.click({ force: true, timeout: 4000 }).catch(() => null);
     }
 
-    await page.waitForTimeout(300);
+    let finalState: "success" | "details" | null = null;
+    for (let wait = 0; wait < 80; wait++) {
+      if (await successHeading.isVisible().catch(() => false)) {
+        finalState = "success";
+        break;
+      }
+      if (await detailsNameInput.isVisible().catch(() => false)) {
+        finalState = "details";
+        break;
+      }
 
-    // 4. Assert success path:
-    //   a) success screen appears, then auto-refreshes after ~10s
-    //   b) on slower full-suite runs, success screen may already have auto-refreshed
-    //      by the time this assertion executes.
-    const successVisible = await successHeading
-      .isVisible({ timeout: 3000 })
-      .catch(() => false);
+      if (wait % 8 === 0 && (await signOffHeading.isVisible().catch(() => false))) {
+        await signBtn.click({ force: true, timeout: 2000 }).catch(() => null);
+      }
 
-    const detailsNameInput = page.locator('input[id="visitorName"]').first();
-    if (successVisible) {
-      await expect(successHeading).not.toBeVisible({ timeout: 15000 });
-      await expect(detailsNameInput).toBeVisible({ timeout: 15000 });
+      await page.waitForTimeout(500);
+    }
+
+    expect(finalState).not.toBeNull();
+
+    if (finalState === "success") {
+      await expect(successHeading).not.toBeVisible({ timeout: 25000 });
+      await expect(detailsNameInput).toBeVisible({ timeout: 25000 });
     } else {
-      await expect(detailsNameInput).toBeVisible({ timeout: 15000 });
+      await expect(
+        detailsNameInput,
+        "Expected kiosk flow to return to details screen after sign-in submit",
+      ).toBeVisible({ timeout: 10000 });
     }
 
     const elapsedSinceSubmit = Date.now() - submitStartedAt;

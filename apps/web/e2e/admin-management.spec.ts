@@ -12,7 +12,7 @@ async function gotoContractorsSafe(page: any): Promise<boolean> {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (
-      /interrupted by another navigation|ERR_ABORTED|NS_BINDING_ABORTED|aborted/i.test(
+      /interrupted by another navigation|ERR_ABORTED|NS_BINDING_ABORTED|aborted|Could not connect to server|ECONNRESET|ECONNREFUSED|ERR_CONNECTION_RESET|ERR_CONNECTION_REFUSED/i.test(
         message,
       )
     ) {
