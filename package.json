@@ -11,6 +11,7 @@
     "test": "turbo run test",
     "test:integration": "turbo run test:integration",
     "test:coverage": "turbo run test:coverage",
+    "test:gap-matrix": "node tools/test-gap-matrix.mjs",
     "test:e2e:smoke": "turbo run test:e2e:smoke",
     "test:e2e:full": "turbo run test:e2e:full",
     "test:e2e:full:all": "turbo run test:e2e:full:all",

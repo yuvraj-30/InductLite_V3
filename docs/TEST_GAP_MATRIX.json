@@ -1,0 +1,3319 @@
+{
+  "generatedAt": "2026-03-08T07:47:27.271Z",
+  "summary": {
+    "totalSourceFiles": 374,
+    "coveredByDirectTests": 97,
+    "gaps": 277
+  },
+  "rows": [
+    {
+      "sourceFile": "apps/mobile/src/config/runtime.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/mobile/src/services/deviceRuntime.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/mobile/src/services/enrollmentToken.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/mobile/src/services/eventQueue.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/mobile/src/services/geofenceRuntime.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/mobile/src/services/mobileApi.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/mobile/src/storage/mobileSettings.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/mobile/src/tasks/geofenceTask.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/mobile/src/utils/id.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/(auth)/actions.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/(auth)/actions.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/(auth)/change-password/change-password-form.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/(auth)/change-password/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/(auth)/contractor/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/(auth)/contractor/magic-link-form.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/(auth)/contractor/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/(auth)/layout.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/(auth)/login/login-form.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/(auth)/login/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/(auth)/logout/route.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/(auth)/logout/route.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/(auth)/register/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/(auth)/register/register-form.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/(auth)/verify/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/access-ops/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/access-ops/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/admin-command-palette.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/approvals/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/approvals/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/audit-analytics/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/audit-log/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/benchmarks/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/command-mode/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/command-mode/roll-call.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/communications/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/communications/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/components/OnboardingChecklist.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/contractors/[id]/edit-contractor-form.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/contractors/[id]/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/contractors/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/contractors/contractor-action-buttons.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/contractors/new/create-contractor-form.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/contractors/new/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/contractors/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/dashboard/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/deliveries/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/deliveries/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/escalations/actions.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/escalations/actions.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/escalations/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/evidence/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/evidence/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/exports/ExportQueuePanel.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/exports/actions.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/exports/actions.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/exports/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/hazards/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/hazards/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/history/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/history/history-filters.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/history/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/history/pagination.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/incidents/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/incidents/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/integrations/channels/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/integrations/channels/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/integrations/procore/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/integrations/procore/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/layout.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/live-register/SiteFilterSelect.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/live-register/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/live-register/auto-refresh.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/live-register/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/live-register/sign-out-button.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/mobile/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/mobile/native/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/mobile/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/nav-link.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/permits/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/permits/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/permits/templates/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/plan-configurator/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/plan-configurator/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/policy-simulator/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/policy-simulator/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/pre-registrations/actions.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/pre-registrations/actions.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/pre-registrations/bulk-invite-form.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/pre-registrations/create-invite-form.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/pre-registrations/deactivate-invite-button.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/pre-registrations/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/prequalification-exchange/actions.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/prequalification-exchange/actions.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/prequalification-exchange/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/resources/actions.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/resources/actions.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/resources/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/risk-passport/actions.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/risk-passport/actions.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/risk-passport/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/safety-copilot/actions.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/safety-copilot/actions.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/safety-copilot/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/safety-forms/actions.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/safety-forms/actions.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/safety-forms/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/settings/actions.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/settings/actions.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/settings/billing-sync-panel.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/settings/compliance-settings-form.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/settings/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/settings/sso-settings-panel.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/CopyLinkButton.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/QRCodeButton.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/access/actions.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/sites/[id]/access/actions.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/access/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/access/site-access-settings-form.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/edit-site-form.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/emergency/actions.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/sites/[id]/emergency/actions.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/emergency/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/lms/actions.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/sites/[id]/lms/actions.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/lms/lms-settings-form.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/lms/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/webhooks/actions.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/sites/[id]/webhooks/actions.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/webhooks/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/webhooks/webhook-settings-form.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/new/create-site-form.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/new/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/site-buttons.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/templates/ConfirmActionButton.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/templates/SubmitButton.client.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/templates/[id]/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/templates/[id]/question-builder.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/templates/[id]/template-header.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/templates/actions.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/templates/actions.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/templates/archived/delete-button.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/templates/archived/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/templates/archived/unarchive-button.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/templates/new/new-template-form.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/templates/new/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/templates/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/templates/template-action-forms.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/templates/template-buttons.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/trust-graph/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/users/[id]/edit-user-form.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/users/[id]/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/users/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/users/new/create-user-form.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/users/new/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/users/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/users/user-action-buttons.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/webhooks/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/access-connectors/[provider]/test/route.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/access-connectors/[provider]/test/route.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/auth/directory-sync/route.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/auth/directory-sync/route.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/auth/logout/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/auth/sso/callback/route.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/auth/sso/callback/route.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/auth/sso/start/route.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/auth/sso/start/route.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/broadcasts/ack/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/client-errors/route.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/client-errors/route.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/cron/digest/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/cron/export-scheduler/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/cron/maintenance/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/csp-report/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/evidence/verify/route.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/evidence/verify/route.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/exports/[id]/download/route.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/exports/[id]/download/route.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/identity/ocr/verify/route.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/identity/ocr/verify/route.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/integrations/channels/actions/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/integrations/procore/workers/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/live/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/mobile/device-bootstrap/route.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/mobile/device-bootstrap/route.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/mobile/enrollment-token/route.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/mobile/enrollment-token/route.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/mobile/geofence-events/replay/route.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/mobile/geofence-events/replay/route.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/mobile/geofence-events/route.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/mobile/geofence-events/route.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/mobile/heartbeat/route.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/mobile/heartbeat/route.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/policy-simulator/runs/[runId]/export/route.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/policy-simulator/runs/[runId]/export/route.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/push/subscriptions/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/ready/route.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/ready/route.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/rollcall/[eventId]/evidence/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/rollcall/[eventId]/export/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/sign-ins/[id]/identity-evidence/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/storage/contractor-documents/[id]/download/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/storage/contractor-documents/commit/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/storage/contractor-documents/presign/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/storage/sign/[id]/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/_guard.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/test/__tests__/_guard.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/clear-rate-limit/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/create-session/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/create-user/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/lookup/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/manage-contractor/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/manage-user/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/process-next-export/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/resolve-escalation/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/runtime/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/seed-public-site/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/set-user-lock/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/v1/partner/sign-ins/route.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/v1/partner/sign-ins/route.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/v1/partner/sites/route.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/v1/partner/sites/route.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/compare/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/contractor/portal/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/demo/actions.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/demo/actions.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/demo/demo-booking-form.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/demo/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/error.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/favicon.ico/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/global-error.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/health/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/layout.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/not-found.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/pricing/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/privacy/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/robots.txt/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/s/[slug]/actions.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/s/[slug]/actions.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/s/[slug]/components/InductionQuestions.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/s/[slug]/components/SignInFlow.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/s/[slug]/components/SuccessScreen.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/s/[slug]/kiosk/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/s/[slug]/not-found.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/s/[slug]/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/sign-out/components/SignOutForm.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/sign-out/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/sitemap.xml/route.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/terms/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/unauthorized/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/~offline/page.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/components/ui/alert.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/components/ui/public-shell.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/components/ui/theme-preference.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/components/ui/theme-runtime.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/components/ui/theme-switcher.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/instrumentation.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/access-connectors/core.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/access-connectors/__tests__/core.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/access-connectors/index.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/access-connectors/providers/base.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/access-connectors/providers/brivo.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/access-connectors/providers/gallagher.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/access-connectors/providers/generic.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/access-connectors/providers/genetec.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/access-connectors/providers/hid-origo.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/access-connectors/providers/index.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/access-connectors/providers/lenels2.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/access-control/config.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/access-control/__tests__/config.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/api/index.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/api/response.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/auth/contractor-session.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Auth/security flow",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/auth/csrf.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/auth/__tests__/csrf.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Auth/security flow",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/auth/guards.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/auth/__tests__/guards.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Auth/security flow",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/auth/index.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Auth/security flow",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/auth/magic-link.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/auth/__tests__/magic-link.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Auth/security flow",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/auth/mfa.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/auth/__tests__/mfa.integration.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Auth/security flow",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/auth/password.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/auth/__tests__/password.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Auth/security flow",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/auth/session-config.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Auth/security flow",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/auth/session.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Auth/security flow",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/auth/sign-out-token.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/auth/__tests__/sign-out-token.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Auth/security flow",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/client-error-reporting.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/cost/compute-counters.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/cost/__tests__/compute-counters.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/cron.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/cron.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/db/index.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Data layer infrastructure",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/db/prisma.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Data layer infrastructure",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/db/public-db.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Data layer infrastructure",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/db/readiness.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/db/readiness.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Data layer infrastructure",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/db/scoped-db.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/db/__tests__/scoped-db.unit.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Data layer infrastructure",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/db/scoped.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Data layer infrastructure",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/differentiation/benchmark.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/differentiation/safety-copilot.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/differentiation/trust-graph.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/email/resend.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/email/worker.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/email/__tests__/worker.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/env-validation.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/__tests__/env-validation.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/export/formatters.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/export/__tests__/formatters.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/export/runner.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/export/scheduler.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/export/worker.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/export/__tests__/worker.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/feature-flags.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/guardrails.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/hardware/adapter.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/hardware/__tests__/adapter.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/health.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/health.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/identity-ocr/index.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/identity-ocr/providers/base.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/identity-ocr/providers/index.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/identity-ocr/providers/__tests__/index.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/identity-ocr/providers/mock.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/identity-ocr/providers/textract.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/identity-ocr/providers/__tests__/textract.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/identity-ocr/service.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/identity/config.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/identity/index.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/identity/oidc.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/identity/user-sync.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/integrations/procore/config.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/integrations/procore/__tests__/config.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/integrations/procore/sync.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/legal/consent-versioning.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/lms/config.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/lms/__tests__/config.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/lms/payload.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/lms/__tests__/payload.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/logger/index.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/logger/pino.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/logic/evaluator.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/logic/__tests__/evaluator.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/maintenance/retention.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/maintenance/retention.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/maintenance/scheduler.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/mobile/device-runtime.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/mobile/enrollment-token.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/mobile/__tests__/enrollment-token.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/observability/otel.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/offline/signin-queue.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/offline/signin-queue.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/offline/signin-sync.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/operations/market-ops.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/partner-api/auth.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/partner-api/auth.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/plans/entitlements.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/plans/__tests__/entitlements.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/plans/index.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/plans/invoice-preview.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/plans/__tests__/invoice-preview.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/plans/invoice-sync.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/plans/__tests__/invoice-sync.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/plans/pricing.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/plans/__tests__/pricing.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/quiz/scoring.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/quiz/__tests__/scoring.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/rate-limit/client.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/rate-limit/clientKey.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/rate-limit/__tests__/clientKey.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/rate-limit/index.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/rate-limit/__tests__/index.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/rate-limit/telemetry.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/rate-limit/__tests__/telemetry.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/access-connector.repository.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/repository/__tests__/access-connector.repository.unit.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/audit-analytics.repository.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/repository/__tests__/audit-analytics.repository.unit.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/audit.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/auth.repository.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/repository/__tests__/auth.repository.unit.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/base.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/repository/__tests__/base.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/communication.repository.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/repository/__tests__/communication.repository.unit.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/company.repository.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/repository/__tests__/company.repository.unit.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/contractor.repository.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/repository/__tests__/contractor.repository.unit.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/dashboard.repository.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/repository/__tests__/dashboard.repository.unit.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/delivery.repository.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/repository/__tests__/delivery.repository.unit.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/demo-booking.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/email.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/emergency.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/evidence.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/export.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/hardware-trace.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/hazard.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/identity-ocr.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/incident.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/index.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/induction-quiz-attempt.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/magic-link.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/mobile-ops.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/permit.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/plan-change.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/plan-entitlement.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/policy-simulator.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/pre-registration.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/public-signin.repository.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/repository/__tests__/public-signin.repository.unit.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/question.repository.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/repository/__tests__/question.repository.unit.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/resource-booking.repository.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/repository/__tests__/resource-booking.repository.unit.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/risk-passport.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/safety-form.repository.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/repository/__tests__/safety-form.repository.unit.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/signin-escalation.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/signin.repository.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/repository/__tests__/signin.repository.unit.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/site-manager.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/site.repository.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/repository/__tests__/site.repository.unit.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/sitemap.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/template.repository.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/repository/__tests__/template.repository.unit.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/user.repository.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/repository/__tests__/user.repository.unit.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/visitor-approval.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/webhook-delivery.repository.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/repository/__tests__/webhook-delivery.repository.unit.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/safety-forms/defaults.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/safety-forms/__tests__/defaults.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/security/data-protection.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/sms/wrapper.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/sms/__tests__/wrapper.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/storage/index.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/storage/keys.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/storage/local.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/storage/s3.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/storage/validation.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/template/language-config.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/template/__tests__/language-config.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/template/media-config.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/template/__tests__/media-config.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/tenant/context.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/tenant/index.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/test/setup.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/testing/mockPrisma.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/time/day-range.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/time/__tests__/day-range.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/url/public-url.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/validation/schemas.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/webhook/config.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/webhook/__tests__/config.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/webhook/worker.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/webhook/__tests__/worker.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/proxy.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "packages/shared/src/index.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "packages/shared/src/schemas.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "packages/shared/src/types.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "packages/shared/src/utils.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    }
+  ],
+  "testFiles": [
+    "apps/web/src/app/(auth)/actions.test.ts",
+    "apps/web/src/app/(auth)/logout/route.test.ts",
+    "apps/web/src/app/admin/actions.csrf.test.ts",
+    "apps/web/src/app/admin/escalations/actions.test.ts",
+    "apps/web/src/app/admin/exports/actions.test.ts",
+    "apps/web/src/app/admin/pre-registrations/actions.test.ts",
+    "apps/web/src/app/admin/prequalification-exchange/actions.test.ts",
+    "apps/web/src/app/admin/resources/actions.test.ts",
+    "apps/web/src/app/admin/risk-passport/actions.test.ts",
+    "apps/web/src/app/admin/safety-copilot/actions.test.ts",
+    "apps/web/src/app/admin/safety-forms/actions.test.ts",
+    "apps/web/src/app/admin/settings/actions.test.ts",
+    "apps/web/src/app/admin/sites/[id]/access/actions.test.ts",
+    "apps/web/src/app/admin/sites/[id]/emergency/actions.test.ts",
+    "apps/web/src/app/admin/sites/[id]/lms/actions.test.ts",
+    "apps/web/src/app/admin/sites/[id]/webhooks/actions.test.ts",
+    "apps/web/src/app/admin/templates/actions.test.ts",
+    "apps/web/src/app/admin/user-contractor-actions.csrf.test.ts",
+    "apps/web/src/app/api/access-connectors/[provider]/test/route.test.ts",
+    "apps/web/src/app/api/auth/directory-sync/route.test.ts",
+    "apps/web/src/app/api/auth/sso/callback/route.test.ts",
+    "apps/web/src/app/api/auth/sso/start/route.test.ts",
+    "apps/web/src/app/api/client-errors/route.test.ts",
+    "apps/web/src/app/api/evidence/verify/route.test.ts",
+    "apps/web/src/app/api/exports/[id]/download/route.test.ts",
+    "apps/web/src/app/api/identity/ocr/verify/route.test.ts",
+    "apps/web/src/app/api/mobile/device-bootstrap/route.test.ts",
+    "apps/web/src/app/api/mobile/enrollment-token/route.test.ts",
+    "apps/web/src/app/api/mobile/geofence-events/replay/route.test.ts",
+    "apps/web/src/app/api/mobile/geofence-events/route.test.ts",
+    "apps/web/src/app/api/mobile/heartbeat/route.test.ts",
+    "apps/web/src/app/api/policy-simulator/runs/[runId]/export/route.test.ts",
+    "apps/web/src/app/api/ready/route.test.ts",
+    "apps/web/src/app/api/storage/contractor-documents/route.test.ts",
+    "apps/web/src/app/api/test/__tests__/_guard.test.ts",
+    "apps/web/src/app/api/v1/partner/sign-ins/route.test.ts",
+    "apps/web/src/app/api/v1/partner/sites/route.test.ts",
+    "apps/web/src/app/demo/actions.test.ts",
+    "apps/web/src/app/s/[slug]/actions.test.ts",
+    "apps/web/src/lib/__tests__/csrf-extended.test.ts",
+    "apps/web/src/lib/__tests__/env-validation.test.ts",
+    "apps/web/src/lib/__tests__/nz-time-expiry.test.ts",
+    "apps/web/src/lib/__tests__/shared-utils.phone.test.ts",
+    "apps/web/src/lib/__tests__/storage.s3.test.ts",
+    "apps/web/src/lib/__tests__/zod-schemas.test.ts",
+    "apps/web/src/lib/access-connectors/__tests__/core.unit.test.ts",
+    "apps/web/src/lib/access-connectors/providers/__tests__/providers.unit.test.ts",
+    "apps/web/src/lib/access-control/__tests__/config.unit.test.ts",
+    "apps/web/src/lib/api/__tests__/response.guardrails.test.ts",
+    "apps/web/src/lib/auth/__tests__/csrf.test.ts",
+    "apps/web/src/lib/auth/__tests__/guards.test.ts",
+    "apps/web/src/lib/auth/__tests__/magic-link.test.ts",
+    "apps/web/src/lib/auth/__tests__/mfa.integration.test.ts",
+    "apps/web/src/lib/auth/__tests__/password.test.ts",
+    "apps/web/src/lib/auth/__tests__/sign-out-token.test.ts",
+    "apps/web/src/lib/auth/__tests__/simple.test.ts",
+    "apps/web/src/lib/auth/session.resilience.test.ts",
+    "apps/web/src/lib/cost/__tests__/compute-counters.test.ts",
+    "apps/web/src/lib/cron.test.ts",
+    "apps/web/src/lib/db/__tests__/scoped-db.unit.test.ts",
+    "apps/web/src/lib/db/readiness.test.ts",
+    "apps/web/src/lib/email/__tests__/worker.unit.test.ts",
+    "apps/web/src/lib/export/__tests__/formatters.unit.test.ts",
+    "apps/web/src/lib/export/__tests__/worker.guardrails.unit.test.ts",
+    "apps/web/src/lib/export/__tests__/worker.unit.test.ts",
+    "apps/web/src/lib/hardware/__tests__/adapter.unit.test.ts",
+    "apps/web/src/lib/health.test.ts",
+    "apps/web/src/lib/identity-ocr/providers/__tests__/index.unit.test.ts",
+    "apps/web/src/lib/identity-ocr/providers/__tests__/textract.unit.test.ts",
+    "apps/web/src/lib/integrations/procore/__tests__/config.unit.test.ts",
+    "apps/web/src/lib/lms/__tests__/config.unit.test.ts",
+    "apps/web/src/lib/lms/__tests__/payload.unit.test.ts",
+    "apps/web/src/lib/logic/__tests__/evaluator.test.ts",
+    "apps/web/src/lib/maintenance/retention.test.ts",
+    "apps/web/src/lib/mobile/__tests__/enrollment-token.unit.test.ts",
+    "apps/web/src/lib/offline/signin-queue.test.ts",
+    "apps/web/src/lib/partner-api/auth.test.ts",
+    "apps/web/src/lib/plans/__tests__/entitlements.unit.test.ts",
+    "apps/web/src/lib/plans/__tests__/invoice-preview.unit.test.ts",
+    "apps/web/src/lib/plans/__tests__/invoice-sync.unit.test.ts",
+    "apps/web/src/lib/plans/__tests__/pricing.unit.test.ts",
+    "apps/web/src/lib/quiz/__tests__/scoring.unit.test.ts",
+    "apps/web/src/lib/rate-limit/__tests__/clientKey.test.ts",
+    "apps/web/src/lib/rate-limit/__tests__/guardrails.test.ts",
+    "apps/web/src/lib/rate-limit/__tests__/index.test.ts",
+    "apps/web/src/lib/rate-limit/__tests__/public-rate-limit.test.ts",
+    "apps/web/src/lib/rate-limit/__tests__/rate-limit.test.ts",
+    "apps/web/src/lib/rate-limit/__tests__/redis-fallback.test.ts",
+    "apps/web/src/lib/rate-limit/__tests__/telemetry.http.test.ts",
+    "apps/web/src/lib/rate-limit/__tests__/telemetry.test.ts",
+    "apps/web/src/lib/rate-limit/__tests__/upstash.e2e.test.ts",
+    "apps/web/src/lib/repository/__tests__/access-connector.repository.unit.test.ts",
+    "apps/web/src/lib/repository/__tests__/audit-analytics.repository.unit.test.ts",
+    "apps/web/src/lib/repository/__tests__/auth.repository.unit.test.ts",
+    "apps/web/src/lib/repository/__tests__/base.test.ts",
+    "apps/web/src/lib/repository/__tests__/communication.repository.unit.test.ts",
+    "apps/web/src/lib/repository/__tests__/company.repository.unit.test.ts",
+    "apps/web/src/lib/repository/__tests__/contractor.repository.unit.test.ts",
+    "apps/web/src/lib/repository/__tests__/dashboard.repository.unit.test.ts",
+    "apps/web/src/lib/repository/__tests__/delivery.repository.unit.test.ts",
+    "apps/web/src/lib/repository/__tests__/public-signin.repository.unit.test.ts",
+    "apps/web/src/lib/repository/__tests__/question.repository.bulk.unit.test.ts",
+    "apps/web/src/lib/repository/__tests__/question.repository.unit.test.ts",
+    "apps/web/src/lib/repository/__tests__/resource-booking.repository.unit.test.ts",
+    "apps/web/src/lib/repository/__tests__/safety-form.repository.unit.test.ts",
+    "apps/web/src/lib/repository/__tests__/signin.repository.unit.test.ts",
+    "apps/web/src/lib/repository/__tests__/site.repository.unit.test.ts",
+    "apps/web/src/lib/repository/__tests__/template-versioning.test.ts",
+    "apps/web/src/lib/repository/__tests__/template.repository.unit.test.ts",
+    "apps/web/src/lib/repository/__tests__/user.repository.unit.test.ts",
+    "apps/web/src/lib/repository/__tests__/webhook-delivery.repository.unit.test.ts",
+    "apps/web/src/lib/safety-forms/__tests__/defaults.unit.test.ts",
+    "apps/web/src/lib/sms/__tests__/wrapper.unit.test.ts",
+    "apps/web/src/lib/storage/__tests__/file-validation.test.ts",
+    "apps/web/src/lib/storage/file-validation.test.ts",
+    "apps/web/src/lib/template/__tests__/language-config.unit.test.ts",
+    "apps/web/src/lib/template/__tests__/media-config.unit.test.ts",
+    "apps/web/src/lib/templates/__tests__/versioning.test.ts",
+    "apps/web/src/lib/time/__tests__/day-range.test.ts",
+    "apps/web/src/lib/webhook/__tests__/config.unit.test.ts",
+    "apps/web/src/lib/webhook/__tests__/worker.unit.test.ts"
+  ]
+}

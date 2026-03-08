@@ -46,6 +46,12 @@ function statusRedirect(status: "ok" | "error", message: string): never {
   redirect(`/admin/resources?${params.toString()}`);
 }
 
+function isNextRedirectError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const digest = (error as { digest?: unknown }).digest;
+  return typeof digest === "string" && digest.startsWith("NEXT_REDIRECT");
+}
+
 async function authorizeResourceMutation() {
   const permission = await checkPermission("site:manage");
   if (!permission.success) {
@@ -113,6 +119,9 @@ export async function createResourceAction(formData: FormData): Promise<void> {
 
     statusRedirect("ok", "Resource created");
   } catch (error) {
+    if (isNextRedirectError(error)) {
+      throw error;
+    }
     log.error({ error: String(error) }, "Failed to create resource");
     statusRedirect("error", "Failed to create resource");
   }
@@ -181,6 +190,9 @@ export async function createResourceBookingAction(formData: FormData): Promise<v
 
     statusRedirect("ok", "Resource booking created");
   } catch (error) {
+    if (isNextRedirectError(error)) {
+      throw error;
+    }
     log.error({ error: String(error) }, "Failed to create resource booking");
     statusRedirect("error", "Failed to create booking (resource may already be booked)");
   }
@@ -224,6 +236,9 @@ export async function cancelResourceBookingAction(formData: FormData): Promise<v
 
     statusRedirect("ok", "Booking cancelled");
   } catch (error) {
+    if (isNextRedirectError(error)) {
+      throw error;
+    }
     log.error({ error: String(error) }, "Failed to cancel booking");
     statusRedirect("error", "Failed to cancel booking");
   }
