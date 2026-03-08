@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-03-08T07:47:27.271Z",
+  "generatedAt": "2026-03-08T08:13:17.710Z",
   "summary": {
     "totalSourceFiles": 374,
-    "coveredByDirectTests": 97,
-    "gaps": 277
+    "coveredByDirectTests": 112,
+    "gaps": 262
   },
   "rows": [
     {
@@ -356,11 +356,13 @@
     },
     {
       "sourceFile": "apps/web/src/app/admin/deliveries/actions.ts",
-      "hasDirectTest": false,
-      "directTests": [],
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/deliveries/actions.test.ts"
+      ],
       "priority": "P0",
       "risk": "Mutating server action",
-      "status": "Gap"
+      "status": "Covered"
     },
     {
       "sourceFile": "apps/web/src/app/admin/deliveries/page.tsx",
@@ -496,11 +498,13 @@
     },
     {
       "sourceFile": "apps/web/src/app/admin/integrations/channels/actions.ts",
-      "hasDirectTest": false,
-      "directTests": [],
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/integrations/channels/actions.test.ts"
+      ],
       "priority": "P0",
       "risk": "Mutating server action",
-      "status": "Gap"
+      "status": "Covered"
     },
     {
       "sourceFile": "apps/web/src/app/admin/integrations/channels/page.tsx",
@@ -512,11 +516,13 @@
     },
     {
       "sourceFile": "apps/web/src/app/admin/integrations/procore/actions.ts",
-      "hasDirectTest": false,
-      "directTests": [],
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/integrations/procore/actions.test.ts"
+      ],
       "priority": "P0",
       "risk": "Mutating server action",
-      "status": "Gap"
+      "status": "Covered"
     },
     {
       "sourceFile": "apps/web/src/app/admin/integrations/procore/page.tsx",
@@ -1220,11 +1226,13 @@
     },
     {
       "sourceFile": "apps/web/src/app/api/auth/logout/route.ts",
-      "hasDirectTest": false,
-      "directTests": [],
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/auth/logout/route.test.ts"
+      ],
       "priority": "P0",
       "risk": "Public/API contract",
-      "status": "Gap"
+      "status": "Covered"
     },
     {
       "sourceFile": "apps/web/src/app/api/auth/sso/callback/route.ts",
@@ -1248,11 +1256,13 @@
     },
     {
       "sourceFile": "apps/web/src/app/api/broadcasts/ack/route.ts",
-      "hasDirectTest": false,
-      "directTests": [],
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/broadcasts/ack/route.test.ts"
+      ],
       "priority": "P0",
       "risk": "Public/API contract",
-      "status": "Gap"
+      "status": "Covered"
     },
     {
       "sourceFile": "apps/web/src/app/api/client-errors/route.ts",
@@ -1266,35 +1276,43 @@
     },
     {
       "sourceFile": "apps/web/src/app/api/cron/digest/route.ts",
-      "hasDirectTest": false,
-      "directTests": [],
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/cron/digest/route.test.ts"
+      ],
       "priority": "P0",
       "risk": "Public/API contract",
-      "status": "Gap"
+      "status": "Covered"
     },
     {
       "sourceFile": "apps/web/src/app/api/cron/export-scheduler/route.ts",
-      "hasDirectTest": false,
-      "directTests": [],
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/cron/export-scheduler/route.test.ts"
+      ],
       "priority": "P0",
       "risk": "Public/API contract",
-      "status": "Gap"
+      "status": "Covered"
     },
     {
       "sourceFile": "apps/web/src/app/api/cron/maintenance/route.ts",
-      "hasDirectTest": false,
-      "directTests": [],
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/cron/maintenance/route.test.ts"
+      ],
       "priority": "P0",
       "risk": "Public/API contract",
-      "status": "Gap"
+      "status": "Covered"
     },
     {
       "sourceFile": "apps/web/src/app/api/csp-report/route.ts",
-      "hasDirectTest": false,
-      "directTests": [],
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/csp-report/route.test.ts"
+      ],
       "priority": "P0",
       "risk": "Public/API contract",
-      "status": "Gap"
+      "status": "Covered"
     },
     {
       "sourceFile": "apps/web/src/app/api/evidence/verify/route.ts",
@@ -1328,27 +1346,33 @@
     },
     {
       "sourceFile": "apps/web/src/app/api/integrations/channels/actions/route.ts",
-      "hasDirectTest": false,
-      "directTests": [],
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/integrations/channels/actions/route.test.ts"
+      ],
       "priority": "P0",
       "risk": "Public/API contract",
-      "status": "Gap"
+      "status": "Covered"
     },
     {
       "sourceFile": "apps/web/src/app/api/integrations/procore/workers/route.ts",
-      "hasDirectTest": false,
-      "directTests": [],
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/integrations/procore/workers/route.test.ts"
+      ],
       "priority": "P0",
       "risk": "Public/API contract",
-      "status": "Gap"
+      "status": "Covered"
     },
     {
       "sourceFile": "apps/web/src/app/api/live/route.ts",
-      "hasDirectTest": false,
-      "directTests": [],
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/live/route.test.ts"
+      ],
       "priority": "P0",
       "risk": "Public/API contract",
-      "status": "Gap"
+      "status": "Covered"
     },
     {
       "sourceFile": "apps/web/src/app/api/mobile/device-bootstrap/route.ts",
@@ -1412,11 +1436,13 @@
     },
     {
       "sourceFile": "apps/web/src/app/api/push/subscriptions/route.ts",
-      "hasDirectTest": false,
-      "directTests": [],
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/push/subscriptions/route.test.ts"
+      ],
       "priority": "P0",
       "risk": "Public/API contract",
-      "status": "Gap"
+      "status": "Covered"
     },
     {
       "sourceFile": "apps/web/src/app/api/ready/route.ts",
@@ -1446,11 +1472,13 @@
     },
     {
       "sourceFile": "apps/web/src/app/api/sign-ins/[id]/identity-evidence/route.ts",
-      "hasDirectTest": false,
-      "directTests": [],
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/sign-ins/[id]/identity-evidence/route.test.ts"
+      ],
       "priority": "P0",
       "risk": "Public/API contract",
-      "status": "Gap"
+      "status": "Covered"
     },
     {
       "sourceFile": "apps/web/src/app/api/storage/contractor-documents/[id]/download/route.ts",
@@ -1478,11 +1506,13 @@
     },
     {
       "sourceFile": "apps/web/src/app/api/storage/sign/[id]/route.ts",
-      "hasDirectTest": false,
-      "directTests": [],
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/storage/sign/[id]/route.test.ts"
+      ],
       "priority": "P0",
       "risk": "Public/API contract",
-      "status": "Gap"
+      "status": "Covered"
     },
     {
       "sourceFile": "apps/web/src/app/api/test/_guard.ts",
@@ -3197,8 +3227,11 @@
     "apps/web/src/app/(auth)/actions.test.ts",
     "apps/web/src/app/(auth)/logout/route.test.ts",
     "apps/web/src/app/admin/actions.csrf.test.ts",
+    "apps/web/src/app/admin/deliveries/actions.test.ts",
     "apps/web/src/app/admin/escalations/actions.test.ts",
     "apps/web/src/app/admin/exports/actions.test.ts",
+    "apps/web/src/app/admin/integrations/channels/actions.test.ts",
+    "apps/web/src/app/admin/integrations/procore/actions.test.ts",
     "apps/web/src/app/admin/pre-registrations/actions.test.ts",
     "apps/web/src/app/admin/prequalification-exchange/actions.test.ts",
     "apps/web/src/app/admin/resources/actions.test.ts",
@@ -3214,20 +3247,32 @@
     "apps/web/src/app/admin/user-contractor-actions.csrf.test.ts",
     "apps/web/src/app/api/access-connectors/[provider]/test/route.test.ts",
     "apps/web/src/app/api/auth/directory-sync/route.test.ts",
+    "apps/web/src/app/api/auth/logout/route.test.ts",
     "apps/web/src/app/api/auth/sso/callback/route.test.ts",
     "apps/web/src/app/api/auth/sso/start/route.test.ts",
+    "apps/web/src/app/api/broadcasts/ack/route.test.ts",
     "apps/web/src/app/api/client-errors/route.test.ts",
+    "apps/web/src/app/api/cron/digest/route.test.ts",
+    "apps/web/src/app/api/cron/export-scheduler/route.test.ts",
+    "apps/web/src/app/api/cron/maintenance/route.test.ts",
+    "apps/web/src/app/api/csp-report/route.test.ts",
     "apps/web/src/app/api/evidence/verify/route.test.ts",
     "apps/web/src/app/api/exports/[id]/download/route.test.ts",
     "apps/web/src/app/api/identity/ocr/verify/route.test.ts",
+    "apps/web/src/app/api/integrations/channels/actions/route.test.ts",
+    "apps/web/src/app/api/integrations/procore/workers/route.test.ts",
+    "apps/web/src/app/api/live/route.test.ts",
     "apps/web/src/app/api/mobile/device-bootstrap/route.test.ts",
     "apps/web/src/app/api/mobile/enrollment-token/route.test.ts",
     "apps/web/src/app/api/mobile/geofence-events/replay/route.test.ts",
     "apps/web/src/app/api/mobile/geofence-events/route.test.ts",
     "apps/web/src/app/api/mobile/heartbeat/route.test.ts",
     "apps/web/src/app/api/policy-simulator/runs/[runId]/export/route.test.ts",
+    "apps/web/src/app/api/push/subscriptions/route.test.ts",
     "apps/web/src/app/api/ready/route.test.ts",
+    "apps/web/src/app/api/sign-ins/[id]/identity-evidence/route.test.ts",
     "apps/web/src/app/api/storage/contractor-documents/route.test.ts",
+    "apps/web/src/app/api/storage/sign/[id]/route.test.ts",
     "apps/web/src/app/api/test/__tests__/_guard.test.ts",
     "apps/web/src/app/api/v1/partner/sign-ins/route.test.ts",
     "apps/web/src/app/api/v1/partner/sites/route.test.ts",

@@ -47,6 +47,12 @@ function statusRedirect(status: "ok" | "error", message: string): never {
   redirect(`/admin/deliveries?${params.toString()}`);
 }
 
+function isNextRedirectError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const digest = (error as { digest?: unknown }).digest;
+  return typeof digest === "string" && digest.startsWith("NEXT_REDIRECT");
+}
+
 async function authorizeDeliveryMutation() {
   const permission = await checkPermission("site:manage");
   if (!permission.success) {
@@ -150,6 +156,9 @@ export async function createDeliveryItemAction(formData: FormData): Promise<void
 
     statusRedirect("ok", "Delivery item logged");
   } catch (error) {
+    if (isNextRedirectError(error)) {
+      throw error;
+    }
     log.error({ error: String(error) }, "Failed to create delivery item");
     statusRedirect("error", "Failed to create delivery item");
   }
@@ -200,6 +209,9 @@ export async function transitionDeliveryItemAction(formData: FormData): Promise<
 
     statusRedirect("ok", `Delivery marked ${updated.status.toLowerCase()}`);
   } catch (error) {
+    if (isNextRedirectError(error)) {
+      throw error;
+    }
     log.error({ error: String(error) }, "Failed to transition delivery item");
     statusRedirect("error", "Failed to update delivery status");
   }
@@ -248,6 +260,9 @@ export async function addDeliveryNoteAction(formData: FormData): Promise<void> {
 
     statusRedirect("ok", "Delivery note added");
   } catch (error) {
+    if (isNextRedirectError(error)) {
+      throw error;
+    }
     log.error({ error: String(error) }, "Failed to add delivery note");
     statusRedirect("error", "Failed to add delivery note");
   }

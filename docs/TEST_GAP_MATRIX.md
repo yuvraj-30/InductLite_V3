@@ -1,10 +1,10 @@
 # Test Gap Matrix
 
-Generated: 2026-03-08T07:47:27.271Z
+Generated: 2026-03-08T08:13:17.710Z
 
 - Total source files: 374
-- Covered by direct tests: 97
-- Gaps: 277
+- Covered by direct tests: 112
+- Gaps: 262
 
 ## Prioritized Missing-Tests Backlog
 
@@ -15,13 +15,10 @@ Generated: 2026-03-08T07:47:27.271Z
 | P0 | `apps/web/src/app/admin/approvals/actions.ts` | Mutating server action | Server action unit test (redirect/error paths) |
 | P0 | `apps/web/src/app/admin/communications/actions.ts` | Mutating server action | Server action unit test (redirect/error paths) |
 | P0 | `apps/web/src/app/admin/contractors/actions.ts` | Mutating server action | Server action unit test (redirect/error paths) |
-| P0 | `apps/web/src/app/admin/deliveries/actions.ts` | Mutating server action | Server action unit test (redirect/error paths) |
 | P0 | `apps/web/src/app/admin/evidence/actions.ts` | Mutating server action | Server action unit test (redirect/error paths) |
 | P0 | `apps/web/src/app/admin/hazards/actions.ts` | Mutating server action | Server action unit test (redirect/error paths) |
 | P0 | `apps/web/src/app/admin/history/actions.ts` | Mutating server action | Server action unit test (redirect/error paths) |
 | P0 | `apps/web/src/app/admin/incidents/actions.ts` | Mutating server action | Server action unit test (redirect/error paths) |
-| P0 | `apps/web/src/app/admin/integrations/channels/actions.ts` | Mutating server action | Server action unit test (redirect/error paths) |
-| P0 | `apps/web/src/app/admin/integrations/procore/actions.ts` | Mutating server action | Server action unit test (redirect/error paths) |
 | P0 | `apps/web/src/app/admin/live-register/actions.ts` | Mutating server action | Server action unit test (redirect/error paths) |
 | P0 | `apps/web/src/app/admin/mobile/actions.ts` | Mutating server action | Server action unit test (redirect/error paths) |
 | P0 | `apps/web/src/app/admin/permits/actions.ts` | Mutating server action | Server action unit test (redirect/error paths) |
@@ -29,23 +26,11 @@ Generated: 2026-03-08T07:47:27.271Z
 | P0 | `apps/web/src/app/admin/policy-simulator/actions.ts` | Mutating server action | Server action unit test (redirect/error paths) |
 | P0 | `apps/web/src/app/admin/sites/actions.ts` | Mutating server action | Server action unit test (redirect/error paths) |
 | P0 | `apps/web/src/app/admin/users/actions.ts` | Mutating server action | Server action unit test (redirect/error paths) |
-| P0 | `apps/web/src/app/api/auth/logout/route.ts` | Public/API contract | Route handler unit/integration test |
-| P0 | `apps/web/src/app/api/broadcasts/ack/route.ts` | Public/API contract | Route handler unit/integration test |
-| P0 | `apps/web/src/app/api/cron/digest/route.ts` | Public/API contract | Route handler unit/integration test |
-| P0 | `apps/web/src/app/api/cron/export-scheduler/route.ts` | Public/API contract | Route handler unit/integration test |
-| P0 | `apps/web/src/app/api/cron/maintenance/route.ts` | Public/API contract | Route handler unit/integration test |
-| P0 | `apps/web/src/app/api/csp-report/route.ts` | Public/API contract | Route handler unit/integration test |
-| P0 | `apps/web/src/app/api/integrations/channels/actions/route.ts` | Public/API contract | Route handler unit/integration test |
-| P0 | `apps/web/src/app/api/integrations/procore/workers/route.ts` | Public/API contract | Route handler unit/integration test |
-| P0 | `apps/web/src/app/api/live/route.ts` | Public/API contract | Route handler unit/integration test |
-| P0 | `apps/web/src/app/api/push/subscriptions/route.ts` | Public/API contract | Route handler unit/integration test |
 | P0 | `apps/web/src/app/api/rollcall/[eventId]/evidence/route.ts` | Public/API contract | Route handler unit/integration test |
 | P0 | `apps/web/src/app/api/rollcall/[eventId]/export/route.ts` | Public/API contract | Route handler unit/integration test |
-| P0 | `apps/web/src/app/api/sign-ins/[id]/identity-evidence/route.ts` | Public/API contract | Route handler unit/integration test |
 | P0 | `apps/web/src/app/api/storage/contractor-documents/[id]/download/route.ts` | Public/API contract | Route handler unit/integration test |
 | P0 | `apps/web/src/app/api/storage/contractor-documents/commit/route.ts` | Public/API contract | Route handler unit/integration test |
 | P0 | `apps/web/src/app/api/storage/contractor-documents/presign/route.ts` | Public/API contract | Route handler unit/integration test |
-| P0 | `apps/web/src/app/api/storage/sign/[id]/route.ts` | Public/API contract | Route handler unit/integration test |
 | P0 | `apps/web/src/app/api/test/clear-rate-limit/route.ts` | Public/API contract | Route handler unit/integration test |
 | P0 | `apps/web/src/app/api/test/create-session/route.ts` | Public/API contract | Route handler unit/integration test |
 | P0 | `apps/web/src/app/api/test/create-user/route.ts` | Public/API contract | Route handler unit/integration test |
@@ -160,6 +145,21 @@ Generated: 2026-03-08T07:47:27.271Z
 | P1 | `apps/web/src/app/admin/sites/[id]/access/site-access-settings-form.tsx` | Application logic | Unit test |
 | P1 | `apps/web/src/app/admin/sites/[id]/CopyLinkButton.tsx` | Application logic | Unit test |
 | P1 | `apps/web/src/app/admin/sites/[id]/edit-site-form.tsx` | Application logic | Unit test |
+| P1 | `apps/web/src/app/admin/sites/[id]/emergency/page.tsx` | Application logic | Unit test |
+| P1 | `apps/web/src/app/admin/sites/[id]/lms/lms-settings-form.tsx` | Application logic | Unit test |
+| P1 | `apps/web/src/app/admin/sites/[id]/lms/page.tsx` | Application logic | Unit test |
+| P1 | `apps/web/src/app/admin/sites/[id]/page.tsx` | Application logic | Unit test |
+| P1 | `apps/web/src/app/admin/sites/[id]/QRCodeButton.tsx` | Application logic | Unit test |
+| P1 | `apps/web/src/app/admin/sites/[id]/webhooks/page.tsx` | Application logic | Unit test |
+| P1 | `apps/web/src/app/admin/sites/[id]/webhooks/webhook-settings-form.tsx` | Application logic | Unit test |
+| P1 | `apps/web/src/app/admin/sites/new/create-site-form.tsx` | Application logic | Unit test |
+| P1 | `apps/web/src/app/admin/sites/new/page.tsx` | Application logic | Unit test |
+| P1 | `apps/web/src/app/admin/sites/page.tsx` | Application logic | Unit test |
+| P1 | `apps/web/src/app/admin/sites/site-buttons.tsx` | Application logic | Unit test |
+| P1 | `apps/web/src/app/admin/templates/[id]/page.tsx` | Application logic | Unit test |
+| P1 | `apps/web/src/app/admin/templates/[id]/question-builder.tsx` | Application logic | Unit test |
+| P1 | `apps/web/src/app/admin/templates/[id]/template-header.tsx` | Application logic | Unit test |
+| P1 | `apps/web/src/app/admin/templates/archived/delete-button.tsx` | Application logic | Unit test |
 
 ## Full Matrix
 
@@ -208,7 +208,7 @@ Generated: 2026-03-08T07:47:27.271Z
 | `apps/web/src/app/admin/contractors/new/page.tsx` | Gap | P1 | - |
 | `apps/web/src/app/admin/contractors/page.tsx` | Gap | P1 | - |
 | `apps/web/src/app/admin/dashboard/page.tsx` | Gap | P1 | - |
-| `apps/web/src/app/admin/deliveries/actions.ts` | Gap | P0 | - |
+| `apps/web/src/app/admin/deliveries/actions.ts` | Covered | P0 | `apps/web/src/app/admin/deliveries/actions.test.ts` |
 | `apps/web/src/app/admin/deliveries/page.tsx` | Gap | P1 | - |
 | `apps/web/src/app/admin/escalations/actions.ts` | Covered | P0 | `apps/web/src/app/admin/escalations/actions.test.ts` |
 | `apps/web/src/app/admin/escalations/page.tsx` | Gap | P1 | - |
@@ -225,9 +225,9 @@ Generated: 2026-03-08T07:47:27.271Z
 | `apps/web/src/app/admin/history/pagination.tsx` | Gap | P1 | - |
 | `apps/web/src/app/admin/incidents/actions.ts` | Gap | P0 | - |
 | `apps/web/src/app/admin/incidents/page.tsx` | Gap | P1 | - |
-| `apps/web/src/app/admin/integrations/channels/actions.ts` | Gap | P0 | - |
+| `apps/web/src/app/admin/integrations/channels/actions.ts` | Covered | P0 | `apps/web/src/app/admin/integrations/channels/actions.test.ts` |
 | `apps/web/src/app/admin/integrations/channels/page.tsx` | Gap | P1 | - |
-| `apps/web/src/app/admin/integrations/procore/actions.ts` | Gap | P0 | - |
+| `apps/web/src/app/admin/integrations/procore/actions.ts` | Covered | P0 | `apps/web/src/app/admin/integrations/procore/actions.test.ts` |
 | `apps/web/src/app/admin/integrations/procore/page.tsx` | Gap | P1 | - |
 | `apps/web/src/app/admin/layout.tsx` | Gap | P1 | - |
 | `apps/web/src/app/admin/live-register/SiteFilterSelect.tsx` | Gap | P1 | - |
@@ -312,36 +312,36 @@ Generated: 2026-03-08T07:47:27.271Z
 | `apps/web/src/app/admin/webhooks/page.tsx` | Gap | P1 | - |
 | `apps/web/src/app/api/access-connectors/[provider]/test/route.ts` | Covered | P0 | `apps/web/src/app/api/access-connectors/[provider]/test/route.test.ts` |
 | `apps/web/src/app/api/auth/directory-sync/route.ts` | Covered | P0 | `apps/web/src/app/api/auth/directory-sync/route.test.ts` |
-| `apps/web/src/app/api/auth/logout/route.ts` | Gap | P0 | - |
+| `apps/web/src/app/api/auth/logout/route.ts` | Covered | P0 | `apps/web/src/app/api/auth/logout/route.test.ts` |
 | `apps/web/src/app/api/auth/sso/callback/route.ts` | Covered | P0 | `apps/web/src/app/api/auth/sso/callback/route.test.ts` |
 | `apps/web/src/app/api/auth/sso/start/route.ts` | Covered | P0 | `apps/web/src/app/api/auth/sso/start/route.test.ts` |
-| `apps/web/src/app/api/broadcasts/ack/route.ts` | Gap | P0 | - |
+| `apps/web/src/app/api/broadcasts/ack/route.ts` | Covered | P0 | `apps/web/src/app/api/broadcasts/ack/route.test.ts` |
 | `apps/web/src/app/api/client-errors/route.ts` | Covered | P0 | `apps/web/src/app/api/client-errors/route.test.ts` |
-| `apps/web/src/app/api/cron/digest/route.ts` | Gap | P0 | - |
-| `apps/web/src/app/api/cron/export-scheduler/route.ts` | Gap | P0 | - |
-| `apps/web/src/app/api/cron/maintenance/route.ts` | Gap | P0 | - |
-| `apps/web/src/app/api/csp-report/route.ts` | Gap | P0 | - |
+| `apps/web/src/app/api/cron/digest/route.ts` | Covered | P0 | `apps/web/src/app/api/cron/digest/route.test.ts` |
+| `apps/web/src/app/api/cron/export-scheduler/route.ts` | Covered | P0 | `apps/web/src/app/api/cron/export-scheduler/route.test.ts` |
+| `apps/web/src/app/api/cron/maintenance/route.ts` | Covered | P0 | `apps/web/src/app/api/cron/maintenance/route.test.ts` |
+| `apps/web/src/app/api/csp-report/route.ts` | Covered | P0 | `apps/web/src/app/api/csp-report/route.test.ts` |
 | `apps/web/src/app/api/evidence/verify/route.ts` | Covered | P0 | `apps/web/src/app/api/evidence/verify/route.test.ts` |
 | `apps/web/src/app/api/exports/[id]/download/route.ts` | Covered | P0 | `apps/web/src/app/api/exports/[id]/download/route.test.ts` |
 | `apps/web/src/app/api/identity/ocr/verify/route.ts` | Covered | P0 | `apps/web/src/app/api/identity/ocr/verify/route.test.ts` |
-| `apps/web/src/app/api/integrations/channels/actions/route.ts` | Gap | P0 | - |
-| `apps/web/src/app/api/integrations/procore/workers/route.ts` | Gap | P0 | - |
-| `apps/web/src/app/api/live/route.ts` | Gap | P0 | - |
+| `apps/web/src/app/api/integrations/channels/actions/route.ts` | Covered | P0 | `apps/web/src/app/api/integrations/channels/actions/route.test.ts` |
+| `apps/web/src/app/api/integrations/procore/workers/route.ts` | Covered | P0 | `apps/web/src/app/api/integrations/procore/workers/route.test.ts` |
+| `apps/web/src/app/api/live/route.ts` | Covered | P0 | `apps/web/src/app/api/live/route.test.ts` |
 | `apps/web/src/app/api/mobile/device-bootstrap/route.ts` | Covered | P0 | `apps/web/src/app/api/mobile/device-bootstrap/route.test.ts` |
 | `apps/web/src/app/api/mobile/enrollment-token/route.ts` | Covered | P0 | `apps/web/src/app/api/mobile/enrollment-token/route.test.ts` |
 | `apps/web/src/app/api/mobile/geofence-events/replay/route.ts` | Covered | P0 | `apps/web/src/app/api/mobile/geofence-events/replay/route.test.ts` |
 | `apps/web/src/app/api/mobile/geofence-events/route.ts` | Covered | P0 | `apps/web/src/app/api/mobile/geofence-events/route.test.ts` |
 | `apps/web/src/app/api/mobile/heartbeat/route.ts` | Covered | P0 | `apps/web/src/app/api/mobile/heartbeat/route.test.ts` |
 | `apps/web/src/app/api/policy-simulator/runs/[runId]/export/route.ts` | Covered | P0 | `apps/web/src/app/api/policy-simulator/runs/[runId]/export/route.test.ts` |
-| `apps/web/src/app/api/push/subscriptions/route.ts` | Gap | P0 | - |
+| `apps/web/src/app/api/push/subscriptions/route.ts` | Covered | P0 | `apps/web/src/app/api/push/subscriptions/route.test.ts` |
 | `apps/web/src/app/api/ready/route.ts` | Covered | P0 | `apps/web/src/app/api/ready/route.test.ts` |
 | `apps/web/src/app/api/rollcall/[eventId]/evidence/route.ts` | Gap | P0 | - |
 | `apps/web/src/app/api/rollcall/[eventId]/export/route.ts` | Gap | P0 | - |
-| `apps/web/src/app/api/sign-ins/[id]/identity-evidence/route.ts` | Gap | P0 | - |
+| `apps/web/src/app/api/sign-ins/[id]/identity-evidence/route.ts` | Covered | P0 | `apps/web/src/app/api/sign-ins/[id]/identity-evidence/route.test.ts` |
 | `apps/web/src/app/api/storage/contractor-documents/[id]/download/route.ts` | Gap | P0 | - |
 | `apps/web/src/app/api/storage/contractor-documents/commit/route.ts` | Gap | P0 | - |
 | `apps/web/src/app/api/storage/contractor-documents/presign/route.ts` | Gap | P0 | - |
-| `apps/web/src/app/api/storage/sign/[id]/route.ts` | Gap | P0 | - |
+| `apps/web/src/app/api/storage/sign/[id]/route.ts` | Covered | P0 | `apps/web/src/app/api/storage/sign/[id]/route.test.ts` |
 | `apps/web/src/app/api/test/_guard.ts` | Covered | P0 | `apps/web/src/app/api/test/__tests__/_guard.test.ts` |
 | `apps/web/src/app/api/test/clear-rate-limit/route.ts` | Gap | P0 | - |
 | `apps/web/src/app/api/test/create-session/route.ts` | Gap | P0 | - |
