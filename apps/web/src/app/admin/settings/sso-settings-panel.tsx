@@ -2,6 +2,8 @@
 
 import { useActionState, useState, useTransition } from "react";
 import {
+  rotatePartnerApiKeyAction,
+  type RotatePartnerApiKeyActionResult,
   rotateDirectorySyncApiKeyAction,
   type RotateDirectorySyncKeyActionResult,
   updateSsoSettingsAction,
@@ -26,8 +28,12 @@ interface SsoSettingsPanelProps {
     };
     allowedEmailDomains: string[];
     directorySyncEnabled: boolean;
+    partnerApiEnabled: boolean;
+    partnerApiScopes: string[];
+    partnerApiMonthlyQuota: number;
     hasClientSecret: boolean;
     hasDirectorySyncToken: boolean;
+    hasPartnerApiToken: boolean;
   };
 }
 
@@ -36,8 +42,11 @@ const initialState: SsoSettingsActionResult | null = null;
 export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProps) {
   const [state, formAction] = useActionState(updateSsoSettingsAction, initialState);
   const [isRotating, startRotating] = useTransition();
+  const [isRotatingPartner, startRotatingPartner] = useTransition();
   const [rotateResult, setRotateResult] =
     useState<RotateDirectorySyncKeyActionResult | null>(null);
+  const [partnerRotateResult, setPartnerRotateResult] =
+    useState<RotatePartnerApiKeyActionResult | null>(null);
 
   const getFieldError = (field: string): string | undefined => {
     if (state && !state.success && state.fieldErrors) {
@@ -51,6 +60,14 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
     startRotating(async () => {
       const result = await rotateDirectorySyncApiKeyAction();
       setRotateResult(result);
+    });
+  };
+
+  const handleRotatePartnerToken = () => {
+    setPartnerRotateResult(null);
+    startRotatingPartner(async () => {
+      const result = await rotatePartnerApiKeyAction();
+      setPartnerRotateResult(result);
     });
   };
 
@@ -254,6 +271,59 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
           Enable directory sync API
         </label>
 
+        <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
+          <h3 className="text-sm font-semibold text-gray-900">Partner API v1</h3>
+          <p className="mt-1 text-xs text-gray-600">
+            Configure versioned partner API access with scoped key permissions and monthly quotas.
+          </p>
+
+          <label className="mt-3 flex items-center gap-2 text-sm text-gray-700">
+            <input
+              type="checkbox"
+              name="partnerApiEnabled"
+              value="true"
+              defaultChecked={initialConfig.partnerApiEnabled}
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            Enable partner API
+          </label>
+
+          <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+            <label className="text-sm text-gray-700 md:col-span-2">
+              API scopes (comma or newline separated)
+              <textarea
+                name="partnerApiScopes"
+                rows={2}
+                defaultValue={initialConfig.partnerApiScopes.join(", ")}
+                className="input mt-1"
+                placeholder="sites.read, signins.read"
+              />
+              {getFieldError("partnerApiScopes") && (
+                <p className="mt-1 text-xs text-red-600">
+                  {getFieldError("partnerApiScopes")}
+                </p>
+              )}
+            </label>
+
+            <label className="text-sm text-gray-700">
+              Monthly request quota
+              <input
+                name="partnerApiMonthlyQuota"
+                type="number"
+                min={100}
+                max={1_000_000}
+                defaultValue={initialConfig.partnerApiMonthlyQuota}
+                className="input mt-1"
+              />
+              {getFieldError("partnerApiMonthlyQuota") && (
+                <p className="mt-1 text-xs text-red-600">
+                  {getFieldError("partnerApiMonthlyQuota")}
+                </p>
+              )}
+            </label>
+          </div>
+        </div>
+
         <div className="flex items-center justify-end border-t pt-4">
           <button
             type="submit"
@@ -306,6 +376,54 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
             className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100 disabled:opacity-50"
           >
             {isRotating ? "Rotating..." : "Rotate Directory Sync Key"}
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-6 rounded-md border border-gray-200 bg-gray-50 p-4">
+        <h3 className="text-sm font-semibold text-gray-900">Partner API Key</h3>
+        <p className="mt-1 text-xs text-gray-600">
+          Endpoints:
+          <code className="ml-1 rounded bg-gray-100 px-1 py-0.5 text-[11px]">
+            GET /api/v1/partner/sites?company=your-company-slug
+          </code>{" "}
+          and
+          <code className="ml-1 rounded bg-gray-100 px-1 py-0.5 text-[11px]">
+            GET /api/v1/partner/sign-ins?company=your-company-slug
+          </code>
+        </p>
+        <p className="mt-1 text-xs text-gray-600">
+          Token status:{" "}
+          <span className="font-medium">
+            {initialConfig.hasPartnerApiToken ? "Configured" : "Not configured"}
+          </span>
+        </p>
+
+        {partnerRotateResult && !partnerRotateResult.success && (
+          <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {partnerRotateResult.error}
+          </div>
+        )}
+        {partnerRotateResult?.success && (
+          <div className="mt-3 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+            <p>{partnerRotateResult.message}</p>
+            <p className="mt-1 text-xs">
+              Copy this key now. It is only shown once.
+            </p>
+            <div className="mt-2 rounded border border-green-200 bg-white p-2 font-mono text-xs text-gray-900">
+              {partnerRotateResult.apiKey}
+            </div>
+          </div>
+        )}
+
+        <div className="mt-3 flex justify-end">
+          <button
+            type="button"
+            onClick={handleRotatePartnerToken}
+            disabled={isRotatingPartner}
+            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100 disabled:opacity-50"
+          >
+            {isRotatingPartner ? "Rotating..." : "Rotate Partner API Key"}
           </button>
         </div>
       </div>

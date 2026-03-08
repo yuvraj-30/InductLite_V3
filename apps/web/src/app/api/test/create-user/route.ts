@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db/prisma";
+import { createPrismaClient, prisma } from "@/lib/db/prisma";
 import { hashPassword } from "@/lib/auth/password";
 import { ensureTestRouteAccess } from "../_guard";
 
@@ -44,10 +44,7 @@ export async function POST(req: Request) {
             e2eLog("E2E: create-user called; masked DATABASE_URL:", masked);
             // Quick schema and table diagnostic using Prisma
             try {
-              const { PrismaClient } = await import("@prisma/client");
-              const diag = new PrismaClient({
-                datasources: { db: { url: dbUrl } },
-              });
+              const diag = createPrismaClient(dbUrl);
               await diag.$connect();
               const res = await diag.user.count();
               e2eLog(
@@ -127,10 +124,7 @@ export async function POST(req: Request) {
       })();
       const dbUrl = env.DATABASE_URL ?? null;
       if (dbUrl) {
-        const { PrismaClient } = await import("@prisma/client");
-        runtimeClient = new PrismaClient({
-          datasources: { db: { url: dbUrl } },
-        });
+        runtimeClient = createPrismaClient(dbUrl);
         await runtimeClient.$connect();
         created = await runtimeClient.user.create({
           data: {
@@ -192,10 +186,7 @@ export async function POST(req: Request) {
         const dbUrl = env.DATABASE_URL ?? null;
         if (dbUrl) {
           try {
-            const { PrismaClient } = await import("@prisma/client");
-            const diag = new PrismaClient({
-              datasources: { db: { url: dbUrl } },
-            });
+            const diag = createPrismaClient(dbUrl);
             await diag.$connect();
             const u = await diag.user.findUnique({ where: { email: safeEmail } });
             e2eLog(

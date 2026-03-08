@@ -71,6 +71,9 @@ const FEATURE_LABELS: Record<ProductFeatureKey, string> = {
   POLICY_SIMULATOR_V1: "Safety policy simulator",
   RISK_PASSPORT_V1: "Contractor risk passport",
   SELF_SERVE_CONFIG_V1: "Self-serve plan configurator",
+  ID_OCR_VERIFICATION_V1: "OCR identity verification",
+  ACCESS_CONNECTORS_V1: "Provider access connectors",
+  NATIVE_MOBILE_RUNTIME_V1: "Native mobile runtime",
 };
 
 export async function buildCompanyInvoicePreview(

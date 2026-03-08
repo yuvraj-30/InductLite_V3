@@ -3,10 +3,10 @@ import {
   __test_clearInMemoryStore,
   __test_clearInMemoryStoreForClient,
 } from "@/lib/rate-limit";
-import { PrismaClient } from "@prisma/client";
 import { ensureTestRouteAccess } from "../_guard";
+import { createPrismaClient } from "@/lib/db/prisma";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 export async function POST(req: Request) {
   const accessDenied = ensureTestRouteAccess(req);

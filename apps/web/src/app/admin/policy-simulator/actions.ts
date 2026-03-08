@@ -39,6 +39,12 @@ interface ParsedScenarioConfig {
   permitRequired: boolean;
 }
 
+function isNextRedirectError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const digest = (error as { digest?: unknown }).digest;
+  return typeof digest === "string" && digest.startsWith("NEXT_REDIRECT");
+}
+
 function startOfUtcDay(now: Date): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 }
@@ -179,6 +185,9 @@ export async function createPolicySimulationAction(formData: FormData): Promise<
 
     statusRedirect("ok", "Policy simulation scenario created");
   } catch (error) {
+    if (isNextRedirectError(error)) {
+      throw error;
+    }
     log.error({ error: String(error) }, "Failed to create policy simulation");
     statusRedirect("error", "Failed to create policy simulation");
   }
@@ -296,6 +305,9 @@ export async function runPolicySimulationAction(formData: FormData): Promise<voi
 
     statusRedirect("ok", "Policy simulation run completed");
   } catch (error) {
+    if (isNextRedirectError(error)) {
+      throw error;
+    }
     if (runId) {
       await updatePolicySimulationRunStatus(context.companyId, runId, {
         status: "FAILED",

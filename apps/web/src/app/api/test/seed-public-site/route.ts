@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { PrismaClient, QuestionType } from "@prisma/client";
+import { QuestionType } from "@prisma/client";
 import { __test_clearInMemoryStore } from "@/lib/rate-limit";
 import { ensureTestRouteAccess } from "../_guard";
 import { hashGeofenceOverrideCode } from "@/lib/access-control/config";
+import { createPrismaClient } from "@/lib/db/prisma";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 export async function POST(req: Request) {
   const accessDenied = ensureTestRouteAccess(req);

@@ -16,6 +16,11 @@ interface ComplianceSettingsFormProps {
     emergency_drill_retention_days: number;
     compliance_legal_hold: boolean;
     compliance_legal_hold_reason: string | null;
+    data_residency_region: string | null;
+    data_residency_scope: string | null;
+    data_residency_notes: string | null;
+    data_residency_attested_at: Date | null;
+    data_residency_attested_by: string | null;
   };
 }
 
@@ -199,6 +204,81 @@ export default function ComplianceSettingsForm({
             )}
           </label>
         </div>
+      </section>
+
+      <section className="rounded-lg border bg-white p-4">
+        <h2 className="text-lg font-semibold text-gray-900">Data Residency</h2>
+        <p className="mt-1 text-sm text-gray-600">
+          Record tenant-level data residency choices for compliance evidence and buyer assurance.
+        </p>
+
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <label className="text-sm text-gray-700">
+            Residency region
+            <select
+              name="dataResidencyRegion"
+              defaultValue={initialSettings.data_residency_region ?? ""}
+              className="input mt-1"
+            >
+              <option value="">Not declared</option>
+              <option value="NZ">New Zealand (NZ)</option>
+              <option value="AU">Australia (AU)</option>
+              <option value="APAC">APAC</option>
+              <option value="GLOBAL">Global</option>
+            </select>
+            {getFieldError("dataResidencyRegion") && (
+              <p className="mt-1 text-xs text-red-600">
+                {getFieldError("dataResidencyRegion")}
+              </p>
+            )}
+          </label>
+
+          <label className="text-sm text-gray-700">
+            Residency scope
+            <select
+              name="dataResidencyScope"
+              defaultValue={initialSettings.data_residency_scope ?? ""}
+              className="input mt-1"
+            >
+              <option value="">Not declared</option>
+              <option value="PRIMARY_ONLY">Primary only</option>
+              <option value="PRIMARY_AND_BACKUP">Primary and backup</option>
+              <option value="PROCESSING_ONLY">Processing only</option>
+            </select>
+            {getFieldError("dataResidencyScope") && (
+              <p className="mt-1 text-xs text-red-600">
+                {getFieldError("dataResidencyScope")}
+              </p>
+            )}
+          </label>
+        </div>
+
+        <label className="mt-4 block text-sm text-gray-700">
+          Residency notes (optional)
+          <textarea
+            name="dataResidencyNotes"
+            rows={3}
+            maxLength={500}
+            defaultValue={initialSettings.data_residency_notes ?? ""}
+            className="input mt-1"
+            placeholder="Example: Primary region NZ, backups retained in AU."
+          />
+          {getFieldError("dataResidencyNotes") && (
+            <p className="mt-1 text-xs text-red-600">
+              {getFieldError("dataResidencyNotes")}
+            </p>
+          )}
+        </label>
+
+        <p className="mt-2 text-xs text-gray-500">
+          Last attested:{" "}
+          {initialSettings.data_residency_attested_at
+            ? initialSettings.data_residency_attested_at.toLocaleString("en-NZ")
+            : "Not attested"}{" "}
+          {initialSettings.data_residency_attested_by
+            ? `(by ${initialSettings.data_residency_attested_by})`
+            : ""}
+        </p>
       </section>
 
       <div className="flex items-center justify-end border-t pt-4">

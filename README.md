@@ -42,6 +42,31 @@ npm run db:seed
 npm run dev
 ```
 
+### Native Mobile App (iOS + Android)
+
+```bash
+# Type-check native app
+npm run mobile:typecheck
+
+# Start Expo runtime
+npm run mobile:start
+
+# Launch iOS simulator
+npm run mobile:ios
+
+# Launch Android emulator
+npm run mobile:android
+```
+
+See [apps/mobile/README.md](apps/mobile/README.md) for placeholder and credential setup.
+
+### Quality Gates
+
+```bash
+# Competitor parity release gate (required rows must stay implemented)
+npm run parity-gate
+```
+
 ### Docker Compose (Full Stack)
 
 ```bash
@@ -77,6 +102,7 @@ Go-live steps: [docs/GO_LIVE_CHECKLIST.md](docs/GO_LIVE_CHECKLIST.md).
 DB migration + rollback operations: [docs/MIGRATION_RUNBOOK.md](docs/MIGRATION_RUNBOOK.md).
 
 - Market and competitor strategy: [docs/NZ_MARKET_COMPETITOR_ANALYSIS.md](docs/NZ_MARKET_COMPETITOR_ANALYSIS.md).
+- Competitor parity control matrix: [docs/COMPETITOR_PARITY_CONTROL_MATRIX.md](docs/COMPETITOR_PARITY_CONTROL_MATRIX.md).
 
 **Render free tier:** keep the single web service awake and trigger cron routes via GitHub Actions. See [.github/workflows/render-keep-alive.yml](.github/workflows/render-keep-alive.yml) and [docs/DEPLOYMENT_RENDER_NEON_R2_UPSTASH.md](docs/DEPLOYMENT_RENDER_NEON_R2_UPSTASH.md) for `CRON_SECRET` and `RENDER_APP_URL` setup.
 
@@ -110,17 +136,18 @@ curl http://localhost:3000/api/ready
 
 ```
 inductlite/
-├── apps/
-│   └── web/              # Next.js application
-│       ├── src/
-│       │   ├── app/      # App Router pages/routes
-│       │   ├── lib/      # Shared utilities
-│       │   └── components/
-│       └── prisma/       # Schema, migrations, seed
-├── packages/             # Shared packages
-└── docker-compose.yml
+|-- apps/
+|   |-- mobile/              # Expo native app (iOS + Android)
+|   `-- web/                 # Next.js application
+|       |-- src/
+|       |   |-- app/         # App Router pages/routes
+|       |   |-- lib/         # Shared utilities
+|       |   `-- components/
+|       `-- prisma/          # Schema, migrations, seed
+|-- packages/                # Shared packages
+`-- docker-compose.yml
 ```
-
 ## License
 
 Proprietary - All rights reserved.
+

@@ -5,6 +5,7 @@ import {
   type APIRequestContext,
   type Page,
 } from "@playwright/test";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, UserRole } from "@prisma/client";
 import { hashPassword } from "../src/lib/auth/password";
 
@@ -67,6 +68,17 @@ const console = {
     if (!E2E_QUIET) globalThis.console.warn(...args);
   },
 };
+
+function createPrismaClient(connectionString?: string): PrismaClient {
+  const resolvedConnectionString =
+    connectionString ??
+    process.env.DATABASE_URL ??
+    "postgresql://invalid:invalid@localhost:5432/invalid";
+
+  return new PrismaClient({
+    adapter: new PrismaPg({ connectionString: resolvedConnectionString }),
+  });
+}
 
 export const test = base.extend<MyFixtures>({
   loginAs: async ({ context, workerUser }, playUse, testInfo) => {
@@ -578,7 +590,6 @@ export const test = base.extend<MyFixtures>({
                 "db",
                 "push",
                 "--accept-data-loss",
-                "--skip-generate",
                 "--schema",
                 "prisma/schema.prisma",
               ]);
@@ -702,7 +713,6 @@ export const test = base.extend<MyFixtures>({
             "db",
             "push",
             "--accept-data-loss",
-            "--skip-generate",
             "--schema",
             "prisma/schema.prisma",
           ],
@@ -768,9 +778,7 @@ export const test = base.extend<MyFixtures>({
     // schema. Create it explicitly via a short-lived Prisma client.
     try {
       try {
-        const adminClient = new PrismaClient({
-          datasources: { db: { url: originalDb } },
-        });
+        const adminClient = createPrismaClient(originalDb);
         await adminClient.$connect();
         // Create schema if it doesn't exist. Use $executeRawUnsafe here because
         // this is a test-only helper and the schema name is generated internally.
@@ -792,8 +800,8 @@ export const test = base.extend<MyFixtures>({
 
       const _commandString =
         process.platform === "win32"
-          ? "npx.cmd prisma db push --accept-data-loss --skip-generate"
-          : "npx prisma db push --accept-data-loss --skip-generate";
+          ? "npx.cmd prisma db push --accept-data-loss"
+          : "npx prisma db push --accept-data-loss";
       // Mark intentionally unused variable as referenced to silence TS no-unused-local
       void _commandString;
 
@@ -980,7 +988,7 @@ export const test = base.extend<MyFixtures>({
             );
             res = runCommand(
               found,
-              ["db", "push", "--accept-data-loss", "--skip-generate"],
+              ["db", "push", "--accept-data-loss"],
               { DATABASE_URL: dbUrl, DATABASE_DIRECT_URL: dbUrl },
             );
             if (
@@ -1000,7 +1008,6 @@ export const test = base.extend<MyFixtures>({
                     "db",
                     "push",
                     "--accept-data-loss",
-                    "--skip-generate",
                   ],
                   { DATABASE_URL: dbUrl, DATABASE_DIRECT_URL: dbUrl },
                 );
@@ -1018,7 +1025,7 @@ export const test = base.extend<MyFixtures>({
             );
             res = runCommand(
               isWin ? "npx.cmd" : "npx",
-              ["prisma", "db", "push", "--accept-data-loss", "--skip-generate"],
+              ["prisma", "db", "push", "--accept-data-loss"],
               { DATABASE_URL: dbUrl, DATABASE_DIRECT_URL: dbUrl },
             );
           }
@@ -1051,9 +1058,7 @@ export const test = base.extend<MyFixtures>({
           String(lastErr),
         );
         try {
-          const adminClient2 = new PrismaClient({
-            datasources: { db: { url: originalDb } },
-          });
+          const adminClient2 = createPrismaClient(originalDb);
           await adminClient2.$connect();
 
           // Copy a small set of core tables from public into the worker schema
@@ -1082,9 +1087,7 @@ export const test = base.extend<MyFixtures>({
       }
 
       // Diagnostic: verify tables were created in the worker schema at runtime.
-      const diagClient = new PrismaClient({
-        datasources: { db: { url: dbUrl } },
-      });
+      const diagClient = createPrismaClient(dbUrl);
       await diagClient.$connect();
       try {
         // Basic table counts
@@ -1333,7 +1336,7 @@ export const test = base.extend<MyFixtures>({
 
     try {
       // Use a short-lived Prisma client pointing at the schema to drop it
-      const client = new PrismaClient({ datasources: { db: { url: dbUrl } } });
+      const client = createPrismaClient(dbUrl);
       await client.$connect();
       // Drop schema to clean up
       await client.$executeRawUnsafe(
@@ -1414,7 +1417,7 @@ export const test = base.extend<MyFixtures>({
 
     if (!createUserOk) {
       try {
-        const db = new PrismaClient();
+        const db = createPrismaClient();
         await db.$connect();
         try {
           const companySlug = `test-company-${clientKey}`;

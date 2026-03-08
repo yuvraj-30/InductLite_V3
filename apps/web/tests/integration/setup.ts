@@ -9,6 +9,7 @@ import {
   PostgreSqlContainer,
   StartedPostgreSqlContainer,
 } from "@testcontainers/postgresql";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { execSync } from "child_process";
 
@@ -46,7 +47,7 @@ export async function setupTestDatabase(): Promise<{
 
   // Apply schema using db push (creates tables from schema.prisma)
   execSync(
-    "npx prisma db push --accept-data-loss --skip-generate --schema prisma/schema.prisma",
+    "npx prisma db push --accept-data-loss --schema prisma/schema.prisma",
     {
       cwd: process.cwd(),
       env: {
@@ -60,9 +61,7 @@ export async function setupTestDatabase(): Promise<{
 
   // Create Prisma client
   prismaClient = new PrismaClient({
-    datasources: {
-      db: { url: connectionString },
-    },
+    adapter: new PrismaPg({ connectionString }),
   });
 
   await prismaClient.$connect();

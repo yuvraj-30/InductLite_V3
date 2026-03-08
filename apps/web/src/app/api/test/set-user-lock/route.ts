@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "@/lib/db/prisma";
 import { ensureTestRouteAccess } from "../_guard";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 export async function POST(req: Request) {
   const accessDenied = ensureTestRouteAccess(req);

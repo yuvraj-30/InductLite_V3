@@ -20,6 +20,8 @@ const mocks = vi.hoisted(() => ({
   findSiteById: vi.fn(),
   updateSite: vi.fn(),
   assertCompanyFeatureEnabled: vi.fn(),
+  isFeatureEnabled: vi.fn(),
+  upsertAccessConnectorConfig: vi.fn(),
   generateRequestId: vi.fn(),
   createRequestLogger: vi.fn(),
   logger: {
@@ -57,6 +59,14 @@ vi.mock("@/lib/plans", () => ({
   assertCompanyFeatureEnabled: mocks.assertCompanyFeatureEnabled,
 }));
 
+vi.mock("@/lib/feature-flags", () => ({
+  isFeatureEnabled: mocks.isFeatureEnabled,
+}));
+
+vi.mock("@/lib/repository/access-connector.repository", () => ({
+  upsertAccessConnectorConfig: mocks.upsertAccessConnectorConfig,
+}));
+
 vi.mock("@/lib/auth/csrf", () => ({
   generateRequestId: mocks.generateRequestId,
 }));
@@ -74,6 +84,8 @@ describe("site access control actions", () => {
     mocks.assertOrigin.mockResolvedValue(undefined);
     mocks.checkSitePermission.mockResolvedValue({ success: true });
     mocks.assertCompanyFeatureEnabled.mockResolvedValue({} as any);
+    mocks.isFeatureEnabled.mockReturnValue(true);
+    mocks.upsertAccessConnectorConfig.mockResolvedValue({});
     mocks.requireAuthenticatedContextReadOnly.mockResolvedValue({
       companyId: "company-1",
       userId: "user-1",
@@ -151,6 +163,42 @@ describe("site access control actions", () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.fieldErrors?.hardwareEndpointUrl?.[0]).toContain("valid");
+    }
+    expect(mocks.updateSite).not.toHaveBeenCalled();
+  });
+
+  it("blocks mobile automation mode without entitlement", async () => {
+    mocks.assertCompanyFeatureEnabled.mockImplementation(
+      async (_companyId: string, featureKey: string) => {
+        if (featureKey === "MOBILE_OFFLINE_ASSIST_V1") {
+          throw new mocks.EntitlementDeniedError("MOBILE_OFFLINE_ASSIST_V1");
+        }
+        return {} as any;
+      },
+    );
+
+    const formData = new FormData();
+    formData.set("geofenceAutomationMode", "AUTO");
+
+    const result = await updateSiteAccessControlAction("site-1", null, formData);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain("Mobile geofence automation is disabled");
+    }
+    expect(mocks.updateSite).not.toHaveBeenCalled();
+  });
+
+  it("requires ID scan when OCR verification is enabled", async () => {
+    const formData = new FormData();
+    formData.set("identityEnabled", "on");
+    formData.set("identityRequireOcrVerification", "on");
+
+    const result = await updateSiteAccessControlAction("site-1", null, formData);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error).toContain("ID image upload is required");
     }
     expect(mocks.updateSite).not.toHaveBeenCalled();
   });

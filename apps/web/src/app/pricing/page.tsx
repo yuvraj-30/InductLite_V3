@@ -23,6 +23,7 @@ const PLAN_DETAILS: Array<{
     highlights: [
       "QR sign-in, inductions, and live register",
       "Emergency roll-call and evidence exports",
+      "SWMS/JSA/RAMS/toolbox/fatigue safety forms",
       "Pre-registration and reminder workflows",
       "Removable feature credits for cost-sensitive sites",
     ],
@@ -76,6 +77,12 @@ const COMPARISON_ROWS: Array<{
     pro: "Included",
   },
   {
+    feature: "Safety forms (SWMS/JSA/RAMS/toolbox/fatigue)",
+    standard: "Included",
+    plus: "Included",
+    pro: "Included",
+  },
+  {
     feature: "Quiz scoring + retries",
     standard: "Optional by entitlement",
     plus: "Included",
@@ -105,6 +112,11 @@ const ADD_ONS = [
     title: "Hardware access integration",
     detail:
       "Gate/turnstile decision integration for sites that require physical access control.",
+  },
+  {
+    title: "Premium access connectors",
+    detail:
+      "Named connectors for HID Origo, Brivo, Gallagher, LenelS2, and Genetec environments.",
   },
   {
     title: "Premium implementation support",

@@ -40,7 +40,7 @@ const demoBookingSchema = z.object({
         return numeric;
       },
       z
-        .number({ invalid_type_error: "Site count must be a number" })
+        .number({ error: "Site count must be a number" })
         .int("Site count must be a whole number")
         .min(1, "Site count must be at least 1")
         .max(500, "Site count is too high")

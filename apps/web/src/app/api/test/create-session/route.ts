@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db/prisma";
+import { createPrismaClient, prisma } from "@/lib/db/prisma";
 import { generateCsrfToken } from "@/lib/auth/csrf";
 import { ensureTestRouteAccess } from "../_guard";
 
@@ -72,10 +72,7 @@ export async function GET(req: Request) {
             const masked = `${u.protocol}//${u.username}:****@${u.hostname}${u.port ? `:${u.port}` : ""}${u.pathname}${u.search}`;
             e2eLog("E2E: create-session lookup; masked DATABASE_URL:", masked);
             try {
-              const { PrismaClient } = await import("@prisma/client");
-              const diag = new PrismaClient({
-                datasources: { db: { url: dbUrl } },
-              });
+              const diag = createPrismaClient(dbUrl);
               await diag.$connect();
               const res = await diag.user.count();
               e2eLog(
@@ -110,10 +107,7 @@ export async function GET(req: Request) {
       })();
       const dbUrl = env.DATABASE_URL ?? null;
       if (dbUrl) {
-        const { PrismaClient } = await import("@prisma/client");
-        runtimeClient = new PrismaClient({
-          datasources: { db: { url: dbUrl } },
-        });
+        runtimeClient = createPrismaClient(dbUrl);
         await runtimeClient.$connect();
         user = await runtimeClient.user.findUnique({
           where: { email },
@@ -154,10 +148,7 @@ export async function GET(req: Request) {
           const dbUrl = env.DATABASE_URL ?? null;
           if (dbUrl) {
             try {
-              const { PrismaClient } = await import("@prisma/client");
-              const diag = new PrismaClient({
-                datasources: { db: { url: dbUrl } },
-              });
+              const diag = createPrismaClient(dbUrl);
               await diag.$connect();
               const count = await diag.user.count({ where: { email } });
               e2eWarn(

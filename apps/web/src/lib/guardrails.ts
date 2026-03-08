@@ -3,6 +3,11 @@ const toInt = (value: string | undefined, fallback: number): number => {
   return Number.isFinite(n) && n > 0 ? Math.floor(n) : fallback;
 };
 
+const toNonNegativeInt = (value: string | undefined, fallback: number): number => {
+  const n = Number(value);
+  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : fallback;
+};
+
 const toBool = (value: string | undefined, fallback: boolean): boolean => {
   if (value === undefined) return fallback;
   return value === "true" || value === "1";
@@ -104,6 +109,26 @@ export const GUARDRAILS = {
   MAX_TENANT_COMPUTE_INVOCATIONS_PER_MONTH: toInt(
     process.env.MAX_TENANT_COMPUTE_INVOCATIONS_PER_MONTH,
     250000,
+  ),
+  MAX_MOBILE_GEOFENCE_EVENTS_PER_COMPANY_PER_DAY: toNonNegativeInt(
+    process.env.MAX_MOBILE_GEOFENCE_EVENTS_PER_COMPANY_PER_DAY,
+    5000,
+  ),
+  MAX_OCR_REQUESTS_PER_COMPANY_PER_MONTH: toNonNegativeInt(
+    process.env.MAX_OCR_REQUESTS_PER_COMPANY_PER_MONTH,
+    0,
+  ),
+  MAX_OCR_REQUESTS_GLOBAL_PER_DAY: toNonNegativeInt(
+    process.env.MAX_OCR_REQUESTS_GLOBAL_PER_DAY,
+    0,
+  ),
+  OCR_IMAGE_RETENTION_DAYS: toNonNegativeInt(
+    process.env.OCR_IMAGE_RETENTION_DAYS,
+    7,
+  ),
+  MAX_CONNECTOR_DELIVERIES_PER_COMPANY_PER_DAY: toNonNegativeInt(
+    process.env.MAX_CONNECTOR_DELIVERIES_PER_COMPANY_PER_DAY,
+    10000,
   ),
 };
 

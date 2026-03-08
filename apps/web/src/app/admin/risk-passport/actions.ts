@@ -25,6 +25,12 @@ const refreshSingleSchema = z.object({
   siteId: z.string().cuid().optional().or(z.literal("")),
 });
 
+function isNextRedirectError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const digest = (error as { digest?: unknown }).digest;
+  return typeof digest === "string" && digest.startsWith("NEXT_REDIRECT");
+}
+
 function startOfUtcDay(now: Date): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 }
@@ -135,6 +141,9 @@ export async function refreshAllRiskScoresAction(formData: FormData): Promise<vo
 
     statusRedirect("ok", `Refreshed ${refreshed.length} contractor risk scores`);
   } catch (error) {
+    if (isNextRedirectError(error)) {
+      throw error;
+    }
     log.error({ error: String(error) }, "Failed to refresh all risk scores");
     statusRedirect("error", "Failed to refresh contractor risk scores");
   }
@@ -192,6 +201,9 @@ export async function refreshSingleRiskScoreAction(formData: FormData): Promise<
 
     statusRedirect("ok", "Contractor risk score refreshed");
   } catch (error) {
+    if (isNextRedirectError(error)) {
+      throw error;
+    }
     log.error({ error: String(error) }, "Failed to refresh contractor risk score");
     statusRedirect("error", "Failed to refresh contractor risk score");
   }

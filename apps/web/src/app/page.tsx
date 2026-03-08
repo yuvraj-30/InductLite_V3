@@ -38,6 +38,11 @@ const STANDARD_FEATURES = [
       "Issue permit templates, run approval/activation lifecycle, and enforce permit-gated sign-in rules.",
   },
   {
+    title: "Construction safety form suite",
+    detail:
+      "Run SWMS, JSA, RAMS, toolbox talk, and fatigue declaration workflows from one admin workspace.",
+  },
+  {
     title: "Visitor approvals + ID hardening",
     detail:
       "Use policy-based approvals, watchlist screening, random checks, and identity verification records.",
@@ -65,6 +70,7 @@ const INTEGRATION_FEATURES = [
   "LMS connector configuration per site",
   "Unified communication event feed and delivery diagnostics",
   "Hardware access decision adapter (entitlement-gated)",
+  "Named access connectors (HID Origo, Brivo, Gallagher, LenelS2, Genetec)",
   "Email and SMS workflow support (plan/add-on controlled)",
 ];
 
@@ -111,6 +117,7 @@ const PLAN_CARDS = [
 
 const LATEST_RELEASES = [
   "Permit-to-Work / Control-of-Work workflows",
+  "Construction safety form suite (SWMS/JSA/RAMS/Toolbox/Fatigue)",
   "Identity hardening (watchlists, random checks, verification records)",
   "Emergency broadcast + acknowledgement + incident evidence linkage",
   "Teams/Slack notifications with approval action callbacks",

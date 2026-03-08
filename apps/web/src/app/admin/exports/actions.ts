@@ -42,7 +42,7 @@ export async function createExportAction(
   const parsed = createExportSchema.safeParse(input);
   if (!parsed.success) {
     return validationErrorResponse(
-      { export: parsed.error.errors.map((e) => e.message) },
+      { export: parsed.error.issues.map((e) => e.message) },
       "Invalid export parameters",
     );
   }

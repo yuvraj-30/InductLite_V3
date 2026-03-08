@@ -44,7 +44,7 @@ function parseDecisionForm(formData: FormData) {
   });
   if (!parsed.success) {
     const fieldErrors: Record<string, string[]> = {};
-    parsed.error.errors.forEach((error) => {
+    parsed.error.issues.forEach((error) => {
       const field = error.path.join(".") || "form";
       fieldErrors[field] = fieldErrors[field] ?? [];
       fieldErrors[field].push(error.message);

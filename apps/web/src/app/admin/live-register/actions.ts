@@ -54,7 +54,7 @@ export async function adminSignOutAction(
   const parsed = signInIdSchema.safeParse(signInId);
   if (!parsed.success) {
     return validationErrorResponse(
-      { signInId: parsed.error.errors.map((e) => e.message) },
+      { signInId: parsed.error.issues.map((e) => e.message) },
       "Invalid sign-in record ID",
     );
   }

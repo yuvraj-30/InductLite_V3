@@ -20,6 +20,9 @@ export const FEATURE_FLAGS = {
   POLICY_SIMULATOR_V1: toBool(process.env.FF_POLICY_SIMULATOR_V1, false),
   RISK_PASSPORT_V1: toBool(process.env.FF_RISK_PASSPORT_V1, false),
   SELF_SERVE_CONFIG_V1: toBool(process.env.FF_SELF_SERVE_CONFIG_V1, false),
+  NATIVE_MOBILE_RUNTIME_V1: toBool(process.env.FEATURE_NATIVE_MOBILE_RUNTIME, false),
+  IDENTITY_OCR_V1: toBool(process.env.FEATURE_IDENTITY_OCR, false),
+  ACCESS_CONNECTORS_V1: toBool(process.env.FEATURE_ACCESS_CONNECTORS, false),
 };
 
 export function isFeatureEnabled(flag: keyof typeof FEATURE_FLAGS): boolean {

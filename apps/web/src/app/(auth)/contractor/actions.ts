@@ -76,7 +76,7 @@ export async function requestContractorMagicLinkAction(
   if (!parsed.success) {
     return {
       success: false,
-      message: parsed.error.errors[0]?.message || "Invalid input",
+      message: parsed.error.issues[0]?.message || "Invalid input",
       error: "INVALID_INPUT",
     };
   }

@@ -36,7 +36,7 @@ Run from repo root:
 
 ```bash
 npm run -w apps/web db:generate
-npx prisma migrate status --schema apps/web/prisma/schema.prisma
+npx prisma migrate status --config apps/web/prisma.config.ts
 ```
 
 Expected:
@@ -62,9 +62,9 @@ export DATABASE_DIRECT_URL='postgresql://...-direct...:5432/...?...'
 ### 3) Apply migrations to Neon
 
 ```bash
-```
 npm run -w apps/web db:migrate
-npx prisma migrate status --schema apps/web/prisma/schema.prisma
+npx prisma migrate status --config apps/web/prisma.config.ts
+```
 
 Expected:
 - New migrations marked as applied.
@@ -154,7 +154,7 @@ Before migration:
 - [ ] Confirm PITR available
 
 After migration:
-- [ ] `prisma migrate status` is clean
+- [ ] `prisma migrate status --config apps/web/prisma.config.ts` is clean
 - [ ] Render deploy complete
 - [ ] Smoke tests pass
 

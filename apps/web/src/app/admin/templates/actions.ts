@@ -74,7 +74,7 @@ export async function unarchiveTemplateAction(
   const idParsed = templateIdSchema.safeParse(templateId);
   if (!idParsed.success) {
     return validationErrorResponse(
-      { templateId: idParsed.error.errors.map((e) => e.message) },
+      { templateId: idParsed.error.issues.map((e) => e.message) },
       "Invalid template ID",
     );
   }
@@ -341,7 +341,7 @@ export async function createTemplateAction(
   const parsed = createTemplateSchema.safeParse(input);
   if (!parsed.success) {
     const fieldErrors: Record<string, string[]> = {};
-    parsed.error.errors.forEach((e) => {
+    parsed.error.issues.forEach((e) => {
       const field = e.path.join(".");
       fieldErrors[field] = fieldErrors[field] || [];
       fieldErrors[field].push(e.message);
@@ -431,7 +431,7 @@ export async function updateTemplateAction(
   const idParsed = templateIdSchema.safeParse(templateId);
   if (!idParsed.success) {
     return validationErrorResponse(
-      { templateId: idParsed.error.errors.map((e) => e.message) },
+      { templateId: idParsed.error.issues.map((e) => e.message) },
       "Invalid template ID",
     );
   }
@@ -439,7 +439,7 @@ export async function updateTemplateAction(
   const parsed = updateTemplateSchema.safeParse(input);
   if (!parsed.success) {
     const fieldErrors: Record<string, string[]> = {};
-    parsed.error.errors.forEach((e) => {
+    parsed.error.issues.forEach((e) => {
       const field = e.path.join(".");
       fieldErrors[field] = fieldErrors[field] || [];
       fieldErrors[field].push(e.message);
@@ -536,7 +536,7 @@ export async function publishTemplateAction(
   const idParsed = templateIdSchema.safeParse(templateId);
   if (!idParsed.success) {
     return validationErrorResponse(
-      { templateId: idParsed.error.errors.map((e) => e.message) },
+      { templateId: idParsed.error.issues.map((e) => e.message) },
       "Invalid template ID",
     );
   }
@@ -612,7 +612,7 @@ export async function createNewVersionAction(
   const idParsed = templateIdSchema.safeParse(sourceTemplateId);
   if (!idParsed.success) {
     return validationErrorResponse(
-      { templateId: idParsed.error.errors.map((e) => e.message) },
+      { templateId: idParsed.error.issues.map((e) => e.message) },
       "Invalid template ID",
     );
   }
@@ -682,7 +682,7 @@ export async function archiveTemplateAction(
   const idParsed = templateIdSchema.safeParse(templateId);
   if (!idParsed.success) {
     return validationErrorResponse(
-      { templateId: idParsed.error.errors.map((e) => e.message) },
+      { templateId: idParsed.error.issues.map((e) => e.message) },
       "Invalid template ID",
     );
   }
@@ -742,7 +742,7 @@ export async function deleteTemplateAction(
   const idParsed = templateIdSchema.safeParse(templateId);
   if (!idParsed.success) {
     return validationErrorResponse(
-      { templateId: idParsed.error.errors.map((e) => e.message) },
+      { templateId: idParsed.error.issues.map((e) => e.message) },
       "Invalid template ID",
     );
   }
@@ -812,7 +812,7 @@ export async function addQuestionAction(
   const idParsed = templateIdSchema.safeParse(templateId);
   if (!idParsed.success) {
     return validationErrorResponse(
-      { templateId: idParsed.error.errors.map((e) => e.message) },
+      { templateId: idParsed.error.issues.map((e) => e.message) },
       "Invalid template ID",
     );
   }
@@ -820,7 +820,7 @@ export async function addQuestionAction(
   const parsed = createQuestionSchema.safeParse(input);
   if (!parsed.success) {
     const fieldErrors: Record<string, string[]> = {};
-    parsed.error.errors.forEach((e) => {
+    parsed.error.issues.forEach((e) => {
       const field = e.path.join(".");
       fieldErrors[field] = fieldErrors[field] || [];
       fieldErrors[field].push(e.message);
@@ -896,7 +896,7 @@ export async function updateQuestionAction(
   const parsed = updateQuestionSchema.safeParse(input);
   if (!parsed.success) {
     const fieldErrors: Record<string, string[]> = {};
-    parsed.error.errors.forEach((e) => {
+    parsed.error.issues.forEach((e) => {
       const field = e.path.join(".");
       fieldErrors[field] = fieldErrors[field] || [];
       fieldErrors[field].push(e.message);
@@ -1020,7 +1020,7 @@ export async function reorderQuestionsAction(
   const idParsed = templateIdSchema.safeParse(templateId);
   if (!idParsed.success) {
     return validationErrorResponse(
-      { templateId: idParsed.error.errors.map((e) => e.message) },
+      { templateId: idParsed.error.issues.map((e) => e.message) },
       "Invalid template ID",
     );
   }

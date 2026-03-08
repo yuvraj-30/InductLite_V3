@@ -20,19 +20,30 @@ import {
 } from "@/lib/plans";
 import {
   generateDirectorySyncApiKey,
+  generatePartnerApiKey,
   hashDirectorySyncApiKey,
+  hashPartnerApiKey,
   parseCompanySsoConfig,
   serializeCompanySsoConfig,
   setClientSecret,
 } from "@/lib/identity";
 
 const MAX_RETENTION_DAYS = 36500;
+const MAX_DATA_RESIDENCY_NOTES = 500;
+const DATA_RESIDENCY_REGIONS = ["NZ", "AU", "APAC", "GLOBAL"] as const;
+const DATA_RESIDENCY_SCOPES = [
+  "PRIMARY_ONLY",
+  "PRIMARY_AND_BACKUP",
+  "PROCESSING_ONLY",
+] as const;
 const MAX_SSO_DISPLAY_NAME = 120;
 const MAX_SSO_ISSUER_URL = 2000;
 const MAX_SSO_CLIENT_ID = 300;
 const MAX_SSO_ROLE_CLAIM_PATH = 120;
 const MAX_SSO_CLIENT_SECRET = 2000;
 const MAX_SSO_LIST_TEXT = 4000;
+const MIN_PARTNER_API_MONTHLY_QUOTA = 100;
+const MAX_PARTNER_API_MONTHLY_QUOTA = 1_000_000;
 
 const updateComplianceSettingsSchema = z
   .object({
@@ -45,6 +56,22 @@ const updateComplianceSettingsSchema = z
     complianceLegalHoldReason: z
       .string()
       .max(500, "Legal hold reason must be 500 characters or less")
+      .optional()
+      .or(z.literal("")),
+    dataResidencyRegion: z
+      .enum(DATA_RESIDENCY_REGIONS)
+      .optional()
+      .or(z.literal("")),
+    dataResidencyScope: z
+      .enum(DATA_RESIDENCY_SCOPES)
+      .optional()
+      .or(z.literal("")),
+    dataResidencyNotes: z
+      .string()
+      .max(
+        MAX_DATA_RESIDENCY_NOTES,
+        `Residency notes must be ${MAX_DATA_RESIDENCY_NOTES} characters or less`,
+      )
       .optional()
       .or(z.literal("")),
   })
@@ -124,6 +151,19 @@ const updateSsoSettingsSchema = z
       .optional()
       .or(z.literal("")),
     directorySyncEnabled: z.coerce.boolean().default(false),
+    partnerApiEnabled: z.coerce.boolean().default(false),
+    partnerApiScopes: z
+      .string()
+      .trim()
+      .max(MAX_SSO_LIST_TEXT, "Partner API scopes are too long")
+      .optional()
+      .or(z.literal("")),
+    partnerApiMonthlyQuota: z.coerce
+      .number()
+      .int()
+      .min(MIN_PARTNER_API_MONTHLY_QUOTA)
+      .max(MAX_PARTNER_API_MONTHLY_QUOTA)
+      .default(10_000),
   })
   .superRefine((value, ctx) => {
     if (!value.enabled) {
@@ -174,9 +214,13 @@ export type RotateDirectorySyncKeyActionResult =
   | { success: true; message: string; apiKey: string }
   | { success: false; error: string };
 
+export type RotatePartnerApiKeyActionResult =
+  | { success: true; message: string; apiKey: string }
+  | { success: false; error: string };
+
 function toFieldErrors(error: z.ZodError): Record<string, string[]> {
   const fieldErrors: Record<string, string[]> = {};
-  for (const issue of error.errors) {
+  for (const issue of error.issues) {
     const field = String(issue.path[0] ?? "form");
     fieldErrors[field] = fieldErrors[field] ?? [];
     fieldErrors[field].push(issue.message);
@@ -223,6 +267,13 @@ function toAuditSnapshot(
     compliance_legal_hold_set_at: settings.compliance_legal_hold_set_at
       ? settings.compliance_legal_hold_set_at.toISOString()
       : null,
+    data_residency_region: settings.data_residency_region,
+    data_residency_scope: settings.data_residency_scope,
+    data_residency_notes: settings.data_residency_notes,
+    data_residency_attested_at: settings.data_residency_attested_at
+      ? settings.data_residency_attested_at.toISOString()
+      : null,
+    data_residency_attested_by: settings.data_residency_attested_by,
   };
 }
 
@@ -257,6 +308,12 @@ function toSsoAuditSnapshot(configRaw: unknown): Record<string, unknown> {
       enabled: config.directorySync.enabled,
       hasToken: Boolean(config.directorySync.tokenHash),
     },
+    partnerApi: {
+      enabled: config.partnerApi.enabled,
+      hasToken: Boolean(config.partnerApi.tokenHash),
+      scopes: config.partnerApi.scopes,
+      monthlyQuota: config.partnerApi.monthlyQuota,
+    },
   };
 }
 
@@ -289,12 +346,15 @@ export async function updateComplianceSettingsAction(
     emergencyDrillRetentionDays: formData.get("emergencyDrillRetentionDays"),
     complianceLegalHold: formData.get("complianceLegalHold") ?? false,
     complianceLegalHoldReason: formData.get("complianceLegalHoldReason"),
+    dataResidencyRegion: formData.get("dataResidencyRegion") ?? "",
+    dataResidencyScope: formData.get("dataResidencyScope") ?? "",
+    dataResidencyNotes: formData.get("dataResidencyNotes") ?? "",
   });
 
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.errors[0]?.message ?? "Invalid input",
+      error: parsed.error.issues[0]?.message ?? "Invalid input",
       fieldErrors: toFieldErrors(parsed.error),
     };
   }
@@ -312,6 +372,10 @@ export async function updateComplianceSettingsAction(
       compliance_legal_hold: parsed.data.complianceLegalHold,
       compliance_legal_hold_reason:
         parsed.data.complianceLegalHoldReason?.trim() || null,
+      data_residency_region: parsed.data.dataResidencyRegion?.trim() || null,
+      data_residency_scope: parsed.data.dataResidencyScope?.trim() || null,
+      data_residency_notes: parsed.data.dataResidencyNotes?.trim() || null,
+      data_residency_attested_by: context.userId,
     });
 
     await createAuditLog(context.companyId, {
@@ -444,12 +508,15 @@ export async function updateSsoSettingsAction(
     roleMappingViewer: formData.get("roleMappingViewer"),
     allowedEmailDomains: formData.get("allowedEmailDomains"),
     directorySyncEnabled: formData.get("directorySyncEnabled") ?? false,
+    partnerApiEnabled: formData.get("partnerApiEnabled") ?? false,
+    partnerApiScopes: formData.get("partnerApiScopes") ?? "",
+    partnerApiMonthlyQuota: formData.get("partnerApiMonthlyQuota") ?? "10000",
   });
 
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.errors[0]?.message ?? "Invalid SSO settings",
+      error: parsed.error.issues[0]?.message ?? "Invalid SSO settings",
       fieldErrors: toFieldErrors(parsed.error),
     };
   }
@@ -490,6 +557,14 @@ export async function updateSsoSettingsAction(
       directorySync: {
         enabled: parsed.data.directorySyncEnabled,
         tokenHash: currentConfig.directorySync.tokenHash,
+      },
+      partnerApi: {
+        enabled: parsed.data.partnerApiEnabled,
+        tokenHash: currentConfig.partnerApi.tokenHash,
+        scopes: parseDelimitedList(parsed.data.partnerApiScopes).map((scope) =>
+          scope.toLowerCase(),
+        ),
+        monthlyQuota: parsed.data.partnerApiMonthlyQuota,
       },
     };
 
@@ -609,5 +684,74 @@ export async function rotateDirectorySyncApiKeyAction(): Promise<RotateDirectory
   } catch (error) {
     log.error({ error: String(error) }, "Failed to rotate directory sync API key");
     return { success: false, error: "Failed to rotate directory sync API key" };
+  }
+}
+
+export async function rotatePartnerApiKeyAction(): Promise<RotatePartnerApiKeyActionResult> {
+  const requestId = generateRequestId();
+  const log = createRequestLogger(requestId, {
+    path: "/admin/settings/sso/rotate-partner-api-key",
+    method: "POST",
+  });
+
+  try {
+    await assertOrigin();
+  } catch {
+    return { success: false, error: "Invalid request origin" };
+  }
+
+  const guard = await checkPermission("settings:manage");
+  if (!guard.success) {
+    return { success: false, error: guard.error };
+  }
+
+  const context = await requireAuthenticatedContextReadOnly();
+
+  try {
+    const existing = await findCompanySsoSettings(context.companyId);
+    if (!existing) {
+      return { success: false, error: "Company settings not found" };
+    }
+
+    const config = parseCompanySsoConfig(existing.sso_config);
+    const apiKey = generatePartnerApiKey();
+    const tokenHash = hashPartnerApiKey(apiKey);
+
+    const nextConfig = {
+      ...config,
+      partnerApi: {
+        enabled: config.partnerApi.enabled,
+        tokenHash,
+        scopes: config.partnerApi.scopes,
+        monthlyQuota: config.partnerApi.monthlyQuota,
+      },
+    };
+
+    await updateCompanySsoSettings(
+      context.companyId,
+      serializeCompanySsoConfig(nextConfig) as Prisma.InputJsonValue,
+    );
+
+    await createAuditLog(context.companyId, {
+      action: "settings.update",
+      entity_type: "Company",
+      entity_id: context.companyId,
+      user_id: context.userId,
+      details: {
+        area: "partner_api",
+        rotated: true,
+      } as Prisma.InputJsonValue,
+      request_id: requestId,
+    });
+
+    revalidatePath("/admin/settings");
+    return {
+      success: true,
+      message: "Partner API key rotated",
+      apiKey,
+    };
+  } catch (error) {
+    log.error({ error: String(error) }, "Failed to rotate partner API key");
+    return { success: false, error: "Failed to rotate partner API key" };
   }
 }

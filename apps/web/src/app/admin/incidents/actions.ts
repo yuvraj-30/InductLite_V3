@@ -66,14 +66,14 @@ export async function createIncidentReportAction(
 
   if (!parsed.success) {
     const fieldErrors: Record<string, string[]> = {};
-    for (const err of parsed.error.errors) {
+    for (const err of parsed.error.issues) {
       const field = String(err.path[0] ?? "form");
       fieldErrors[field] = fieldErrors[field] ?? [];
       fieldErrors[field].push(err.message);
     }
     return {
       success: false,
-      error: parsed.error.errors[0]?.message ?? "Invalid input",
+      error: parsed.error.issues[0]?.message ?? "Invalid input",
       fieldErrors,
     };
   }

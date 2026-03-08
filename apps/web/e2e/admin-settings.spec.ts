@@ -10,6 +10,13 @@ test.describe.serial("Admin Settings", () => {
     await expect(field).toHaveValue(value);
   }
 
+  async function setCheckboxChecked(page: any, label: string) {
+    const checkbox = page.getByLabel(label);
+    await checkbox.scrollIntoViewIfNeeded();
+    await checkbox.check({ force: true });
+    await expect(checkbox).toBeChecked();
+  }
+
   async function submitSettingsForm(page: any, saveButton: any) {
     const saveForm = page
       .locator("form")
@@ -48,7 +55,7 @@ test.describe.serial("Admin Settings", () => {
     await setNumericField(page, "Audit log retention (days)", "180");
     await setNumericField(page, "Incident retention (days)", "2000");
     await setNumericField(page, "Emergency drill retention (days)", "2000");
-    await page.getByLabel("Compliance legal hold enabled").check();
+    await setCheckboxChecked(page, "Compliance legal hold enabled");
     await page.getByLabel("Legal hold reason").fill(legalHoldReason);
     await expect(page.getByLabel("Legal hold reason")).toHaveValue(
       legalHoldReason,
@@ -88,12 +95,10 @@ test.describe.serial("Admin Settings", () => {
   });
 
   test("legal hold requires a reason", async ({ page }) => {
-    const legalHoldCheckbox = page.getByLabel("Compliance legal hold enabled");
     const legalHoldReason = page.getByLabel("Legal hold reason");
     const saveButton = page.getByRole("button", { name: "Save Settings" });
 
-    await legalHoldCheckbox.check();
-    await expect(legalHoldCheckbox).toBeChecked();
+    await setCheckboxChecked(page, "Compliance legal hold enabled");
     await legalHoldReason.waitFor({ state: "visible", timeout: 15000 });
     // Use fill() to clear value instead of keyboard shortcuts for mobile Safari stability.
     await legalHoldReason.fill(`temporary-${Date.now()}`);

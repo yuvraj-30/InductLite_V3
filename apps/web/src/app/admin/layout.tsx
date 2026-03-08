@@ -45,6 +45,22 @@ export default async function AdminLayout({
       contexts: ["sites", "dashboard", "live"],
     },
     {
+      id: "deliveries",
+      href: "/admin/deliveries",
+      title: "Open Delivery & Mailroom",
+      description: "Track inbound deliveries through arrival and collection.",
+      keywords: ["delivery", "mailroom", "courier"],
+      contexts: ["dashboard", "sites", "live"],
+    },
+    {
+      id: "resources",
+      href: "/admin/resources",
+      title: "Open Resources & Booking",
+      description: "Manage desk, room, and equipment bookings.",
+      keywords: ["resource", "booking", "desk", "room"],
+      contexts: ["dashboard", "sites"],
+    },
+    {
       id: "live-register",
       href: "/admin/live-register",
       title: "Open Live Register",
@@ -129,6 +145,14 @@ export default async function AdminLayout({
         contexts: ["dashboard", "sites", "escalations"],
       },
       {
+        id: "safety-forms",
+        href: "/admin/safety-forms",
+        title: "Open Safety Forms",
+        description: "Manage SWMS, JSA, RAMS, toolbox talks, and fatigue forms.",
+        keywords: ["swms", "jsa", "rams", "toolbox", "fatigue"],
+        contexts: ["dashboard", "sites", "escalations"],
+      },
+      {
         id: "approvals",
         href: "/admin/approvals",
         title: "Open Approvals",
@@ -153,11 +177,35 @@ export default async function AdminLayout({
         contexts: ["dashboard", "webhooks", "escalations"],
       },
       {
+        id: "procore-connector",
+        href: "/admin/integrations/procore",
+        title: "Manage Procore Connector",
+        description: "Configure named Procore sync and queue connector jobs.",
+        keywords: ["procore", "connector", "sync"],
+        contexts: ["dashboard", "webhooks", "escalations"],
+      },
+      {
+        id: "prequal-exchange",
+        href: "/admin/prequalification-exchange",
+        title: "Open Prequalification Exchange",
+        description: "Import and map external prequalification snapshots.",
+        keywords: ["totika", "sitewise", "prequalification"],
+        contexts: ["dashboard", "escalations", "contractors"],
+      },
+      {
         id: "mobile-ops",
         href: "/admin/mobile",
         title: "Open Mobile Operations",
         description: "Manage push subscriptions and auto check-out hints.",
         keywords: ["mobile", "push", "presence"],
+        contexts: ["dashboard", "live"],
+      },
+      {
+        id: "mobile-native-runtime",
+        href: "/admin/mobile/native",
+        title: "Open Native Runtime",
+        description: "Review iOS/Android wrapper and store metadata.",
+        keywords: ["ios", "android", "native", "wrapper"],
         contexts: ["dashboard", "live"],
       },
       {
@@ -191,6 +239,30 @@ export default async function AdminLayout({
         description: "Review and refresh contractor risk profiles.",
         keywords: ["risk", "contractor", "passport"],
         contexts: ["dashboard", "contractors"],
+      },
+      {
+        id: "safety-copilot",
+        href: "/admin/safety-copilot",
+        title: "Open Safety Copilot",
+        description: "Run AI-assisted safety and permit guidance.",
+        keywords: ["ai", "copilot", "safety", "permit"],
+        contexts: ["dashboard", "escalations"],
+      },
+      {
+        id: "trust-graph",
+        href: "/admin/trust-graph",
+        title: "Open Trust Graph",
+        description: "Inspect cross-signal contractor trust scores.",
+        keywords: ["trust", "graph", "contractor", "risk"],
+        contexts: ["dashboard", "contractors"],
+      },
+      {
+        id: "benchmarks",
+        href: "/admin/benchmarks",
+        title: "Open Predictive Benchmarks",
+        description: "Review projected metrics with percentile explainability.",
+        keywords: ["benchmark", "predictive", "analytics"],
+        contexts: ["dashboard", "history"],
       },
     );
   }
@@ -343,6 +415,12 @@ export default async function AdminLayout({
               <NavLink href="/admin/pre-registrations">Pre-Registrations</NavLink>
             </li>
             <li>
+              <NavLink href="/admin/deliveries">Deliveries</NavLink>
+            </li>
+            <li>
+              <NavLink href="/admin/resources">Resources</NavLink>
+            </li>
+            <li>
               <NavLink href="/admin/hazards">Hazard Register</NavLink>
             </li>
             <li>
@@ -391,13 +469,25 @@ export default async function AdminLayout({
               <NavLink href="/admin/permits">Permit-to-Work</NavLink>
             </li>
             <li>
+              <NavLink href="/admin/safety-forms">Safety Forms</NavLink>
+            </li>
+            <li>
               <NavLink href="/admin/approvals">Approvals</NavLink>
             </li>
             <li>
               <NavLink href="/admin/integrations/channels">Teams/Slack</NavLink>
             </li>
             <li>
+              <NavLink href="/admin/integrations/procore">Procore Connector</NavLink>
+            </li>
+            <li>
+              <NavLink href="/admin/prequalification-exchange">Prequal Exchange</NavLink>
+            </li>
+            <li>
               <NavLink href="/admin/mobile">Mobile Ops</NavLink>
+            </li>
+            <li>
+              <NavLink href="/admin/mobile/native">Native Runtime</NavLink>
             </li>
             <li>
               <NavLink href="/admin/access-ops">Access Ops</NavLink>
@@ -410,6 +500,15 @@ export default async function AdminLayout({
             </li>
             <li>
               <NavLink href="/admin/risk-passport">Risk Passport</NavLink>
+            </li>
+            <li>
+              <NavLink href="/admin/safety-copilot">Safety Copilot</NavLink>
+            </li>
+            <li>
+              <NavLink href="/admin/trust-graph">Trust Graph</NavLink>
+            </li>
+            <li>
+              <NavLink href="/admin/benchmarks">Benchmarks</NavLink>
             </li>
             <li>
               <NavLink href="/admin/templates">Templates</NavLink>

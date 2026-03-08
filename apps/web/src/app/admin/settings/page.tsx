@@ -169,8 +169,12 @@ export default async function AdminSettingsPage() {
           roleMapping: ssoConfig.roleMapping,
           allowedEmailDomains: ssoConfig.allowedEmailDomains,
           directorySyncEnabled: ssoConfig.directorySync.enabled,
+          partnerApiEnabled: ssoConfig.partnerApi.enabled,
+          partnerApiScopes: ssoConfig.partnerApi.scopes,
+          partnerApiMonthlyQuota: ssoConfig.partnerApi.monthlyQuota,
           hasClientSecret: Boolean(ssoConfig.clientSecretEncrypted),
           hasDirectorySyncToken: Boolean(ssoConfig.directorySync.tokenHash),
+          hasPartnerApiToken: Boolean(ssoConfig.partnerApi.tokenHash),
         }}
       />
 

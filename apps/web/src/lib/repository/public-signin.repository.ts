@@ -100,6 +100,12 @@ export interface PublicSignInInput {
       sortOrder: number;
     }>;
   };
+  identityEvidence?: {
+    visitorPhotoDataUrl?: string;
+    visitorIdDataUrl?: string;
+    visitorIdType?: string;
+    consentAccepted: boolean;
+  };
 }
 
 /**
@@ -115,7 +121,10 @@ export interface SignInResult {
 }
 
 const MAX_SIGNATURE_BYTES = 2_000_000;
+const MAX_IDENTITY_EVIDENCE_BYTES = 2_000_000;
 const REFRESHER_INTERVAL_DAYS = 365;
+const IMAGE_DATA_URL_PATTERN =
+  /^data:image\/(?:png|jpe?g|webp);base64,([A-Za-z0-9+/=]+)$/i;
 
 interface ResolvedCompetencyEvidence {
   status: InductionCompetencyStatus;
@@ -221,6 +230,48 @@ function extractSignatureMeta(signatureData: string): {
   };
 }
 
+function extractImageEvidenceMeta(
+  rawValue: string,
+  fieldLabel: "visitor photo" | "visitor ID image",
+): {
+  value: string;
+  mimeType: string;
+  sizeBytes: number;
+} {
+  const trimmed = rawValue.trim();
+  if (!trimmed) {
+    throw new RepositoryError(`${fieldLabel} is required`, "VALIDATION");
+  }
+
+  const match = IMAGE_DATA_URL_PATTERN.exec(trimmed);
+  if (!match) {
+    throw new RepositoryError(`${fieldLabel} is invalid`, "VALIDATION");
+  }
+
+  const payload = match[1] ?? "";
+  const bytes = Buffer.from(payload, "base64");
+  const sizeBytes = bytes.byteLength;
+  if (sizeBytes <= 0 || sizeBytes > MAX_IDENTITY_EVIDENCE_BYTES) {
+    throw new RepositoryError(`${fieldLabel} is too large`, "VALIDATION");
+  }
+
+  const mimeType = trimmed
+    .slice("data:".length)
+    .split(";", 1)[0]
+    ?.toLowerCase()
+    .trim();
+
+  if (!mimeType) {
+    throw new RepositoryError(`${fieldLabel} mime type is invalid`, "VALIDATION");
+  }
+
+  return {
+    value: trimmed,
+    mimeType,
+    sizeBytes,
+  };
+}
+
 /**
  * Create a sign-in record with induction response atomically
  *
@@ -269,9 +320,36 @@ export async function createPublicSignIn(
   const signatureMeta = input.signatureData
     ? extractSignatureMeta(input.signatureData)
     : null;
+  const visitorPhotoEvidenceMeta = input.identityEvidence?.visitorPhotoDataUrl
+    ? extractImageEvidenceMeta(
+        input.identityEvidence.visitorPhotoDataUrl,
+        "visitor photo",
+      )
+    : null;
+  const visitorIdEvidenceMeta = input.identityEvidence?.visitorIdDataUrl
+    ? extractImageEvidenceMeta(
+        input.identityEvidence.visitorIdDataUrl,
+        "visitor ID image",
+      )
+    : null;
+  const visitorIdEvidenceType = input.identityEvidence?.visitorIdType?.trim() || null;
 
   if (signatureMeta && signatureMeta.sizeBytes > MAX_SIGNATURE_BYTES) {
     throw new RepositoryError("Signature is too large", "VALIDATION");
+  }
+
+  if (
+    (visitorPhotoEvidenceMeta || visitorIdEvidenceMeta) &&
+    !input.identityEvidence?.consentAccepted
+  ) {
+    throw new RepositoryError(
+      "Identity evidence consent is required before sign-in",
+      "VALIDATION",
+    );
+  }
+
+  if (visitorIdEvidenceType && visitorIdEvidenceType.length > 60) {
+    throw new RepositoryError("Visitor ID type is too long", "VALIDATION");
   }
 
   // Validate templateVersion is a positive integer
@@ -355,6 +433,13 @@ export async function createPublicSignIn(
           location_distance_m: input.locationAudit?.distanceMeters ?? null,
           location_within_radius: input.locationAudit?.withinSiteRadius ?? null,
           location_captured_at: input.locationAudit?.capturedAt ?? null,
+          visitor_photo_evidence: encryptNullableString(
+            visitorPhotoEvidenceMeta?.value ?? null,
+          ),
+          visitor_id_evidence: encryptNullableString(
+            visitorIdEvidenceMeta?.value ?? null,
+          ),
+          visitor_id_evidence_type: visitorIdEvidenceType,
           // Token fields will be set after transaction
           sign_out_token: null,
           sign_out_token_exp: null,

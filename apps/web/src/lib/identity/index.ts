@@ -6,6 +6,9 @@ export {
   generateDirectorySyncApiKey,
   hashDirectorySyncApiKey,
   verifyDirectorySyncApiKey,
+  generatePartnerApiKey,
+  hashPartnerApiKey,
+  verifyPartnerApiKey,
   resolveRoleFromClaims,
   isEmailDomainAllowed,
 } from "./config";
@@ -15,6 +18,7 @@ export type {
   SsoProvider,
   RoleMapping,
   DirectorySyncConfig,
+  PartnerApiConfig,
 } from "./config";
 
 export {

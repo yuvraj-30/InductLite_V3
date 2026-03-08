@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { encryptTotpSecret, decryptTotpSecret, verifyTotpCode } from "../mfa";
-import { authenticator } from "otplib";
+import { generateSecret, generateSync } from "otplib";
 
 describe("MFA Integration", () => {
   const MFA_KEY = Buffer.from("12345678901234567890123456789012").toString(
@@ -22,15 +22,15 @@ describe("MFA Integration", () => {
   });
 
   it("should verify a valid TOTP code", () => {
-    const secret = authenticator.generateSecret();
-    const token = authenticator.generate(secret);
+    const secret = generateSecret();
+    const token = generateSync({ secret });
 
     const isValid = verifyTotpCode(secret, token);
     expect(isValid).toBe(true);
   });
 
   it("should fail for invalid TOTP code", () => {
-    const secret = authenticator.generateSecret();
+    const secret = generateSecret();
     const isValid = verifyTotpCode(secret, "000000");
     expect(isValid).toBe(false);
   });
@@ -38,8 +38,8 @@ describe("MFA Integration", () => {
   it("should fail for reused token (window check)", () => {
     // Note: otplib check() by default allows a small window but doesn't track reuse
     // unless configured with a stateful check. For this test we assert basic verification.
-    const secret = authenticator.generateSecret();
-    const token = authenticator.generate(secret);
+    const secret = generateSecret();
+    const token = generateSync({ secret });
 
     expect(verifyTotpCode(secret, token)).toBe(true);
     // In a real stateful implementation we'd track used tokens.

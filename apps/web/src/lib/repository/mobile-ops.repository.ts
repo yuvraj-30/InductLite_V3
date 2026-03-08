@@ -1,6 +1,8 @@
 import { scopedDb } from "@/lib/db/scoped-db";
 import type {
   DeviceSubscription,
+  MobileRuntimeEventStatus,
+  MobileRuntimeEventType,
   PresenceHint,
   PresenceHintStatus,
 } from "@prisma/client";
@@ -24,6 +26,32 @@ export interface CreatePresenceHintInput {
   sign_in_record_id: string;
   hint_type: string;
   hint_payload?: Record<string, unknown>;
+}
+
+export interface CreateMobileDeviceRuntimeEventInput {
+  site_id?: string | null;
+  device_subscription_id?: string | null;
+  event_type: MobileRuntimeEventType;
+  event_status?: MobileRuntimeEventStatus;
+  correlation_id?: string | null;
+  runtime_tag?: string | null;
+  reason?: string | null;
+  payload?: Record<string, unknown> | null;
+}
+
+interface MobileOpsRuntimeDbDelegate {
+  deviceSubscription: {
+    findFirst: (args: Record<string, unknown>) => Promise<DeviceSubscription | null>;
+    updateMany: (args: Record<string, unknown>) => Promise<{ count: number }>;
+  };
+  mobileDeviceRuntimeEvent: {
+    create: (args: Record<string, unknown>) => Promise<unknown>;
+    count: (args: Record<string, unknown>) => Promise<number>;
+  };
+}
+
+function getMobileOpsRuntimeDb(companyId: string): MobileOpsRuntimeDbDelegate {
+  return scopedDb(companyId) as unknown as MobileOpsRuntimeDbDelegate;
 }
 
 export async function upsertDeviceSubscription(
@@ -122,6 +150,149 @@ export async function listActiveDeviceSubscriptions(
     });
   } catch (error) {
     handlePrismaError(error, "DeviceSubscription");
+  }
+}
+
+export async function findActiveDeviceSubscriptionByEndpoint(
+  companyId: string,
+  endpoint: string,
+): Promise<DeviceSubscription | null> {
+  requireCompanyId(companyId);
+  const normalized = endpoint.trim();
+  if (!normalized) {
+    throw new RepositoryError("endpoint is required", "VALIDATION");
+  }
+
+  try {
+    const db = scopedDb(companyId);
+    return await db.deviceSubscription.findFirst({
+      where: {
+        endpoint: normalized,
+        is_active: true,
+      },
+    });
+  } catch (error) {
+    handlePrismaError(error, "DeviceSubscription");
+  }
+}
+
+export async function touchDeviceSubscriptionHeartbeat(
+  companyId: string,
+  endpoint: string,
+  input?: {
+    platform?: string;
+    active?: boolean;
+  },
+): Promise<DeviceSubscription | null> {
+  requireCompanyId(companyId);
+  const normalized = endpoint.trim();
+  if (!normalized) {
+    throw new RepositoryError("endpoint is required", "VALIDATION");
+  }
+
+  try {
+    const db = scopedDb(companyId);
+    await db.deviceSubscription.updateMany({
+      where: { endpoint: normalized },
+      data: {
+        last_seen_at: new Date(),
+        ...(input?.platform ? { platform: input.platform.trim() } : {}),
+        ...(input?.active !== undefined ? { is_active: input.active } : {}),
+      },
+    });
+
+    return await db.deviceSubscription.findFirst({
+      where: {
+        endpoint: normalized,
+      },
+    });
+  } catch (error) {
+    if (error instanceof RepositoryError) throw error;
+    handlePrismaError(error, "DeviceSubscription");
+  }
+}
+
+export async function rotateDeviceSubscriptionTokenVersion(
+  companyId: string,
+  endpoint: string,
+): Promise<DeviceSubscription | null> {
+  requireCompanyId(companyId);
+  const normalized = endpoint.trim();
+  if (!normalized) {
+    throw new RepositoryError("endpoint is required", "VALIDATION");
+  }
+
+  const db = getMobileOpsRuntimeDb(companyId);
+  try {
+    const existing = await db.deviceSubscription.findFirst({
+      where: { endpoint: normalized },
+    });
+    if (!existing) return null;
+
+    await db.deviceSubscription.updateMany({
+      where: { id: existing.id },
+      data: {
+        token_version: { increment: 1 },
+        is_active: true,
+        last_seen_at: new Date(),
+      },
+    });
+
+    return await db.deviceSubscription.findFirst({
+      where: { id: existing.id },
+    });
+  } catch (error) {
+    if (error instanceof RepositoryError) throw error;
+    handlePrismaError(error, "DeviceSubscription");
+  }
+}
+
+export async function createMobileDeviceRuntimeEvent(
+  companyId: string,
+  input: CreateMobileDeviceRuntimeEventInput,
+): Promise<void> {
+  requireCompanyId(companyId);
+
+  const db = getMobileOpsRuntimeDb(companyId);
+  try {
+    await db.mobileDeviceRuntimeEvent.create({
+      data: {
+        site_id: input.site_id ?? null,
+        device_subscription_id: input.device_subscription_id ?? null,
+        event_type: input.event_type,
+        event_status: input.event_status ?? "ACCEPTED",
+        correlation_id: input.correlation_id?.trim() || null,
+        runtime_tag: input.runtime_tag?.trim() || null,
+        reason: input.reason?.trim() || null,
+        payload: input.payload ?? null,
+      },
+    });
+  } catch (error) {
+    handlePrismaError(error, "MobileDeviceRuntimeEvent");
+  }
+}
+
+export async function countMobileDeviceRuntimeEventsSince(
+  companyId: string,
+  input: {
+    since: Date;
+    event_type?: MobileRuntimeEventType;
+    site_id?: string;
+  },
+): Promise<number> {
+  requireCompanyId(companyId);
+
+  const db = getMobileOpsRuntimeDb(companyId);
+  try {
+    return await db.mobileDeviceRuntimeEvent.count({
+      where: {
+        created_at: { gte: input.since },
+        ...(input.event_type ? { event_type: input.event_type } : {}),
+        ...(input.site_id ? { site_id: input.site_id } : {}),
+      },
+    });
+  } catch (error) {
+    handlePrismaError(error, "MobileDeviceRuntimeEvent");
   }
 }
 

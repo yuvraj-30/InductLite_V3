@@ -119,7 +119,7 @@ export async function createEmergencyContactAction(
     priority: formData.get("priority")?.toString() ?? "0",
   });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? "Invalid input" };
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
   const guard = await checkSitePermission("site:manage", siteId);
@@ -235,7 +235,7 @@ export async function createEmergencyProcedureAction(
     sortOrder: formData.get("sortOrder")?.toString() ?? "0",
   });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? "Invalid input" };
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
   const guard = await checkSitePermission("site:manage", siteId);
@@ -352,7 +352,7 @@ export async function createEmergencyDrillAction(
     legalHold: formData.get("legalHold") ?? false,
   });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? "Invalid input" };
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
   const guard = await checkSitePermission("site:manage", siteId);
@@ -627,7 +627,7 @@ export async function closeRollCallEventAction(
     notes: formData.get("notes")?.toString() ?? "",
   });
   if (!parsed.success) {
-    return { success: false, error: parsed.error.errors[0]?.message ?? "Invalid input" };
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
   const guard = await checkSitePermission("site:manage", siteId);

@@ -118,6 +118,26 @@ export async function listAccessDecisionTraces(
   }
 }
 
+export async function findAccessDecisionTraceByCorrelationId(
+  companyId: string,
+  correlationId: string,
+): Promise<AccessDecisionTrace | null> {
+  requireCompanyId(companyId);
+  if (!correlationId.trim()) {
+    throw new RepositoryError("correlationId is required", "VALIDATION");
+  }
+
+  try {
+    const db = scopedDb(companyId);
+    return await db.accessDecisionTrace.findFirst({
+      where: { correlation_id: correlationId },
+      orderBy: [{ created_at: "desc" }],
+    });
+  } catch (error) {
+    handlePrismaError(error, "AccessDecisionTrace");
+  }
+}
+
 export async function createHardwareOutageEvent(
   companyId: string,
   input: CreateHardwareOutageEventInput,

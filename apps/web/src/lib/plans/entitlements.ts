@@ -38,6 +38,9 @@ export const PRODUCT_FEATURE_KEYS = [
   "POLICY_SIMULATOR_V1",
   "RISK_PASSPORT_V1",
   "SELF_SERVE_CONFIG_V1",
+  "ID_OCR_VERIFICATION_V1",
+  "ACCESS_CONNECTORS_V1",
+  "NATIVE_MOBILE_RUNTIME_V1",
 ] as const;
 
 export type ProductFeatureKey = (typeof PRODUCT_FEATURE_KEYS)[number];
@@ -107,6 +110,7 @@ const PLAN_DEFAULT_FEATURES: Record<CompanyPlan, ProductFeatureKey[]> = {
     "EVIDENCE_TAMPER_V1",
     "POLICY_SIMULATOR_V1",
     "RISK_PASSPORT_V1",
+    "NATIVE_MOBILE_RUNTIME_V1",
   ],
   PRO: [
     "HOST_NOTIFICATIONS",
@@ -136,6 +140,9 @@ const PLAN_DEFAULT_FEATURES: Record<CompanyPlan, ProductFeatureKey[]> = {
     "POLICY_SIMULATOR_V1",
     "RISK_PASSPORT_V1",
     "SELF_SERVE_CONFIG_V1",
+    "ID_OCR_VERIFICATION_V1",
+    "ACCESS_CONNECTORS_V1",
+    "NATIVE_MOBILE_RUNTIME_V1",
   ],
 };
 

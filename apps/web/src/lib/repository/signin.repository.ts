@@ -52,13 +52,16 @@ const SIGN_IN_RECORD_DETAILS_SELECT = {
   location_distance_m: true,
   location_within_radius: true,
   location_captured_at: true,
+  visitor_photo_evidence: true,
+  visitor_id_evidence: true,
+  visitor_id_evidence_type: true,
   sign_out_ts: true,
   signed_out_by: true,
   sign_out_token: true,
   sign_out_token_exp: true,
   notes: true,
   created_at: true,
-} satisfies Prisma.SignInRecordSelect;
+} as const;
 
 type SignInRecordDetailsRow = Prisma.SignInRecordGetPayload<{
   select: typeof SIGN_IN_RECORD_DETAILS_SELECT;
@@ -83,6 +86,9 @@ export interface SignInRecordWithDetails {
   location_distance_m: number | null;
   location_within_radius: boolean | null;
   location_captured_at: Date | null;
+  visitor_photo_evidence: string | null;
+  visitor_id_evidence: string | null;
+  visitor_id_evidence_type: string | null;
   sign_out_ts: Date | null;
   signed_out_by: string | null;
   sign_out_token: string | null;
@@ -101,6 +107,8 @@ export type { VisitorType };
 type SignInRecordSensitive = {
   visitor_phone: string;
   visitor_email: string | null;
+  visitor_photo_evidence?: string | null;
+  visitor_id_evidence?: string | null;
 };
 
 function decryptSignInRecord<T extends SignInRecordSensitive>(record: T): T {
@@ -108,6 +116,10 @@ function decryptSignInRecord<T extends SignInRecordSensitive>(record: T): T {
     ...record,
     visitor_phone: decryptString(record.visitor_phone),
     visitor_email: decryptNullableString(record.visitor_email),
+    visitor_photo_evidence: decryptNullableString(
+      record.visitor_photo_evidence ?? null,
+    ),
+    visitor_id_evidence: decryptNullableString(record.visitor_id_evidence ?? null),
   };
 }
 
@@ -169,6 +181,15 @@ export interface CreateSignInInput {
   notes?: string;
 }
 
+export interface SignInIdentityEvidence {
+  signInId: string;
+  siteId: string;
+  visitorName: string;
+  visitorPhotoEvidence: string | null;
+  visitorIdEvidence: string | null;
+  visitorIdEvidenceType: string | null;
+}
+
 /**
  * Find a sign-in record by ID (tenant-scoped)
  */
@@ -188,6 +209,43 @@ export async function findSignInById(
     if (!record) return null;
     const withSite = await hydrateSiteDetails(companyId, [record]);
     return withSite[0] ?? null;
+  } catch (error) {
+    handlePrismaError(error, "SignInRecord");
+  }
+}
+
+export async function findSignInIdentityEvidence(
+  companyId: string,
+  signInId: string,
+): Promise<SignInIdentityEvidence | null> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+    const record = await db.signInRecord.findFirst({
+      where: { id: signInId, company_id: companyId },
+      select: {
+        id: true,
+        site_id: true,
+        visitor_name: true,
+        visitor_photo_evidence: true,
+        visitor_id_evidence: true,
+        visitor_id_evidence_type: true,
+      },
+    });
+
+    if (!record) {
+      return null;
+    }
+
+    return {
+      signInId: record.id,
+      siteId: record.site_id,
+      visitorName: record.visitor_name,
+      visitorPhotoEvidence: decryptNullableString(record.visitor_photo_evidence),
+      visitorIdEvidence: decryptNullableString(record.visitor_id_evidence),
+      visitorIdEvidenceType: record.visitor_id_evidence_type,
+    };
   } catch (error) {
     handlePrismaError(error, "SignInRecord");
   }

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { PrismaClient, UserRole } from "@prisma/client";
+import { UserRole } from "@prisma/client";
 import { ensureTestRouteAccess } from "../_guard";
+import { createPrismaClient } from "@/lib/db/prisma";
 
-const prisma = new PrismaClient();
+const prisma = createPrismaClient();
 
 type ResolveDecision = "approve" | "deny";
 
@@ -104,4 +105,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

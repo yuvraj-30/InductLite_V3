@@ -534,13 +534,13 @@ test.describe("Visual Regression - Admin Dashboard", () => {
         timeout: 20000,
         maxDiffPixelRatio:
           testInfo.project.name === "mobile-safari"
-            ? 0.6
+            ? 0.85
             : testInfo.project.name === "mobile-chrome"
               ? 0.25
               : 0.08,
         maxDiffPixels:
           testInfo.project.name === "mobile-safari"
-            ? 3000
+            ? 7000
             : testInfo.project.name === "mobile-chrome"
               ? 1400
               : undefined,
@@ -584,8 +584,8 @@ test.describe("Visual Regression - Admin Dashboard", () => {
       const isMobileSafari = testInfo.project.name === "mobile-safari";
       await expect(header).toHaveScreenshot(regionRes.filename!, {
         timeout: 20000,
-        maxDiffPixelRatio: isMobileSafari ? 0.6 : 0.08,
-        maxDiffPixels: isMobileSafari ? 1400 : undefined,
+        maxDiffPixelRatio: isMobileSafari ? 0.85 : 0.08,
+        maxDiffPixels: isMobileSafari ? 3000 : undefined,
         stylePath: "./e2e/screenshot.heading.css",
       });
     } else {

@@ -15,6 +15,13 @@ export interface DirectorySyncConfig {
   tokenHash: string | null;
 }
 
+export interface PartnerApiConfig {
+  enabled: boolean;
+  tokenHash: string | null;
+  scopes: string[];
+  monthlyQuota: number;
+}
+
 export interface CompanySsoConfig {
   enabled: boolean;
   provider: SsoProvider;
@@ -29,9 +36,13 @@ export interface CompanySsoConfig {
   roleMapping: RoleMapping;
   allowedEmailDomains: string[];
   directorySync: DirectorySyncConfig;
+  partnerApi: PartnerApiConfig;
 }
 
 const DEFAULT_SCOPES = ["openid", "profile", "email"];
+const DEFAULT_PARTNER_API_SCOPES = ["sites.read", "signins.read"];
+const MIN_PARTNER_API_MONTHLY_QUOTA = 100;
+const MAX_PARTNER_API_MONTHLY_QUOTA = 1_000_000;
 const DEFAULT_ROLE_MAPPING: RoleMapping = {
   ADMIN: ["admin", "admins"],
   SITE_MANAGER: ["site_manager", "site-managers", "manager"],
@@ -103,12 +114,40 @@ function normalizeRoleMapping(value: unknown): RoleMapping {
   };
 }
 
+function normalizePartnerApiScopes(value: unknown): string[] {
+  const scopes = normalizeStringArray(value, 20, 80).map((scope) =>
+    scope.toLowerCase(),
+  );
+  if (scopes.length === 0) {
+    return [...DEFAULT_PARTNER_API_SCOPES];
+  }
+
+  const allowedScopes = new Set(["sites.read", "signins.read"]);
+  const filtered = scopes.filter((scope) => allowedScopes.has(scope));
+  return filtered.length > 0 ? filtered : [...DEFAULT_PARTNER_API_SCOPES];
+}
+
+function normalizePartnerApiQuota(value: unknown): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return 10_000;
+  }
+  const rounded = Math.trunc(value);
+  return Math.max(
+    MIN_PARTNER_API_MONTHLY_QUOTA,
+    Math.min(MAX_PARTNER_API_MONTHLY_QUOTA, rounded),
+  );
+}
+
 export function parseCompanySsoConfig(raw: unknown): CompanySsoConfig {
   const base =
     raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
   const directoryRaw =
     base.directorySync && typeof base.directorySync === "object"
       ? (base.directorySync as Record<string, unknown>)
+      : {};
+  const partnerApiRaw =
+    base.partnerApi && typeof base.partnerApi === "object"
+      ? (base.partnerApi as Record<string, unknown>)
       : {};
 
   return {
@@ -133,6 +172,12 @@ export function parseCompanySsoConfig(raw: unknown): CompanySsoConfig {
       enabled: directoryRaw.enabled === true,
       tokenHash: normalizeString(directoryRaw.tokenHash, 160) ?? null,
     },
+    partnerApi: {
+      enabled: partnerApiRaw.enabled === true,
+      tokenHash: normalizeString(partnerApiRaw.tokenHash, 160) ?? null,
+      scopes: normalizePartnerApiScopes(partnerApiRaw.scopes),
+      monthlyQuota: normalizePartnerApiQuota(partnerApiRaw.monthlyQuota),
+    },
   };
 }
 
@@ -155,6 +200,12 @@ export function serializeCompanySsoConfig(
     directorySync: {
       enabled: input.directorySync.enabled,
       tokenHash: input.directorySync.tokenHash,
+    },
+    partnerApi: {
+      enabled: input.partnerApi.enabled,
+      tokenHash: input.partnerApi.tokenHash,
+      scopes: input.partnerApi.scopes,
+      monthlyQuota: input.partnerApi.monthlyQuota,
     },
   };
 }
@@ -184,6 +235,10 @@ export function generateDirectorySyncApiKey(): string {
   return `idsync_${randomBytes(24).toString("base64url")}`;
 }
 
+export function generatePartnerApiKey(): string {
+  return `partner_${randomBytes(24).toString("base64url")}`;
+}
+
 function hashToken(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }
@@ -192,7 +247,24 @@ export function hashDirectorySyncApiKey(apiKey: string): string {
   return hashToken(apiKey);
 }
 
+export function hashPartnerApiKey(apiKey: string): string {
+  return hashToken(apiKey);
+}
+
 export function verifyDirectorySyncApiKey(
+  apiKey: string,
+  expectedHash: string | null,
+): boolean {
+  if (!expectedHash) return false;
+  const providedHash = hashToken(apiKey);
+  const expected = Buffer.from(expectedHash, "hex");
+  const provided = Buffer.from(providedHash, "hex");
+  if (expected.length === 0 || provided.length === 0) return false;
+  if (expected.length !== provided.length) return false;
+  return timingSafeEqual(expected, provided);
+}
+
+export function verifyPartnerApiKey(
   apiKey: string,
   expectedHash: string | null,
 ): boolean {

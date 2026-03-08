@@ -110,6 +110,7 @@ export type AuditAction =
   | "visitor.watchlist.deactivate"
   | "visitor.approval.decision"
   | "visitor.identity_verification.create"
+  | "visitor.identity_evidence_view"
   | "visitor.badge_print"
   | "visitor.sign_out"
   // SMS + hardware add-on actions
@@ -138,9 +139,32 @@ export type AuditAction =
   | "mobile.auto_checkout_assist.run"
   | "mobile.presence_hint.resolve"
   | "mobile.device_subscription.upsert"
+  | "mobile.device.heartbeat"
+  | "mobile.enrollment_token.issue"
+  | "mobile.geofence_event.process"
   | "push.subscription.upsert"
   | "push.subscription.deactivate"
+  // Named connector + exchange + AI differentiation
+  | "procore.connector.update"
+  | "procore.sync.queue"
+  | "procore.inbound.apply"
+  | "prequal.exchange.import"
+  | "ai.copilot.run"
+  // Delivery and resource operations
+  | "delivery.item.create"
+  | "delivery.item.transition"
+  | "delivery.item.note"
+  | "resource.create"
+  | "resource.booking.create"
+  | "resource.booking.cancel"
+  // Construction safety form suite actions
+  | "safety_form.template.install_defaults"
+  | "safety_form.template.create"
+  | "safety_form.template.deactivate"
+  | "safety_form.submission.create"
+  | "safety_form.submission.review"
   // Access operations + differentiation actions
+  | "access.connector.test"
   | "hardware.outage.resolve"
   | "evidence.manifest.create"
   | "evidence.manifest.verify"
@@ -161,7 +185,9 @@ export type AuditAction =
   | "publiclink.deactivate"
   // Settings actions
   | "settings.update"
-  | "billing.invoice_sync";
+  | "billing.invoice_sync"
+  // Partner API actions
+  | "partner.api.request";
 
 /**
  * Audit log entry input

@@ -194,14 +194,14 @@ export async function createSiteAction(
   const parsed = createSiteSchema.safeParse(rawData);
   if (!parsed.success) {
     const fieldErrors: Record<string, string[]> = {};
-    parsed.error.errors.forEach((err) => {
+    parsed.error.issues.forEach((err) => {
       const field = err.path[0]?.toString() || "form";
       if (!fieldErrors[field]) fieldErrors[field] = [];
       fieldErrors[field].push(err.message);
     });
     return {
       success: false,
-      error: parsed.error.errors[0]?.message || "Validation failed",
+      error: parsed.error.issues[0]?.message || "Validation failed",
       fieldErrors,
     };
   }
@@ -324,7 +324,7 @@ export async function updateSiteAction(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.errors[0]?.message || "Validation failed",
+      error: parsed.error.issues[0]?.message || "Validation failed",
     };
   }
 

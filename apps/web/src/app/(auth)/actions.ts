@@ -104,7 +104,7 @@ export async function loginAction(
     log.warn({ action: "auth.login", error: "validation_failed" });
     return {
       success: false,
-      error: parsed.error.errors[0]?.message || "Invalid input",
+      error: parsed.error.issues[0]?.message || "Invalid input",
     };
   }
 
@@ -189,7 +189,7 @@ export async function registerAction(
   const parsed = registerSchema.safeParse(rawData);
   if (!parsed.success) {
     const fieldErrors: Record<string, string[]> = {};
-    parsed.error.errors.forEach((err) => {
+    parsed.error.issues.forEach((err) => {
       const field = err.path[0]?.toString() || "form";
       fieldErrors[field] = fieldErrors[field] || [];
       fieldErrors[field].push(err.message);
@@ -197,7 +197,7 @@ export async function registerAction(
 
     return {
       success: false,
-      error: parsed.error.errors[0]?.message || "Invalid input",
+      error: parsed.error.issues[0]?.message || "Invalid input",
       fieldErrors,
     };
   }
@@ -341,7 +341,7 @@ export async function changePasswordAction(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.errors[0]?.message || "Invalid input",
+      error: parsed.error.issues[0]?.message || "Invalid input",
     };
   }
 

@@ -1,0 +1,41 @@
+{
+  "cli": {
+    "version": ">= 12.8.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development",
+      "env": {
+        "EXPO_PUBLIC_MOBILE_RELEASE_CHANNEL": "development"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_MOBILE_RELEASE_CHANNEL": "preview"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_MOBILE_RELEASE_CHANNEL": "production"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascAppId": "0000000000"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./credentials/android/play-service-account.placeholder.json",
+        "track": "internal"
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { checkPermissionReadOnly } from "@/lib/auth";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
@@ -8,8 +9,10 @@ import {
   listActiveDeviceSubscriptions,
   listPresenceHints,
 } from "@/lib/repository/mobile-ops.repository";
+import { parseDeviceRuntime } from "@/lib/mobile/device-runtime";
 import {
   registerDeviceSubscriptionAction,
+  revokeDeviceSubscriptionAction,
   resolvePresenceHintAction,
   runAutoCheckoutAssistAction,
 } from "./actions";
@@ -60,6 +63,7 @@ export default async function MobileOperationsPage() {
     listPresenceHints(context.companyId, { status: "OPEN", limit: 200 }),
     listPresenceHints(context.companyId, { limit: 200 }),
   ]);
+  const now = Date.now();
 
   return (
     <div className="space-y-6 p-6">
@@ -68,6 +72,14 @@ export default async function MobileOperationsPage() {
         <p className="mt-1 text-sm text-gray-600">
           Manage PWA push subscriptions and auto check-out assistance hints.
         </p>
+        <div className="mt-3">
+          <Link
+            href="/admin/mobile/native"
+            className="inline-flex min-h-[36px] items-center rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+          >
+            Native iOS/Android Runtime
+          </Link>
+        </div>
       </div>
 
       <section className="rounded-lg border bg-white p-4">
@@ -226,8 +238,29 @@ export default async function MobileOperationsPage() {
             </select>
           </label>
           <label className="text-sm text-gray-700 md:col-span-2">
-            Platform (optional)
-            <input name="platform" className="input mt-1" placeholder="ios-pwa / android-pwa / desktop" />
+            Platform
+            <input
+              name="platform"
+              className="input mt-1"
+              placeholder="ios-native / android-native / ios-pwa / android-pwa"
+              defaultValue="ios-native"
+            />
+          </label>
+          <label className="text-sm text-gray-700">
+            App Version (optional)
+            <input name="appVersion" className="input mt-1" placeholder="1.0.0" />
+          </label>
+          <label className="text-sm text-gray-700">
+            OS Version (optional)
+            <input name="osVersion" className="input mt-1" placeholder="iOS 17 / Android 15" />
+          </label>
+          <label className="text-sm text-gray-700 md:col-span-2">
+            Wrapper Channel (optional)
+            <input
+              name="wrapperChannel"
+              className="input mt-1"
+              placeholder="app-store / play-store / testflight / internal"
+            />
           </label>
           <div className="md:col-span-2">
             <button
@@ -242,6 +275,24 @@ export default async function MobileOperationsPage() {
 
       <section className="rounded-lg border bg-white p-4">
         <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+          Secure Enrollment
+        </h2>
+        <p className="mt-3 text-sm text-gray-700">
+          Generate device enrollment credentials using:
+          <code className="ml-1 rounded bg-gray-100 px-1 py-0.5 text-xs">POST /api/mobile/enrollment-token</code>
+          .
+          Enrolled devices submit background entry/exit events to:
+          <code className="ml-1 rounded bg-gray-100 px-1 py-0.5 text-xs">POST /api/mobile/geofence-events</code>
+          . Batched replay is available at:
+          <code className="ml-1 rounded bg-gray-100 px-1 py-0.5 text-xs">POST /api/mobile/geofence-events/replay</code>
+          . Heartbeats are available at:
+          <code className="ml-1 rounded bg-gray-100 px-1 py-0.5 text-xs">POST /api/mobile/heartbeat</code>
+          .
+        </p>
+      </section>
+
+      <section className="rounded-lg border bg-white p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
           Device Subscriptions
         </h2>
         <div className="mt-3 overflow-x-auto">
@@ -249,7 +300,7 @@ export default async function MobileOperationsPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
-                  Platform
+                  Runtime
                 </th>
                 <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
                   Site
@@ -258,21 +309,43 @@ export default async function MobileOperationsPage() {
                   Endpoint
                 </th>
                 <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
-                  Last Seen
+                  Health
+                </th>
+                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  Action
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
               {subscriptions.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-3 py-3 text-sm text-gray-500">
+                  <td colSpan={5} className="px-3 py-3 text-sm text-gray-500">
                     No active subscriptions.
                   </td>
                 </tr>
               ) : (
                 subscriptions.map((subscription) => (
                   <tr key={subscription.id}>
-                    <td className="px-3 py-3 text-sm text-gray-700">{subscription.platform ?? "-"}</td>
+                    <td className="px-3 py-3 text-xs text-gray-700">
+                      {(() => {
+                        const runtime = parseDeviceRuntime(subscription.platform);
+                        return (
+                          <div className="space-y-0.5">
+                            <div className="font-semibold">{runtime.platform}</div>
+                            <div className="text-gray-500">
+                              {runtime.appVersion ? `app ${runtime.appVersion}` : "app -"}
+                              {" | "}
+                              {runtime.osVersion ? runtime.osVersion : "os -"}
+                            </div>
+                            <div className="text-gray-500">
+                              {runtime.wrapperChannel
+                                ? `channel ${runtime.wrapperChannel}`
+                                : "channel -"}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </td>
                     <td className="px-3 py-3 text-sm text-gray-700">
                       {sites.find((site) => site.id === subscription.site_id)?.name ?? "All sites"}
                     </td>
@@ -281,10 +354,59 @@ export default async function MobileOperationsPage() {
                         {subscription.endpoint}
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-sm text-gray-700">
-                      {subscription.last_seen_at
-                        ? subscription.last_seen_at.toLocaleString("en-NZ")
-                        : "-"}
+                    <td className="px-3 py-3 text-xs text-gray-700">
+                      {(() => {
+                        const seenAt = subscription.last_seen_at;
+                        if (!seenAt) {
+                          return <span className="text-amber-700">No heartbeat yet</span>;
+                        }
+                        const minutesAgo = Math.floor(
+                          (now - seenAt.getTime()) / (60 * 1000),
+                        );
+                        if (minutesAgo <= 30) {
+                          return (
+                            <div>
+                              <div className="font-semibold text-emerald-700">Healthy</div>
+                              <div className="text-gray-500">
+                                last seen {seenAt.toLocaleString("en-NZ")}
+                              </div>
+                            </div>
+                          );
+                        }
+                        if (minutesAgo <= 180) {
+                          return (
+                            <div>
+                              <div className="font-semibold text-amber-700">Degraded</div>
+                              <div className="text-gray-500">
+                                last seen {seenAt.toLocaleString("en-NZ")}
+                              </div>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div>
+                            <div className="font-semibold text-red-700">Stale</div>
+                            <div className="text-gray-500">
+                              last seen {seenAt.toLocaleString("en-NZ")}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </td>
+                    <td className="px-3 py-3 text-right">
+                      <form
+                        action={async () => {
+                          "use server";
+                          await revokeDeviceSubscriptionAction(subscription.endpoint);
+                        }}
+                      >
+                        <button
+                          type="submit"
+                          className="rounded border border-red-300 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+                        >
+                          Revoke
+                        </button>
+                      </form>
                     </td>
                   </tr>
                 ))

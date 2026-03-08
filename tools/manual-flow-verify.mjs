@@ -83,19 +83,19 @@ async function runDbPreflight() {
         "prisma",
         "migrate",
         "status",
-        "--schema",
-        "apps/web/prisma/schema.prisma",
+        "--config",
+        "prisma.config.ts",
       ]
     : [
         "prisma",
         "migrate",
         "status",
-        "--schema",
-        "apps/web/prisma/schema.prisma",
+        "--config",
+        "prisma.config.ts",
       ];
 
   const result = await runCommand(command, args, {
-    cwd: root,
+    cwd: appDir,
     stdio: "inherit",
   });
 
@@ -731,7 +731,7 @@ async function runAllE2E(extraArgs = []) {
   const args = isWindows ? ["/d", "/s", "/c", "npm", ...npmArgs] : npmArgs;
   const runStamp = formatRunStamp();
   const runLogPath = path.join(outDir, `all-e2e-${runStamp}.log`);
-  const e2eServerMode = process.env.E2E_SERVER_MODE ?? "dev";
+  const e2eServerMode = process.env.E2E_SERVER_MODE ?? "prod";
   const ciEnvForLocalRun = process.env.E2E_FORCE_CI === "1" ? "true" : "";
   const sharedLogStream = fs.createWriteStream(logPath, { flags: "a" });
   const runLogStream = fs.createWriteStream(runLogPath, { flags: "a" });

@@ -11,12 +11,14 @@ import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 import { listCurrentlyOnSite } from "@/lib/repository/signin.repository";
 import {
   createPresenceHint,
+  deactivateDeviceSubscription,
   listPresenceHints,
   resolvePresenceHint,
   upsertDeviceSubscription,
 } from "@/lib/repository/mobile-ops.repository";
 import { createAuditLog } from "@/lib/repository/audit.repository";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
+import { encodeDeviceRuntime } from "@/lib/mobile/device-runtime";
 
 export type MobileActionResult =
   | { success: true; message: string }
@@ -39,6 +41,13 @@ const registerDeviceSchema = z.object({
   authKey: z.string().min(10),
   siteId: z.string().cuid().optional().or(z.literal("")),
   platform: z.string().max(40).optional().or(z.literal("")),
+  appVersion: z.string().max(30).optional().or(z.literal("")),
+  osVersion: z.string().max(30).optional().or(z.literal("")),
+  wrapperChannel: z.string().max(40).optional().or(z.literal("")),
+});
+
+const revokeDeviceSchema = z.object({
+  endpoint: z.string().url(),
 });
 
 async function authorizeMutation(): Promise<
@@ -249,6 +258,9 @@ export async function registerDeviceSubscriptionAction(
     authKey: formData.get("authKey")?.toString() ?? "",
     siteId: formData.get("siteId")?.toString() ?? "",
     platform: formData.get("platform")?.toString() ?? "",
+    appVersion: formData.get("appVersion")?.toString() ?? "",
+    osVersion: formData.get("osVersion")?.toString() ?? "",
+    wrapperChannel: formData.get("wrapperChannel")?.toString() ?? "",
   });
   if (!parsed.success) {
     return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
@@ -257,13 +269,20 @@ export async function registerDeviceSubscriptionAction(
   const featureError = await ensureMobileFeatures(auth.companyId);
   if (featureError) return featureError;
 
+  const runtimeTag = encodeDeviceRuntime({
+    platform: parsed.data.platform || "web-push",
+    appVersion: parsed.data.appVersion || null,
+    osVersion: parsed.data.osVersion || null,
+    wrapperChannel: parsed.data.wrapperChannel || null,
+  });
+
   const device = await upsertDeviceSubscription(auth.companyId, {
     endpoint: parsed.data.endpoint,
     public_key: parsed.data.publicKey,
     auth_key: parsed.data.authKey,
     site_id: parsed.data.siteId || undefined,
     user_id: auth.userId,
-    platform: parsed.data.platform || undefined,
+    platform: runtimeTag,
   });
   await createAuditLog(auth.companyId, {
     action: "mobile.device_subscription.upsert",
@@ -272,7 +291,7 @@ export async function registerDeviceSubscriptionAction(
     user_id: auth.userId,
     details: {
       site_id: device.site_id,
-      platform: device.platform,
+      platform: runtimeTag,
       endpoint: device.endpoint,
     },
     request_id: auth.requestId,
@@ -280,4 +299,39 @@ export async function registerDeviceSubscriptionAction(
 
   revalidatePath("/admin/mobile");
   return { success: true, message: "Device subscription saved" };
+}
+
+export async function revokeDeviceSubscriptionAction(
+  endpoint: string,
+): Promise<MobileActionResult> {
+  try {
+    await assertOrigin();
+  } catch {
+    return { success: false, error: "Invalid request origin" };
+  }
+
+  const auth = await authorizeMutation();
+  if (!auth.success) return auth;
+
+  const parsed = revokeDeviceSchema.safeParse({ endpoint });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const featureError = await ensureMobileFeatures(auth.companyId);
+  if (featureError) return featureError;
+
+  await deactivateDeviceSubscription(auth.companyId, parsed.data.endpoint);
+  await createAuditLog(auth.companyId, {
+    action: "push.subscription.deactivate",
+    entity_type: "DeviceSubscription",
+    user_id: auth.userId,
+    details: {
+      endpoint: parsed.data.endpoint,
+    },
+    request_id: auth.requestId,
+  });
+
+  revalidatePath("/admin/mobile");
+  return { success: true, message: "Device subscription revoked" };
 }

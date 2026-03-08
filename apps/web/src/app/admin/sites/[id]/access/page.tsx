@@ -38,6 +38,9 @@ export default async function SiteAccessControlPage({
   const config = parseAccessControlConfig(site.access_control);
   const canEnableGeofence = entitlements.features.GEOFENCE_ENFORCEMENT;
   const canEnableHardware = entitlements.features.HARDWARE_ACCESS;
+  const canEnableMobileAssist = entitlements.features.MOBILE_OFFLINE_ASSIST_V1;
+  const canEnableIdentityHardening = entitlements.features.ID_HARDENING_V1;
+  const canEnableIdentityOcr = entitlements.features.ID_OCR_VERIFICATION_V1;
 
   return (
     <div className="p-6">
@@ -57,7 +60,7 @@ export default async function SiteAccessControlPage({
         </Link>
       </div>
 
-      <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+      <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-3">
         <div
           className={`rounded-lg border p-3 text-sm ${canEnableGeofence ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-amber-200 bg-amber-50 text-amber-900"}`}
         >
@@ -78,6 +81,36 @@ export default async function SiteAccessControlPage({
               : "Not enabled for this site plan (CONTROL_ID: PLAN-ENTITLEMENT-001)."}
           </p>
         </div>
+        <div
+          className={`rounded-lg border p-3 text-sm ${canEnableMobileAssist ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-amber-200 bg-amber-50 text-amber-900"}`}
+        >
+          <p className="font-semibold">Mobile Geofence Automation</p>
+          <p className="mt-1">
+            {canEnableMobileAssist
+              ? "Enabled for this site plan."
+              : "Not enabled for this site plan (CONTROL_ID: PLAN-ENTITLEMENT-001)."}
+          </p>
+        </div>
+        <div
+          className={`rounded-lg border p-3 text-sm ${canEnableIdentityHardening ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-amber-200 bg-amber-50 text-amber-900"}`}
+        >
+          <p className="font-semibold">Visitor Photo and ID Evidence</p>
+          <p className="mt-1">
+            {canEnableIdentityHardening
+              ? "Enabled for this site plan."
+              : "Not enabled for this site plan (CONTROL_ID: PLAN-ENTITLEMENT-001)."}
+          </p>
+        </div>
+        <div
+          className={`rounded-lg border p-3 text-sm ${canEnableIdentityOcr ? "border-emerald-200 bg-emerald-50 text-emerald-900" : "border-amber-200 bg-amber-50 text-amber-900"}`}
+        >
+          <p className="font-semibold">Identity OCR Verification</p>
+          <p className="mt-1">
+            {canEnableIdentityOcr
+              ? "Enabled for this site plan."
+              : "Not enabled for this site plan (CONTROL_ID: PLAN-ENTITLEMENT-001)."}
+          </p>
+        </div>
       </div>
 
       <SiteAccessSettingsForm
@@ -85,14 +118,35 @@ export default async function SiteAccessControlPage({
         initialGeofenceMode={config.geofence.mode}
         initialGeofenceAllowMissingLocation={config.geofence.allowMissingLocation}
         hasGeofenceOverrideCode={Boolean(config.geofence.overrideCodeHash)}
+        initialGeofenceAutomationMode={config.geofence.automationMode}
+        initialGeofenceAutoCheckoutGraceMinutes={
+          config.geofence.autoCheckoutGraceMinutes
+        }
         initialHardwareEnabled={config.hardware.enabled}
         initialHardwareProvider={config.hardware.provider ?? ""}
         initialHardwareEndpointUrl={config.hardware.endpointUrl ?? ""}
         hasHardwareAuthToken={Boolean(config.hardware.authToken)}
+        initialIdentityEnabled={config.identity.enabled}
+        initialIdentityRequirePhoto={config.identity.requirePhoto}
+        initialIdentityRequireIdScan={config.identity.requireIdScan}
+        initialIdentityRequireConsent={config.identity.requireConsent}
+        initialIdentityRequireOcrVerification={
+          config.identity.requireOcrVerification
+        }
+        initialIdentityAllowedDocumentTypes={
+          config.identity.allowedDocumentTypes
+        }
+        initialIdentityOcrDecisionMode={config.identity.ocrDecisionMode}
         canEnableGeofence={canEnableGeofence}
         canEnableHardware={canEnableHardware}
+        canEnableMobileAssist={canEnableMobileAssist}
+        canEnableIdentityHardening={canEnableIdentityHardening}
+        canEnableIdentityOcr={canEnableIdentityOcr}
         updatedAt={
-          config.hardware.updatedAt ?? config.geofence.updatedAt ?? null
+          config.identity.updatedAt ??
+          config.hardware.updatedAt ??
+          config.geofence.updatedAt ??
+          null
         }
       />
     </div>

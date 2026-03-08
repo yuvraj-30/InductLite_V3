@@ -66,7 +66,7 @@ export type ContractorActionResult =
 
 function toFieldErrors(error: z.ZodError): Record<string, string[]> {
   const fieldErrors: Record<string, string[]> = {};
-  error.errors.forEach((issue) => {
+  error.issues.forEach((issue) => {
     const field = issue.path[0]?.toString() ?? "form";
     if (!fieldErrors[field]) {
       fieldErrors[field] = [];
@@ -136,7 +136,7 @@ export async function createContractorAction(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.errors[0]?.message ?? "Validation failed",
+      error: parsed.error.issues[0]?.message ?? "Validation failed",
       fieldErrors: toFieldErrors(parsed.error),
     };
   }
@@ -216,7 +216,7 @@ export async function updateContractorAction(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.errors[0]?.message ?? "Validation failed",
+      error: parsed.error.issues[0]?.message ?? "Validation failed",
       fieldErrors: toFieldErrors(parsed.error),
     };
   }

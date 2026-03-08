@@ -113,6 +113,7 @@ import {
   parseAccessControlConfig,
   verifyGeofenceOverrideCode,
 } from "@/lib/access-control/config";
+import { runIdentityOcrVerification } from "@/lib/identity-ocr";
 import { FEATURE_FLAGS } from "@/lib/feature-flags";
 import { queueHardwareAccessDecision } from "@/lib/hardware/adapter";
 import { sendSmsWithQuota } from "@/lib/sms/wrapper";
@@ -1339,6 +1340,15 @@ export interface SiteInfo {
     allowMissingLocation: boolean;
     requiresOverrideCode: boolean;
   };
+  identityEvidence?: {
+    enabled: boolean;
+    requirePhoto: boolean;
+    requireIdScan: boolean;
+    requireConsent: boolean;
+    requireOcrVerification: boolean;
+    allowedDocumentTypes: string[];
+    ocrDecisionMode: "assist" | "strict";
+  };
 }
 
 export interface TemplateInfo {
@@ -1486,6 +1496,32 @@ export async function getSiteForSignIn(
       }
     }
 
+    let identityHardeningEnabled = false;
+    try {
+      await assertCompanyFeatureEnabled(site.company.id, "ID_HARDENING_V1", site.id);
+      identityHardeningEnabled = true;
+    } catch (error) {
+      if (!(error instanceof EntitlementDeniedError)) {
+        throw error;
+      }
+    }
+
+    let identityOcrEnabled = false;
+    if (identityHardeningEnabled) {
+      try {
+        await assertCompanyFeatureEnabled(
+          site.company.id,
+          "ID_OCR_VERIFICATION_V1",
+          site.id,
+        );
+        identityOcrEnabled = true;
+      } catch (error) {
+        if (!(error instanceof EntitlementDeniedError)) {
+          throw error;
+        }
+      }
+    }
+
     let contentBlocksEnabled = false;
     try {
       await assertCompanyFeatureEnabled(site.company.id, "CONTENT_BLOCKS", site.id);
@@ -1570,6 +1606,21 @@ export async function getSiteForSignIn(
             geofenceEnforcementEnabled &&
             accessControlConfig.geofence.mode === "OVERRIDE" &&
             accessControlConfig.geofence.overrideCodeHash !== null,
+        },
+        identityEvidence: {
+          enabled: identityHardeningEnabled && accessControlConfig.identity.enabled,
+          requirePhoto:
+            identityHardeningEnabled && accessControlConfig.identity.requirePhoto,
+          requireIdScan:
+            identityHardeningEnabled && accessControlConfig.identity.requireIdScan,
+          requireConsent:
+            identityHardeningEnabled && accessControlConfig.identity.requireConsent,
+          requireOcrVerification:
+            identityHardeningEnabled &&
+            identityOcrEnabled &&
+            accessControlConfig.identity.requireOcrVerification,
+          allowedDocumentTypes: accessControlConfig.identity.allowedDocumentTypes,
+          ocrDecisionMode: accessControlConfig.identity.ocrDecisionMode,
         },
       },
       template: {
@@ -1656,7 +1707,7 @@ export async function submitSignIn(
   const parsed = signInSchema.safeParse(input);
   if (!parsed.success) {
     const fieldErrors: Record<string, string[]> = {};
-    parsed.error.errors.forEach((e) => {
+    parsed.error.issues.forEach((e) => {
       const field = e.path.join(".");
       fieldErrors[field] = fieldErrors[field] || [];
       fieldErrors[field].push(e.message);
@@ -1829,6 +1880,167 @@ export async function submitSignIn(
         },
         "Geofence policy blocked this sign-in",
       );
+    }
+
+    let identityEvidenceFeatureEnabled = false;
+    if (accessControlConfig.identity.enabled) {
+      try {
+        await assertCompanyFeatureEnabled(
+          site.company.id,
+          "ID_HARDENING_V1",
+          site.id,
+        );
+        identityEvidenceFeatureEnabled = true;
+      } catch (error) {
+        if (!(error instanceof EntitlementDeniedError)) {
+          throw error;
+        }
+      }
+    }
+    const identityEvidenceEnabled =
+      identityEvidenceFeatureEnabled && accessControlConfig.identity.enabled;
+    const identityPhotoRequired =
+      identityEvidenceEnabled && accessControlConfig.identity.requirePhoto;
+    const identityIdScanRequired =
+      identityEvidenceEnabled && accessControlConfig.identity.requireIdScan;
+    const identityConsentRequired =
+      identityEvidenceEnabled && accessControlConfig.identity.requireConsent;
+
+    if (identityPhotoRequired && !parsed.data.visitorPhotoDataUrl) {
+      return validationErrorResponse(
+        {
+          visitorPhotoDataUrl: [
+            "A visitor photo is required before sign-in can continue.",
+          ],
+        },
+        "Visitor photo evidence required",
+      );
+    }
+
+    if (identityIdScanRequired && !parsed.data.visitorIdDataUrl) {
+      return validationErrorResponse(
+        {
+          visitorIdDataUrl: ["A visitor ID image is required for this site."],
+        },
+        "Visitor ID evidence required",
+      );
+    }
+
+    if (identityConsentRequired && parsed.data.identityConsentAccepted !== true) {
+      return validationErrorResponse(
+        {
+          identityConsentAccepted: [
+            "You must consent to identity evidence processing for this site.",
+          ],
+        },
+        "Identity evidence consent is required",
+      );
+    }
+
+    const identityEvidence = identityEvidenceEnabled
+      ? {
+          visitorPhotoDataUrl: parsed.data.visitorPhotoDataUrl,
+          visitorIdDataUrl: parsed.data.visitorIdDataUrl,
+          visitorIdType: parsed.data.visitorIdType,
+          consentAccepted: parsed.data.identityConsentAccepted === true,
+        }
+      : undefined;
+
+    let identityOcrFeatureEnabled = false;
+    if (identityEvidenceEnabled && accessControlConfig.identity.requireOcrVerification) {
+      try {
+        await assertCompanyFeatureEnabled(
+          site.company.id,
+          "ID_OCR_VERIFICATION_V1",
+          site.id,
+        );
+        identityOcrFeatureEnabled = true;
+      } catch (error) {
+        if (!(error instanceof EntitlementDeniedError)) {
+          throw error;
+        }
+      }
+    }
+
+    const identityOcrRequired =
+      identityEvidenceEnabled &&
+      identityOcrFeatureEnabled &&
+      accessControlConfig.identity.requireOcrVerification &&
+      Boolean(parsed.data.visitorIdDataUrl);
+
+    let identityOcrDecisionStatus: string | null = null;
+    let identityOcrReasonCode: string | null = null;
+    let identityOcrExecuted = false;
+
+    if (identityOcrRequired && parsed.data.visitorIdDataUrl) {
+      const ocrResult = await runIdentityOcrVerification({
+        companyId: site.company.id,
+        siteId: site.id,
+        visitorName: parsed.data.visitorName,
+        documentImageDataUrl: parsed.data.visitorIdDataUrl,
+        documentType: parsed.data.visitorIdType ?? null,
+        allowedDocumentTypes: accessControlConfig.identity.allowedDocumentTypes,
+        decisionMode: accessControlConfig.identity.ocrDecisionMode,
+      });
+
+      if (ocrResult.controlError) {
+        return ocrResult.controlError;
+      }
+
+      identityOcrExecuted = ocrResult.executed;
+      identityOcrDecisionStatus = ocrResult.decisionStatus;
+      identityOcrReasonCode = ocrResult.reasonCode;
+
+      if (
+        accessControlConfig.identity.ocrDecisionMode === "strict" &&
+        ocrResult.executed &&
+        ocrResult.decisionStatus !== "APPROVED"
+      ) {
+        const [ip, userAgent] = await Promise.all([getClientIp(), getUserAgent()]);
+        await createAuditLog(site.company.id, {
+          action: "visitor.sign_in_blocked",
+          entity_type: "Site",
+          entity_id: site.id,
+          user_id: undefined,
+          details: {
+            reason: "identity_ocr_strict_policy_blocked",
+            ocr_decision_status: ocrResult.decisionStatus,
+            ocr_reason_code: ocrResult.reasonCode,
+            ocr_decision_mode: accessControlConfig.identity.ocrDecisionMode,
+            visitor_type: parsed.data.visitorType,
+          },
+          ip_address: ip,
+          user_agent: userAgent,
+          request_id: requestId,
+        });
+
+        await triggerHardwareAccessDecision({
+          companyId: site.company.id,
+          siteId: site.id,
+          siteName: site.name,
+          site,
+          decision: "DENY",
+          reason: "identity_ocr_strict_policy_blocked",
+          visitorName: parsed.data.visitorName,
+          visitorPhoneE164:
+            formatToE164(parsed.data.visitorPhone, "NZ") ?? undefined,
+          requestId,
+          log,
+          metadata: {
+            ocrDecisionStatus: ocrResult.decisionStatus,
+            ocrReasonCode: ocrResult.reasonCode,
+          },
+        });
+
+        return validationErrorResponse(
+          {
+            visitorIdDataUrl: [
+              "ID verification needs manual review before sign-in can continue.",
+            ],
+          },
+          "Identity OCR verification requires manual review",
+        );
+      }
     }
 
     let quizScoringFeatureEnabled = false;
@@ -2885,6 +3097,7 @@ export async function submitSignIn(
         usedVariant: selectedLanguageVariant !== null,
       },
       mediaEvidence,
+      identityEvidence,
     });
 
     const hostNotificationDelivery = await queueHostArrivalNotifications({
@@ -2932,6 +3145,18 @@ export async function submitSignIn(
         media_blocks_enabled: hasInductionMedia(effectiveMediaConfig),
         media_ack_required: effectiveMediaConfig.requireAcknowledgement,
         media_acknowledged: parsed.data.mediaAcknowledged === true,
+        identity_evidence_enabled: identityEvidenceEnabled,
+        identity_photo_required: identityPhotoRequired,
+        identity_id_required: identityIdScanRequired,
+        identity_consent_required: identityConsentRequired,
+        identity_photo_supplied: Boolean(parsed.data.visitorPhotoDataUrl),
+        identity_id_supplied: Boolean(parsed.data.visitorIdDataUrl),
+        identity_id_type: parsed.data.visitorIdType ?? null,
+        identity_ocr_required: identityOcrRequired,
+        identity_ocr_executed: identityOcrExecuted,
+        identity_ocr_decision_status: identityOcrDecisionStatus,
+        identity_ocr_reason_code: identityOcrReasonCode,
+        identity_ocr_decision_mode: accessControlConfig.identity.ocrDecisionMode,
         selected_language_code: selectedLanguageCode,
         selected_language_label: selectedLanguageVariant?.label ?? null,
         selected_language_variant: selectedLanguageVariant !== null,
@@ -3076,7 +3301,7 @@ export async function submitBadgePrintAudit(
   const parsed = badgePrintAuditSchema.safeParse(input);
   if (!parsed.success) {
     const fieldErrors: Record<string, string[]> = {};
-    parsed.error.errors.forEach((e) => {
+    parsed.error.issues.forEach((e) => {
       const field = e.path.join(".");
       fieldErrors[field] = fieldErrors[field] || [];
       fieldErrors[field].push(e.message);
@@ -3167,7 +3392,7 @@ export async function submitSignOut(
   const parsed = signOutSchema.safeParse(input);
   if (!parsed.success) {
     const fieldErrors: Record<string, string[]> = {};
-    parsed.error.errors.forEach((e) => {
+    parsed.error.issues.forEach((e) => {
       const field = e.path.join(".");
       fieldErrors[field] = fieldErrors[field] || [];
       fieldErrors[field].push(e.message);

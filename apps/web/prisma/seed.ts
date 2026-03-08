@@ -1,3 +1,5 @@
+import "dotenv/config";
+import { PrismaPg } from "@prisma/adapter-pg";
 import {
   PrismaClient,
   UserRole,
@@ -9,7 +11,12 @@ import * as argon2 from "argon2";
 import { subDays, subHours, addMonths, subMonths } from "date-fns";
 
 /* eslint-disable no-console */
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({
+    connectionString:
+      process.env.DATABASE_URL ?? "postgresql://invalid:invalid@localhost:5432/invalid",
+  }),
+});
 
 async function main() {
   console.log("🌱 Starting seed...");

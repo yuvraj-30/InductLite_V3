@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => {
 
   return {
     assertCompanyFeatureEnabled: vi.fn(),
-    queueOutboundWebhookDeliveries: vi.fn(),
+    dispatchAccessConnectorCommand: vi.fn(),
     createAuditLog: vi.fn(),
     createAccessDecisionTrace: vi.fn(),
     createHardwareOutageEvent: vi.fn(),
@@ -26,8 +26,8 @@ vi.mock("@/lib/plans", () => ({
   EntitlementDeniedError: mocks.EntitlementDeniedError,
 }));
 
-vi.mock("@/lib/repository/webhook-delivery.repository", () => ({
-  queueOutboundWebhookDeliveries: mocks.queueOutboundWebhookDeliveries,
+vi.mock("@/lib/access-connectors", () => ({
+  dispatchAccessConnectorCommand: mocks.dispatchAccessConnectorCommand,
 }));
 
 vi.mock("@/lib/repository/audit.repository", () => ({
@@ -45,7 +45,13 @@ describe("hardware adapter queue", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.assertCompanyFeatureEnabled.mockResolvedValue(undefined);
-    mocks.queueOutboundWebhookDeliveries.mockResolvedValue(1);
+    mocks.dispatchAccessConnectorCommand.mockResolvedValue({
+      queued: true,
+      mode: "generic",
+      provider: "GENERIC",
+      reason: "generic_connector_queued",
+      targetUrl: "https://hardware.example.test/events",
+    });
     mocks.createAuditLog.mockResolvedValue(undefined);
     mocks.createAccessDecisionTrace.mockResolvedValue(undefined);
     mocks.createHardwareOutageEvent.mockResolvedValue(undefined);
@@ -70,14 +76,14 @@ describe("hardware adapter queue", () => {
       visitorPhoneE164: "+64211234567",
     });
 
-    expect(result).toEqual({ queued: true, reason: "queued" });
-    expect(mocks.queueOutboundWebhookDeliveries).toHaveBeenCalledWith(
-      "company-1",
-      expect.arrayContaining([
-        expect.objectContaining({
-          eventType: "hardware.access.decision",
-        }),
-      ]),
+    expect(result).toEqual({ queued: true, reason: "generic_connector_queued" });
+    expect(mocks.dispatchAccessConnectorCommand).toHaveBeenCalledWith(
+      expect.objectContaining({
+        companyId: "company-1",
+        siteId: "site-1",
+        command: "grant",
+        reason: "sign_in_success",
+      }),
     );
     expect(mocks.createAuditLog).toHaveBeenCalledWith(
       "company-1",

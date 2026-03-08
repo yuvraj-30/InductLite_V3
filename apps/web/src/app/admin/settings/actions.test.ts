@@ -16,6 +16,8 @@ const mocks = vi.hoisted(() => ({
   setClientSecret: vi.fn(),
   generateDirectorySyncApiKey: vi.fn(),
   hashDirectorySyncApiKey: vi.fn(),
+  generatePartnerApiKey: vi.fn(),
+  hashPartnerApiKey: vi.fn(),
   revalidatePath: vi.fn(),
   generateRequestId: vi.fn(),
   logger: {
@@ -62,6 +64,8 @@ vi.mock("@/lib/identity", () => ({
   setClientSecret: mocks.setClientSecret,
   generateDirectorySyncApiKey: mocks.generateDirectorySyncApiKey,
   hashDirectorySyncApiKey: mocks.hashDirectorySyncApiKey,
+  generatePartnerApiKey: mocks.generatePartnerApiKey,
+  hashPartnerApiKey: mocks.hashPartnerApiKey,
 }));
 
 vi.mock("@/lib/auth/csrf", () => ({
@@ -74,6 +78,7 @@ vi.mock("@/lib/logger", () => ({
 
 import {
   rotateDirectorySyncApiKeyAction,
+  rotatePartnerApiKeyAction,
   syncBillingPreviewAction,
   updateComplianceSettingsAction,
   updateSsoSettingsAction,
@@ -88,6 +93,9 @@ function buildValidFormData(): FormData {
   formData.set("emergencyDrillRetentionDays", "1825");
   formData.set("complianceLegalHold", "true");
   formData.set("complianceLegalHoldReason", "Ongoing regulator investigation");
+  formData.set("dataResidencyRegion", "NZ");
+  formData.set("dataResidencyScope", "PRIMARY_AND_BACKUP");
+  formData.set("dataResidencyNotes", "Primary NZ with AU backup.");
   return formData;
 }
 
@@ -110,6 +118,11 @@ describe("updateComplianceSettingsAction", () => {
       compliance_legal_hold: false,
       compliance_legal_hold_reason: null,
       compliance_legal_hold_set_at: null,
+      data_residency_region: "NZ",
+      data_residency_scope: "PRIMARY_ONLY",
+      data_residency_notes: "Primary workload remains in NZ.",
+      data_residency_attested_at: new Date("2026-03-08T00:00:00.000Z"),
+      data_residency_attested_by: "user-1",
     });
     mocks.updateCompanyComplianceSettings.mockResolvedValue({
       id: "company-1",
@@ -121,6 +134,11 @@ describe("updateComplianceSettingsAction", () => {
       compliance_legal_hold: true,
       compliance_legal_hold_reason: "Ongoing regulator investigation",
       compliance_legal_hold_set_at: new Date("2026-02-23T00:00:00.000Z"),
+      data_residency_region: "NZ",
+      data_residency_scope: "PRIMARY_AND_BACKUP",
+      data_residency_notes: "Primary NZ with AU backup.",
+      data_residency_attested_at: new Date("2026-03-08T10:00:00.000Z"),
+      data_residency_attested_by: "user-1",
     });
     mocks.createAuditLog.mockResolvedValue(undefined);
     mocks.buildCompanyInvoicePreview.mockResolvedValue({
@@ -162,6 +180,12 @@ describe("updateComplianceSettingsAction", () => {
         },
         allowedEmailDomains: [],
         directorySync: { enabled: false, tokenHash: null },
+        partnerApi: {
+          enabled: false,
+          tokenHash: null,
+          scopes: ["sites.read", "signins.read"],
+          monthlyQuota: 10000,
+        },
       },
     });
     mocks.updateCompanySsoSettings.mockResolvedValue({
@@ -195,6 +219,12 @@ describe("updateComplianceSettingsAction", () => {
         ? raw.allowedEmailDomains
         : [],
       directorySync: raw?.directorySync ?? { enabled: false, tokenHash: null },
+      partnerApi: raw?.partnerApi ?? {
+        enabled: false,
+        tokenHash: null,
+        scopes: ["sites.read", "signins.read"],
+        monthlyQuota: 10000,
+      },
     }));
     mocks.serializeCompanySsoConfig.mockImplementation((value: unknown) => value);
     mocks.setClientSecret.mockImplementation((config: any) => ({
@@ -203,6 +233,8 @@ describe("updateComplianceSettingsAction", () => {
     }));
     mocks.generateDirectorySyncApiKey.mockReturnValue("idsync_generated_key");
     mocks.hashDirectorySyncApiKey.mockReturnValue("hashed-directory-key");
+    mocks.generatePartnerApiKey.mockReturnValue("partner_generated_key");
+    mocks.hashPartnerApiKey.mockReturnValue("hashed-partner-key");
     mocks.generateRequestId.mockReturnValue("req-1");
     mocks.createRequestLogger.mockReturnValue(mocks.logger);
   });
@@ -247,6 +279,9 @@ describe("updateComplianceSettingsAction", () => {
         incident_retention_days: 1825,
         emergency_drill_retention_days: 1825,
         compliance_legal_hold: true,
+        data_residency_region: "NZ",
+        data_residency_scope: "PRIMARY_AND_BACKUP",
+        data_residency_attested_by: "user-1",
       }),
     );
     expect(mocks.createAuditLog).toHaveBeenCalledWith(
@@ -314,6 +349,9 @@ function buildValidSsoFormData(): FormData {
   formData.set("roleMappingViewer", "viewer");
   formData.set("allowedEmailDomains", "example.com");
   formData.set("directorySyncEnabled", "true");
+  formData.set("partnerApiEnabled", "true");
+  formData.set("partnerApiScopes", "sites.read, signins.read");
+  formData.set("partnerApiMonthlyQuota", "15000");
   return formData;
 }
 
@@ -348,6 +386,12 @@ describe("SSO settings actions", () => {
         },
         allowedEmailDomains: [],
         directorySync: { enabled: false, tokenHash: null },
+        partnerApi: {
+          enabled: false,
+          tokenHash: null,
+          scopes: ["sites.read", "signins.read"],
+          monthlyQuota: 10000,
+        },
       },
     });
     mocks.parseCompanySsoConfig.mockImplementation((raw: any) => ({
@@ -373,6 +417,12 @@ describe("SSO settings actions", () => {
         ? raw.allowedEmailDomains
         : [],
       directorySync: raw?.directorySync ?? { enabled: false, tokenHash: null },
+      partnerApi: raw?.partnerApi ?? {
+        enabled: false,
+        tokenHash: null,
+        scopes: ["sites.read", "signins.read"],
+        monthlyQuota: 10000,
+      },
     }));
     mocks.serializeCompanySsoConfig.mockImplementation((value: unknown) => value);
     mocks.setClientSecret.mockImplementation((config: any) => ({
@@ -381,6 +431,8 @@ describe("SSO settings actions", () => {
     }));
     mocks.generateDirectorySyncApiKey.mockReturnValue("idsync_generated_key");
     mocks.hashDirectorySyncApiKey.mockReturnValue("hashed-directory-key");
+    mocks.generatePartnerApiKey.mockReturnValue("partner_generated_key");
+    mocks.hashPartnerApiKey.mockReturnValue("hashed-partner-key");
     mocks.createRequestLogger.mockReturnValue(mocks.logger);
     mocks.generateRequestId.mockReturnValue("req-1");
     mocks.createAuditLog.mockResolvedValue(undefined);
@@ -435,6 +487,12 @@ describe("SSO settings actions", () => {
         },
         allowedEmailDomains: [],
         directorySync: { enabled: false, tokenHash: null },
+        partnerApi: {
+          enabled: false,
+          tokenHash: null,
+          scopes: ["sites.read", "signins.read"],
+          monthlyQuota: 10000,
+        },
       },
     });
     mocks.parseCompanySsoConfig.mockImplementationOnce(() => ({
@@ -455,10 +513,22 @@ describe("SSO settings actions", () => {
       },
       allowedEmailDomains: [],
       directorySync: { enabled: false, tokenHash: null },
+      partnerApi: {
+        enabled: false,
+        tokenHash: null,
+        scopes: ["sites.read", "signins.read"],
+        monthlyQuota: 10000,
+      },
     }));
     mocks.parseCompanySsoConfig.mockImplementationOnce((raw: any) => ({
       ...raw,
       clientSecretEncrypted: null,
+      partnerApi: raw?.partnerApi ?? {
+        enabled: false,
+        tokenHash: null,
+        scopes: ["sites.read", "signins.read"],
+        monthlyQuota: 10000,
+      },
     }));
 
     const result = await updateSsoSettingsAction(null, formData);
@@ -498,6 +568,24 @@ describe("SSO settings actions", () => {
       expect.objectContaining({
         directorySync: expect.objectContaining({
           tokenHash: "hashed-directory-key",
+        }),
+      }),
+    );
+  });
+
+  it("rotates partner API key and stores hashed token", async () => {
+    const result = await rotatePartnerApiKeyAction();
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.apiKey).toBe("partner_generated_key");
+    }
+    expect(mocks.hashPartnerApiKey).toHaveBeenCalledWith("partner_generated_key");
+    expect(mocks.updateCompanySsoSettings).toHaveBeenCalledWith(
+      "company-1",
+      expect.objectContaining({
+        partnerApi: expect.objectContaining({
+          tokenHash: "hashed-partner-key",
         }),
       }),
     );

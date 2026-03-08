@@ -3,14 +3,13 @@ import {
   parseAccessControlConfig,
 } from "@/lib/access-control/config";
 import { randomUUID } from "crypto";
-import type { Prisma } from "@prisma/client";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 import { createAuditLog } from "@/lib/repository/audit.repository";
 import {
   createAccessDecisionTrace,
   createHardwareOutageEvent,
 } from "@/lib/repository/hardware-trace.repository";
-import { queueOutboundWebhookDeliveries } from "@/lib/repository/webhook-delivery.repository";
+import { dispatchAccessConnectorCommand } from "@/lib/access-connectors";
 
 export type HardwareAccessDecision = "ALLOW" | "DENY";
 
@@ -43,62 +42,6 @@ function maskToLast4(phone: string | undefined): string | null {
     return digits;
   }
   return digits.slice(-4);
-}
-
-function buildHardwarePayload(input: {
-  correlationId: string;
-  provider: string | null;
-  decision: HardwareAccessDecision;
-  reason: string;
-  siteId: string;
-  siteName: string;
-  signInRecordId?: string;
-  visitorName?: string;
-  visitorPhoneE164?: string;
-  metadata?: Record<string, unknown>;
-}) {
-  const providerKey = input.provider?.trim().toUpperCase() || "GENERIC";
-  const occurredAt = new Date().toISOString();
-  const maskedPhone = maskToLast4(input.visitorPhoneE164);
-
-  const common = {
-    event: "hardware.access.decision",
-    correlationId: input.correlationId,
-    provider: providerKey,
-    occurredAt,
-    decision: input.decision,
-    reason: input.reason,
-    site: {
-      id: input.siteId,
-      name: input.siteName,
-    },
-    subject: {
-      signInRecordId: input.signInRecordId ?? null,
-      visitorName: input.visitorName ?? null,
-      visitorPhoneLast4: maskedPhone,
-    },
-    metadata: input.metadata ?? {},
-  };
-
-  if (providerKey === "HID_ORIGO") {
-    return {
-      ...common,
-      hidOrigo: {
-        command: input.decision === "ALLOW" ? "grant" : "deny",
-      },
-    };
-  }
-
-  if (providerKey === "SITE_GATEWAY") {
-    return {
-      ...common,
-      siteGateway: {
-        action: input.decision === "ALLOW" ? "open_gate" : "keep_closed",
-      },
-    };
-  }
-
-  return common;
 }
 
 export async function queueHardwareAccessDecision(
@@ -148,29 +91,41 @@ export async function queueHardwareAccessDecision(
   }
 
   try {
-    const payload = buildHardwarePayload({
-      correlationId,
-      provider: config.hardware.provider,
-      decision: input.decision,
-      reason: input.reason,
+    const dispatch = await dispatchAccessConnectorCommand({
+      companyId: input.companyId,
       siteId: input.siteId,
       siteName: input.siteName,
+      accessControl: input.accessControl,
+      correlationId,
+      command: input.decision === "ALLOW" ? "grant" : "deny",
+      reason: input.reason,
       signInRecordId: input.signInRecordId,
       visitorName: input.visitorName,
       visitorPhoneE164: input.visitorPhoneE164,
       metadata: input.metadata,
     });
 
-    const queuedCount = await queueOutboundWebhookDeliveries(input.companyId, [
-      {
-        siteId: input.siteId,
-        eventType: "hardware.access.decision",
-        targetUrl: config.hardware.endpointUrl!,
-        payload: payload as Prisma.InputJsonValue,
-      },
-    ]);
+    if (dispatch.reason === "connector_delivery_cap_reached") {
+      await createAccessDecisionTrace(input.companyId, {
+        site_id: input.siteId,
+        correlation_id: correlationId,
+        decision_status: "FALLBACK",
+        reason: "connector_delivery_cap_reached",
+        sign_in_record_id: input.signInRecordId,
+        fallback_mode: true,
+        request_payload: {
+          decision: input.decision,
+          reason: input.reason,
+          provider: config.hardware.provider,
+        },
+        response_payload: {
+          control_id: dispatch.controlId ?? "CONNECTOR-GUARDRAIL-001",
+        },
+      });
+      return { queued: false, reason: "connector_delivery_cap_reached" };
+    }
 
-    if (queuedCount > 0) {
+    if (dispatch.queued) {
       await createAccessDecisionTrace(input.companyId, {
         site_id: input.siteId,
         correlation_id: correlationId,
@@ -184,7 +139,9 @@ export async function queueHardwareAccessDecision(
           provider: config.hardware.provider,
         },
         response_payload: {
-          queued_count: queuedCount,
+          mode: dispatch.mode,
+          provider: dispatch.provider,
+          target_url: dispatch.targetUrl,
         },
       });
 
@@ -196,8 +153,9 @@ export async function queueHardwareAccessDecision(
         details: {
           decision: input.decision,
           reason: input.reason,
-          provider: config.hardware.provider,
-          endpoint_url: config.hardware.endpointUrl,
+          provider: dispatch.provider ?? config.hardware.provider,
+          connector_mode: dispatch.mode,
+          endpoint_url: dispatch.targetUrl ?? config.hardware.endpointUrl,
           correlation_id: correlationId,
           sign_in_record_id: input.signInRecordId ?? null,
           visitor_phone_last4: maskToLast4(input.visitorPhoneE164),
@@ -206,7 +164,7 @@ export async function queueHardwareAccessDecision(
       });
     }
 
-    return { queued: queuedCount > 0, reason: "queued" };
+    return { queued: dispatch.queued, reason: dispatch.reason };
   } catch (error) {
     await createAccessDecisionTrace(input.companyId, {
       site_id: input.siteId,

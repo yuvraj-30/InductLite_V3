@@ -21,6 +21,12 @@ const verifyManifestSchema = z.object({
   manifestId: z.string().cuid(),
 });
 
+function isNextRedirectError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const digest = (error as { digest?: unknown }).digest;
+  return typeof digest === "string" && digest.startsWith("NEXT_REDIRECT");
+}
+
 function buildStatusRedirect(input: {
   status: "ok" | "error";
   message: string;
@@ -164,6 +170,9 @@ export async function verifyEvidenceManifestAction(formData: FormData): Promise<
       }),
     );
   } catch (error) {
+    if (isNextRedirectError(error)) {
+      throw error;
+    }
     log.error({ error: String(error) }, "Failed to verify evidence manifest");
     redirect(
       buildStatusRedirect({

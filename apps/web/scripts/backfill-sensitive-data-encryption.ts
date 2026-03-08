@@ -1,5 +1,6 @@
 import "dotenv/config";
 
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient, type Prisma } from "@prisma/client";
 import {
   encryptJsonValue,
@@ -9,7 +10,12 @@ import {
   isEncryptedValue,
 } from "../src/lib/security/data-protection";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({
+    connectionString:
+      process.env.DATABASE_URL ?? "postgresql://invalid:invalid@localhost:5432/invalid",
+  }),
+});
 const BATCH_SIZE = 200;
 
 async function backfillSignInRecords(): Promise<number> {

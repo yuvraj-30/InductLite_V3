@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { authenticator } from "otplib";
+import { verifySync } from "otplib";
 
 const KEY_LENGTH = 32;
 
@@ -47,5 +47,5 @@ export function decryptTotpSecret(payload: string): string | null {
 export function verifyTotpCode(secret: string, code: string): boolean {
   const normalized = code.replace(/\s+/g, "");
   if (!/^[0-9]{6}$/.test(normalized)) return false;
-  return authenticator.check(normalized, secret);
+  return verifySync({ secret, token: normalized }).valid;
 }

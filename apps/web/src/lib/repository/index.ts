@@ -143,6 +143,7 @@ export {
   queueOutboundWebhookDeliveries,
   listOutboundWebhookDeliveries,
   countOutboundWebhookDeliveriesByStatus,
+  countOutboundWebhookDeliveriesSince,
   listDueOutboundWebhookDeliveries,
   claimOutboundWebhookDelivery,
   markOutboundWebhookDeliverySent,
@@ -154,6 +155,34 @@ export type {
   OutboundWebhookDeliveryWorkItem,
   OutboundWebhookDeliveryListItem,
 } from "./webhook-delivery.repository";
+
+// Access connector repository
+export {
+  upsertAccessConnectorConfig,
+  findActiveAccessConnectorConfig,
+  listAccessConnectorConfigs,
+  createAccessConnectorHealthEvent,
+  listAccessConnectorHealthEvents,
+  countAccessConnectorHealthFailuresSince,
+} from "./access-connector.repository";
+
+export type {
+  UpsertAccessConnectorConfigInput,
+  CreateAccessConnectorHealthEventInput,
+} from "./access-connector.repository";
+
+// Identity OCR repository
+export {
+  createIdentityOcrVerification,
+  listIdentityOcrVerifications,
+  countIdentityOcrVerificationsSince,
+  countGlobalIdentityOcrVerificationsSince,
+} from "./identity-ocr.repository";
+
+export type {
+  CreateIdentityOcrVerificationInput,
+  ListIdentityOcrVerificationFilter,
+} from "./identity-ocr.repository";
 
 // Induction quiz attempt repository
 export {
@@ -331,6 +360,7 @@ export {
   upsertDeviceSubscription,
   deactivateDeviceSubscription,
   listActiveDeviceSubscriptions,
+  findActiveDeviceSubscriptionByEndpoint,
   createPresenceHint,
   listPresenceHints,
   resolvePresenceHint,
@@ -344,6 +374,7 @@ export type {
 export {
   createAccessDecisionTrace,
   updateAccessDecisionTraceAck,
+  findAccessDecisionTraceByCorrelationId,
   listAccessDecisionTraces,
   createHardwareOutageEvent,
   resolveHardwareOutageEvent,
@@ -354,6 +385,53 @@ export type {
   UpdateAccessDecisionTraceAckInput,
   CreateHardwareOutageEventInput,
 } from "./hardware-trace.repository";
+
+// Delivery and mailroom repository
+export {
+  createDeliveryItem,
+  createDeliveryEvent,
+  listDeliveryItems,
+  listDeliveryEvents,
+  findDeliveryItemById,
+  transitionDeliveryItemStatus,
+} from "./delivery.repository";
+export type {
+  CreateDeliveryItemInput,
+  CreateDeliveryEventInput,
+  ListDeliveryItemsFilter,
+} from "./delivery.repository";
+
+// Resource and desk booking repository
+export {
+  createBookableResource,
+  listBookableResources,
+  createResourceBooking,
+  listResourceBookings,
+  cancelResourceBooking,
+} from "./resource-booking.repository";
+export type {
+  CreateBookableResourceInput,
+  ListBookableResourcesFilter,
+  CreateResourceBookingInput,
+  ListResourceBookingsFilter,
+} from "./resource-booking.repository";
+
+// Construction safety form suite repository
+export {
+  listSafetyFormTemplates,
+  createSafetyFormTemplate,
+  deactivateSafetyFormTemplate,
+  createSafetyFormSubmission,
+  listSafetyFormSubmissions,
+  reviewSafetyFormSubmission,
+  installDefaultSafetyFormTemplates,
+} from "./safety-form.repository";
+export type {
+  CreateSafetyFormTemplateInput,
+  ListSafetyFormTemplateFilter,
+  CreateSafetyFormSubmissionInput,
+  ListSafetyFormSubmissionFilter,
+} from "./safety-form.repository";
 
 // Evidence manifest repository
 export {
@@ -440,6 +518,7 @@ export type { AdvancedAuditAnalytics } from "./audit-analytics.repository";
 // Sign-in repository
 export {
   findSignInById,
+  findSignInIdentityEvidence,
   listCurrentlyOnSite,
   countCurrentlyOnSite,
   listSignInHistory,
@@ -451,6 +530,7 @@ export {
 
 export type {
   SignInRecordWithDetails,
+  SignInIdentityEvidence,
   SignInFilter,
   CreateSignInInput,
   VisitorType,

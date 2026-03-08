@@ -39,22 +39,32 @@ const COMPARISON_ROWS: Array<{
   },
   {
     feature: "Permit-to-Work / Control-of-Work module",
-    inductLite: "Planned",
+    inductLite: "Yes",
     competitors: "Available in some higher-depth safety suites",
   },
   {
+    feature: "SWMS/JSA/RAMS/toolbox/fatigue digital forms",
+    inductLite: "Yes",
+    competitors: "Common in construction-focused safety suites",
+  },
+  {
+    feature: "Named physical access connectors",
+    inductLite: "Yes (HID Origo, Brivo, Gallagher, LenelS2, Genetec)",
+    competitors: "Usually limited to selected enterprise tiers",
+  },
+  {
     feature: "ID watchlists and random security checks",
-    inductLite: "Planned",
+    inductLite: "Yes",
     competitors: "Available in some enterprise visitor products",
   },
   {
     feature: "Teams/Slack approval loops",
-    inductLite: "Planned",
+    inductLite: "Yes",
     competitors: "Available in selected competitors",
   },
   {
-    feature: "Native mobile app auto check-in/out",
-    inductLite: "Partial (web/PWA first)",
+    feature: "Mobile auto check-in/out automation (API + PWA workflows)",
+    inductLite: "Yes (store-ready native wrappers; publish after credential setup)",
     competitors: "Available in some mobile-first products",
   },
 ];
@@ -131,7 +141,7 @@ export default function ComparePage() {
             Use this comparison to shortlist solutions quickly. It reflects public
             competitor positioning and current InductLite scope.
           </p>
-          <p className="mt-2 text-xs text-muted">Snapshot date: March 5, 2026.</p>
+          <p className="mt-2 text-xs text-muted">Snapshot date: March 8, 2026.</p>
         </section>
 
         <section className="surface-panel overflow-x-auto px-4 py-5 sm:px-6">

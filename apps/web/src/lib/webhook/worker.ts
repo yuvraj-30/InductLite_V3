@@ -11,6 +11,8 @@ import {
 import { parseWebhookConfig } from "./config";
 import { parseLmsConnectorConfig } from "@/lib/lms/config";
 import { parseAccessControlConfig } from "@/lib/access-control/config";
+import { parseProcoreConnectorConfig } from "@/lib/integrations/procore/config";
+import { decryptNullableString } from "@/lib/security/data-protection";
 
 const WEBHOOK_BATCH_SIZE = 50;
 const WEBHOOK_TIMEOUT_MS = 12_000;
@@ -49,6 +51,29 @@ function getFetchTimeoutSignal(timeoutMs: number): AbortSignal | undefined {
   return undefined;
 }
 
+function readConnectorProviderFromPayload(
+  payload: unknown,
+): "HID_ORIGO" | "BRIVO" | "GALLAGHER" | "LENELS2" | "GENETEC" | null {
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    return null;
+  }
+  const provider = (payload as Record<string, unknown>).provider;
+  if (typeof provider !== "string") {
+    return null;
+  }
+  const normalized = provider.trim().toUpperCase();
+  if (
+    normalized === "HID_ORIGO" ||
+    normalized === "BRIVO" ||
+    normalized === "GALLAGHER" ||
+    normalized === "LENELS2" ||
+    normalized === "GENETEC"
+  ) {
+    return normalized;
+  }
+  return null;
+}
+
 export interface OutboundWebhookProcessingSummary {
   candidates: number;
   claimed: number;
@@ -69,10 +94,13 @@ export async function processOutboundWebhookQueue(
       signingSecret: string;
       lmsAuthToken: string | null;
       lmsProvider: string | null;
+      procoreAuthToken: string | null;
+      procoreProjectId: string | null;
       hardwareAuthToken: string | null;
       hardwareProvider: string | null;
     }
   >();
+  const connectorTokenCache = new Map<string, string | null>();
 
   const summary: OutboundWebhookProcessingSummary = {
     candidates: 0,
@@ -92,6 +120,8 @@ export async function processOutboundWebhookQueue(
     signingSecret: string;
     lmsAuthToken: string | null;
     lmsProvider: string | null;
+    procoreAuthToken: string | null;
+    procoreProjectId: string | null;
     hardwareAuthToken: string | null;
     hardwareProvider: string | null;
   }> => {
@@ -115,11 +145,14 @@ export async function processOutboundWebhookQueue(
 
     const webhookConfig = parseWebhookConfig(site?.webhooks);
     const lmsConfig = parseLmsConnectorConfig(site?.lms_connector);
+    const procoreConfig = parseProcoreConnectorConfig(site?.lms_connector);
     const accessControlConfig = parseAccessControlConfig(site?.access_control);
     const resolvedConfig = {
       signingSecret: webhookConfig.signingSecret ?? defaultSigningSecret,
       lmsAuthToken: lmsConfig.authToken,
       lmsProvider: lmsConfig.provider,
+      procoreAuthToken: procoreConfig.authToken,
+      procoreProjectId: procoreConfig.projectId,
       hardwareAuthToken: accessControlConfig.hardware.authToken,
       hardwareProvider: accessControlConfig.hardware.provider,
     };
@@ -175,6 +208,49 @@ export async function processOutboundWebhookQueue(
       if (deliveryConfig.hardwareProvider) {
         headers["X-InductLite-Hardware-Provider"] =
           deliveryConfig.hardwareProvider;
+      }
+    }
+
+    const connectorProvider = readConnectorProviderFromPayload(delivery.payload);
+    if (
+      delivery.event_type === "hardware.access.decision" &&
+      connectorProvider
+    ) {
+      const tokenCacheKey = `${delivery.company_id}:${delivery.site_id}:${connectorProvider}`;
+      let connectorToken = connectorTokenCache.get(tokenCacheKey);
+      if (connectorToken === undefined) {
+        const connectorConfig = await publicDb.accessConnectorConfig.findFirst({
+          where: {
+            company_id: delivery.company_id,
+            site_id: delivery.site_id,
+            provider: connectorProvider,
+            is_active: true,
+          },
+          select: {
+            auth_token_encrypted: true,
+          },
+        });
+        connectorToken = decryptNullableString(
+          connectorConfig?.auth_token_encrypted ?? null,
+        );
+        connectorTokenCache.set(tokenCacheKey, connectorToken ?? null);
+      }
+
+      if (connectorToken) {
+        headers.Authorization = `Bearer ${connectorToken}`;
+      }
+      headers["X-InductLite-Hardware-Provider"] = connectorProvider;
+    }
+
+    if (
+      delivery.event_type.startsWith("procore.") &&
+      deliveryConfig.procoreAuthToken
+    ) {
+      headers.Authorization = `Bearer ${deliveryConfig.procoreAuthToken}`;
+      headers["X-InductLite-Connector"] = "PROCORE";
+      if (deliveryConfig.procoreProjectId) {
+        headers["X-InductLite-Procore-Project"] =
+          deliveryConfig.procoreProjectId;
       }
     }
 

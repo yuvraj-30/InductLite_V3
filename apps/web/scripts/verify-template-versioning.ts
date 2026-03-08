@@ -12,8 +12,14 @@
  */
 
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({
+    connectionString:
+      process.env.DATABASE_URL ?? "postgresql://invalid:invalid@localhost:5432/invalid",
+  }),
+});
 
 // Test company ID - create or use existing
 const TEST_COMPANY_NAME = "Versioning Test Company";

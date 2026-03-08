@@ -1,9 +1,16 @@
 /* eslint-disable no-console, @typescript-eslint/no-var-requires */
+const { PrismaPg } = require("@prisma/adapter-pg");
 const { PrismaClient } = require("@prisma/client");
 const argon2 = require("argon2");
 
 async function main() {
-  const prisma = new PrismaClient();
+  const prisma = new PrismaClient({
+    adapter: new PrismaPg({
+      connectionString:
+        process.env.DATABASE_URL ??
+        "postgresql://invalid:invalid@localhost:5432/invalid",
+    }),
+  });
 
   try {
     const hash = await argon2.hash("Admin123!", {

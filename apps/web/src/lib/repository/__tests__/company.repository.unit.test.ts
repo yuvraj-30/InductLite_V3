@@ -35,6 +35,11 @@ describe("company.repository", () => {
       compliance_legal_hold: false,
       compliance_legal_hold_reason: null,
       compliance_legal_hold_set_at: null,
+      data_residency_region: "NZ",
+      data_residency_scope: "PRIMARY_ONLY",
+      data_residency_notes: "Primary workload remains in NZ.",
+      data_residency_attested_at: new Date("2026-03-08T00:00:00.000Z"),
+      data_residency_attested_by: "user-1",
     });
 
     const result = await findCompanyComplianceSettings("company-1");
@@ -58,6 +63,11 @@ describe("company.repository", () => {
       .mockResolvedValueOnce({
         compliance_legal_hold: false,
         compliance_legal_hold_set_at: null,
+        data_residency_region: "NZ",
+        data_residency_scope: "PRIMARY_ONLY",
+        data_residency_notes: "Primary workload remains in NZ.",
+        data_residency_attested_at: new Date("2026-03-08T00:00:00.000Z"),
+        data_residency_attested_by: "user-1",
       })
       .mockResolvedValueOnce({
         id: "company-1",
@@ -69,6 +79,11 @@ describe("company.repository", () => {
         compliance_legal_hold: true,
         compliance_legal_hold_reason: "Regulator request",
         compliance_legal_hold_set_at: new Date("2026-02-23T00:00:00.000Z"),
+        data_residency_region: "NZ",
+        data_residency_scope: "PRIMARY_AND_BACKUP",
+        data_residency_notes: "Primary NZ with AU backup copy.",
+        data_residency_attested_at: new Date("2026-03-08T09:30:00.000Z"),
+        data_residency_attested_by: "user-2",
       });
     mocks.companyUpdateMany.mockResolvedValue({ count: 1 });
 
@@ -80,6 +95,10 @@ describe("company.repository", () => {
       emergency_drill_retention_days: 1825,
       compliance_legal_hold: true,
       compliance_legal_hold_reason: "Regulator request",
+      data_residency_region: "NZ",
+      data_residency_scope: "PRIMARY_AND_BACKUP",
+      data_residency_notes: "Primary NZ with AU backup copy.",
+      data_residency_attested_by: "user-2",
     });
 
     expect(mocks.companyUpdateMany).toHaveBeenCalledWith(
@@ -89,6 +108,11 @@ describe("company.repository", () => {
           compliance_legal_hold: true,
           compliance_legal_hold_reason: "Regulator request",
           compliance_legal_hold_set_at: expect.any(Date),
+          data_residency_region: "NZ",
+          data_residency_scope: "PRIMARY_AND_BACKUP",
+          data_residency_notes: "Primary NZ with AU backup copy.",
+          data_residency_attested_at: expect.any(Date),
+          data_residency_attested_by: "user-2",
         }),
       }),
     );

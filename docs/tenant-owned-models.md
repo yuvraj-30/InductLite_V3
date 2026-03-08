@@ -1,7 +1,7 @@
 # Tenant Owned Models
 
-Version: `v3`
-Updated: `2026-03-05`
+Version: `v4`
+Updated: `2026-03-07`
 Source: `apps/web/prisma/schema.prisma`
 
 This file is the canonical `TENANT_OWNED_MODELS` registry.
@@ -45,6 +45,12 @@ Manual edits are not allowed.
 - `PresenceHint`
 - `AccessDecisionTrace`
 - `HardwareOutageEvent`
+- `DeliveryItem`
+- `DeliveryEvent`
+- `BookableResource`
+- `ResourceBooking`
+- `SafetyFormTemplate`
+- `SafetyFormSubmission`
 - `EvidenceManifest`
 - `EvidenceArtifact`
 - `PolicySimulation`

@@ -138,11 +138,12 @@ body {
 /* Mobile-first base styles */
 @layer base {
   html {
-    @apply scroll-smooth;
+    scroll-behavior: smooth;
   }
 
   body {
-    @apply antialiased;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   p,
@@ -151,15 +152,21 @@ body {
   }
 
   h1 {
-    @apply text-3xl tracking-tight sm:text-4xl;
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+    letter-spacing: -0.025em;
   }
 
   h2 {
-    @apply text-2xl tracking-tight sm:text-3xl;
+    font-size: 1.5rem;
+    line-height: 2rem;
+    letter-spacing: -0.025em;
   }
 
   h3 {
-    @apply text-xl tracking-tight;
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    letter-spacing: -0.025em;
   }
 
   :where(h1, h2, h3, .kinetic-title) {
@@ -178,7 +185,7 @@ body {
 
   a,
   button {
-    @apply transition-all duration-200;
+    transition: all 200ms ease;
   }
 
   a:focus-visible,
@@ -188,6 +195,18 @@ body {
   textarea:focus-visible {
     outline: 2px solid var(--ring-focus);
     outline-offset: 2px;
+  }
+
+  @media (min-width: 640px) {
+    h1 {
+      font-size: 2.25rem;
+      line-height: 2.5rem;
+    }
+
+    h2 {
+      font-size: 1.875rem;
+      line-height: 2.25rem;
+    }
   }
 }
 
@@ -210,22 +229,48 @@ body {
   }
 
   .bento-grid {
-    @apply grid gap-4;
+    display: grid;
+    gap: 1rem;
     grid-auto-flow: dense;
   }
 
   .bento-card {
-    @apply surface-panel p-5 sm:p-6;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: saturate(112%) blur(var(--glass-blur));
+    padding: 1.25rem;
   }
 
-  .btn {
-    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold disabled:pointer-events-none disabled:opacity-60;
+  .btn,
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 0.75rem;
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 600;
     border: 1px solid transparent;
     box-shadow: var(--shadow-touch);
   }
 
+  .btn:disabled,
+  .btn-primary:disabled,
+  .btn-secondary:disabled,
+  .btn-danger:disabled {
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
   .btn-primary {
-    @apply btn text-white;
+    color: #fff;
     background-image: linear-gradient(
       118deg,
       color-mix(in srgb, var(--accent-primary) 86%, #070e1c 14%) 0%,
@@ -242,7 +287,6 @@ body {
   }
 
   .btn-secondary {
-    @apply btn;
     background: var(--bg-surface-strong);
     border-color: var(--border-soft);
     color: var(--text-primary);
@@ -254,7 +298,7 @@ body {
   }
 
   .btn-danger {
-    @apply btn text-white;
+    color: #fff;
     background-image: linear-gradient(120deg, #cb3058 0%, #8c1438 100%);
   }
 
@@ -264,7 +308,14 @@ body {
   }
 
   .input {
-    @apply block w-full rounded-[var(--radius-control)] border px-3 py-2.5 text-sm;
+    display: block;
+    width: 100%;
+    border-radius: var(--radius-control);
+    border-width: 1px;
+    border-style: solid;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
     min-height: 44px;
     background: color-mix(in srgb, var(--bg-surface-strong) 90%, white 10%);
     border-color: var(--border-soft);
@@ -284,12 +335,20 @@ body {
   }
 
   .label {
-    @apply block text-sm font-semibold;
+    display: block;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 600;
     color: var(--text-secondary);
   }
 
   .card {
-    @apply surface-panel p-5 sm:p-6;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: saturate(112%) blur(var(--glass-blur));
+    padding: 1.25rem;
   }
 
   .cyber-divider {
@@ -300,6 +359,13 @@ body {
       rgba(42, 154, 255, 0.55) 50%,
       rgba(63, 99, 255, 0.05) 100%
     );
+  }
+
+  @media (min-width: 640px) {
+    .bento-card,
+    .card {
+      padding: 1.5rem;
+    }
   }
 }
 

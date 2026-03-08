@@ -73,7 +73,7 @@ export type UserActionResult =
 
 function toFieldErrors(error: z.ZodError): Record<string, string[]> {
   const fieldErrors: Record<string, string[]> = {};
-  error.errors.forEach((issue) => {
+  error.issues.forEach((issue) => {
     const field = issue.path[0]?.toString() ?? "form";
     if (!fieldErrors[field]) {
       fieldErrors[field] = [];
@@ -127,7 +127,7 @@ export async function createUserAction(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.errors[0]?.message ?? "Validation failed",
+      error: parsed.error.issues[0]?.message ?? "Validation failed",
       fieldErrors: toFieldErrors(parsed.error),
     };
   }
@@ -206,7 +206,7 @@ export async function updateUserAction(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.errors[0]?.message ?? "Validation failed",
+      error: parsed.error.issues[0]?.message ?? "Validation failed",
       fieldErrors: toFieldErrors(parsed.error),
     };
   }

@@ -361,6 +361,66 @@ const ENV_CONFIG: EnvConfig[] = [
     production: false,
     description: "Feature flag for self-serve plan configurator",
   },
+  {
+    name: "FEATURE_NATIVE_MOBILE_RUNTIME",
+    required: false,
+    production: false,
+    description: "Feature flag for native mobile runtime pathways",
+  },
+  {
+    name: "FEATURE_IDENTITY_OCR",
+    required: false,
+    production: false,
+    description: "Feature flag for OCR-backed identity verification",
+  },
+  {
+    name: "FEATURE_ACCESS_CONNECTORS",
+    required: false,
+    production: false,
+    description: "Feature flag for provider-native access connectors",
+  },
+  {
+    name: "OCR_ENABLED",
+    required: false,
+    production: false,
+    description: "Enable OCR identity verification runtime",
+  },
+  {
+    name: "OCR_PROVIDER",
+    required: false,
+    production: false,
+    description: "Default OCR provider key (MOCK|TEXTRACT[_REGION])",
+  },
+  {
+    name: "OCR_PROVIDER_NZ",
+    required: false,
+    production: false,
+    description: "OCR provider override for NZ data residency",
+  },
+  {
+    name: "OCR_PROVIDER_AU",
+    required: false,
+    production: false,
+    description: "OCR provider override for AU data residency",
+  },
+  {
+    name: "OCR_PROVIDER_APAC",
+    required: false,
+    production: false,
+    description: "OCR provider override for APAC data residency",
+  },
+  {
+    name: "OCR_PROVIDER_GLOBAL",
+    required: false,
+    production: false,
+    description: "OCR provider override for GLOBAL data residency",
+  },
+  {
+    name: "OCR_TEXTRACT_REGION",
+    required: false,
+    production: false,
+    description: "Default AWS region for Textract OCR provider",
+  },
   // Guardrails
   {
     name: "ENV_BUDGET_TIER",
@@ -542,6 +602,48 @@ const ENV_CONFIG: EnvConfig[] = [
     production: false,
     description: "Max tenant compute invocations per month",
   },
+  {
+    name: "MAX_MOBILE_GEOFENCE_EVENTS_PER_COMPANY_PER_DAY",
+    required: false,
+    production: false,
+    description: "Max mobile geofence events per company per day",
+  },
+  {
+    name: "MOBILE_GEOFENCE_EVENT_MAX_AGE_MINUTES",
+    required: false,
+    production: false,
+    description: "Max accepted mobile geofence event age (minutes)",
+  },
+  {
+    name: "MOBILE_GEOFENCE_EVENT_FUTURE_SKEW_MINUTES",
+    required: false,
+    production: false,
+    description: "Max allowed future skew for geofence events (minutes)",
+  },
+  {
+    name: "MAX_OCR_REQUESTS_PER_COMPANY_PER_MONTH",
+    required: false,
+    production: false,
+    description: "Max OCR requests per company per month",
+  },
+  {
+    name: "MAX_OCR_REQUESTS_GLOBAL_PER_DAY",
+    required: false,
+    production: false,
+    description: "Max OCR requests globally per day",
+  },
+  {
+    name: "OCR_IMAGE_RETENTION_DAYS",
+    required: false,
+    production: false,
+    description: "OCR image retention days",
+  },
+  {
+    name: "MAX_CONNECTOR_DELIVERIES_PER_COMPANY_PER_DAY",
+    required: false,
+    production: false,
+    description: "Max connector deliveries per company per day",
+  },
   // Rate limit guardrails
   {
     name: "RL_PUBLIC_SLUG_PER_IP_PER_MIN",
@@ -707,6 +809,10 @@ export function validateEnv(): {
     "MAX_PUSH_NOTIFICATIONS_PER_COMPANY_PER_MONTH",
     "MAX_POLICY_SIM_RUNS_PER_COMPANY_PER_DAY",
     "MAX_RISK_SCORE_RECALC_JOBS_PER_DAY",
+    "MAX_MOBILE_GEOFENCE_EVENTS_PER_COMPANY_PER_DAY",
+    "MOBILE_GEOFENCE_EVENT_MAX_AGE_MINUTES",
+    "MOBILE_GEOFENCE_EVENT_FUTURE_SKEW_MINUTES",
+    "MAX_CONNECTOR_DELIVERIES_PER_COMPANY_PER_DAY",
   ];
   for (const name of positiveIntEnv) {
     const value = process.env[name];
@@ -719,6 +825,52 @@ export function validateEnv(): {
         error: `${name} must be a positive integer`,
       });
     }
+  }
+
+  const nonNegativeIntEnv = [
+    "MAX_OCR_REQUESTS_PER_COMPANY_PER_MONTH",
+    "MAX_OCR_REQUESTS_GLOBAL_PER_DAY",
+    "OCR_IMAGE_RETENTION_DAYS",
+  ];
+  for (const name of nonNegativeIntEnv) {
+    const value = process.env[name];
+    if (value === undefined || value === "") continue;
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed) || parsed < 0 || !Number.isInteger(parsed)) {
+      errors.push({
+        name,
+        error: `${name} must be a non-negative integer`,
+      });
+    }
+  }
+
+  const providerKeyPattern =
+    /^(MOCK|TEXTRACT|AWS_TEXTRACT|TEXTRACT_[A-Z0-9_]+|AWS_TEXTRACT_[A-Z0-9_]+)$/;
+  const ocrProviderEnv = [
+    "OCR_PROVIDER",
+    "OCR_PROVIDER_NZ",
+    "OCR_PROVIDER_AU",
+    "OCR_PROVIDER_APAC",
+    "OCR_PROVIDER_GLOBAL",
+  ] as const;
+  for (const name of ocrProviderEnv) {
+    const value = process.env[name]?.trim().toUpperCase();
+    if (!value) continue;
+    if (!providerKeyPattern.test(value)) {
+      errors.push({
+        name,
+        error:
+          `${name} must be MOCK, TEXTRACT, AWS_TEXTRACT, or a regional variant such as TEXTRACT_AP_SOUTHEAST_2`,
+      });
+    }
+  }
+
+  const textractRegion = process.env.OCR_TEXTRACT_REGION?.trim();
+  if (textractRegion && !/^[a-z]{2}-[a-z]+-\d$/.test(textractRegion)) {
+    errors.push({
+      name: "OCR_TEXTRACT_REGION",
+      error: "OCR_TEXTRACT_REGION must look like ap-southeast-2",
+    });
   }
 
   const smsEnabledRaw = (process.env.SMS_ENABLED ?? "").trim().toLowerCase();

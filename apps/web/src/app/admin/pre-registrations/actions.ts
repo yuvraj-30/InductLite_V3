@@ -115,7 +115,7 @@ export type BulkPreRegistrationActionResult =
 
 function toFieldErrors(error: z.ZodError): Record<string, string[]> {
   const fieldErrors: Record<string, string[]> = {};
-  for (const issue of error.errors) {
+  for (const issue of error.issues) {
     const field = String(issue.path[0] ?? "form");
     fieldErrors[field] = fieldErrors[field] ?? [];
     fieldErrors[field].push(issue.message);
@@ -364,7 +364,7 @@ export async function createPreRegistrationInviteAction(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.errors[0]?.message ?? "Invalid input",
+      error: parsed.error.issues[0]?.message ?? "Invalid input",
       fieldErrors: toFieldErrors(parsed.error),
     };
   }
@@ -504,7 +504,7 @@ export async function bulkCreatePreRegistrationInvitesAction(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.errors[0]?.message ?? "Invalid bulk CSV input",
+      error: parsed.error.issues[0]?.message ?? "Invalid bulk CSV input",
       fieldErrors: toFieldErrors(parsed.error),
     };
   }
@@ -571,7 +571,7 @@ export async function bulkCreatePreRegistrationInvitesAction(
         failed.push({
           row: row.row,
           visitorName: normalizedRow.visitorName || undefined,
-          error: rowValidation.error.errors[0]?.message ?? "Invalid row format",
+          error: rowValidation.error.issues[0]?.message ?? "Invalid row format",
         });
         continue;
       }

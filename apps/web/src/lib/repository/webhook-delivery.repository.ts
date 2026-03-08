@@ -126,6 +126,31 @@ export async function countOutboundWebhookDeliveriesByStatus(
   }
 }
 
+export async function countOutboundWebhookDeliveriesSince(
+  companyId: string,
+  input: {
+    since: Date;
+    eventType?: string;
+    siteId?: string;
+  },
+): Promise<number> {
+  requireCompanyId(companyId);
+
+  try {
+    const db = scopedDb(companyId);
+    return await db.outboundWebhookDelivery.count({
+      where: {
+        company_id: companyId,
+        created_at: { gte: input.since },
+        ...(input.eventType ? { event_type: input.eventType } : {}),
+        ...(input.siteId ? { site_id: input.siteId } : {}),
+      },
+    });
+  } catch (error) {
+    handlePrismaError(error, "OutboundWebhookDelivery");
+  }
+}
+
 export async function queueOutboundWebhookDeliveries(
   companyId: string,
   input: QueueOutboundWebhookDeliveryInput[],

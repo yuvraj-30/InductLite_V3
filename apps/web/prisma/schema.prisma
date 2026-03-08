@@ -7,9 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DATABASE_DIRECT_URL")
+  provider = "postgresql"
 }
 
 // ============================================================================
@@ -21,6 +19,11 @@ model Company {
   name                           String
   slug                           String      @unique
   product_plan                   CompanyPlan @default(STANDARD)
+  data_residency_region          String?
+  data_residency_scope           String?
+  data_residency_notes           String?
+  data_residency_attested_at     DateTime?
+  data_residency_attested_by     String?
   sso_config                     Json?
   feature_overrides              Json?
   feature_credit_overrides       Json?
@@ -256,33 +259,36 @@ enum QuestionType {
 // ============================================================================
 
 model SignInRecord {
-  id                     String      @id @default(cuid())
-  company_id             String
-  site_id                String
-  idempotency_key        String? // Public sign-in dedupe key (client generated)
-  visitor_name           String
-  visitor_phone          String
-  visitor_email          String?
-  employer_name          String? // For contractor matching
-  visitor_type           VisitorType @default(CONTRACTOR)
-  hasAcceptedTerms       Boolean     @default(false)
-  termsAcceptedAt        DateTime?
-  terms_version_id       String?
-  privacy_version_id     String?
-  consent_statement      String?
-  sign_in_ts             DateTime    @default(now())
-  location_latitude      Float?
-  location_longitude     Float?
-  location_accuracy_m    Float?
-  location_distance_m    Float?
-  location_within_radius Boolean?
-  location_captured_at   DateTime?
-  sign_out_ts            DateTime? // null = currently on site
-  signed_out_by          String? // User ID who signed out the visitor (null = self-signout)
-  sign_out_token         String? // Hashed token for self sign-out
-  sign_out_token_exp     DateTime? // Token expiry
-  notes                  String?
-  created_at             DateTime    @default(now())
+  id                       String      @id @default(cuid())
+  company_id               String
+  site_id                  String
+  idempotency_key          String? // Public sign-in dedupe key (client generated)
+  visitor_name             String
+  visitor_phone            String
+  visitor_email            String?
+  employer_name            String? // For contractor matching
+  visitor_type             VisitorType @default(CONTRACTOR)
+  hasAcceptedTerms         Boolean     @default(false)
+  termsAcceptedAt          DateTime?
+  terms_version_id         String?
+  privacy_version_id       String?
+  consent_statement        String?
+  sign_in_ts               DateTime    @default(now())
+  location_latitude        Float?
+  location_longitude       Float?
+  location_accuracy_m      Float?
+  location_distance_m      Float?
+  location_within_radius   Boolean?
+  location_captured_at     DateTime?
+  visitor_photo_evidence   String?
+  visitor_id_evidence      String?
+  visitor_id_evidence_type String?
+  sign_out_ts              DateTime? // null = currently on site
+  signed_out_by            String? // User ID who signed out the visitor (null = self-signout)
+  sign_out_token           String? // Hashed token for self sign-out
+  sign_out_token_exp       DateTime? // Token expiry
+  notes                    String?
+  created_at               DateTime    @default(now())
 
   // Relations
   company                Company                  @relation(fields: [company_id], references: [id], onDelete: Cascade)
@@ -924,17 +930,17 @@ enum PlanChangeRequestStatus {
 }
 
 model PermitTemplate {
-  id                       String   @id @default(cuid())
-  company_id               String
-  site_id                  String?
-  name                     String
-  permit_type              String
-  description              String?
-  approval_policy          Json?
-  is_required_for_signin   Boolean  @default(false)
-  is_active                Boolean  @default(true)
-  created_at               DateTime @default(now())
-  updated_at               DateTime @updatedAt
+  id                     String   @id @default(cuid())
+  company_id             String
+  site_id                String?
+  name                   String
+  permit_type            String
+  description            String?
+  approval_policy        Json?
+  is_required_for_signin Boolean  @default(false)
+  is_active              Boolean  @default(true)
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
 
   @@index([company_id])
   @@index([company_id, site_id])
@@ -959,29 +965,29 @@ model PermitCondition {
 }
 
 model PermitRequest {
-  id                String               @id @default(cuid())
-  company_id        String
-  site_id           String
+  id                 String                @id @default(cuid())
+  company_id         String
+  site_id            String
   permit_template_id String
-  contractor_id     String?
-  requestor_user_id String?
-  assignee_user_id  String?
-  visitor_name      String?
-  visitor_phone     String?
-  visitor_email     String?
-  employer_name     String?
-  status            PermitLifecycleStatus @default(DRAFT)
-  validity_start    DateTime?
-  validity_end      DateTime?
-  notes             String?
-  requested_at      DateTime?
-  approved_at       DateTime?
-  active_at         DateTime?
-  suspended_at      DateTime?
-  closed_at         DateTime?
-  sign_in_record_id String?
-  created_at        DateTime             @default(now())
-  updated_at        DateTime             @updatedAt
+  contractor_id      String?
+  requestor_user_id  String?
+  assignee_user_id   String?
+  visitor_name       String?
+  visitor_phone      String?
+  visitor_email      String?
+  employer_name      String?
+  status             PermitLifecycleStatus @default(DRAFT)
+  validity_start     DateTime?
+  validity_end       DateTime?
+  notes              String?
+  requested_at       DateTime?
+  approved_at        DateTime?
+  active_at          DateTime?
+  suspended_at       DateTime?
+  closed_at          DateTime?
+  sign_in_record_id  String?
+  created_at         DateTime              @default(now())
+  updated_at         DateTime              @updatedAt
 
   @@index([company_id])
   @@index([company_id, site_id, status])
@@ -992,15 +998,15 @@ model PermitRequest {
 }
 
 model PermitApproval {
-  id              String                 @id @default(cuid())
-  company_id      String
+  id                String                 @id @default(cuid())
+  company_id        String
   permit_request_id String
-  stage           Int                    @default(1)
-  approver_user_id String
-  decision        PermitApprovalDecision
-  notes           String?
-  decided_at      DateTime               @default(now())
-  created_at      DateTime               @default(now())
+  stage             Int                    @default(1)
+  approver_user_id  String
+  decision          PermitApprovalDecision
+  notes             String?
+  decided_at        DateTime               @default(now())
+  created_at        DateTime               @default(now())
 
   @@index([company_id])
   @@index([company_id, permit_request_id])
@@ -1008,19 +1014,19 @@ model PermitApproval {
 }
 
 model ContractorPrequalification {
-  id            String                          @id @default(cuid())
+  id            String                           @id @default(cuid())
   company_id    String
   contractor_id String
   site_id       String?
-  score         Int                             @default(0)
+  score         Int                              @default(0)
   status        ContractorPrequalificationStatus @default(PENDING)
   checklist     Json?
   evidence_refs Json?
   expires_at    DateTime?
   reviewed_by   String?
   reviewed_at   DateTime?
-  created_at    DateTime                        @default(now())
-  updated_at    DateTime                        @updatedAt
+  created_at    DateTime                         @default(now())
+  updated_at    DateTime                         @updatedAt
 
   @@unique([company_id, contractor_id, site_id])
   @@index([company_id])
@@ -1028,46 +1034,46 @@ model ContractorPrequalification {
 }
 
 model VisitorApprovalPolicy {
-  id                         String   @id @default(cuid())
-  company_id                 String
-  site_id                    String
-  template_id                String?
-  name                       String
-  rules                      Json?
-  random_check_percentage    Int      @default(0)
-  require_watchlist_screening Boolean @default(true)
-  is_active                  Boolean  @default(true)
-  created_at                 DateTime @default(now())
-  updated_at                 DateTime @updatedAt
+  id                          String   @id @default(cuid())
+  company_id                  String
+  site_id                     String
+  template_id                 String?
+  name                        String
+  rules                       Json?
+  random_check_percentage     Int      @default(0)
+  require_watchlist_screening Boolean  @default(true)
+  is_active                   Boolean  @default(true)
+  created_at                  DateTime @default(now())
+  updated_at                  DateTime @updatedAt
 
   @@index([company_id])
   @@index([company_id, site_id, is_active])
 }
 
 model VisitorApprovalRequest {
-  id                             String              @id @default(cuid())
-  company_id                     String
-  site_id                        String
-  visitor_name                   String
-  visitor_phone                  String?
-  visitor_email                  String?
-  employer_name                  String?
-  visitor_type                   VisitorType         @default(CONTRACTOR)
-  reason                         String
-  policy_id                      String?
-  status                         VisitorApprovalStatus @default(PENDING)
-  requested_at                   DateTime            @default(now())
-  reviewed_at                    DateTime?
-  reviewed_by                    String?
-  decision_notes                 String?
-  channel_action_token_hash      String?             @unique
-  sign_in_record_id              String?
-  pending_sign_in_escalation_id  String?
-  random_check_triggered         Boolean             @default(false)
-  watchlist_match                Boolean             @default(false)
-  watchlist_entry_id             String?
-  created_at                     DateTime            @default(now())
-  updated_at                     DateTime            @updatedAt
+  id                            String                @id @default(cuid())
+  company_id                    String
+  site_id                       String
+  visitor_name                  String
+  visitor_phone                 String?
+  visitor_email                 String?
+  employer_name                 String?
+  visitor_type                  VisitorType           @default(CONTRACTOR)
+  reason                        String
+  policy_id                     String?
+  status                        VisitorApprovalStatus @default(PENDING)
+  requested_at                  DateTime              @default(now())
+  reviewed_at                   DateTime?
+  reviewed_by                   String?
+  decision_notes                String?
+  channel_action_token_hash     String?               @unique
+  sign_in_record_id             String?
+  pending_sign_in_escalation_id String?
+  random_check_triggered        Boolean               @default(false)
+  watchlist_match               Boolean               @default(false)
+  watchlist_entry_id            String?
+  created_at                    DateTime              @default(now())
+  updated_at                    DateTime              @updatedAt
 
   @@index([company_id])
   @@index([company_id, site_id, status])
@@ -1076,7 +1082,7 @@ model VisitorApprovalRequest {
 }
 
 model VisitorWatchlistEntry {
-  id               String   @id @default(cuid())
+  id               String    @id @default(cuid())
   company_id       String
   full_name        String
   phone            String?
@@ -1086,10 +1092,10 @@ model VisitorWatchlistEntry {
   normalized_phone String?
   normalized_email String?
   reason           String?
-  is_active        Boolean  @default(true)
+  is_active        Boolean   @default(true)
   expires_at       DateTime?
-  created_at       DateTime @default(now())
-  updated_at       DateTime @updatedAt
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
 
   @@index([company_id])
   @@index([company_id, is_active, expires_at])
@@ -1137,22 +1143,22 @@ model EmergencyBroadcast {
 }
 
 model BroadcastRecipient {
-  id              String                  @id @default(cuid())
-  company_id      String
-  broadcast_id    String
-  recipient_name  String?
-  recipient_email String?
-  recipient_phone String?
+  id                String                   @id @default(cuid())
+  company_id        String
+  broadcast_id      String
+  recipient_name    String?
+  recipient_email   String?
+  recipient_phone   String?
   recipient_user_id String?
-  channel         BroadcastChannel
-  status          BroadcastRecipientStatus @default(PENDING)
-  ack_token_hash  String?                 @unique
-  acknowledged_at DateTime?
-  retries         Int                     @default(0)
-  last_attempt_at DateTime?
-  error_message   String?
-  created_at      DateTime                @default(now())
-  updated_at      DateTime                @updatedAt
+  channel           BroadcastChannel
+  status            BroadcastRecipientStatus @default(PENDING)
+  ack_token_hash    String?                  @unique
+  acknowledged_at   DateTime?
+  retries           Int                      @default(0)
+  last_attempt_at   DateTime?
+  error_message     String?
+  created_at        DateTime                 @default(now())
+  updated_at        DateTime                 @updatedAt
 
   @@index([company_id])
   @@index([company_id, broadcast_id, status])
@@ -1176,17 +1182,17 @@ model CommunicationEvent {
 }
 
 model ChannelIntegrationConfig {
-  id            String          @id @default(cuid())
-  company_id    String
-  site_id       String?
-  provider      ChannelProvider
-  endpoint_url  String
+  id             String          @id @default(cuid())
+  company_id     String
+  site_id        String?
+  provider       ChannelProvider
+  endpoint_url   String
   signing_secret String?
-  auth_token    String?
-  mappings      Json?
-  is_active     Boolean         @default(true)
-  created_at    DateTime        @default(now())
-  updated_at    DateTime        @updatedAt
+  auth_token     String?
+  mappings       Json?
+  is_active      Boolean         @default(true)
+  created_at     DateTime        @default(now())
+  updated_at     DateTime        @updatedAt
 
   @@index([company_id])
   @@index([company_id, provider, is_active])
@@ -1194,7 +1200,7 @@ model ChannelIntegrationConfig {
 }
 
 model ChannelDelivery {
-  id                    String               @id @default(cuid())
+  id                    String                @id @default(cuid())
   company_id            String
   integration_config_id String
   event_type            String
@@ -1202,11 +1208,11 @@ model ChannelDelivery {
   status                ChannelDeliveryStatus @default(PENDING)
   response_status_code  Int?
   response_body         String?
-  retries               Int                  @default(0)
+  retries               Int                   @default(0)
   next_attempt_at       DateTime?
-  idempotency_key       String?              @unique
-  created_at            DateTime             @default(now())
-  updated_at            DateTime             @updatedAt
+  idempotency_key       String?               @unique
+  created_at            DateTime              @default(now())
+  updated_at            DateTime              @updatedAt
 
   @@index([company_id])
   @@index([company_id, status, next_attempt_at])
@@ -1214,36 +1220,157 @@ model ChannelDelivery {
 }
 
 model DeviceSubscription {
-  id            String   @id @default(cuid())
+  id            String    @id @default(cuid())
   company_id    String
   site_id       String?
   user_id       String?
-  endpoint      String   @unique
+  endpoint      String    @unique
   public_key    String
   auth_key      String
   platform      String?
-  is_active     Boolean  @default(true)
+  token_version Int       @default(1)
+  is_active     Boolean   @default(true)
   last_seen_at  DateTime?
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
 
   @@index([company_id])
   @@index([company_id, site_id, is_active])
 }
 
+enum MobileRuntimeEventType {
+  ENROLLMENT
+  GEOFENCE
+  HEARTBEAT
+  BOOTSTRAP
+}
+
+enum MobileRuntimeEventStatus {
+  ACCEPTED
+  DUPLICATE
+  REJECTED
+  ERROR
+}
+
+model MobileDeviceRuntimeEvent {
+  id                     String                   @id @default(cuid())
+  company_id             String
+  site_id                String?
+  device_subscription_id String?
+  event_type             MobileRuntimeEventType
+  event_status           MobileRuntimeEventStatus @default(ACCEPTED)
+  correlation_id         String?
+  runtime_tag            String?
+  reason                 String?
+  payload                Json?
+  created_at             DateTime                 @default(now())
+
+  @@index([company_id])
+  @@index([company_id, event_type, created_at])
+  @@index([company_id, site_id, event_type, created_at])
+  @@index([company_id, device_subscription_id, created_at])
+}
+
+enum IdentityOcrStatus {
+  PENDING
+  APPROVED
+  REVIEW
+  REJECTED
+  ERROR
+}
+
+model IdentityOcrVerification {
+  id                              String            @id @default(cuid())
+  company_id                      String
+  site_id                         String
+  sign_in_record_id               String?
+  identity_verification_record_id String?
+  provider                        String
+  document_type                   String?
+  decision_mode                   String
+  decision_status                 IdentityOcrStatus @default(PENDING)
+  confidence_score                Float?
+  name_match_score                Float?
+  extracted_name                  String?
+  extracted_document_number_hash  String?
+  extracted_expiry_date           DateTime?
+  reason_code                     String?
+  request_metadata                Json?
+  response_metadata               Json?
+  created_at                      DateTime          @default(now())
+  updated_at                      DateTime          @updatedAt
+
+  @@index([company_id])
+  @@index([company_id, site_id, created_at])
+  @@index([company_id, decision_status, created_at])
+  @@index([sign_in_record_id])
+}
+
+enum AccessConnectorProvider {
+  GENERIC
+  HID_ORIGO
+  BRIVO
+  GALLAGHER
+  LENELS2
+  GENETEC
+}
+
+enum AccessConnectorHealthStatus {
+  HEALTHY
+  DEGRADED
+  OUTAGE
+  RESTORED
+}
+
+model AccessConnectorConfig {
+  id                   String                  @id @default(cuid())
+  company_id           String
+  site_id              String?
+  provider             AccessConnectorProvider
+  endpoint_url         String
+  auth_token_encrypted String?
+  settings             Json?
+  is_active            Boolean                 @default(true)
+  created_at           DateTime                @default(now())
+  updated_at           DateTime                @updatedAt
+
+  @@unique([company_id, site_id, provider])
+  @@index([company_id])
+  @@index([company_id, site_id, is_active])
+  @@index([company_id, provider, is_active])
+}
+
+model AccessConnectorHealthEvent {
+  id                  String                      @id @default(cuid())
+  company_id          String
+  site_id             String?
+  connector_config_id String?
+  provider            AccessConnectorProvider
+  status              AccessConnectorHealthStatus
+  reason              String
+  details             Json?
+  occurred_at         DateTime                    @default(now())
+  created_at          DateTime                    @default(now())
+
+  @@index([company_id])
+  @@index([company_id, provider, occurred_at])
+  @@index([company_id, site_id, occurred_at])
+  @@index([connector_config_id])
+}
+
 model PresenceHint {
-  id               String            @id @default(cuid())
-  company_id       String
-  site_id          String
+  id                String             @id @default(cuid())
+  company_id        String
+  site_id           String
   sign_in_record_id String
-  hint_type        String
-  status           PresenceHintStatus @default(OPEN)
-  hint_payload     Json?
-  suggested_at     DateTime          @default(now())
-  resolved_at      DateTime?
-  resolution_notes String?
-  created_at       DateTime          @default(now())
-  updated_at       DateTime          @updatedAt
+  hint_type         String
+  status            PresenceHintStatus @default(OPEN)
+  hint_payload      Json?
+  suggested_at      DateTime           @default(now())
+  resolved_at       DateTime?
+  resolution_notes  String?
+  created_at        DateTime           @default(now())
+  updated_at        DateTime           @updatedAt
 
   @@index([company_id])
   @@index([company_id, site_id, status])
@@ -1251,21 +1378,21 @@ model PresenceHint {
 }
 
 model AccessDecisionTrace {
-  id              String              @id @default(cuid())
-  company_id      String
-  site_id         String
+  id                String               @id @default(cuid())
+  company_id        String
+  site_id           String
   sign_in_record_id String?
-  correlation_id  String
-  decision_status AccessDecisionStatus
-  reason          String?
-  request_payload Json?
-  response_payload Json?
-  requested_at    DateTime            @default(now())
-  decided_at      DateTime?
-  acknowledged_at DateTime?
-  fallback_mode   Boolean             @default(false)
-  created_at      DateTime            @default(now())
-  updated_at      DateTime            @updatedAt
+  correlation_id    String
+  decision_status   AccessDecisionStatus
+  reason            String?
+  request_payload   Json?
+  response_payload  Json?
+  requested_at      DateTime             @default(now())
+  decided_at        DateTime?
+  acknowledged_at   DateTime?
+  fallback_mode     Boolean              @default(false)
+  created_at        DateTime             @default(now())
+  updated_at        DateTime             @updatedAt
 
   @@unique([company_id, correlation_id])
   @@index([company_id])
@@ -1273,24 +1400,203 @@ model AccessDecisionTrace {
 }
 
 model HardwareOutageEvent {
-  id          String                @id @default(cuid())
+  id          String                 @id @default(cuid())
   company_id  String
   site_id     String?
   provider    String?
   severity    HardwareOutageSeverity @default(DEGRADED)
   reason      String
   details     Json?
-  started_at  DateTime              @default(now())
+  started_at  DateTime               @default(now())
   resolved_at DateTime?
-  created_at  DateTime              @default(now())
-  updated_at  DateTime              @updatedAt
+  created_at  DateTime               @default(now())
+  updated_at  DateTime               @updatedAt
 
   @@index([company_id])
   @@index([company_id, site_id, severity, started_at])
 }
 
+enum DeliveryItemStatus {
+  ARRIVED
+  NOTIFIED
+  COLLECTED
+  RETURNED
+  CANCELLED
+}
+
+enum DeliveryEventType {
+  ARRIVED
+  NOTIFIED
+  STATUS_CHANGED
+  NOTE
+  COLLECTED
+  RETURNED
+  CANCELLED
+}
+
+model DeliveryItem {
+  id                String             @id @default(cuid())
+  company_id        String
+  site_id           String
+  reference_code    String
+  sender_name       String?
+  carrier_name      String?
+  recipient_name    String
+  recipient_email   String?
+  recipient_phone   String?
+  intended_for      String?
+  status            DeliveryItemStatus @default(ARRIVED)
+  notes             String?
+  sla_due_at        DateTime?
+  arrived_at        DateTime           @default(now())
+  notified_at       DateTime?
+  collected_at      DateTime?
+  collected_by_name String?
+  created_at        DateTime           @default(now())
+  updated_at        DateTime           @updatedAt
+
+  @@unique([company_id, reference_code])
+  @@index([company_id])
+  @@index([company_id, site_id, status])
+  @@index([company_id, arrived_at])
+}
+
+model DeliveryEvent {
+  id               String              @id @default(cuid())
+  company_id       String
+  delivery_item_id String
+  event_type       DeliveryEventType
+  message          String?
+  status_from      DeliveryItemStatus?
+  status_to        DeliveryItemStatus?
+  actor_user_id    String?
+  metadata         Json?
+  created_at       DateTime            @default(now())
+
+  @@index([company_id])
+  @@index([company_id, delivery_item_id, created_at])
+}
+
+enum ResourceType {
+  DESK
+  ROOM
+  VEHICLE
+  TOOL
+  EQUIPMENT
+  OTHER
+}
+
+enum ResourceBookingStatus {
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+model BookableResource {
+  id             String       @id @default(cuid())
+  company_id     String
+  site_id        String
+  name           String
+  resource_type  ResourceType @default(OTHER)
+  capacity       Int          @default(1)
+  location_label String?
+  notes          String?
+  is_active      Boolean      @default(true)
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+
+  @@unique([company_id, site_id, name])
+  @@index([company_id])
+  @@index([company_id, site_id, is_active])
+}
+
+model ResourceBooking {
+  id                String                @id @default(cuid())
+  company_id        String
+  site_id           String
+  resource_id       String
+  title             String
+  contact_name      String?
+  contact_email     String?
+  booked_by_user_id String?
+  starts_at         DateTime
+  ends_at           DateTime
+  status            ResourceBookingStatus @default(CONFIRMED)
+  notes             String?
+  cancelled_at      DateTime?
+  created_at        DateTime              @default(now())
+  updated_at        DateTime              @updatedAt
+
+  @@index([company_id])
+  @@index([company_id, site_id, starts_at])
+  @@index([company_id, resource_id, starts_at])
+  @@index([company_id, status, starts_at])
+}
+
+enum SafetyFormType {
+  SWMS
+  JSA
+  RAMS
+  TOOLBOX_TALK
+  FATIGUE_DECLARATION
+}
+
+enum SafetyFormSubmissionStatus {
+  SUBMITTED
+  REVIEWED
+  REJECTED
+}
+
+model SafetyFormTemplate {
+  id           String         @id @default(cuid())
+  company_id   String
+  site_id      String?
+  name         String
+  form_type    SafetyFormType
+  description  String?
+  field_schema Json
+  is_active    Boolean        @default(true)
+  created_by   String?
+  created_at   DateTime       @default(now())
+  updated_at   DateTime       @updatedAt
+
+  submissions SafetyFormSubmission[]
+
+  @@unique([company_id, site_id, name, form_type])
+  @@index([company_id])
+  @@index([company_id, site_id, is_active])
+  @@index([company_id, form_type, is_active])
+}
+
+model SafetyFormSubmission {
+  id                 String                     @id @default(cuid())
+  company_id         String
+  site_id            String
+  template_id        String
+  sign_in_record_id  String?
+  submitted_by_name  String
+  submitted_by_email String?
+  submitted_by_phone String?
+  payload            Json
+  summary            String?
+  status             SafetyFormSubmissionStatus @default(SUBMITTED)
+  submitted_at       DateTime                   @default(now())
+  reviewed_at        DateTime?
+  reviewed_by        String?
+  review_notes       String?
+  created_at         DateTime                   @default(now())
+  updated_at         DateTime                   @updatedAt
+
+  template SafetyFormTemplate @relation(fields: [template_id], references: [id], onDelete: Cascade)
+
+  @@index([company_id])
+  @@index([company_id, site_id, submitted_at])
+  @@index([company_id, template_id, status])
+  @@index([sign_in_record_id])
+}
+
 model EvidenceManifest {
-  id                  String                    @id @default(cuid())
+  id                  String                     @id @default(cuid())
   company_id          String
   export_job_id       String?
   hash_root           String
@@ -1298,8 +1604,8 @@ model EvidenceManifest {
   signer              String?
   signature_algorithm EvidenceSignatureAlgorithm @default(HMAC_SHA256)
   expires_at          DateTime?
-  created_at          DateTime                  @default(now())
-  updated_at          DateTime                  @updatedAt
+  created_at          DateTime                   @default(now())
+  updated_at          DateTime                   @updatedAt
 
   @@index([company_id])
   @@index([company_id, export_job_id])
@@ -1320,20 +1626,20 @@ model EvidenceArtifact {
 }
 
 model PolicySimulation {
-  id          String   @id @default(cuid())
-  company_id  String
-  name        String
-  scenario    Json
-  created_by  String?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  id         String   @id @default(cuid())
+  company_id String
+  name       String
+  scenario   Json
+  created_by String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
   @@index([company_id])
   @@index([company_id, created_at])
 }
 
 model PolicySimulationRun {
-  id                    String                @id @default(cuid())
+  id                    String                 @id @default(cuid())
   company_id            String
   policy_simulation_id  String
   status                PolicySimulationStatus @default(QUEUED)
@@ -1342,8 +1648,8 @@ model PolicySimulationRun {
   completed_at          DateTime?
   requested_by          String?
   error_message         String?
-  created_at            DateTime              @default(now())
-  updated_at            DateTime              @updatedAt
+  created_at            DateTime               @default(now())
+  updated_at            DateTime               @updatedAt
 
   @@index([company_id])
   @@index([company_id, status, created_at])
@@ -1351,32 +1657,32 @@ model PolicySimulationRun {
 }
 
 model PolicySimulationResult {
-  id                      String   @id @default(cuid())
-  company_id              String
+  id                       String   @id @default(cuid())
+  company_id               String
   policy_simulation_run_id String   @unique
-  summary                 Json
-  breakdown               Json
+  summary                  Json
+  breakdown                Json
   blocked_entries_estimate Int
   approval_load_estimate   Int
   false_positive_estimate  Int
-  created_at              DateTime @default(now())
-  updated_at              DateTime @updatedAt
+  created_at               DateTime @default(now())
+  updated_at               DateTime @updatedAt
 
   @@index([company_id])
   @@index([company_id, created_at])
 }
 
 model ContractorRiskScore {
-  id                 String   @id @default(cuid())
+  id                 String    @id @default(cuid())
   company_id         String
   contractor_id      String
   site_id            String?
-  current_score      Int      @default(0)
+  current_score      Int       @default(0)
   components         Json?
   threshold_state    String?
   last_calculated_at DateTime?
-  created_at         DateTime @default(now())
-  updated_at         DateTime @updatedAt
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
 
   @@unique([company_id, contractor_id, site_id])
   @@index([company_id])
@@ -1396,16 +1702,16 @@ model RiskScoreHistory {
 }
 
 model PlanChangeRequest {
-  id              String                  @id @default(cuid())
-  company_id      String
-  requested_by    String?
-  target_plan     CompanyPlan
-  effective_at    DateTime
-  status          PlanChangeRequestStatus @default(DRAFT)
-  change_payload  Json
+  id               String                  @id @default(cuid())
+  company_id       String
+  requested_by     String?
+  target_plan      CompanyPlan
+  effective_at     DateTime
+  status           PlanChangeRequestStatus @default(DRAFT)
+  change_payload   Json
   rollback_payload Json?
-  created_at      DateTime                @default(now())
-  updated_at      DateTime                @updatedAt
+  created_at       DateTime                @default(now())
+  updated_at       DateTime                @updatedAt
 
   @@index([company_id])
   @@index([company_id, status, effective_at])

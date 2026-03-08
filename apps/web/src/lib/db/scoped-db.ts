@@ -35,15 +35,25 @@ const TENANT_MODELS = [
   "visitorApprovalRequest",
   "visitorWatchlistEntry",
   "identityVerificationRecord",
+  "identityOcrVerification",
   "emergencyBroadcast",
   "broadcastRecipient",
   "communicationEvent",
   "channelIntegrationConfig",
   "channelDelivery",
   "deviceSubscription",
+  "mobileDeviceRuntimeEvent",
   "presenceHint",
   "accessDecisionTrace",
   "hardwareOutageEvent",
+  "accessConnectorConfig",
+  "accessConnectorHealthEvent",
+  "deliveryItem",
+  "deliveryEvent",
+  "bookableResource",
+  "resourceBooking",
+  "safetyFormTemplate",
+  "safetyFormSubmission",
   "evidenceManifest",
   "evidenceArtifact",
   "policySimulation",
@@ -554,6 +564,38 @@ export function scopedDb(
       deleteMany: (args?: any) => Promise<any>;
     };
     hardwareOutageEvent: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    deliveryItem: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    deliveryEvent: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    bookableResource: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    resourceBooking: {
       findFirst: (args?: any) => Promise<any>;
       findMany: (args?: any) => Promise<any[]>;
       count: (args?: any) => Promise<number>;

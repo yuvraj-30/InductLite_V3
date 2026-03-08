@@ -115,11 +115,15 @@ function getPersistableDetails(details: VisitorDetails): PersistedVisitorDetails
 function sanitizeOfflineQueuePayload(
   payload: PublicSignInPayload,
 ): PublicSignInPayload {
-  // Do not persist employer name in browser storage.
+  // Do not persist sensitive profile or identity evidence in browser storage.
   return {
     ...payload,
     employerName: undefined,
     geofenceOverrideCode: undefined,
+    visitorPhotoDataUrl: undefined,
+    visitorIdDataUrl: undefined,
+    visitorIdType: undefined,
+    identityConsentAccepted: undefined,
   };
 }
 
@@ -187,6 +191,24 @@ function calculateDistanceMeters(
   return earthRadiusMeters * c;
 }
 
+const MAX_IDENTITY_EVIDENCE_BYTES = 2 * 1024 * 1024;
+
+function fileToImageDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const value = typeof reader.result === "string" ? reader.result : "";
+      if (!value.startsWith("data:image/")) {
+        reject(new Error("Only image files are supported."));
+        return;
+      }
+      resolve(value);
+    };
+    reader.onerror = () => reject(new Error("Unable to read selected image."));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function SignInFlow({
   slug,
   site,
@@ -206,6 +228,14 @@ export function SignInFlow({
   );
   const [mediaAcknowledged, setMediaAcknowledged] = useState(false);
   const [geofenceOverrideCode, setGeofenceOverrideCode] = useState("");
+  const [visitorPhotoDataUrl, setVisitorPhotoDataUrl] = useState<string | undefined>(
+    undefined,
+  );
+  const [visitorIdDataUrl, setVisitorIdDataUrl] = useState<string | undefined>(
+    undefined,
+  );
+  const [visitorIdType, setVisitorIdType] = useState("Driver Licence");
+  const [identityConsentAccepted, setIdentityConsentAccepted] = useState(false);
   const [expressMode, setExpressMode] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
   const [pendingQueueMessage, setPendingQueueMessage] = useState<string | null>(
@@ -253,6 +283,15 @@ export function SignInFlow({
   const hostRecipients = site.hostRecipients ?? [];
   const locationAudit = site.locationAudit;
   const geofencePolicy = site.geofence;
+  const identityEvidence = site.identityEvidence ?? {
+    enabled: false,
+    requirePhoto: false,
+    requireIdScan: false,
+    requireConsent: false,
+    requireOcrVerification: false,
+    allowedDocumentTypes: [],
+    ocrDecisionMode: "assist",
+  };
   const mediaConfig = template.media;
   const languageConfig = template.language;
   const languageChoices = languageConfig.available;
@@ -370,6 +409,17 @@ export function SignInFlow({
     geofenceEnforcementEnabled &&
     geofencePolicy?.mode === "OVERRIDE" &&
     (geofenceLocationMissingAndRequired || geofenceOutsideRadius);
+  const identityEvidenceEnabled = identityEvidence.enabled === true;
+  const identityPhotoRequired =
+    identityEvidenceEnabled && identityEvidence.requirePhoto === true;
+  const identityIdRequired =
+    identityEvidenceEnabled && identityEvidence.requireIdScan === true;
+  const identityConsentRequired =
+    identityEvidenceEnabled && identityEvidence.requireConsent === true;
+  const identityOcrRequired =
+    identityEvidenceEnabled &&
+    identityEvidence.requireOcrVerification === true &&
+    identityIdRequired;
 
   useEffect(() => {
     if (SignatureCanvasComponent) return;
@@ -787,6 +837,48 @@ export function SignInFlow({
     }
   };
 
+  const handleIdentityImageSelect = async (
+    kind: "photo" | "id",
+    fileList: FileList | null,
+  ) => {
+    const file = fileList?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_IDENTITY_EVIDENCE_BYTES) {
+      const message = "Image is too large. Max upload size is 2MB.";
+      setError(message);
+      setFieldErrors((prev) => ({
+        ...prev,
+        [kind === "photo" ? "visitorPhotoDataUrl" : "visitorIdDataUrl"]: [message],
+      }));
+      return;
+    }
+
+    try {
+      const encoded = await fileToImageDataUrl(file);
+      if (kind === "photo") {
+        setVisitorPhotoDataUrl(encoded);
+      } else {
+        setVisitorIdDataUrl(encoded);
+      }
+      setError(null);
+      setFieldErrors((prev) => ({
+        ...prev,
+        [kind === "photo" ? "visitorPhotoDataUrl" : "visitorIdDataUrl"]: [],
+      }));
+    } catch (uploadError) {
+      const message =
+        uploadError instanceof Error
+          ? uploadError.message
+          : "Unable to process selected image.";
+      setError(message);
+      setFieldErrors((prev) => ({
+        ...prev,
+        [kind === "photo" ? "visitorPhotoDataUrl" : "visitorIdDataUrl"]: [message],
+      }));
+    }
+  };
+
   const handleSignatureSubmit = () => {
     if (!details.hasAcceptedTerms) {
       setFieldErrors({ hasAcceptedTerms: ["You must accept the terms"] });
@@ -818,6 +910,35 @@ export function SignInFlow({
       return;
     }
 
+    if (identityPhotoRequired && !visitorPhotoDataUrl) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        visitorPhotoDataUrl: ["Visitor photo is required for this site."],
+      }));
+      setError("Please capture a visitor photo before signing off.");
+      return;
+    }
+
+    if (identityIdRequired && !visitorIdDataUrl) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        visitorIdDataUrl: ["Visitor ID image is required for this site."],
+      }));
+      setError("Please upload a visitor ID image before signing off.");
+      return;
+    }
+
+    if (identityConsentRequired && !identityConsentAccepted) {
+      setFieldErrors((prev) => ({
+        ...prev,
+        identityConsentAccepted: [
+          "Identity evidence consent is required for this site.",
+        ],
+      }));
+      setError("Please confirm identity evidence consent to continue.");
+      return;
+    }
+
     const signatureData =
       savedSignatureData ?? sigCanvas.current?.toDataURL("image/png");
     const payload = {
@@ -835,6 +956,15 @@ export function SignInFlow({
         answer,
       })),
       signatureData,
+      visitorPhotoDataUrl: identityEvidenceEnabled ? visitorPhotoDataUrl : undefined,
+      visitorIdDataUrl: identityEvidenceEnabled ? visitorIdDataUrl : undefined,
+      visitorIdType:
+        identityEvidenceEnabled && visitorIdDataUrl
+          ? visitorIdType.trim() || undefined
+          : undefined,
+      identityConsentAccepted: identityEvidenceEnabled
+        ? identityConsentAccepted
+        : undefined,
       location: capturedLocation ?? undefined,
       inviteToken: prefillInvite?.token,
       languageCode: selectedLanguageCode,
@@ -848,6 +978,15 @@ export function SignInFlow({
     setMissingRequiredQuestionIds([]);
 
     if (!isOnline) {
+      if (
+        identityEvidenceEnabled &&
+        (visitorPhotoDataUrl || visitorIdDataUrl || identityPhotoRequired || identityIdRequired)
+      ) {
+        setError(
+          "Identity evidence sign-ins require a live connection and cannot be queued offline.",
+        );
+        return;
+      }
       queuePayloadForSync(payload);
       return;
     }
@@ -1542,6 +1681,131 @@ export function SignInFlow({
             <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
               Kiosk mode detected: signature saving is disabled for shared-device safety.
             </div>
+          )}
+
+          {identityEvidenceEnabled && (
+            <section className="rounded-lg border border-indigo-300/35 bg-indigo-500/10 p-3">
+              <h3 className="text-sm font-semibold text-indigo-950 dark:text-indigo-100">
+                Visitor Identity Evidence
+              </h3>
+              <p className="mt-1 text-xs text-indigo-900 dark:text-indigo-200">
+                Uploads are encrypted and only visible to authorized site management.
+              </p>
+              {identityOcrRequired && (
+                <p className="mt-1 text-xs text-indigo-900 dark:text-indigo-200">
+                  OCR verification is enabled ({identityEvidence.ocrDecisionMode} mode).
+                </p>
+              )}
+
+              <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+                <label className="text-sm text-indigo-950 dark:text-indigo-100">
+                  Visitor photo {identityPhotoRequired ? "*" : "(optional)"}
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    capture="environment"
+                    onChange={(event) => {
+                      void handleIdentityImageSelect("photo", event.target.files);
+                    }}
+                    className="mt-1 block w-full rounded-md border border-indigo-200 bg-white px-2 py-2 text-xs"
+                  />
+                  {fieldErrors.visitorPhotoDataUrl?.[0] && (
+                    <p className="mt-1 text-xs text-red-700">
+                      {fieldErrors.visitorPhotoDataUrl[0]}
+                    </p>
+                  )}
+                </label>
+
+                <label className="text-sm text-indigo-950 dark:text-indigo-100">
+                  Visitor ID image {identityIdRequired ? "*" : "(optional)"}
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    capture="environment"
+                    onChange={(event) => {
+                      void handleIdentityImageSelect("id", event.target.files);
+                    }}
+                    className="mt-1 block w-full rounded-md border border-indigo-200 bg-white px-2 py-2 text-xs"
+                  />
+                  {fieldErrors.visitorIdDataUrl?.[0] && (
+                    <p className="mt-1 text-xs text-red-700">
+                      {fieldErrors.visitorIdDataUrl[0]}
+                    </p>
+                  )}
+                </label>
+              </div>
+
+              {visitorIdDataUrl && (
+                <label className="mt-3 block text-sm text-indigo-950 dark:text-indigo-100">
+                  ID type
+                  <select
+                    value={visitorIdType}
+                    onChange={(event) => setVisitorIdType(event.target.value)}
+                    className="input mt-1 text-sm"
+                  >
+                    <option value="Driver Licence">Driver Licence</option>
+                    <option value="Passport">Passport</option>
+                    <option value="Company ID">Company ID</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </label>
+              )}
+              {identityOcrRequired &&
+                identityEvidence.allowedDocumentTypes.length > 0 && (
+                  <p className="mt-2 text-xs text-indigo-900 dark:text-indigo-200">
+                    Allowed document types:{" "}
+                    {identityEvidence.allowedDocumentTypes.join(", ")}
+                  </p>
+                )}
+
+              <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+                {visitorPhotoDataUrl && (
+                  <div className="rounded-md border border-indigo-200 bg-white p-2">
+                    <p className="text-xs font-semibold text-indigo-900">Photo preview</p>
+                    <img
+                      src={visitorPhotoDataUrl}
+                      alt="Visitor photo preview"
+                      className="mt-1 max-h-36 w-full rounded object-cover"
+                    />
+                  </div>
+                )}
+                {visitorIdDataUrl && (
+                  <div className="rounded-md border border-indigo-200 bg-white p-2">
+                    <p className="text-xs font-semibold text-indigo-900">ID preview</p>
+                    <img
+                      src={visitorIdDataUrl}
+                      alt="Visitor ID preview"
+                      className="mt-1 max-h-36 w-full rounded object-cover"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <label className="mt-3 flex items-start gap-2 text-xs text-indigo-900 dark:text-indigo-100">
+                <input
+                  type="checkbox"
+                  checked={identityConsentAccepted}
+                  onChange={(event) => {
+                    setIdentityConsentAccepted(event.target.checked);
+                    if (fieldErrors.identityConsentAccepted) {
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        identityConsentAccepted: [],
+                      }));
+                    }
+                  }}
+                  className="mt-0.5 h-4 w-4 rounded border-indigo-300 text-indigo-600"
+                />
+                <span>
+                  I consent to identity image processing for site access validation and compliance audit.
+                </span>
+              </label>
+              {fieldErrors.identityConsentAccepted?.[0] && (
+                <p className="mt-1 text-xs text-red-700">
+                  {fieldErrors.identityConsentAccepted[0]}
+                </p>
+              )}
+            </section>
           )}
 
           <div>

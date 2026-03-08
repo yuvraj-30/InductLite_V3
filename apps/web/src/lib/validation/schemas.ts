@@ -16,6 +16,9 @@ export const MAX_STRING_LENGTH = 200;
 export const MAX_SIGNIN_ANSWERS = 50;
 export const MAX_SIGNIN_ANSWER_STRING_LENGTH = 5000;
 export const MAX_SIGNATURE_DATA_LENGTH = 2_000_000;
+export const MAX_VISITOR_IDENTITY_EVIDENCE_LENGTH = 2_000_000;
+const IMAGE_DATA_URL_REGEX =
+  /^data:image\/(?:png|jpe?g|webp);base64,[A-Za-z0-9+/=]+$/i;
 
 const answerValueSchema = z.union([
   z.string().max(MAX_SIGNIN_ANSWER_STRING_LENGTH, "Answer is too long"),
@@ -109,6 +112,27 @@ export const signInSchema = z.object({
       `Signature payload exceeds ${MAX_SIGNATURE_DATA_LENGTH} characters`,
     )
     .optional(),
+  visitorPhotoDataUrl: z
+    .string()
+    .max(
+      MAX_VISITOR_IDENTITY_EVIDENCE_LENGTH,
+      `Visitor photo exceeds ${MAX_VISITOR_IDENTITY_EVIDENCE_LENGTH} characters`,
+    )
+    .regex(IMAGE_DATA_URL_REGEX, "Visitor photo must be a PNG/JPEG/WEBP image data URL")
+    .optional(),
+  visitorIdDataUrl: z
+    .string()
+    .max(
+      MAX_VISITOR_IDENTITY_EVIDENCE_LENGTH,
+      `Visitor ID image exceeds ${MAX_VISITOR_IDENTITY_EVIDENCE_LENGTH} characters`,
+    )
+    .regex(
+      IMAGE_DATA_URL_REGEX,
+      "Visitor ID image must be a PNG/JPEG/WEBP image data URL",
+    )
+    .optional(),
+  visitorIdType: z.string().trim().max(60, "ID type is too long").optional(),
+  identityConsentAccepted: z.boolean().optional(),
   location: z
     .object({
       latitude: z.number().min(-90, "Invalid latitude").max(90, "Invalid latitude"),

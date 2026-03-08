@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ensureTestRouteAccess } from "../_guard";
+import { createPrismaClient } from "@/lib/db/prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,10 +34,7 @@ export async function GET(req: Request) {
     const normalizedEmail = email.toLowerCase().trim();
 
     try {
-      const { PrismaClient } = await import("@prisma/client");
-      const diag = new PrismaClient({
-        datasources: { db: { url: env.DATABASE_URL } },
-      });
+      const diag = createPrismaClient(env.DATABASE_URL);
       await diag.$connect();
       const count = await diag.user.count({ where: { email: normalizedEmail } });
       const user = await diag.user.findFirst({

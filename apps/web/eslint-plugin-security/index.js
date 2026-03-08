@@ -34,6 +34,18 @@ function containsCompanyId(node) {
   return false;
 }
 
+function readFilename(context) {
+  if (typeof context.filename === "string") return context.filename;
+  if (typeof context.getFilename === "function") return context.getFilename();
+  return "";
+}
+
+function readSourceCode(context) {
+  if (context.sourceCode) return context.sourceCode;
+  if (typeof context.getSourceCode === "function") return context.getSourceCode();
+  return null;
+}
+
 module.exports = {
   rules: {
     /**
@@ -142,7 +154,7 @@ module.exports = {
         const tenantTables = options.tenantTables || defaultTenantTables;
 
         // Track if we're in a repository file
-        const filename = context.getFilename();
+        const filename = readFilename(context);
         const isRepositoryFile = filename.includes("repository");
 
         if (!isRepositoryFile) {
@@ -236,10 +248,13 @@ module.exports = {
         schema: [],
       },
       create(context) {
-        const filename = context.getFilename();
+        const filename = readFilename(context);
 
         // Check if this is a client component
-        const sourceCode = context.getSourceCode();
+        const sourceCode = readSourceCode(context);
+        if (!sourceCode) {
+          return {};
+        }
         const firstToken = sourceCode.getFirstToken(sourceCode.ast);
         const hasDirective =
           sourceCode.ast &&
@@ -435,7 +450,7 @@ module.exports = {
           "i",
         );
 
-        const filename = context.getFilename();
+        const filename = readFilename(context);
         const isActionsFile =
           filename.includes("actions.ts") || filename.includes("actions.tsx");
 
@@ -444,7 +459,10 @@ module.exports = {
         }
 
         // Check for 'use server' directive
-        const sourceCode = context.getSourceCode();
+        const sourceCode = readSourceCode(context);
+        if (!sourceCode) {
+          return {};
+        }
         const sourceText = sourceCode.getText();
         const hasUseServer =
           sourceText.startsWith('"use server"') ||

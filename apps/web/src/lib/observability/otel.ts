@@ -1,6 +1,6 @@
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
-import { Resource } from "@opentelemetry/resources";
+import { resourceFromAttributes } from "@opentelemetry/resources";
 import { SemanticResourceAttributes } from "@opentelemetry/semantic-conventions";
 
 let sdk: NodeSDK | null = null;
@@ -45,7 +45,7 @@ export async function startOpenTelemetry(): Promise<void> {
 
   sdk = new NodeSDK({
     traceExporter: exporter,
-    resource: new Resource({
+    resource: resourceFromAttributes({
       [SemanticResourceAttributes.SERVICE_NAME]:
         process.env.OTEL_SERVICE_NAME || "inductlite-web",
       [SemanticResourceAttributes.SERVICE_VERSION]:
