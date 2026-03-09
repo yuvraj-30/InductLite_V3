@@ -52,10 +52,11 @@ export function SuccessScreen({ slug, result }: SuccessScreenProps) {
     };
   }, [BadgeQrComponent]);
 
+  const signOutPath = `/sign-out?token=${encodeURIComponent(result.signOutToken)}`;
   const signOutUrl =
     typeof window !== "undefined"
-      ? `${window.location.origin}/sign-out?token=${encodeURIComponent(result.signOutToken)}`
-      : "";
+      ? `${window.location.origin}${signOutPath}`
+      : signOutPath;
 
   const badgePayload = useMemo(
     () =>

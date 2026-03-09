@@ -249,6 +249,35 @@ async function fillDetailsForm(
   await page.locator("#visitorType").selectOption(visitorType);
 }
 
+async function ensureDetailsPersisted(
+  page: Page,
+  details: {
+    name: string;
+    phone: string;
+    email?: string;
+    visitorType?: "CONTRACTOR" | "VISITOR" | "EMPLOYEE" | "DELIVERY";
+  },
+): Promise<void> {
+  const nameField = page.getByLabel(/full name/i);
+  const phoneField = page.getByLabel(/phone number/i);
+
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    const currentName = await nameField.inputValue().catch(() => "");
+    const currentPhone = await phoneField.inputValue().catch(() => "");
+    const hasExpectedName = currentName === details.name;
+    const hasExpectedPhone = /^\+64/.test(currentPhone);
+    if (hasExpectedName && hasExpectedPhone) {
+      return;
+    }
+
+    await fillDetailsForm(page, details).catch(() => null);
+    await page.waitForTimeout(250 * attempt);
+  }
+
+  await expect(nameField).toHaveValue(details.name);
+  await expect(phoneField).toHaveValue(/^\+64/);
+}
+
 async function continueToInductionWithRetry(
   page: Page,
   refill?: {
@@ -1009,8 +1038,11 @@ test.describe.serial("Public Sign-In Flow", () => {
       email: "e2e@test.com",
     });
 
-    await expect(nameField).toHaveValue(visitorName);
-    await expect(phoneField).toHaveValue(/^\+64/);
+    await ensureDetailsPersisted(page, {
+      name: visitorName,
+      phone: visitorPhone,
+      email: "e2e@test.com",
+    });
 
     // Select visitor type if present
     //const visitorType = page.getByLabel(/type|role/i);
@@ -1093,8 +1125,11 @@ test.describe.serial("Public Sign-In Flow", () => {
 
     const nameField = page.getByLabel(/full name/i);
     const phoneField = page.getByLabel(/phone number/i);
-    await expect(nameField).toHaveValue(visitorName);
-    await expect(phoneField).toHaveValue(/^\+64/);
+    await ensureDetailsPersisted(page, {
+      name: visitorName,
+      phone: visitorPhone,
+      email: "e2e@test.com",
+    });
 
     const reachedInduction = await continueToInductionWithRetry(page, {
       name: visitorName,

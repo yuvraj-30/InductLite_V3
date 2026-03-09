@@ -15,6 +15,7 @@ apps/web/playwright-report/
 apps/web/test-results/
 apps/web/e2e/vrt-local-out/
 apps/web/manual-evidence/e2e-screenshots/
+apps/web/manual-evidence/
 
 # Prisma
 *.db

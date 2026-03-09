@@ -42,6 +42,23 @@ npm run db:seed
 npm run dev
 ```
 
+### Seeded Plan Test Tenants
+
+After `npm run db:seed`, these additional admin users are available (password = `ADMIN_PASSWORD`):
+
+| Plan | Admin Email | Company Slug | Public Site Slugs |
+| --- | --- | --- | --- |
+| STANDARD | `admin.standard@inductlite.test` | `plan-test-standard` | `plan-standard-site-a`, `plan-standard-site-b` |
+| PLUS | `admin.plus@inductlite.test` | `plan-test-plus` | `plan-plus-site-a`, `plan-plus-site-b` |
+| PRO | `admin.pro@inductlite.test` | `plan-test-pro` | `plan-pro-site-a`, `plan-pro-site-b` |
+| STANDARD + add-on overrides | `admin.addons@inductlite.test` | `plan-test-addons` | `plan-addons-site-a`, `plan-addons-site-b` |
+
+To enable the Plan Configurator UI:
+
+1. Set `FF_SELF_SERVE_CONFIG_V1=true` in your root `.env` (or deployment env vars).
+2. Restart the web server.
+3. Log in as `admin.pro@inductlite.test` (or `admin.addons@inductlite.test`), then open `/admin/plan-configurator`.
+
 ### Native Mobile App (iOS + Android)
 
 ```bash
@@ -65,7 +82,19 @@ See [apps/mobile/README.md](apps/mobile/README.md) for placeholder and credentia
 ```bash
 # Competitor parity release gate (required rows must stay implemented)
 npm run parity-gate
+
+# Full confidence gate (guardrails + lint/typecheck + unit/integration + chromium e2e)
+npm run test:confidence
+
+# Full confidence gate with all Playwright projects
+npm run test:confidence:full
+
+# Include visual regression lane in confidence gate
+npm run test:confidence -- --with-visual
 ```
+
+Detailed test-coverage explanation (plain language): [docs/FULL_TEST_COVERAGE_AND_PURPOSE_2026-03-09.md](docs/FULL_TEST_COVERAGE_AND_PURPOSE_2026-03-09.md)
+Manual browser validation checklist: [docs/MANUAL_FEATURE_VALIDATION_CHECKLIST_2026-03-09.md](docs/MANUAL_FEATURE_VALIDATION_CHECKLIST_2026-03-09.md)
 
 ### Docker Compose (Full Stack)
 

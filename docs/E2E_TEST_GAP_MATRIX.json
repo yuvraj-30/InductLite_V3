@@ -1,0 +1,2074 @@
+{
+  "summary": {
+    "generatedAt": "2026-03-08T12:12:19.322Z",
+    "totalAppRoutes": 117,
+    "totalPlaywrightSpecs": 19,
+    "totalReferencedPaths": 120,
+    "staticReferencedPaths": 120,
+    "dynamicReferencedPaths": 0,
+    "dynamicLinksMode": false,
+    "jsFlowsMode": false,
+    "coveredRoutes": 117,
+    "gaps": 0,
+    "uiRoutes": 72,
+    "apiRoutes": 45,
+    "coveredUiRoutes": 72,
+    "coveredApiRoutes": 45
+  },
+  "rows": [
+    {
+      "sourceFile": "apps/web/src/app/~offline/page.tsx",
+      "routePath": "/~offline",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P1",
+      "risk": "Public site UX / SEO",
+      "status": "Covered",
+      "evidencePaths": [
+        "/~offline"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/link-integrity.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/page.tsx",
+      "routePath": "/admin",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/admin-auth.spec.ts",
+        "apps/web/e2e/export.spec.ts",
+        "apps/web/e2e/link-integrity.spec.ts",
+        "apps/web/e2e/visual-regression.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/access-ops/page.tsx",
+      "routePath": "/admin/access-ops",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/access-ops"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/approvals/page.tsx",
+      "routePath": "/admin/approvals",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/approvals"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/audit-analytics/page.tsx",
+      "routePath": "/admin/audit-analytics",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/audit-analytics"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/audit-log/page.tsx",
+      "routePath": "/admin/audit-log",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/audit-log"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/link-integrity.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/benchmarks/page.tsx",
+      "routePath": "/admin/benchmarks",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/benchmarks"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/command-mode/page.tsx",
+      "routePath": "/admin/command-mode",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/command-mode"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/command-mode.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/communications/page.tsx",
+      "routePath": "/admin/communications",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/communications"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/contractors/page.tsx",
+      "routePath": "/admin/contractors",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/contractors"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/admin-management.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/contractors/[id]/page.tsx",
+      "routePath": "/admin/contractors/:id",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [],
+      "evidenceSpecs": [
+        "apps/web/e2e/admin-management.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/contractors/new/page.tsx",
+      "routePath": "/admin/contractors/new",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [],
+      "evidenceSpecs": [
+        "apps/web/e2e/admin-management.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/dashboard/page.tsx",
+      "routePath": "/admin/dashboard",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/dashboard"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/link-integrity.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/deliveries/page.tsx",
+      "routePath": "/admin/deliveries",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/deliveries"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/escalations/page.tsx",
+      "routePath": "/admin/escalations",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/escalations"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/escalation-approval.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/evidence/page.tsx",
+      "routePath": "/admin/evidence",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/evidence"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/exports/page.tsx",
+      "routePath": "/admin/exports",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/exports"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/export.spec.ts",
+        "apps/web/e2e/link-integrity.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/hazards/page.tsx",
+      "routePath": "/admin/hazards",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/hazards"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/admin-hazards.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/history/page.tsx",
+      "routePath": "/admin/history",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/history"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/link-integrity.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/incidents/page.tsx",
+      "routePath": "/admin/incidents",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/incidents"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/integrations/channels/page.tsx",
+      "routePath": "/admin/integrations/channels",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/integrations/channels"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/integrations/procore/page.tsx",
+      "routePath": "/admin/integrations/procore",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/integrations/procore"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/live-register/page.tsx",
+      "routePath": "/admin/live-register",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/live-register"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/admin-auth.spec.ts",
+        "apps/web/e2e/link-integrity.spec.ts",
+        "apps/web/e2e/visual-regression.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/mobile/page.tsx",
+      "routePath": "/admin/mobile",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/mobile"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/mobile/native/page.tsx",
+      "routePath": "/admin/mobile/native",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/mobile/native"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/permits/page.tsx",
+      "routePath": "/admin/permits",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/permits"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/permits/templates/page.tsx",
+      "routePath": "/admin/permits/templates",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/permits/templates"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/plan-configurator/page.tsx",
+      "routePath": "/admin/plan-configurator",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/plan-configurator"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/policy-simulator/page.tsx",
+      "routePath": "/admin/policy-simulator",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/policy-simulator"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/pre-registrations/page.tsx",
+      "routePath": "/admin/pre-registrations",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/pre-registrations"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/prequalification-exchange/page.tsx",
+      "routePath": "/admin/prequalification-exchange",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/prequalification-exchange"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/resources/page.tsx",
+      "routePath": "/admin/resources",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/resources"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/risk-passport/page.tsx",
+      "routePath": "/admin/risk-passport",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/risk-passport"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/safety-copilot/page.tsx",
+      "routePath": "/admin/safety-copilot",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/safety-copilot"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/safety-forms/page.tsx",
+      "routePath": "/admin/safety-forms",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/safety-forms"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/settings/page.tsx",
+      "routePath": "/admin/settings",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/settings"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/admin-settings.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/page.tsx",
+      "routePath": "/admin/sites",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/sites"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/admin-emergency-contacts.spec.ts",
+        "apps/web/e2e/admin-hazards.spec.ts",
+        "apps/web/e2e/link-integrity.spec.ts",
+        "apps/web/e2e/visual-regression.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/page.tsx",
+      "routePath": "/admin/sites/:id",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/sites/dynamic",
+        "/admin/sites/new"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/admin-emergency-contacts.spec.ts",
+        "apps/web/e2e/admin-hazards.spec.ts",
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/access/page.tsx",
+      "routePath": "/admin/sites/:id/access",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/sites/dynamic/access"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/emergency/page.tsx",
+      "routePath": "/admin/sites/:id/emergency",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/sites/dynamic/emergency"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/admin-emergency-contacts.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/lms/page.tsx",
+      "routePath": "/admin/sites/:id/lms",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/sites/dynamic/lms"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/[id]/webhooks/page.tsx",
+      "routePath": "/admin/sites/:id/webhooks",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/sites/dynamic/webhooks"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/sites/new/page.tsx",
+      "routePath": "/admin/sites/new",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/sites/new"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/admin-emergency-contacts.spec.ts",
+        "apps/web/e2e/admin-hazards.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/templates/page.tsx",
+      "routePath": "/admin/templates",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/templates"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/link-integrity.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/templates/[id]/page.tsx",
+      "routePath": "/admin/templates/:id",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/templates/archived",
+        "/admin/templates/dynamic",
+        "/admin/templates/new"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/templates/archived/page.tsx",
+      "routePath": "/admin/templates/archived",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/templates/archived"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/templates/new/page.tsx",
+      "routePath": "/admin/templates/new",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/templates/new"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/trust-graph/page.tsx",
+      "routePath": "/admin/trust-graph",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/trust-graph"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/users/page.tsx",
+      "routePath": "/admin/users",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/users"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/admin-management.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/users/[id]/page.tsx",
+      "routePath": "/admin/users/:id",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/users/dynamic",
+        "/admin/users/new"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/users/new/page.tsx",
+      "routePath": "/admin/users/new",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/users/new"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/webhooks/page.tsx",
+      "routePath": "/admin/webhooks",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/webhooks"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/access-connectors/[provider]/test/route.ts",
+      "routePath": "/api/access-connectors/:provider/test",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/access-connectors/generic/test"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/auth/directory-sync/route.ts",
+      "routePath": "/api/auth/directory-sync",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/auth/directory-sync"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/auth/logout/route.ts",
+      "routePath": "/api/auth/logout",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/auth/logout"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/auth/sso/callback/route.ts",
+      "routePath": "/api/auth/sso/callback",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/auth/sso/callback"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/auth/sso/start/route.ts",
+      "routePath": "/api/auth/sso/start",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/auth/sso/start"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/broadcasts/ack/route.ts",
+      "routePath": "/api/broadcasts/ack",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/broadcasts/ack"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/client-errors/route.ts",
+      "routePath": "/api/client-errors",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/client-errors"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/cron/digest/route.ts",
+      "routePath": "/api/cron/digest",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/cron/digest"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/cron/export-scheduler/route.ts",
+      "routePath": "/api/cron/export-scheduler",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/cron/export-scheduler"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/cron/maintenance/route.ts",
+      "routePath": "/api/cron/maintenance",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/cron/maintenance"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/csp-report/route.ts",
+      "routePath": "/api/csp-report",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/csp-report"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/evidence/verify/route.ts",
+      "routePath": "/api/evidence/verify",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/evidence/verify"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/exports/[id]/download/route.ts",
+      "routePath": "/api/exports/:id/download",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/exports/${jobId}/download"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/export.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/identity/ocr/verify/route.ts",
+      "routePath": "/api/identity/ocr/verify",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/identity/ocr/verify"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/integrations/channels/actions/route.ts",
+      "routePath": "/api/integrations/channels/actions",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/integrations/channels/actions"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/integrations/procore/workers/route.ts",
+      "routePath": "/api/integrations/procore/workers",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/integrations/procore/workers"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/live/route.ts",
+      "routePath": "/api/live",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/live"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/mobile/device-bootstrap/route.ts",
+      "routePath": "/api/mobile/device-bootstrap",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/mobile/device-bootstrap"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/mobile/enrollment-token/route.ts",
+      "routePath": "/api/mobile/enrollment-token",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/mobile/enrollment-token"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/mobile/geofence-events/route.ts",
+      "routePath": "/api/mobile/geofence-events",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/mobile/geofence-events"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/mobile/geofence-events/replay/route.ts",
+      "routePath": "/api/mobile/geofence-events/replay",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/mobile/geofence-events/replay"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/mobile/heartbeat/route.ts",
+      "routePath": "/api/mobile/heartbeat",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/mobile/heartbeat"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/policy-simulator/runs/[runId]/export/route.ts",
+      "routePath": "/api/policy-simulator/runs/:runId/export",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/policy-simulator/runs/dynamic/export"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/push/subscriptions/route.ts",
+      "routePath": "/api/push/subscriptions",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/push/subscriptions"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/ready/route.ts",
+      "routePath": "/api/ready",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/ready"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/rollcall/[eventId]/evidence/route.ts",
+      "routePath": "/api/rollcall/:eventId/evidence",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/rollcall/dynamic/evidence"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/rollcall/[eventId]/export/route.ts",
+      "routePath": "/api/rollcall/:eventId/export",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/rollcall/dynamic/export"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/sign-ins/[id]/identity-evidence/route.ts",
+      "routePath": "/api/sign-ins/:id/identity-evidence",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/sign-ins/dynamic/identity-evidence"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/storage/contractor-documents/[id]/download/route.ts",
+      "routePath": "/api/storage/contractor-documents/:id/download",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/storage/contractor-documents/dynamic/download"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/storage/contractor-documents/commit/route.ts",
+      "routePath": "/api/storage/contractor-documents/commit",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/storage/contractor-documents/commit"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/storage/contractor-documents/presign/route.ts",
+      "routePath": "/api/storage/contractor-documents/presign",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/storage/contractor-documents/presign"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/storage/sign/[id]/route.ts",
+      "routePath": "/api/storage/sign/:id",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/storage/sign/dynamic"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/clear-rate-limit/route.ts",
+      "routePath": "/api/test/clear-rate-limit",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/test/clear-rate-limit"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/escalation-approval.spec.ts",
+        "apps/web/e2e/public-signin.spec.ts",
+        "apps/web/e2e/visual-regression.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/create-session/route.ts",
+      "routePath": "/api/test/create-session",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/test/create-session"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/create-user/route.ts",
+      "routePath": "/api/test/create-user",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/test/create-user"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/admin-management.spec.ts",
+        "apps/web/e2e/security-gate.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/lookup/route.ts",
+      "routePath": "/api/test/lookup",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/test/lookup"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/manage-contractor/route.ts",
+      "routePath": "/api/test/manage-contractor",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/test/manage-contractor"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/admin-management.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/manage-user/route.ts",
+      "routePath": "/api/test/manage-user",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/test/manage-user"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/admin-management.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/process-next-export/route.ts",
+      "routePath": "/api/test/process-next-export",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/test/process-next-export"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/resolve-escalation/route.ts",
+      "routePath": "/api/test/resolve-escalation",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/test/resolve-escalation"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/escalation-approval.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/runtime/route.ts",
+      "routePath": "/api/test/runtime",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/test/runtime"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/security-gate.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/seed-public-site/route.ts",
+      "routePath": "/api/test/seed-public-site",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/test/seed-public-site"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/test/set-user-lock/route.ts",
+      "routePath": "/api/test/set-user-lock",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/test/set-user-lock"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/v1/partner/sign-ins/route.ts",
+      "routePath": "/api/v1/partner/sign-ins",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/v1/partner/sign-ins"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/api/v1/partner/sites/route.ts",
+      "routePath": "/api/v1/partner/sites",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Covered",
+      "evidencePaths": [
+        "/api/v1/partner/sites"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/(auth)/change-password/page.tsx",
+      "routePath": "/change-password",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Authentication flow",
+      "status": "Covered",
+      "evidencePaths": [
+        "/change-password"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/compare/page.tsx",
+      "routePath": "/compare",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P1",
+      "risk": "Public site UX / SEO",
+      "status": "Covered",
+      "evidencePaths": [
+        "/compare"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/(auth)/contractor/page.tsx",
+      "routePath": "/contractor",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P2",
+      "risk": "Public site UX / SEO",
+      "status": "Covered",
+      "evidencePaths": [
+        "/contractor"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/link-integrity.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/contractor/portal/page.tsx",
+      "routePath": "/contractor/portal",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P2",
+      "risk": "Public site UX / SEO",
+      "status": "Covered",
+      "evidencePaths": [
+        "/contractor/portal"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/demo/page.tsx",
+      "routePath": "/demo",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P1",
+      "risk": "Public site UX / SEO",
+      "status": "Covered",
+      "evidencePaths": [
+        "/demo"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/favicon.ico/route.ts",
+      "routePath": "/favicon.ico",
+      "routeType": "route-handler",
+      "surface": "ui",
+      "priority": "P2",
+      "risk": "Public site UX / SEO",
+      "status": "Covered",
+      "evidencePaths": [
+        "/favicon.ico"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/health/route.ts",
+      "routePath": "/health",
+      "routeType": "route-handler",
+      "surface": "ui",
+      "priority": "P2",
+      "risk": "Public site UX / SEO",
+      "status": "Covered",
+      "evidencePaths": [
+        "/health"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/(auth)/login/page.tsx",
+      "routePath": "/login",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Authentication flow",
+      "status": "Covered",
+      "evidencePaths": [
+        "/login"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/admin-auth.spec.ts",
+        "apps/web/e2e/link-integrity.spec.ts",
+        "apps/web/e2e/visual-regression.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/(auth)/logout/route.ts",
+      "routePath": "/logout",
+      "routeType": "route-handler",
+      "surface": "ui",
+      "priority": "P2",
+      "risk": "Public site UX / SEO",
+      "status": "Covered",
+      "evidencePaths": [
+        "/logout"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/link-integrity.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/pricing/page.tsx",
+      "routePath": "/pricing",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P1",
+      "risk": "Public site UX / SEO",
+      "status": "Covered",
+      "evidencePaths": [
+        "/pricing"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/privacy/page.tsx",
+      "routePath": "/privacy",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P1",
+      "risk": "Public site UX / SEO",
+      "status": "Covered",
+      "evidencePaths": [
+        "/privacy"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/(auth)/register/page.tsx",
+      "routePath": "/register",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Authentication flow",
+      "status": "Covered",
+      "evidencePaths": [
+        "/register"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/robots.txt/route.ts",
+      "routePath": "/robots.txt",
+      "routeType": "route-handler",
+      "surface": "ui",
+      "priority": "P2",
+      "risk": "Public site UX / SEO",
+      "status": "Covered",
+      "evidencePaths": [
+        "/robots.txt"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/seo.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/s/[slug]/page.tsx",
+      "routePath": "/s/:slug",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Public sign-in entrypoint",
+      "status": "Covered",
+      "evidencePaths": [
+        "/s/dynamic",
+        "/s/dynamic(",
+        "/s/nonexistent-site-12345",
+        "/s/test-site"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
+        "apps/web/e2e/escalation-approval.spec.ts",
+        "apps/web/e2e/kiosk-mode.spec.ts",
+        "apps/web/e2e/link-integrity.spec.ts",
+        "apps/web/e2e/logic-flow.spec.ts",
+        "apps/web/e2e/public-signin.spec.ts",
+        "apps/web/e2e/visual-regression.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/s/[slug]/kiosk/page.tsx",
+      "routePath": "/s/:slug/kiosk",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Public sign-in entrypoint",
+      "status": "Covered",
+      "evidencePaths": [
+        "/s/dynamic/kiosk"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/kiosk-mode.spec.ts",
+        "apps/web/e2e/link-integrity.spec.ts",
+        "apps/web/e2e/visual-regression.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/sign-out/page.tsx",
+      "routePath": "/sign-out",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P1",
+      "risk": "Public site UX / SEO",
+      "status": "Covered",
+      "evidencePaths": [
+        "/sign-out"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/escalation-approval.spec.ts",
+        "apps/web/e2e/link-integrity.spec.ts",
+        "apps/web/e2e/public-signin.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/sitemap.xml/route.ts",
+      "routePath": "/sitemap.xml",
+      "routeType": "route-handler",
+      "surface": "ui",
+      "priority": "P2",
+      "risk": "Public site UX / SEO",
+      "status": "Covered",
+      "evidencePaths": [
+        "/sitemap.xml"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/seo.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/terms/page.tsx",
+      "routePath": "/terms",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P1",
+      "risk": "Public site UX / SEO",
+      "status": "Covered",
+      "evidencePaths": [
+        "/terms"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/unauthorized/page.tsx",
+      "routePath": "/unauthorized",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P1",
+      "risk": "Public site UX / SEO",
+      "status": "Covered",
+      "evidencePaths": [
+        "/unauthorized"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/link-integrity.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/(auth)/verify/route.ts",
+      "routePath": "/verify",
+      "routeType": "route-handler",
+      "surface": "ui",
+      "priority": "P2",
+      "risk": "Public site UX / SEO",
+      "status": "Covered",
+      "evidencePaths": [
+        "/verify"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    }
+  ],
+  "referencedPaths": [
+    "/",
+    "/admin",
+    "/admin/access-ops",
+    "/admin/approvals",
+    "/admin/audit-analytics",
+    "/admin/audit-log",
+    "/admin/benchmarks",
+    "/admin/command-mode",
+    "/admin/communications",
+    "/admin/contractors",
+    "/admin/dashboard",
+    "/admin/deliveries",
+    "/admin/escalations",
+    "/admin/evidence",
+    "/admin/exports",
+    "/admin/hazards",
+    "/admin/history",
+    "/admin/incidents",
+    "/admin/integrations/channels",
+    "/admin/integrations/procore",
+    "/admin/live-register",
+    "/admin/mobile",
+    "/admin/mobile/native",
+    "/admin/permits",
+    "/admin/permits/templates",
+    "/admin/plan-configurator",
+    "/admin/policy-simulator",
+    "/admin/pre-registrations",
+    "/admin/prequalification-exchange",
+    "/admin/resources",
+    "/admin/risk-passport",
+    "/admin/safety-copilot",
+    "/admin/safety-forms",
+    "/admin/settings",
+    "/admin/sites",
+    "/admin/sites/dynamic",
+    "/admin/sites/dynamic/access",
+    "/admin/sites/dynamic/emergency",
+    "/admin/sites/dynamic/lms",
+    "/admin/sites/dynamic/webhooks",
+    "/admin/sites/new",
+    "/admin/templates",
+    "/admin/templates/archived",
+    "/admin/templates/dynamic",
+    "/admin/templates/new",
+    "/admin/trust-graph",
+    "/admin/users",
+    "/admin/users/dynamic",
+    "/admin/users/new",
+    "/admin/webhooks",
+    "/api",
+    "/api/access-connectors/generic/test",
+    "/api/auth/directory-sync",
+    "/api/auth/logout",
+    "/api/auth/sso/callback",
+    "/api/auth/sso/start",
+    "/api/broadcasts/ack",
+    "/api/client-errors",
+    "/api/cron/digest",
+    "/api/cron/export-scheduler",
+    "/api/cron/maintenance",
+    "/api/csp-report",
+    "/api/evidence/verify",
+    "/api/exports/${jobId}/download",
+    "/api/identity/ocr/verify",
+    "/api/integrations/channels/actions",
+    "/api/integrations/procore/workers",
+    "/api/live",
+    "/api/mobile/device-bootstrap",
+    "/api/mobile/enrollment-token",
+    "/api/mobile/geofence-events",
+    "/api/mobile/geofence-events/replay",
+    "/api/mobile/heartbeat",
+    "/api/policy-simulator/runs/dynamic/export",
+    "/api/push/subscriptions",
+    "/api/ready",
+    "/api/rollcall/dynamic/evidence",
+    "/api/rollcall/dynamic/export",
+    "/api/sign-ins/dynamic/identity-evidence",
+    "/api/storage/contractor-documents/commit",
+    "/api/storage/contractor-documents/dynamic/download",
+    "/api/storage/contractor-documents/presign",
+    "/api/storage/sign/dynamic",
+    "/api/test/clear-rate-limit",
+    "/api/test/create-session",
+    "/api/test/create-user",
+    "/api/test/lookup",
+    "/api/test/manage-contractor",
+    "/api/test/manage-user",
+    "/api/test/process-next-export",
+    "/api/test/resolve-escalation",
+    "/api/test/runtime",
+    "/api/test/seed-public-site",
+    "/api/test/set-user-lock",
+    "/api/v1/partner/sign-ins",
+    "/api/v1/partner/sites",
+    "/change-password",
+    "/compare",
+    "/contractor",
+    "/contractor/portal",
+    "/demo",
+    "/favicon.ico",
+    "/health",
+    "/login",
+    "/logout",
+    "/pricing",
+    "/privacy",
+    "/register",
+    "/robots.txt",
+    "/s/dynamic",
+    "/s/dynamic(",
+    "/s/dynamic/kiosk",
+    "/s/nonexistent-site-12345",
+    "/s/test-site",
+    "/sign-out",
+    "/sitemap.xml",
+    "/terms",
+    "/unauthorized",
+    "/verify",
+    "/~offline"
+  ],
+  "specFiles": [
+    "apps/web/e2e/a11y.spec.ts",
+    "apps/web/e2e/admin-auth.spec.ts",
+    "apps/web/e2e/admin-emergency-contacts.spec.ts",
+    "apps/web/e2e/admin-hazards.spec.ts",
+    "apps/web/e2e/admin-management.spec.ts",
+    "apps/web/e2e/admin-settings.spec.ts",
+    "apps/web/e2e/command-mode.spec.ts",
+    "apps/web/e2e/csrf-security.spec.ts",
+    "apps/web/e2e/escalation-approval.spec.ts",
+    "apps/web/e2e/export.spec.ts",
+    "apps/web/e2e/gap-matrix-coverage.spec.ts",
+    "apps/web/e2e/kiosk-mode.spec.ts",
+    "apps/web/e2e/link-integrity.spec.ts",
+    "apps/web/e2e/logic-flow.spec.ts",
+    "apps/web/e2e/public-signin.spec.ts",
+    "apps/web/e2e/security-gate.spec.ts",
+    "apps/web/e2e/seo.spec.ts",
+    "apps/web/e2e/visual-regression.spec.ts",
+    "apps/web/e2e/visual-regression.vrt.spec.ts"
+  ],
+  "dynamic": {
+    "enabled": false,
+    "baseUrl": null,
+    "maxPages": 0,
+    "maxDepth": 0,
+    "seededPublicSlug": null,
+    "adminSessionEstablished": false,
+    "errors": []
+  }
+}

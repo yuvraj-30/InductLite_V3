@@ -6,6 +6,7 @@ import {
   QuestionType,
   VisitorType,
   DocumentType,
+  CompanyPlan,
 } from "@prisma/client";
 import * as argon2 from "argon2";
 import { subDays, subHours, addMonths, subMonths } from "date-fns";
@@ -17,6 +18,268 @@ const prisma = new PrismaClient({
       process.env.DATABASE_URL ?? "postgresql://invalid:invalid@localhost:5432/invalid",
   }),
 });
+
+interface PlanFixtureSite {
+  name: string;
+  slug: string;
+  address: string;
+  description: string;
+  featureOverrides?: Record<string, boolean>;
+}
+
+interface PlanFixtureCompany {
+  name: string;
+  slug: string;
+  plan: CompanyPlan;
+  adminEmail: string;
+  sites: PlanFixtureSite[];
+  companyFeatureOverrides?: Record<string, boolean>;
+}
+
+const PLAN_FIXTURE_COMPANIES: PlanFixtureCompany[] = [
+  {
+    name: "Plan Test Standard Ltd",
+    slug: "plan-test-standard",
+    plan: CompanyPlan.STANDARD,
+    adminEmail: "admin.standard@inductlite.test",
+    sites: [
+      {
+        name: "Standard Demo Site A",
+        slug: "plan-standard-site-a",
+        address: "100 Standard Way, Auckland, 1010",
+        description: "Standard-plan tenant baseline site.",
+      },
+      {
+        name: "Standard Demo Site B",
+        slug: "plan-standard-site-b",
+        address: "200 Standard Way, Wellington, 6011",
+        description: "Standard-plan tenant secondary site.",
+      },
+    ],
+  },
+  {
+    name: "Plan Test Plus Ltd",
+    slug: "plan-test-plus",
+    plan: CompanyPlan.PLUS,
+    adminEmail: "admin.plus@inductlite.test",
+    sites: [
+      {
+        name: "Plus Demo Site A",
+        slug: "plan-plus-site-a",
+        address: "10 Plus Street, Christchurch, 8011",
+        description: "Plus-plan tenant baseline site.",
+      },
+      {
+        name: "Plus Demo Site B",
+        slug: "plan-plus-site-b",
+        address: "20 Plus Street, Hamilton, 3204",
+        description: "Plus-plan tenant secondary site.",
+      },
+    ],
+  },
+  {
+    name: "Plan Test Pro Ltd",
+    slug: "plan-test-pro",
+    plan: CompanyPlan.PRO,
+    adminEmail: "admin.pro@inductlite.test",
+    sites: [
+      {
+        name: "Pro Demo Site A",
+        slug: "plan-pro-site-a",
+        address: "1 Pro Park, Tauranga, 3110",
+        description: "Pro-plan tenant baseline site.",
+      },
+      {
+        name: "Pro Demo Site B",
+        slug: "plan-pro-site-b",
+        address: "2 Pro Park, Dunedin, 9016",
+        description: "Pro-plan tenant secondary site with site override.",
+        featureOverrides: {
+          PWA_PUSH_V1: false,
+        },
+      },
+    ],
+  },
+  {
+    name: "Plan Test Add-ons Ltd",
+    slug: "plan-test-addons",
+    plan: CompanyPlan.STANDARD,
+    adminEmail: "admin.addons@inductlite.test",
+    companyFeatureOverrides: {
+      SELF_SERVE_CONFIG_V1: true,
+      SMS_WORKFLOWS: true,
+      HARDWARE_ACCESS: true,
+      GEOFENCE_ENFORCEMENT: true,
+      LMS_CONNECTOR: true,
+      ANALYTICS_ADVANCED: true,
+      ID_OCR_VERIFICATION_V1: true,
+      ACCESS_CONNECTORS_V1: true,
+      NATIVE_MOBILE_RUNTIME_V1: true,
+    },
+    sites: [
+      {
+        name: "Add-ons Demo Site A",
+        slug: "plan-addons-site-a",
+        address: "11 Addon Lane, Auckland, 1023",
+        description: "Add-ons enabled baseline site.",
+      },
+      {
+        name: "Add-ons Demo Site B",
+        slug: "plan-addons-site-b",
+        address: "22 Addon Lane, Lower Hutt, 5010",
+        description: "Add-ons test site with selected add-ons disabled at site level.",
+        featureOverrides: {
+          HARDWARE_ACCESS: false,
+          GEOFENCE_ENFORCEMENT: false,
+          ID_OCR_VERIFICATION_V1: false,
+        },
+      },
+    ],
+  },
+];
+
+async function seedPlanFixtureTenants(passwordHash: string) {
+  console.log("Creating plan fixture tenants...");
+  const summary: Array<{
+    companyName: string;
+    plan: CompanyPlan;
+    adminEmail: string;
+    slugs: string[];
+  }> = [];
+
+  for (const fixture of PLAN_FIXTURE_COMPANIES) {
+    const company = await prisma.company.upsert({
+      where: { slug: fixture.slug },
+      update: {
+        name: fixture.name,
+        product_plan: fixture.plan,
+        ...(fixture.companyFeatureOverrides !== undefined
+          ? { feature_overrides: fixture.companyFeatureOverrides }
+          : {}),
+      },
+      create: {
+        name: fixture.name,
+        slug: fixture.slug,
+        product_plan: fixture.plan,
+        retention_days: 365,
+        ...(fixture.companyFeatureOverrides !== undefined
+          ? { feature_overrides: fixture.companyFeatureOverrides }
+          : {}),
+      },
+    });
+
+    await prisma.user.upsert({
+      where: { email: fixture.adminEmail },
+      update: {
+        company_id: company.id,
+        password_hash: passwordHash,
+        role: UserRole.ADMIN,
+        is_active: true,
+      },
+      create: {
+        company_id: company.id,
+        email: fixture.adminEmail,
+        password_hash: passwordHash,
+        name: `${fixture.plan} Plan Admin`,
+        role: UserRole.ADMIN,
+        is_active: true,
+      },
+    });
+
+    const siteSlugs: string[] = [];
+    for (const siteFixture of fixture.sites) {
+      const site = await prisma.site.upsert({
+        where: {
+          company_id_name: {
+            company_id: company.id,
+            name: siteFixture.name,
+          },
+        },
+        update: {
+          address: siteFixture.address,
+          description: siteFixture.description,
+          is_active: true,
+          ...(siteFixture.featureOverrides !== undefined
+            ? { feature_overrides: siteFixture.featureOverrides }
+            : {}),
+        },
+        create: {
+          company_id: company.id,
+          name: siteFixture.name,
+          address: siteFixture.address,
+          description: siteFixture.description,
+          is_active: true,
+          ...(siteFixture.featureOverrides !== undefined
+            ? { feature_overrides: siteFixture.featureOverrides }
+            : {}),
+        },
+      });
+
+      await prisma.sitePublicLink.upsert({
+        where: { slug: siteFixture.slug },
+        update: {
+          site_id: site.id,
+          is_active: true,
+        },
+        create: {
+          site_id: site.id,
+          slug: siteFixture.slug,
+          is_active: true,
+        },
+      });
+      siteSlugs.push(siteFixture.slug);
+    }
+
+    const template = await prisma.inductionTemplate.upsert({
+      where: {
+        company_id_name_version: {
+          company_id: company.id,
+          name: "Plan Fixture Safety Induction",
+          version: 1,
+        },
+      },
+      update: {
+        is_published: true,
+        is_default: true,
+        published_at: new Date(),
+      },
+      create: {
+        company_id: company.id,
+        name: "Plan Fixture Safety Induction",
+        description: "Baseline induction template for plan testing.",
+        version: 1,
+        is_published: true,
+        is_default: true,
+        published_at: new Date(),
+      },
+    });
+
+    await prisma.inductionQuestion.deleteMany({
+      where: { template_id: template.id },
+    });
+    await prisma.inductionQuestion.create({
+      data: {
+        template_id: template.id,
+        question_text: "I understand and agree to this site's safety rules.",
+        question_type: QuestionType.ACKNOWLEDGMENT,
+        is_required: true,
+        display_order: 1,
+      },
+    });
+
+    summary.push({
+      companyName: fixture.name,
+      plan: fixture.plan,
+      adminEmail: fixture.adminEmail,
+      slugs: siteSlugs,
+    });
+  }
+
+  console.log(
+    `   Created/updated ${summary.length} plan fixture companies with admin users and public sites`,
+  );
+  return summary;
+}
 
 async function main() {
   console.log("🌱 Starting seed...");
@@ -676,6 +939,8 @@ async function main() {
 
   console.log("   ✓ Created 4 audit log entries");
 
+  const planFixtureSummary = await seedPlanFixtureTenants(passwordHash);
+
   // =========================================================================
   // SUMMARY
   // =========================================================================
@@ -690,6 +955,12 @@ async function main() {
   console.log(`🔧 Contractors: 3`);
   console.log(`📄 Documents: 5 (1 expired)`);
   console.log(`📝 Sign-ins: ${signInCount} (3 currently on site)`);
+  console.log("🧪 Plan fixtures:");
+  for (const fixture of planFixtureSummary) {
+    console.log(
+      `   • ${fixture.plan}: ${fixture.adminEmail} (slugs: ${fixture.slugs.join(", ")})`,
+    );
+  }
   console.log("─".repeat(50));
 }
 

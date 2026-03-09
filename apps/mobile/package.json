@@ -7,6 +7,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "doctor": "npx expo-doctor",
     "prebuild": "expo prebuild",
@@ -32,7 +34,9 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
-    "typescript": "~5.9.2"
+    "@vitest/coverage-v8": "^4.0.18",
+    "typescript": "~5.9.2",
+    "vitest": "^4.0.18"
   },
   "expo": {
     "install": {

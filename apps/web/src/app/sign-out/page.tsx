@@ -15,11 +15,20 @@ export const metadata: Metadata = {
 };
 
 interface SignOutPageProps {
-  searchParams: Promise<{ token?: string }>;
+  searchParams: Promise<{ token?: string | string[]; t?: string | string[] }>;
+}
+
+function normalizeTokenValue(value: string | string[] | undefined): string {
+  if (Array.isArray(value)) {
+    return value[0] ?? "";
+  }
+  return value ?? "";
 }
 
 export default async function SignOutPage({ searchParams }: SignOutPageProps) {
-  const { token } = await searchParams;
+  const params = await searchParams;
+  const token =
+    normalizeTokenValue(params.token) || normalizeTokenValue(params.t);
 
   return (
     <PublicShell brand="InductLite" subtitle="Visitor Sign-Out">

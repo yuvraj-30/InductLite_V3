@@ -56,6 +56,15 @@ await uiLogin(page, "admin@buildright.co.nz", "Admin123!");
 
 - The `playwright.config.ts` includes test env overrides (`SESSION_SECRET` and `ALLOW_TEST_RUNNER`) so the dev server can accept test-created session cookies.
 - Keep test seed data (admin user) in sync with the test account used here.
+- Route/path coverage gap matrix (static analysis) can be generated from repo root with:
+  - `npm run test:e2e:gap-matrix`
+  - Outputs: `docs/E2E_TEST_GAP_MATRIX.md` and `docs/E2E_TEST_GAP_MATRIX.json`
+- Dynamic-link assisted gap matrix mode (requires app server reachable, default `http://127.0.0.1:3000`):
+  - `npm run test:e2e:gap-matrix -- --dynamic-links`
+  - Optional flags: `--base-url <url> --max-pages 250 --max-depth 4`
+- Button-only JS flow analysis (heuristic crawl with Playwright):
+  - `npm run test:e2e:gap-matrix -- --dynamic-links --js-flows`
+  - Optional flags: `--max-buttons-per-page 16`
 
 ### Running tests locally on Windows (WSL) ⚠️
 

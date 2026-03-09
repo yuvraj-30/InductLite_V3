@@ -841,7 +841,7 @@ async function main() {
   if (showHelp) {
     console.log("Usage:");
     console.log("  node tools/manual-flow-verify.mjs");
-    console.log("    Runs full apps/web Playwright E2E suite (305 tests) [default]");
+    console.log("    Runs full apps/web Playwright E2E suite [default]");
     console.log("  node tools/manual-flow-verify.mjs --all-e2e [-- <playwright-args>]");
     console.log("    Runs full apps/web Playwright E2E suite (explicit mode)");
     console.log("  node tools/manual-flow-verify.mjs --manual-flow");

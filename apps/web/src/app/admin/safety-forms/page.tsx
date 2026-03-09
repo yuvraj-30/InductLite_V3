@@ -205,7 +205,7 @@ export default async function SafetyFormsPage({
                 .filter((template) => template.is_active)
                 .map((template) => (
                   <option key={template.id} value={template.id}>
-                    {template.form_type} · {template.name}
+                    {template.form_type} - {template.name}
                   </option>
                 ))}
             </select>
