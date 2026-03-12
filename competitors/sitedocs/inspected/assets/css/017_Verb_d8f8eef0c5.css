@@ -1,0 +1,130 @@
+/**
+ * @license
+ * MyFonts Webfont Build ID 3781770, 2019-07-05T12:38:03-0400
+ * 
+ * The fonts listed in this notice are subject to the End User License
+ * Agreement(s) entered into by the website owner. All other parties are 
+ * explicitly restricted from using the Licensed Webfonts(s).
+ * 
+ * You may obtain a valid license at the URLs below.
+ * 
+ * Webfont: VerbBlack-Italic by Yellow Design Studio
+ * URL: https://www.myfonts.com/fonts/yellow-design/verb/black-italic/
+ * 
+ * Webfont: VerbBlack by Yellow Design Studio
+ * URL: https://www.myfonts.com/fonts/yellow-design/verb/black/
+ * 
+ * Webfont: VerbRegular-BoldItalic by Yellow Design Studio
+ * URL: https://www.myfonts.com/fonts/yellow-design/verb/bold-italic/
+ * 
+ * Webfont: VerbRegular-Bold by Yellow Design Studio
+ * URL: https://www.myfonts.com/fonts/yellow-design/verb/bold/
+ * 
+ * Webfont: VerbExtrabold-Italic by Yellow Design Studio
+ * URL: https://www.myfonts.com/fonts/yellow-design/verb/extrabold-italic/
+ * 
+ * Webfont: VerbExtrabold by Yellow Design Studio
+ * URL: https://www.myfonts.com/fonts/yellow-design/verb/extrabold/
+ * 
+ * Webfont: VerbExtralight-Italic by Yellow Design Studio
+ * URL: https://www.myfonts.com/fonts/yellow-design/verb/extralight-italic/
+ * 
+ * Webfont: VerbExtralight by Yellow Design Studio
+ * URL: https://www.myfonts.com/fonts/yellow-design/verb/extralight/
+ * 
+ * Webfont: VerbLight-Italic by Yellow Design Studio
+ * URL: https://www.myfonts.com/fonts/yellow-design/verb/light-italic/
+ * 
+ * Webfont: VerbLight by Yellow Design Studio
+ * URL: https://www.myfonts.com/fonts/yellow-design/verb/light/
+ * 
+ * Webfont: VerbMedium-Italic by Yellow Design Studio
+ * URL: https://www.myfonts.com/fonts/yellow-design/verb/medium-italic/
+ * 
+ * Webfont: VerbMedium by Yellow Design Studio
+ * URL: https://www.myfonts.com/fonts/yellow-design/verb/medium/
+ * 
+ * Webfont: VerbRegular-Italic by Yellow Design Studio
+ * URL: https://www.myfonts.com/fonts/yellow-design/verb/italic/
+ * 
+ * Webfont: VerbRegular by Yellow Design Studio
+ * URL: https://www.myfonts.com/fonts/yellow-design/verb/regular/
+ * 
+ * Webfont: VerbSemibold-Italic by Yellow Design Studio
+ * URL: https://www.myfonts.com/fonts/yellow-design/verb/semibold-italic/
+ * 
+ * Webfont: VerbSemibold by Yellow Design Studio
+ * URL: https://www.myfonts.com/fonts/yellow-design/verb/semibold/
+ * 
+ * Webfont: VerbUltra-Italic by Yellow Design Studio
+ * URL: https://www.myfonts.com/fonts/yellow-design/verb/ultra-italic/
+ * 
+ * Webfont: VerbUltra by Yellow Design Studio
+ * URL: https://www.myfonts.com/fonts/yellow-design/verb/ultra/
+ * 
+ * 
+ * License: https://www.myfonts.com/viewlicense?type=web&buildid=3781770
+ * Licensed pageviews: 500,000
+ * Webfonts copyright: Copyright (c) 2013 by Yellow Design Studio. All rights reserved.
+ * 
+ * © 2019 MyFonts Inc
+*/
+
+
+/* @import must be at top of file, otherwise CSS will not work */
+@import url("//hello.myfonts.net/count/39b48a");
+
+  
+@font-face {font-family: 'VerbBlack-Italic';src: url('webfonts/39B48A_0_0.eot');src: url('webfonts/39B48A_0_0.eot?#iefix') format('embedded-opentype'),url('webfonts/39B48A_0_0.woff2') format('woff2'),url('webfonts/39B48A_0_0.woff') format('woff'),url('webfonts/39B48A_0_0.ttf') format('truetype');}
+ 
+  
+@font-face {font-family: 'VerbBlack';src: url('webfonts/39B48A_1_0.eot');src: url('webfonts/39B48A_1_0.eot?#iefix') format('embedded-opentype'),url('webfonts/39B48A_1_0.woff2') format('woff2'),url('webfonts/39B48A_1_0.woff') format('woff'),url('webfonts/39B48A_1_0.ttf') format('truetype');}
+ 
+  
+@font-face {font-family: 'VerbRegular-BoldItalic';src: url('webfonts/39B48A_2_0.eot');src: url('webfonts/39B48A_2_0.eot?#iefix') format('embedded-opentype'),url('webfonts/39B48A_2_0.woff2') format('woff2'),url('webfonts/39B48A_2_0.woff') format('woff'),url('webfonts/39B48A_2_0.ttf') format('truetype');}
+ 
+  
+@font-face {font-family: 'VerbRegular-Bold';src: url('webfonts/39B48A_3_0.eot');src: url('webfonts/39B48A_3_0.eot?#iefix') format('embedded-opentype'),url('webfonts/39B48A_3_0.woff2') format('woff2'),url('webfonts/39B48A_3_0.woff') format('woff'),url('webfonts/39B48A_3_0.ttf') format('truetype');}
+ 
+  
+@font-face {font-family: 'VerbExtrabold-Italic';src: url('webfonts/39B48A_4_0.eot');src: url('webfonts/39B48A_4_0.eot?#iefix') format('embedded-opentype'),url('webfonts/39B48A_4_0.woff2') format('woff2'),url('webfonts/39B48A_4_0.woff') format('woff'),url('webfonts/39B48A_4_0.ttf') format('truetype');}
+ 
+  
+@font-face {font-family: 'VerbExtrabold';src: url('webfonts/39B48A_5_0.eot');src: url('webfonts/39B48A_5_0.eot?#iefix') format('embedded-opentype'),url('webfonts/39B48A_5_0.woff2') format('woff2'),url('webfonts/39B48A_5_0.woff') format('woff'),url('webfonts/39B48A_5_0.ttf') format('truetype');}
+ 
+  
+@font-face {font-family: 'VerbExtralight-Italic';src: url('webfonts/39B48A_6_0.eot');src: url('webfonts/39B48A_6_0.eot?#iefix') format('embedded-opentype'),url('webfonts/39B48A_6_0.woff2') format('woff2'),url('webfonts/39B48A_6_0.woff') format('woff'),url('webfonts/39B48A_6_0.ttf') format('truetype');}
+ 
+  
+@font-face {font-family: 'VerbExtralight';src: url('webfonts/39B48A_7_0.eot');src: url('webfonts/39B48A_7_0.eot?#iefix') format('embedded-opentype'),url('webfonts/39B48A_7_0.woff2') format('woff2'),url('webfonts/39B48A_7_0.woff') format('woff'),url('webfonts/39B48A_7_0.ttf') format('truetype');}
+ 
+  
+@font-face {font-family: 'VerbLight-Italic';src: url('webfonts/39B48A_8_0.eot');src: url('webfonts/39B48A_8_0.eot?#iefix') format('embedded-opentype'),url('webfonts/39B48A_8_0.woff2') format('woff2'),url('webfonts/39B48A_8_0.woff') format('woff'),url('webfonts/39B48A_8_0.ttf') format('truetype');}
+ 
+  
+@font-face {font-family: 'VerbLight';src: url('webfonts/39B48A_9_0.eot');src: url('webfonts/39B48A_9_0.eot?#iefix') format('embedded-opentype'),url('webfonts/39B48A_9_0.woff2') format('woff2'),url('webfonts/39B48A_9_0.woff') format('woff'),url('webfonts/39B48A_9_0.ttf') format('truetype');}
+ 
+  
+@font-face {font-family: 'VerbMedium-Italic';src: url('webfonts/39B48A_A_0.eot');src: url('webfonts/39B48A_A_0.eot?#iefix') format('embedded-opentype'),url('webfonts/39B48A_A_0.woff2') format('woff2'),url('webfonts/39B48A_A_0.woff') format('woff'),url('webfonts/39B48A_A_0.ttf') format('truetype');}
+ 
+  
+@font-face {font-family: 'VerbMedium';src: url('webfonts/39B48A_B_0.eot');src: url('webfonts/39B48A_B_0.eot?#iefix') format('embedded-opentype'),url('webfonts/39B48A_B_0.woff2') format('woff2'),url('webfonts/39B48A_B_0.woff') format('woff'),url('webfonts/39B48A_B_0.ttf') format('truetype');}
+ 
+  
+@font-face {font-family: 'VerbRegular-Italic';src: url('webfonts/39B48A_C_0.eot');src: url('webfonts/39B48A_C_0.eot?#iefix') format('embedded-opentype'),url('webfonts/39B48A_C_0.woff2') format('woff2'),url('webfonts/39B48A_C_0.woff') format('woff'),url('webfonts/39B48A_C_0.ttf') format('truetype');}
+ 
+  
+@font-face {font-family: 'VerbRegular';src: url('webfonts/39B48A_D_0.eot');src: url('webfonts/39B48A_D_0.eot?#iefix') format('embedded-opentype'),url('webfonts/39B48A_D_0.woff2') format('woff2'),url('webfonts/39B48A_D_0.woff') format('woff'),url('webfonts/39B48A_D_0.ttf') format('truetype');}
+ 
+  
+@font-face {font-family: 'VerbSemibold-Italic';src: url('webfonts/39B48A_E_0.eot');src: url('webfonts/39B48A_E_0.eot?#iefix') format('embedded-opentype'),url('webfonts/39B48A_E_0.woff2') format('woff2'),url('webfonts/39B48A_E_0.woff') format('woff'),url('webfonts/39B48A_E_0.ttf') format('truetype');}
+ 
+  
+@font-face {font-family: 'VerbSemibold';src: url('webfonts/39B48A_F_0.eot');src: url('webfonts/39B48A_F_0.eot?#iefix') format('embedded-opentype'),url('webfonts/39B48A_F_0.woff2') format('woff2'),url('webfonts/39B48A_F_0.woff') format('woff'),url('webfonts/39B48A_F_0.ttf') format('truetype');}
+ 
+  
+@font-face {font-family: 'VerbUltra-Italic';src: url('webfonts/39B48A_10_0.eot');src: url('webfonts/39B48A_10_0.eot?#iefix') format('embedded-opentype'),url('webfonts/39B48A_10_0.woff2') format('woff2'),url('webfonts/39B48A_10_0.woff') format('woff'),url('webfonts/39B48A_10_0.ttf') format('truetype');}
+ 
+  
+@font-face {font-family: 'VerbUltra';src: url('webfonts/39B48A_11_0.eot');src: url('webfonts/39B48A_11_0.eot?#iefix') format('embedded-opentype'),url('webfonts/39B48A_11_0.woff2') format('woff2'),url('webfonts/39B48A_11_0.woff') format('woff'),url('webfonts/39B48A_11_0.ttf') format('truetype');}
+ 

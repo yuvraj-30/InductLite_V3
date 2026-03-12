@@ -1,0 +1,134 @@
+[
+  {
+    "url": "https://saferme.com/",
+    "status": 302,
+    "resourceType": "document",
+    "contentType": "text/plain; charset=utf-8"
+  },
+  {
+    "url": "https://saferme.com/en-nz/",
+    "status": 200,
+    "resourceType": "document",
+    "contentType": "text/html; charset=UTF-8"
+  },
+  {
+    "url": "https://saferme.com/webpack-runtime-779a8a7f3efa202129df.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://saferme.com/app-1a85334a94a027a440f1.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://js.hs-scripts.com/4330484.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript;charset=utf-8"
+  },
+  {
+    "url": "https://saferme.com/framework-6cd53a6e53c5117905cd.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://js.hs-analytics.net/analytics/1773300600000/4330484.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://js.hs-banner.com/v2/4330484/banner.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://saferme.com/d2376bb346bca986ef5da64f179042e42fbd67ca-6d01625c95373d4e1d1b.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://saferme.com/ea88be26-f3027b72a8d249bfc38f.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://saferme.com/64ac05fc9b22565566eac310081f5429f0206070-0b84fbb42b85ec85b73d.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://saferme.com/71a8cc15ceaee6738e00251a16973a4bc0baa8f0-c2f48a4a75d57702a33e.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://saferme.com/291daee0834081ebaffcbec3fe6f79181cdaf1a8-452ff105d2f0c429412b.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://saferme.com/component---src-templates-feature-pages-tsx-0303636293006b345645.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://saferme.com/2da1e444983d8cc81d8e02bebbeb9f9aa4af3880-9250386640fb1446ac64.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://www.googletagmanager.com/gtm.js?id=GTM-MG6K6KW",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://saferme.com/223-b53fe9c42bfa2ddb2492.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript;charset=utf-8"
+  },
+  {
+    "url": "https://tag.marinsm.com/serve/5f7e836f41c25cebbb00005f.js",
+    "status": 301,
+    "resourceType": "script",
+    "contentType": ""
+  },
+  {
+    "url": "https://www.google-analytics.com/analytics.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://ws.zoominfo.com/pixel/617b4f60d3ef7a0012fdb56d",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://www.googletagmanager.com/gtag/js?id=G-94XY7RTW0H&cx=c&gtm=4e63a1",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  }
+]

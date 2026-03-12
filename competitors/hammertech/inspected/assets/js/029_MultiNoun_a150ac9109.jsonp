@@ -1,0 +1,1 @@
+/**/liveagent._.handlePing({"messages":[{"type":"VisitorId", "message":{"sessionId":"17bb85fd-68ac-414d-a585-b889aec5b69b"}},{"type":"Error", "message":{"text":"Could not locate deployment 5728t000000002p from Org 00D0o0000017HWq"}}]});

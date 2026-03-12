@@ -1,0 +1,320 @@
+{
+  "competitor": "SaferMe",
+  "sourceUrl": "https://saferme.com/",
+  "finalUrl": "https://saferme.com/en-nz/",
+  "startedAt": "2026-03-12T07:33:11.154Z",
+  "finishedAt": "2026-03-12T07:33:21.568Z",
+  "page": {
+    "status": 200,
+    "title": "Safety Software that Proactively Protects",
+    "metaDescription": "Simple yet intelligent. Safety the way it should be so that your people actually engage.",
+    "h1": [
+      "Modern Safety. Made Easy."
+    ]
+  },
+  "capture": {
+    "screenshots": [
+      "screenshots/landing-viewport.png",
+      "screenshots/landing-full.png"
+    ],
+    "html": "inspected/page.html",
+    "cssCount": 0,
+    "jsCount": 21
+  },
+  "assets": {
+    "cssUrls": [],
+    "jsUrls": [
+      "https://www.googletagmanager.com/gtag/js?id=G-94XY7RTW0H&cx=c&gtm=4e63a1",
+      "https://ws.zoominfo.com/pixel/617b4f60d3ef7a0012fdb56d",
+      "https://tag.marinsm.com/serve/5f7e836f41c25cebbb00005f.js",
+      "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+      "https://www.google-analytics.com/analytics.js",
+      "https://js.hs-analytics.net/analytics/1773300600000/4330484.js",
+      "https://js.hs-banner.com/v2/4330484/banner.js",
+      "https://www.googletagmanager.com/gtm.js?id=GTM-MG6K6KW",
+      "https://js.hs-scripts.com/4330484.js",
+      "https://saferme.com/webpack-runtime-779a8a7f3efa202129df.js",
+      "https://saferme.com/polyfill-308ec6dcf585e7747ca4.js",
+      "https://saferme.com/framework-6cd53a6e53c5117905cd.js",
+      "https://saferme.com/app-1a85334a94a027a440f1.js",
+      "https://saferme.com/d2376bb346bca986ef5da64f179042e42fbd67ca-6d01625c95373d4e1d1b.js",
+      "https://saferme.com/ea88be26-f3027b72a8d249bfc38f.js",
+      "https://saferme.com/64ac05fc9b22565566eac310081f5429f0206070-0b84fbb42b85ec85b73d.js",
+      "https://saferme.com/71a8cc15ceaee6738e00251a16973a4bc0baa8f0-c2f48a4a75d57702a33e.js",
+      "https://saferme.com/291daee0834081ebaffcbec3fe6f79181cdaf1a8-452ff105d2f0c429412b.js",
+      "https://saferme.com/component---src-templates-feature-pages-tsx-0303636293006b345645.js",
+      "https://saferme.com/2da1e444983d8cc81d8e02bebbeb9f9aa4af3880-9250386640fb1446ac64.js",
+      "https://saferme.com/223-b53fe9c42bfa2ddb2492.js"
+    ],
+    "downloadedCss": [],
+    "downloadedJs": [
+      {
+        "sourceUrl": "https://www.googletagmanager.com/gtag/js?id=G-94XY7RTW0H&cx=c&gtm=4e63a1",
+        "file": "inspected/assets/js/001_js_e0f4b64eda.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 519908
+      },
+      {
+        "sourceUrl": "https://ws.zoominfo.com/pixel/617b4f60d3ef7a0012fdb56d",
+        "file": "inspected/assets/js/002_617b4f60d3ef7a0012fdb56d_326bd3b49a.js",
+        "contentType": "",
+        "bytes": 0
+      },
+      {
+        "sourceUrl": "https://tag.marinsm.com/serve/5f7e836f41c25cebbb00005f.js",
+        "file": "inspected/assets/js/003_5f7e836f41c25cebbb00005f_d4131a30d1.js",
+        "contentType": "text/html; charset=utf-8",
+        "bytes": 29806
+      },
+      {
+        "sourceUrl": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+        "file": "inspected/assets/js/004_insight.min_8b6988a02f.js",
+        "contentType": "application/javascript;charset=utf-8",
+        "bytes": 53612
+      },
+      {
+        "sourceUrl": "https://www.google-analytics.com/analytics.js",
+        "file": "inspected/assets/js/005_analytics_6e0d87d95b.js",
+        "contentType": "text/javascript",
+        "bytes": 52310
+      },
+      {
+        "sourceUrl": "https://js.hs-analytics.net/analytics/1773300600000/4330484.js",
+        "file": "inspected/assets/js/006_4330484_edeb7028fe.js",
+        "contentType": "text/javascript",
+        "bytes": 109605
+      },
+      {
+        "sourceUrl": "https://js.hs-banner.com/v2/4330484/banner.js",
+        "file": "inspected/assets/js/007_banner_b47591bb03.js",
+        "contentType": "text/javascript; charset=UTF-8",
+        "bytes": 69072
+      },
+      {
+        "sourceUrl": "https://www.googletagmanager.com/gtm.js?id=GTM-MG6K6KW",
+        "file": "inspected/assets/js/008_gtm_d975af6ab8.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 468254
+      },
+      {
+        "sourceUrl": "https://js.hs-scripts.com/4330484.js",
+        "file": "inspected/assets/js/009_4330484_951529398c.js",
+        "contentType": "application/javascript;charset=utf-8",
+        "bytes": 1010
+      },
+      {
+        "sourceUrl": "https://saferme.com/webpack-runtime-779a8a7f3efa202129df.js",
+        "file": "inspected/assets/js/010_webpack-runtime-779a8a7f3efa202129df_95a5ccbfd5.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 6807
+      },
+      {
+        "sourceUrl": "https://saferme.com/polyfill-308ec6dcf585e7747ca4.js",
+        "file": "inspected/assets/js/011_polyfill-308ec6dcf585e7747ca4_05ed124e36.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 85009
+      },
+      {
+        "sourceUrl": "https://saferme.com/framework-6cd53a6e53c5117905cd.js",
+        "file": "inspected/assets/js/012_framework-6cd53a6e53c5117905cd_54b55672a8.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 210225
+      },
+      {
+        "sourceUrl": "https://saferme.com/app-1a85334a94a027a440f1.js",
+        "file": "inspected/assets/js/013_app-1a85334a94a027a440f1_885a66d9f4.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 427148
+      },
+      {
+        "sourceUrl": "https://saferme.com/d2376bb346bca986ef5da64f179042e42fbd67ca-6d01625c95373d4e1d1b.js",
+        "file": "inspected/assets/js/014_d2376bb346bca986ef5da64f179042e42fbd67ca-6d01625c95373d4e1d1b_f3267e7870.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 17801
+      },
+      {
+        "sourceUrl": "https://saferme.com/ea88be26-f3027b72a8d249bfc38f.js",
+        "file": "inspected/assets/js/015_ea88be26-f3027b72a8d249bfc38f_776be3d94d.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 279606
+      },
+      {
+        "sourceUrl": "https://saferme.com/64ac05fc9b22565566eac310081f5429f0206070-0b84fbb42b85ec85b73d.js",
+        "file": "inspected/assets/js/016_64ac05fc9b22565566eac310081f5429f0206070-0b84fbb42b85ec85b73d_84b8b05f74.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 32330
+      },
+      {
+        "sourceUrl": "https://saferme.com/71a8cc15ceaee6738e00251a16973a4bc0baa8f0-c2f48a4a75d57702a33e.js",
+        "file": "inspected/assets/js/017_71a8cc15ceaee6738e00251a16973a4bc0baa8f0-c2f48a4a75d57702a33e_e815794bc6.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 23276
+      },
+      {
+        "sourceUrl": "https://saferme.com/291daee0834081ebaffcbec3fe6f79181cdaf1a8-452ff105d2f0c429412b.js",
+        "file": "inspected/assets/js/018_291daee0834081ebaffcbec3fe6f79181cdaf1a8-452ff105d2f0c429412b_f8898e37f5.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 8670
+      },
+      {
+        "sourceUrl": "https://saferme.com/component---src-templates-feature-pages-tsx-0303636293006b345645.js",
+        "file": "inspected/assets/js/019_component---src-templates-feature-pages-tsx-0303636293006b345645_e64282d57b.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 125469
+      },
+      {
+        "sourceUrl": "https://saferme.com/2da1e444983d8cc81d8e02bebbeb9f9aa4af3880-9250386640fb1446ac64.js",
+        "file": "inspected/assets/js/020_2da1e444983d8cc81d8e02bebbeb9f9aa4af3880-9250386640fb1446ac64_432f12bdbe.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 488255
+      },
+      {
+        "sourceUrl": "https://saferme.com/223-b53fe9c42bfa2ddb2492.js",
+        "file": "inspected/assets/js/021_223-b53fe9c42bfa2ddb2492_89d88b7489.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 2694
+      }
+    ]
+  },
+  "network": [
+    {
+      "url": "https://saferme.com/",
+      "status": 302,
+      "resourceType": "document",
+      "contentType": "text/plain; charset=utf-8"
+    },
+    {
+      "url": "https://saferme.com/en-nz/",
+      "status": 200,
+      "resourceType": "document",
+      "contentType": "text/html; charset=UTF-8"
+    },
+    {
+      "url": "https://saferme.com/webpack-runtime-779a8a7f3efa202129df.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://saferme.com/app-1a85334a94a027a440f1.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://js.hs-scripts.com/4330484.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript;charset=utf-8"
+    },
+    {
+      "url": "https://saferme.com/framework-6cd53a6e53c5117905cd.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://js.hs-analytics.net/analytics/1773300600000/4330484.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://js.hs-banner.com/v2/4330484/banner.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://saferme.com/d2376bb346bca986ef5da64f179042e42fbd67ca-6d01625c95373d4e1d1b.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://saferme.com/ea88be26-f3027b72a8d249bfc38f.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://saferme.com/64ac05fc9b22565566eac310081f5429f0206070-0b84fbb42b85ec85b73d.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://saferme.com/71a8cc15ceaee6738e00251a16973a4bc0baa8f0-c2f48a4a75d57702a33e.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://saferme.com/291daee0834081ebaffcbec3fe6f79181cdaf1a8-452ff105d2f0c429412b.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://saferme.com/component---src-templates-feature-pages-tsx-0303636293006b345645.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://saferme.com/2da1e444983d8cc81d8e02bebbeb9f9aa4af3880-9250386640fb1446ac64.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtm.js?id=GTM-MG6K6KW",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://saferme.com/223-b53fe9c42bfa2ddb2492.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript;charset=utf-8"
+    },
+    {
+      "url": "https://tag.marinsm.com/serve/5f7e836f41c25cebbb00005f.js",
+      "status": 301,
+      "resourceType": "script",
+      "contentType": ""
+    },
+    {
+      "url": "https://www.google-analytics.com/analytics.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://ws.zoominfo.com/pixel/617b4f60d3ef7a0012fdb56d",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtag/js?id=G-94XY7RTW0H&cx=c&gtm=4e63a1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    }
+  ],
+  "errors": [
+    "pageerror: Error: Minified React error #425; visit https://reactjs.org/docs/error-decoder.html?invariant=425 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+    "pageerror: Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+    "pageerror: Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+    "pageerror: Error: Minified React error #418; visit https://reactjs.org/docs/error-decoder.html?invariant=418 for the full message or use the non-minified dev environment for full errors and additional helpful warnings.",
+    "pageerror: Error: Minified React error #423; visit https://reactjs.org/docs/error-decoder.html?invariant=423 for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  ]
+}

@@ -1,0 +1,732 @@
+{
+  "competitor": "SiteDocs",
+  "sourceUrl": "https://www.sitedocs.com/",
+  "finalUrl": "https://www.sitedocs.com/",
+  "startedAt": "2026-03-12T07:32:32.353Z",
+  "finishedAt": "2026-03-12T07:32:48.617Z",
+  "page": {
+    "status": 200,
+    "title": "Online Safety Management Software | SiteDocs",
+    "metaDescription": "SiteDocs Safety Management Software helps make every aspect of your safety compliance easier, faster, and better. Learn more today.",
+    "h1": [
+      "Safety Compliance Made Easy",
+      "Safety Compliance Made Easy"
+    ]
+  },
+  "capture": {
+    "screenshots": [
+      "screenshots/landing-viewport.png",
+      "screenshots/landing-full.png"
+    ],
+    "html": "inspected/page.html",
+    "cssCount": 20,
+    "jsCount": 30
+  },
+  "assets": {
+    "cssUrls": [
+      "https://www.sitedocs.com/wp-content/plugins/geotargetingwp/public/css/geotarget-public.min.css?ver=6.9.1",
+      "https://www.sitedocs.com/wp-content/plugins/groovy-menu/assets/style/frontend.css?ver=2.6.3",
+      "https://www.sitedocs.com/wp-content/uploads/groovy/fonts/groovy-28328.css?ver=2.6.3",
+      "https://www.sitedocs.com/wp-content/uploads/groovy/fonts/groovy-69018.css?ver=2.6.3",
+      "https://www.sitedocs.com/wp-content/uploads/groovy/fonts/groovy-socicon.css?ver=2.6.3",
+      "https://www.sitedocs.com/wp-content/plugins/groovy-menu/assets/style/fontawesome.css?ver=2.6.3",
+      "https://www.sitedocs.com/wp-content/plugins/groovy-menu/assets/style/font-internal.css?ver=2.6.3",
+      "https://www.sitedocs.com/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/css/magnific_popup.css?ver=2.5.63",
+      "https://www.sitedocs.com/wp-content/plugins/supreme-modules-for-divi/public/css/animate.css?ver=2.5.63",
+      "https://www.sitedocs.com/wp-content/themes/Divi/style.min.css?ver=4.27.5",
+      "https://www.sitedocs.com/wp-content/et-cache/48754/et-divi-dynamic-tb-42959-48754-late.css",
+      "https://www.sitedocs.com/wp-content/et-cache/48754/et-divi-dynamic-tb-42959-48754-late.css?ver=1773158461",
+      "https://www.sitedocs.com/wp-content/et-cache/48754/et-divi-dynamic-tb-42959-48754.css?ver=1773158461",
+      "https://www.sitedocs.com/wp-content/plugins/groovy-menu/includes/theme_support/divi-grooni-groovymenu/styles/style.min.css?ver=1.0.4",
+      "https://www.sitedocs.com/wp-content/plugins/supreme-modules-for-divi/styles/style.min.css?ver=2.5.63",
+      "https://www.sitedocs.com/wp-content/uploads/groovy/preset_55054.css?ver=d68bf3882fad45a77ce75d2a7031bcaf",
+      "https://www.sitedocs.com/webfonts/Verb/Verb.css",
+      "https://www.sitedocs.com/wp-content/themes/Divi/includes/builder/styles/magnific_popup.css",
+      "https://hello.myfonts.net/count/39b48a",
+      "https://fonts.googleapis.com/css2?family=Open%20Sans:wght@400;500;700&display=swap"
+    ],
+    "jsUrls": [
+      "https://www.googletagmanager.com/gtag/js?id=AW-945490812&cx=c&gtm=4e63a1h1",
+      "https://connect.facebook.net/signals/config/527402865988763?v=2.9.277&r=stable&domain=www.sitedocs.com&hme=b0ad3da822578fe2b808f13c29c26424c1eec6df21f897230a1f8d7975c03c8e&ex_m=101%2C194%2C143%2C22%2C69%2C70%2C136%2C65%2C64%2C11%2C151%2C87%2C16%2C130%2C123%2C72%2C75%2C129%2C148%2C153%2C8%2C4%2C5%2C7%2C6%2C3%2C88%2C98%2C154%2C159%2C208%2C59%2C175%2C176%2C52%2C262%2C30%2C71%2C220%2C219%2C218%2C23%2C32%2C100%2C58%2C10%2C60%2C94%2C95%2C96%2C102%2C126%2C31%2C29%2C128%2C125%2C124%2C144%2C73%2C147%2C145%2C146%2C47%2C57%2C119%2C15%2C150%2C42%2C249%2C250%2C248%2C26%2C27%2C28%2C45%2C137%2C74%2C109%2C18%2C20%2C41%2C37%2C39%2C38%2C80%2C89%2C93%2C107%2C135%2C138%2C43%2C108%2C24%2C21%2C115%2C66%2C35%2C140%2C139%2C141%2C132%2C131%2C25%2C34%2C56%2C106%2C149%2C67%2C17%2C142%2C111%2C78%2C63%2C19%2C82%2C83%2C112%2C81%2C33%2C277%2C201%2C190%2C191%2C189%2C280%2C272%2C49%2C202%2C104%2C127%2C77%2C117%2C51%2C44%2C46%2C110%2C116%2C122%2C55%2C61%2C50%2C53%2C97%2C152%2C1%2C120%2C14%2C118%2C12%2C2%2C54%2C90%2C62%2C114%2C86%2C85%2C155%2C156%2C91%2C92%2C9%2C121%2C99%2C48%2C133%2C84%2C76%2C68%2C113%2C103%2C40%2C134%2C0%2C79%2C36%2C105%2C13%2C157",
+      "https://connect.facebook.net/en_US/fbevents.js",
+      "https://bat.bing.com/bat.js",
+      "https://www.google-analytics.com/analytics.js",
+      "https://www.googletagmanager.com/gtag/js?id=G-V4YN47VM9V&cx=c&gtm=4e63a1h1",
+      "https://cdn-cookieyes.com/client_data/a6d77df12dae2b3b48327b05/script.js",
+      "https://js.hs-banner.com/v2/197922/banner.js",
+      "https://js.hs-analytics.net/analytics/1773300600000/197922.js",
+      "https://js.hubspot.com/web-interactives-embed.js",
+      "https://www.googletagmanager.com/gtm.js?id=GTM-TKWKN9",
+      "https://www.sitedocs.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1",
+      "https://www.sitedocs.com/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1",
+      "https://fast.wistia.com/assets/external/E-v1.js",
+      "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+      "https://www.googletagmanager.com/gtag/js?id=AW-945490812",
+      "https://assets.calendly.com/assets/external/widget.js",
+      "https://js.hsforms.net/forms/v2.js",
+      "https://js.hs-scripts.com/197922.js",
+      "https://browser.sentry-cdn.com/9.6.1/bundle.min.js",
+      "https://www.sitedocs.com/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/js/magnific-popup.js",
+      "https://www.sitedocs.com/wp-content/plugins/geotargetingwp/public/js/geotarget-public.js?ver=3.5.4.5",
+      "https://www.sitedocs.com/wp-content/plugins/geotargetingwp/public/js/min/selectize.min.js?ver=3.5.4.5",
+      "https://www.sitedocs.com/wp-content/plugins/groovy-menu/assets/js/frontend.js?ver=2.6.3",
+      "https://js.hs-scripts.com/197922.js?integration=WordPress&ver=11.3.39",
+      "https://www.sitedocs.com/wp-content/themes/Divi/js/scripts.min.js?ver=4.27.5",
+      "https://www.sitedocs.com/wp-content/themes/Divi/js/smoothscroll.js?ver=4.27.5",
+      "https://www.sitedocs.com/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/js/jquery.fitvids.js?ver=4.27.5",
+      "https://www.sitedocs.com/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/js/jquery.mobile.js?ver=4.27.5",
+      "https://www.sitedocs.com/wp-content/plugins/groovy-menu/includes/theme_support/divi-grooni-groovymenu/scripts/frontend-bundle.min.js?ver=1.0.4"
+    ],
+    "downloadedCss": [
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/plugins/geotargetingwp/public/css/geotarget-public.min.css?ver=6.9.1",
+        "file": "inspected/assets/css/001_geotarget-public.min_86b7f2fbc2.css",
+        "contentType": "text/css",
+        "bytes": 25905
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/plugins/groovy-menu/assets/style/frontend.css?ver=2.6.3",
+        "file": "inspected/assets/css/002_frontend_25dd355291.css",
+        "contentType": "text/css",
+        "bytes": 78008
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/uploads/groovy/fonts/groovy-28328.css?ver=2.6.3",
+        "file": "inspected/assets/css/003_groovy-28328_96a6e39c7f.css",
+        "contentType": "text/css",
+        "bytes": 5891
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/uploads/groovy/fonts/groovy-69018.css?ver=2.6.3",
+        "file": "inspected/assets/css/004_groovy-69018_671c6d32b8.css",
+        "contentType": "text/css",
+        "bytes": 8889
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/uploads/groovy/fonts/groovy-socicon.css?ver=2.6.3",
+        "file": "inspected/assets/css/005_groovy-socicon_1c1bd7f8fb.css",
+        "contentType": "text/css",
+        "bytes": 16560
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/plugins/groovy-menu/assets/style/fontawesome.css?ver=2.6.3",
+        "file": "inspected/assets/css/006_fontawesome_fd52dce417.css",
+        "contentType": "text/css",
+        "bytes": 36273
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/plugins/groovy-menu/assets/style/font-internal.css?ver=2.6.3",
+        "file": "inspected/assets/css/007_font-internal_ea8b5f3740.css",
+        "contentType": "text/css",
+        "bytes": 644
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/css/magnific_popup.css?ver=2.5.63",
+        "file": "inspected/assets/css/008_magnific_popup_a39e83f049.css",
+        "contentType": "text/css",
+        "bytes": 6470
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/plugins/supreme-modules-for-divi/public/css/animate.css?ver=2.5.63",
+        "file": "inspected/assets/css/009_animate_13e4c6be5e.css",
+        "contentType": "text/css",
+        "bytes": 85371
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/themes/Divi/style.min.css?ver=4.27.5",
+        "file": "inspected/assets/css/010_style.min_975a7c8aa4.css",
+        "contentType": "text/css",
+        "bytes": 26638
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/et-cache/48754/et-divi-dynamic-tb-42959-48754-late.css",
+        "file": "inspected/assets/css/011_et-divi-dynamic-tb-42959-48754-late_9f5a8309fd.css",
+        "contentType": "text/css",
+        "bytes": 24035
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/et-cache/48754/et-divi-dynamic-tb-42959-48754-late.css?ver=1773158461",
+        "file": "inspected/assets/css/012_et-divi-dynamic-tb-42959-48754-late_88415d4aee.css",
+        "contentType": "text/css",
+        "bytes": 24035
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/et-cache/48754/et-divi-dynamic-tb-42959-48754.css?ver=1773158461",
+        "file": "inspected/assets/css/013_et-divi-dynamic-tb-42959-48754_89bb7c640d.css",
+        "contentType": "text/css",
+        "bytes": 45683
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/plugins/groovy-menu/includes/theme_support/divi-grooni-groovymenu/styles/style.min.css?ver=1.0.4",
+        "file": "inspected/assets/css/014_style.min_e5694a2f65.css",
+        "contentType": "text/css",
+        "bytes": 787
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/plugins/supreme-modules-for-divi/styles/style.min.css?ver=2.5.63",
+        "file": "inspected/assets/css/015_style.min_a5ddd22f9d.css",
+        "contentType": "text/css",
+        "bytes": 192657
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/uploads/groovy/preset_55054.css?ver=d68bf3882fad45a77ce75d2a7031bcaf",
+        "file": "inspected/assets/css/016_preset_55054_9bdadf1e0c.css",
+        "contentType": "text/css",
+        "bytes": 40791
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/webfonts/Verb/Verb.css",
+        "file": "inspected/assets/css/017_Verb_d8f8eef0c5.css",
+        "contentType": "text/css",
+        "bytes": 8396
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/themes/Divi/includes/builder/styles/magnific_popup.css",
+        "file": "inspected/assets/css/018_magnific_popup_7913ba9074.css",
+        "contentType": "text/css",
+        "bytes": 6488
+      },
+      {
+        "sourceUrl": "https://hello.myfonts.net/count/39b48a",
+        "file": "inspected/assets/css/019_39b48a_dc1206c9ca.css",
+        "contentType": "text/css",
+        "bytes": 0
+      },
+      {
+        "sourceUrl": "https://fonts.googleapis.com/css2?family=Open%20Sans:wght@400;500;700&display=swap",
+        "file": "inspected/assets/css/020_css2_7c92cece2c.css",
+        "contentType": "text/css; charset=utf-8",
+        "bytes": 795
+      }
+    ],
+    "downloadedJs": [
+      {
+        "sourceUrl": "https://www.googletagmanager.com/gtag/js?id=AW-945490812&cx=c&gtm=4e63a1h1",
+        "file": "inspected/assets/js/001_js_d4c39d0e01.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 421165
+      },
+      {
+        "sourceUrl": "https://connect.facebook.net/signals/config/527402865988763?v=2.9.277&r=stable&domain=www.sitedocs.com&hme=b0ad3da822578fe2b808f13c29c26424c1eec6df21f897230a1f8d7975c03c8e&ex_m=101%2C194%2C143%2C22%2C69%2C70%2C136%2C65%2C64%2C11%2C151%2C87%2C16%2C130%2C123%2C72%2C75%2C129%2C148%2C153%2C8%2C4%2C5%2C7%2C6%2C3%2C88%2C98%2C154%2C159%2C208%2C59%2C175%2C176%2C52%2C262%2C30%2C71%2C220%2C219%2C218%2C23%2C32%2C100%2C58%2C10%2C60%2C94%2C95%2C96%2C102%2C126%2C31%2C29%2C128%2C125%2C124%2C144%2C73%2C147%2C145%2C146%2C47%2C57%2C119%2C15%2C150%2C42%2C249%2C250%2C248%2C26%2C27%2C28%2C45%2C137%2C74%2C109%2C18%2C20%2C41%2C37%2C39%2C38%2C80%2C89%2C93%2C107%2C135%2C138%2C43%2C108%2C24%2C21%2C115%2C66%2C35%2C140%2C139%2C141%2C132%2C131%2C25%2C34%2C56%2C106%2C149%2C67%2C17%2C142%2C111%2C78%2C63%2C19%2C82%2C83%2C112%2C81%2C33%2C277%2C201%2C190%2C191%2C189%2C280%2C272%2C49%2C202%2C104%2C127%2C77%2C117%2C51%2C44%2C46%2C110%2C116%2C122%2C55%2C61%2C50%2C53%2C97%2C152%2C1%2C120%2C14%2C118%2C12%2C2%2C54%2C90%2C62%2C114%2C86%2C85%2C155%2C156%2C91%2C92%2C9%2C121%2C99%2C48%2C133%2C84%2C76%2C68%2C113%2C103%2C40%2C134%2C0%2C79%2C36%2C105%2C13%2C157",
+        "file": "inspected/assets/js/002_527402865988763_b3fe16db54.js",
+        "contentType": "application/x-javascript; charset=utf-8",
+        "bytes": 153494
+      },
+      {
+        "sourceUrl": "https://connect.facebook.net/en_US/fbevents.js",
+        "file": "inspected/assets/js/003_fbevents_20e1ef357a.js",
+        "contentType": "application/x-javascript; charset=utf-8",
+        "bytes": 364367
+      },
+      {
+        "sourceUrl": "https://bat.bing.com/bat.js",
+        "file": "inspected/assets/js/004_bat_fa27d6d268.js",
+        "contentType": "application/javascript",
+        "bytes": 54841
+      },
+      {
+        "sourceUrl": "https://www.google-analytics.com/analytics.js",
+        "file": "inspected/assets/js/005_analytics_6e0d87d95b.js",
+        "contentType": "text/javascript",
+        "bytes": 52310
+      },
+      {
+        "sourceUrl": "https://www.googletagmanager.com/gtag/js?id=G-V4YN47VM9V&cx=c&gtm=4e63a1h1",
+        "file": "inspected/assets/js/006_js_2c1bf14988.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 548171
+      },
+      {
+        "sourceUrl": "https://cdn-cookieyes.com/client_data/a6d77df12dae2b3b48327b05/script.js",
+        "file": "inspected/assets/js/007_script_aab361ffa2.js",
+        "contentType": "application/javascript",
+        "bytes": 28567
+      },
+      {
+        "sourceUrl": "https://js.hs-banner.com/v2/197922/banner.js",
+        "file": "inspected/assets/js/008_banner_5c8e5c3ccc.js",
+        "contentType": "text/javascript; charset=UTF-8",
+        "bytes": 68934
+      },
+      {
+        "sourceUrl": "https://js.hs-analytics.net/analytics/1773300600000/197922.js",
+        "file": "inspected/assets/js/009_197922_44a42b5144.js",
+        "contentType": "text/javascript",
+        "bytes": 109514
+      },
+      {
+        "sourceUrl": "https://js.hubspot.com/web-interactives-embed.js",
+        "file": "inspected/assets/js/010_web-interactives-embed_dc57017e01.js",
+        "contentType": "application/javascript; charset=utf-8",
+        "bytes": 97535
+      },
+      {
+        "sourceUrl": "https://www.googletagmanager.com/gtm.js?id=GTM-TKWKN9",
+        "file": "inspected/assets/js/011_gtm_db8f72c115.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 495017
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1",
+        "file": "inspected/assets/js/012_jquery.min_0f2634cc8f.js",
+        "contentType": "application/javascript",
+        "bytes": 87553
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1",
+        "file": "inspected/assets/js/013_jquery-migrate.min_8722e5ccab.js",
+        "contentType": "application/javascript",
+        "bytes": 13577
+      },
+      {
+        "sourceUrl": "https://fast.wistia.com/assets/external/E-v1.js",
+        "file": "inspected/assets/js/014_E-v1_5e0326240e.js",
+        "contentType": "text/javascript",
+        "bytes": 952591
+      },
+      {
+        "sourceUrl": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+        "file": "inspected/assets/js/015_insight.min_8b6988a02f.js",
+        "contentType": "application/javascript;charset=utf-8",
+        "bytes": 53612
+      },
+      {
+        "sourceUrl": "https://www.googletagmanager.com/gtag/js?id=AW-945490812",
+        "file": "inspected/assets/js/016_js_e82cda5e97.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 421154
+      },
+      {
+        "sourceUrl": "https://assets.calendly.com/assets/external/widget.js",
+        "file": "inspected/assets/js/017_widget_2e4164056e.js",
+        "contentType": "text/javascript",
+        "bytes": 11438
+      },
+      {
+        "sourceUrl": "https://js.hsforms.net/forms/v2.js",
+        "file": "inspected/assets/js/018_v2_1787e82571.js",
+        "contentType": "application/javascript; charset=utf-8",
+        "bytes": 603955
+      },
+      {
+        "sourceUrl": "https://js.hs-scripts.com/197922.js",
+        "file": "inspected/assets/js/019_197922_45bb7e4e61.js",
+        "contentType": "application/javascript;charset=utf-8",
+        "bytes": 1496
+      },
+      {
+        "sourceUrl": "https://browser.sentry-cdn.com/9.6.1/bundle.min.js",
+        "file": "inspected/assets/js/020_bundle.min_f590cefde8.js",
+        "contentType": "application/javascript; charset=utf-8",
+        "bytes": 73553
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/js/magnific-popup.js",
+        "file": "inspected/assets/js/021_magnific-popup_6060d92bed.js",
+        "contentType": "application/javascript",
+        "bytes": 22272
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/plugins/geotargetingwp/public/js/geotarget-public.js?ver=3.5.4.5",
+        "file": "inspected/assets/js/022_geotarget-public_34b9c9049a.js",
+        "contentType": "application/javascript",
+        "bytes": 24816
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/plugins/geotargetingwp/public/js/min/selectize.min.js?ver=3.5.4.5",
+        "file": "inspected/assets/js/023_selectize.min_6bfd2e6b8c.js",
+        "contentType": "application/javascript",
+        "bytes": 44228
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/plugins/groovy-menu/assets/js/frontend.js?ver=2.6.3",
+        "file": "inspected/assets/js/024_frontend_c054a5f211.js",
+        "contentType": "application/javascript",
+        "bytes": 179999
+      },
+      {
+        "sourceUrl": "https://js.hs-scripts.com/197922.js?integration=WordPress&ver=11.3.39",
+        "file": "inspected/assets/js/025_197922_5f8cc1ea7d.js",
+        "contentType": "application/javascript;charset=utf-8",
+        "bytes": 1496
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/themes/Divi/js/scripts.min.js?ver=4.27.5",
+        "file": "inspected/assets/js/026_scripts.min_d3c534f06d.js",
+        "contentType": "application/javascript",
+        "bytes": 274461
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/themes/Divi/js/smoothscroll.js?ver=4.27.5",
+        "file": "inspected/assets/js/027_smoothscroll_28fe1161db.js",
+        "contentType": "application/javascript",
+        "bytes": 5714
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/js/jquery.fitvids.js?ver=4.27.5",
+        "file": "inspected/assets/js/028_jquery.fitvids_f5397504c3.js",
+        "contentType": "application/javascript",
+        "bytes": 3349
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/js/jquery.mobile.js?ver=4.27.5",
+        "file": "inspected/assets/js/029_jquery.mobile_132b16cea8.js",
+        "contentType": "application/javascript",
+        "bytes": 10776
+      },
+      {
+        "sourceUrl": "https://www.sitedocs.com/wp-content/plugins/groovy-menu/includes/theme_support/divi-grooni-groovymenu/scripts/frontend-bundle.min.js?ver=1.0.4",
+        "file": "inspected/assets/js/030_frontend-bundle.min_fa6af547ea.js",
+        "contentType": "application/javascript",
+        "bytes": 586
+      }
+    ]
+  },
+  "network": [
+    {
+      "url": "https://www.sitedocs.com/",
+      "status": 200,
+      "resourceType": "document",
+      "contentType": "text/html; charset=UTF-8"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/plugins/groovy-menu/assets/style/fontawesome.css?ver=2.6.3",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/plugins/supreme-modules-for-divi/public/css/animate.css?ver=2.5.63",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/uploads/groovy/fonts/groovy-28328.css?ver=2.6.3",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/uploads/groovy/fonts/groovy-socicon.css?ver=2.6.3",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/plugins/groovy-menu/assets/style/frontend.css?ver=2.6.3",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/themes/Divi/style.min.css?ver=4.27.5",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/plugins/groovy-menu/assets/style/font-internal.css?ver=2.6.3",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/css/magnific_popup.css?ver=2.5.63",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/uploads/groovy/fonts/groovy-69018.css?ver=2.6.3",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/plugins/geotargetingwp/public/css/geotarget-public.min.css?ver=6.9.1",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/et-cache/48754/et-divi-dynamic-tb-42959-48754-late.css?ver=1773158461",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/et-cache/48754/et-divi-dynamic-tb-42959-48754.css?ver=1773158461",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/uploads/groovy/preset_55054.css?ver=d68bf3882fad45a77ce75d2a7031bcaf",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/themes/Divi/includes/builder/styles/magnific_popup.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/plugins/groovy-menu/includes/theme_support/divi-grooni-groovymenu/styles/style.min.css?ver=1.0.4",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.sitedocs.com/webfonts/Verb/Verb.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/plugins/supreme-modules-for-divi/styles/style.min.css?ver=2.5.63",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript;charset=utf-8"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/plugins/geotargetingwp/public/js/geotarget-public.js?ver=3.5.4.5",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://assets.calendly.com/assets/external/widget.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/plugins/geotargetingwp/public/js/min/selectize.min.js?ver=3.5.4.5",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://js.hsforms.net/forms/v2.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/plugins/groovy-menu/assets/js/frontend.js?ver=2.6.3",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://hello.myfonts.net/count/39b48a",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://js.hs-scripts.com/197922.js?integration=WordPress&ver=11.3.39",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript;charset=utf-8"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/themes/Divi/js/scripts.min.js?ver=4.27.5",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/plugins/groovy-menu/includes/theme_support/divi-grooni-groovymenu/scripts/frontend-bundle.min.js?ver=1.0.4",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/themes/Divi/js/smoothscroll.js?ver=4.27.5",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/js/jquery.mobile.js?ver=4.27.5",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/themes/Divi/core/admin/js/common.js?ver=4.27.5",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/plugins/supreme-modules-for-divi/scripts/frontend-bundle.min.js?ver=2.5.63",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/js/jquery.fitvids.js?ver=4.27.5",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://js.hs-scripts.com/197922.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript;charset=utf-8"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/themes/Divi/includes/builder/feature/dynamic-assets/assets/js/magnific-popup.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://www.sitedocs.com/wp-content/et-cache/48754/et-divi-dynamic-tb-42959-48754-late.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://fast.wistia.com/assets/external/E-v1.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://js.hs-banner.com/v2/197922/banner.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtm.js?id=GTM-TKWKN9",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://js.hubspot.com/web-interactives-embed.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtag/js?id=AW-945490812",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://js.hs-analytics.net/analytics/1773300600000/197922.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://js.hsforms.net/forms/v2.js",
+      "status": 304,
+      "resourceType": "script",
+      "contentType": ""
+    },
+    {
+      "url": "https://browser.sentry-cdn.com/9.6.1/bundle.min.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cdn-cookieyes.com/client_data/a6d77df12dae2b3b48327b05/script.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtag/js?id=G-V4YN47VM9V&cx=c&gtm=4e63a1h1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://www.google-analytics.com/analytics.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtag/js?id=AW-945490812&cx=c&gtm=4e63a1h1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://bat.bing.com/bat.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://fonts.googleapis.com/css2?family=Open%20Sans:wght@400;500;700&display=swap",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "url": "https://connect.facebook.net/en_US/fbevents.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/x-javascript; charset=utf-8"
+    },
+    {
+      "url": "https://secure.leadforensics.com/js/796478.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://connect.facebook.net/signals/config/527402865988763?v=2.9.277&r=stable&domain=www.sitedocs.com&hme=b0ad3da822578fe2b808f13c29c26424c1eec6df21f897230a1f8d7975c03c8e&ex_m=101%2C194%2C143%2C22%2C69%2C70%2C136%2C65%2C64%2C11%2C151%2C87%2C16%2C130%2C123%2C72%2C75%2C129%2C148%2C153%2C8%2C4%2C5%2C7%2C6%2C3%2C88%2C98%2C154%2C159%2C208%2C59%2C175%2C176%2C52%2C262%2C30%2C71%2C220%2C219%2C218%2C23%2C32%2C100%2C58%2C10%2C60%2C94%2C95%2C96%2C102%2C126%2C31%2C29%2C128%2C125%2C124%2C144%2C73%2C147%2C145%2C146%2C47%2C57%2C119%2C15%2C150%2C42%2C249%2C250%2C248%2C26%2C27%2C28%2C45%2C137%2C74%2C109%2C18%2C20%2C41%2C37%2C39%2C38%2C80%2C89%2C93%2C107%2C135%2C138%2C43%2C108%2C24%2C21%2C115%2C66%2C35%2C140%2C139%2C141%2C132%2C131%2C25%2C34%2C56%2C106%2C149%2C67%2C17%2C142%2C111%2C78%2C63%2C19%2C82%2C83%2C112%2C81%2C33%2C277%2C201%2C190%2C191%2C189%2C280%2C272%2C49%2C202%2C104%2C127%2C77%2C117%2C51%2C44%2C46%2C110%2C116%2C122%2C55%2C61%2C50%2C53%2C97%2C152%2C1%2C120%2C14%2C118%2C12%2C2%2C54%2C90%2C62%2C114%2C86%2C85%2C155%2C156%2C91%2C92%2C9%2C121%2C99%2C48%2C133%2C84%2C76%2C68%2C113%2C103%2C40%2C134%2C0%2C79%2C36%2C105%2C13%2C157",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/x-javascript; charset=utf-8"
+    },
+    {
+      "url": "https://js.zi-scripts.com/zi-tag.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "blob:https://www.sitedocs.com/0b8c52a7-94ad-4144-a369-06b953cbae35",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    }
+  ],
+  "errors": [
+    "pageerror: TypeError: Failed to execute 'observe' on 'MutationObserver': parameter 1 is not of type 'Node'."
+  ]
+}

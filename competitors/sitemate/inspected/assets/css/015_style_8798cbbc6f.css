@@ -1,0 +1,278 @@
+/*
+Theme Name: Beaver Builder Child Theme
+Theme URI: http://www.wpbeaverbuilder.com
+Version: 1.0
+Description: An example child theme that can be used as a starting point for custom development.
+Author: The Beaver Builder Team
+Author URI: http://www.fastlinemedia.com
+template: bb-theme
+*/
+
+/* Add your custom styles here... */ 
+
+/* ----------------------
+SITE HEADER
+---------------------- */
+
+img.fl-logo-img {
+	max-width: 126px;
+	padding-top: 10px;
+	padding-bottom: 10px;
+}
+
+i.fa.fa-bars {
+	padding-top: 0px;
+}
+
+/* ----------------------
+POSTS
+---------------------- */
+
+.fl-post .fl-author-box {
+	max-width: 1020px;
+	margin: auto;
+}
+
+.fl-author-link {
+	display: none;
+}
+
+.fl-widget {
+    margin-bottom: 40px;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.wp-caption p.wp-caption-text {
+	display: none;
+}
+
+.wp-caption {
+   background: none;
+   border: none;
+   max-width: 100%;
+   padding: 10px;
+   text-align: center;
+}
+
+/* ----------------------
+SINGLE POSTS - FULL WIDTH WITH BEAVER BUILDER
+---------------------- */
+
+.single-post.fl-builder .fl-page-content .container{
+	max-width:100%;width:100%;padding-left:0;padding-right:0;
+}
+
+.single-post.fl-builder .fl-page-content .row{
+	margin-left:0;margin-right:0;
+}
+
+.single-post.fl-builder .fl-page-content .fl-content{
+	padding-left:0;padding-right:0;margin:0;
+}
+
+
+.single-post.fl-builder .fl-post-meta-bottom, .single-post.fl-builder .fl-comments { 
+	margin-top: 60px; max-width: 1020px; margin-left:auto; margin-right:auto; padding-left: 0; padding-right:0; 
+}
+
+.single-post.fl-builder .fl-page-content .fl-post-header{
+	display:none;
+}
+
+.avatar.avatar-68.photo {
+	border-radius: 4px;
+}
+
+.fl-post-meta-bottom {
+    border: none;
+    font-style: normal;
+    margin-top: 20px;
+	margin-bottom: 20px;
+    padding-top: 10px;
+}
+
+.fl-comment-form {
+	margin-bottom: 100px;
+}
+
+/* ----------------------
+ARTICLE ARCHIVE FORMATTING
+---------------------- */
+
+@media only screen and (min-width: 992px) {
+	.fl-archive .fl-post{width:48%;float:left;margin-left:4%;}
+	.fl-archive .fl-post:nth-child(odd){margin-left:0;clear:both;}
+}
+
+.fl-post-thumb img {
+	border-radius: 5px;
+}
+
+.fl-post-thumb img:hover {
+    transform:scale(1.01)
+}
+
+.fl-content-left {
+    border-right: none;
+    padding-right: 40px;
+}
+
+.fl-archive .fl-post {
+    border-bottom: none;
+    padding-bottom: 15px;
+}
+
+.fl-post-title {
+    font-size: 24px;
+}
+
+.fl-post-header {
+	margin-bottom: 15px;
+}
+
+.fl-post-more-link {
+	display: none;
+}
+
+/* ----------------------
+SITE MENU
+---------------------- */
+
+
+
+/* ----------------------
+mobile
+---------------------- */
+
+@media (min-width: 280px) and (max-width: 768px) {
+    .hero-h1 {
+    margin-top: -50px;
+    }
+}
+
+@media (max-width: 480px) {
+    h2 {
+    font-size: 30px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+    font-size: 34px !important;
+    }
+}
+
+
+/* ----------------------
+Other
+---------------------- */
+
+@media (max-width: 767px) {
+.fl-page-nav-toggle-icon.fl-page-nav-toggle-visible-mobile .fl-page-nav ul.sub-menu li a:before {
+    content: none !important;
+    margin-right: 10px;
+    }
+}
+
+#menu-item-6817 {
+    cursor: pointer;
+}
+
+@media (min-width: 992px) {
+.fl-page-nav-right .fl-page-nav-wrap {
+	width: 700px;
+	}
+}
+
+.navbar-toggle.navbar-toggler {
+    padding-top: 22px !important;
+}
+
+.nav-menu-software:hover {
+    cursor: pointer;
+}
+
+.hero-h1 {
+    color:#FFF;
+}
+
+.white-text {
+    color: #FFF;
+}
+
+.box {
+    border-radius: 6px;
+    margin: 15px;
+}
+
+.tab {
+    float: left;
+    transition: 0.1s;
+    cursor: pointer;
+	padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.tab:hover {
+    border-radius: 10px;
+    cursor: pointer;
+	padding: 15px;
+}
+
+.tab.active {
+    border-radius: 10px;
+	padding: 15px;
+}
+
+.shape-circle {
+    border-radius: 50%;
+    position: relative;
+    margin: auto;
+    z-index: 0;
+}
+
+.clear-btn {
+    background: transparent;
+    color: #FFF;
+    border: 2px solid #FFF;
+    padding: 15px;
+    border-radius: 6px;
+}
+
+.clear-btn:hover {
+    background: #FFF;
+    border: 2px solid #FFF;
+}
+
+.img-browser {
+    box-shadow: 0 5px 15px 0 #f2f2f2;
+    border-radius: 6px;
+    width: 850px;
+}
+
+.logo-h4 {
+    font-size: 16px;
+    text-align: center;
+}
+
+h4 {
+    font-weight: 700;
+}
+
+.cc-frame {
+    box-shadow: 0 3px 12px 0 #dddddd;
+    border-radius: 6px;
+    border: 1px solid #f2f2f2;
+    background: #2e81da;
+    padding-top: 40px;
+    display: block;
+    margin: auto;
+    width: 1200px;
+    height: 660px;
+}
+
+#home-top-div {
+    background: linear-gradient(179.59355956866534deg, rgba(66, 85, 104,1) 32.68110021786492%,rgba(66, 85, 104,1) 33.3235294117647%,rgba(73, 94, 115,1) 77.37581699346404%)
+}

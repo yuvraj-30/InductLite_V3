@@ -1,0 +1,336 @@
+{
+  "competitor": "InductLite Local",
+  "sourceUrl": "http://localhost:3000/",
+  "finalUrl": "http://localhost:3000/",
+  "startedAt": "2026-03-12T07:49:45.663Z",
+  "finishedAt": "2026-03-12T07:49:52.201Z",
+  "page": {
+    "status": 200,
+    "title": "InductLite - Site Induction Management",
+    "metaDescription": "Multi-tenant SaaS for NZ construction site inductions and visitor management",
+    "h1": [
+      "Replace paper inductions with a live compliance system."
+    ]
+  },
+  "capture": {
+    "screenshots": [
+      "screenshots/landing-viewport.png",
+      "screenshots/landing-full.png"
+    ],
+    "html": "inspected/page.html",
+    "cssCount": 1,
+    "jsCount": 22
+  },
+  "assets": {
+    "cssUrls": [
+      "http://localhost:3000/_next/static/chunks/%5Broot-of-the-server%5D__6bdd1523._.css"
+    ],
+    "jsUrls": [
+      "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js",
+      "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_9212ccad._.js",
+      "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_1dd7fb59.js",
+      "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_a0e4c7b4._.js",
+      "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_17643121._.js",
+      "http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js",
+      "http://localhost:3000/_next/static/chunks/node_modules_%40swc_helpers_cjs_d80fb378._.js",
+      "http://localhost:3000/_next/static/chunks/apps_web_a0ff3932._.js",
+      "http://localhost:3000/_next/static/chunks/turbopack-apps_web_23a915ee._.js",
+      "http://localhost:3000/_next/static/chunks/node_modules_next_dist_06142577._.js",
+      "http://localhost:3000/_next/static/chunks/apps_web_src_79f75aa6._.js",
+      "http://localhost:3000/_next/static/chunks/apps_web_src_app_global-error_tsx_1cf6b850._.js",
+      "http://localhost:3000/_next/static/chunks/_bcadb650._.js",
+      "http://localhost:3000/_next/static/chunks/apps_web_src_app_layout_tsx_1cf6b850._.js",
+      "http://localhost:3000/_next/static/chunks/apps_web_src_06a78227._.js",
+      "http://localhost:3000/_next/static/chunks/apps_web_src_app_error_tsx_4a91f7aa._.js",
+      "http://localhost:3000/_next/static/chunks/node_modules_next_dist_02409dcd._.js",
+      "http://localhost:3000/_next/static/chunks/apps_web_src_app_page_tsx_4a91f7aa._.js",
+      "http://localhost:3000/_next/static/chunks/node_modules_next_dist_build_polyfills_polyfill-nomodule.js",
+      "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_c8c997ce._.js",
+      "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_c7192189._.js",
+      "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_956a0d3a._.js"
+    ],
+    "downloadedCss": [
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/%5Broot-of-the-server%5D__6bdd1523._.css",
+        "file": "inspected/assets/css/001_5broot_of_the_server_5d_6bdd1523_9cfd117709.css",
+        "contentType": "text/css; charset=UTF-8",
+        "bytes": 124549
+      }
+    ],
+    "downloadedJs": [
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js",
+        "file": "inspected/assets/js/001_node_modules_next_dist_compiled_react_dom_1e674e59_db4ba02bf0.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 1047866
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_9212ccad._.js",
+        "file": "inspected/assets/js/002_node_modules_next_dist_compiled_react_server_dom_turbopack_9212ccad_aa79c81296.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 171046
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_1dd7fb59.js",
+        "file": "inspected/assets/js/003_node_modules_next_dist_compiled_next_devtools_index_1dd7fb59_5265cdc6b3.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 816072
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_a0e4c7b4._.js",
+        "file": "inspected/assets/js/004_node_modules_next_dist_compiled_a0e4c7b4_7158af9416.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 144411
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_17643121._.js",
+        "file": "inspected/assets/js/005_node_modules_next_dist_client_17643121_0353de40b9.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 621049
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js",
+        "file": "inspected/assets/js/006_node_modules_next_dist_f3530cac_30f50f1d97.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 208383
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/node_modules_%40swc_helpers_cjs_d80fb378._.js",
+        "file": "inspected/assets/js/007_node_modules_40swc_helpers_cjs_d80fb378_8f8199f3a7.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 1979
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/apps_web_a0ff3932._.js",
+        "file": "inspected/assets/js/008_apps_web_a0ff3932_380c11032c.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 783
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/turbopack-apps_web_23a915ee._.js",
+        "file": "inspected/assets/js/009_turbopack_apps_web_23a915ee_ebca83dc3a.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 74978
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_06142577._.js",
+        "file": "inspected/assets/js/010_node_modules_next_dist_06142577_3aa5cfab01.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 139578
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/apps_web_src_79f75aa6._.js",
+        "file": "inspected/assets/js/011_apps_web_src_79f75aa6_1cd7555f53.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 13369
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/apps_web_src_app_global-error_tsx_1cf6b850._.js",
+        "file": "inspected/assets/js/012_apps_web_src_app_global_error_tsx_1cf6b850_d3e1329d21.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 308
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/_bcadb650._.js",
+        "file": "inspected/assets/js/013_bcadb650_aecb10e6ea.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 27525
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/apps_web_src_app_layout_tsx_1cf6b850._.js",
+        "file": "inspected/assets/js/014_apps_web_src_app_layout_tsx_1cf6b850_fda15c6ee8.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 296
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/apps_web_src_06a78227._.js",
+        "file": "inspected/assets/js/015_apps_web_src_06a78227_94230f85dd.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 13559
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/apps_web_src_app_error_tsx_4a91f7aa._.js",
+        "file": "inspected/assets/js/016_apps_web_src_app_error_tsx_4a91f7aa_8bd669943e.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 252
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_02409dcd._.js",
+        "file": "inspected/assets/js/017_node_modules_next_dist_02409dcd_7b962dcba2.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 38323
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/apps_web_src_app_page_tsx_4a91f7aa._.js",
+        "file": "inspected/assets/js/018_apps_web_src_app_page_tsx_4a91f7aa_227188e953.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 262
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_build_polyfills_polyfill-nomodule.js",
+        "file": "inspected/assets/js/019_node_modules_next_dist_build_polyfills_polyfill_nomodule_02035464cc.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 112594
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_c8c997ce._.js",
+        "file": "inspected/assets/js/020_5bturbopack_5d_browser_dev_hmr_client_hmr_client_ts_c8c997ce_4423906152.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 15433
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_c7192189._.js",
+        "file": "inspected/assets/js/021_5bturbopack_5d_browser_dev_hmr_client_hmr_client_ts_c7192189_e461496236.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 288
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_956a0d3a._.js",
+        "file": "inspected/assets/js/022_5bturbopack_5d_browser_dev_hmr_client_hmr_client_ts_956a0d3a_735e7d765d.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 671
+      }
+    ]
+  },
+  "network": [
+    {
+      "url": "http://localhost:3000/",
+      "status": 200,
+      "resourceType": "document",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/%5Broot-of-the-server%5D__6bdd1523._.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_956a0d3a._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-server-dom-turbopack_9212ccad._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_a0e4c7b4._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_%40swc_helpers_cjs_d80fb378._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_1e674e59._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_17643121._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/apps_web_a0ff3932._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_next-devtools_index_1dd7fb59.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/turbopack-apps_web_23a915ee._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/apps_web_src_79f75aa6._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_06142577._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/apps_web_src_app_global-error_tsx_1cf6b850._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/_bcadb650._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/apps_web_src_app_layout_tsx_1cf6b850._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/apps_web_src_app_error_tsx_4a91f7aa._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/apps_web_src_06a78227._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/node_modules_next_dist_02409dcd._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/apps_web_src_app_page_tsx_4a91f7aa._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_c7192189._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/%5Bturbopack%5D_browser_dev_hmr-client_hmr-client_ts_c8c997ce._.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    }
+  ],
+  "errors": []
+}

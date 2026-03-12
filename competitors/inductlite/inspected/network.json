@@ -1,0 +1,68 @@
+[
+  {
+    "url": "https://inductlite-app.onrender.com/",
+    "status": 200,
+    "resourceType": "document",
+    "contentType": "text/html; charset=utf-8"
+  },
+  {
+    "url": "https://inductlite-app.onrender.com/_next/static/chunks/main-app-99f4caf4617b16af.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://inductlite-app.onrender.com/_next/static/css/6557c83f467fee2e.css",
+    "status": 200,
+    "resourceType": "stylesheet",
+    "contentType": "text/css; charset=UTF-8"
+  },
+  {
+    "url": "https://inductlite-app.onrender.com/_next/static/chunks/app/error-e4cd509a7fcffbf8.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://inductlite-app.onrender.com/_next/static/chunks/app/page-a4ca1be313ecd507.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://inductlite-app.onrender.com/_next/static/chunks/webpack-47930eb226b226ec.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://inductlite-app.onrender.com/_next/static/chunks/app/layout-e8ba41fc008aa9e2.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://inductlite-app.onrender.com/_next/static/chunks/5587-3447c9135433b21e.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://inductlite-app.onrender.com/_next/static/chunks/445-36f7a9fce3edb1ef.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://inductlite-app.onrender.com/_next/static/chunks/app/global-error-22a5c33aeee924ef.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://inductlite-app.onrender.com/_next/static/chunks/87c73c54-d5c79025671c9a4e.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  }
+]

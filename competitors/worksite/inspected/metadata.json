@@ -1,0 +1,659 @@
+{
+  "competitor": "Worksite",
+  "sourceUrl": "https://www.worksite.nz/",
+  "finalUrl": "https://www.worksite.nz/",
+  "startedAt": "2026-03-12T07:34:46.213Z",
+  "finishedAt": "2026-03-12T07:35:04.209Z",
+  "page": {
+    "status": 200,
+    "title": "Health and Safety Induction Software Solution - Worksite NZ",
+    "metaDescription": "The easy and affordable online health and safety contractor induction software solution. Helping you remain compliant and keeping your staff, contractors, and",
+    "h1": [
+      "Contractor inductions made easy"
+    ]
+  },
+  "capture": {
+    "screenshots": [
+      "screenshots/landing-viewport.png",
+      "screenshots/landing-full.png"
+    ],
+    "html": "inspected/page.html",
+    "cssCount": 10,
+    "jsCount": 30
+  },
+  "assets": {
+    "cssUrls": [
+      "https://www.worksite.nz/wp-content/cache/wpfc-minified/1pa0qxnw/8f0h3.css",
+      "https://www.worksite.nz/wp-content/cache/wpfc-minified/lmq6wgit/8f0h3.css",
+      "https://www.worksite.nz/wp-content/cache/wpfc-minified/20lkqz90/4akbo.css",
+      "https://www.worksite.nz/wp-content/uploads/elementor/css/post-552.css?ver=1681709003",
+      "https://www.worksite.nz/wp-content/cache/wpfc-minified/8lipljus/8f0h2.css",
+      "https://www.worksite.nz/wp-content/uploads/elementor/css/post-106.css?ver=1716162563",
+      "https://www.worksite.nz/wp-content/cache/wpfc-minified/9j2ab3bm/4akbo.css",
+      "https://fonts.googleapis.com/css?family=Roboto%3A100%2C100italic%2C200%2C200italic%2C300%2C300italic%2C400%2C400italic%2C500%2C500italic%2C600%2C600italic%2C700%2C700italic%2C800%2C800italic%2C900%2C900italic%7CRoboto+Slab%3A100%2C100italic%2C200%2C200italic%2C300%2C300italic%2C400%2C400italic%2C500%2C500italic%2C600%2C600italic%2C700%2C700italic%2C800%2C800italic%2C900%2C900italic%7CSource+Sans+Pro%3A100%2C100italic%2C200%2C200italic%2C300%2C300italic%2C400%2C400italic%2C500%2C500italic%2C600%2C600italic%2C700%2C700italic%2C800%2C800italic%2C900%2C900italic&display=auto&ver=6.6.2",
+      "https://www.worksite.nz/wp-content/cache/wpfc-minified/dr8haa4j/8f0h2.css",
+      "https://www.gstatic.com/recaptcha/releases/QvLuXwupqtKCyjBw2xIzFLIf/styles__ltr.css"
+    ],
+    "jsUrls": [
+      "https://www.google-analytics.com/analytics.js",
+      "https://www.googletagmanager.com/gtag/js?id=G-H13TYXX4QG&cx=c&gtm=4e63a1",
+      "https://scripts.clarity.ms/0.8.57/clarity.js",
+      "https://www.gstatic.com/recaptcha/releases/QvLuXwupqtKCyjBw2xIzFLIf/recaptcha__en.js",
+      "https://www.googletagmanager.com/gtm.js?id=GTM-NVFVNSK",
+      "https://www.clarity.ms/tag/g9bqpazjzz",
+      "https://www.worksite.nz/wp-includes/js/jquery/jquery.min.js?ver=3.7.1",
+      "https://www.worksite.nz/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1",
+      "https://www.worksite.nz/wp-content/plugins/masterslider/includes/modules/elementor/assets/js/elementor-widgets.js?ver=3.6.5",
+      "https://www.worksite.nz/wp-content/plugins/elementor/assets/lib/font-awesome/js/v4-shims.min.js?ver=3.6.6",
+      "https://www.googletagmanager.com/gtag/js?id=UA-145241468-1",
+      "https://www.worksite.nz/wp-includes/js/wp-emoji-release.min.js?ver=6.6.2",
+      "https://www.worksite.nz/wp-includes/js/dist/hooks.min.js?ver=2810c76e705dd1a53b18",
+      "https://www.worksite.nz/wp-includes/js/dist/i18n.min.js?ver=5e580eb46a90c2b997e6",
+      "https://www.worksite.nz/wp-content/plugins/contact-form-7/includes/swv/js/index.js?ver=5.9.8",
+      "https://www.worksite.nz/wp-content/plugins/contact-form-7/includes/js/index.js?ver=5.9.8",
+      "https://www.worksite.nz/wp-content/plugins/th-widget-pack/js/themo-foot.js?ver=2.2.7",
+      "https://www.google.com/recaptcha/api.js?render=6Ld1Mq8UAAAAACyejNKRv_7ZROm0KrdonYwf4mJ-&ver=3.0",
+      "https://www.worksite.nz/wp-includes/js/dist/vendor/wp-polyfill.min.js?ver=3.15.0",
+      "https://www.worksite.nz/wp-content/plugins/contact-form-7/modules/recaptcha/index.js?ver=5.9.8",
+      "https://www.worksite.nz/wp-content/themes/pursuitx/assets/js/vendor/vendor_footer.js?ver=1.2",
+      "https://www.worksite.nz/wp-content/themes/pursuitx/assets/js/main.js?ver=1.3",
+      "https://www.worksite.nz/wp-content/plugins/wp-logo-showcase-responsive-slider-slider/assets/js/slick.min.js?ver=3.8.1",
+      "https://www.worksite.nz/wp-content/plugins/wp-logo-showcase-responsive-slider-slider/assets/js/wpls-public.js?ver=3.8.1",
+      "https://www.worksite.nz/wp-content/plugins/formidable/js/frm.min.js?ver=6.16",
+      "https://www.google.com/recaptcha/api.js?onload=frmRecaptcha&render=explicit&ver=3",
+      "https://www.worksite.nz/wp-content/plugins/elementor/assets/js/webpack.runtime.min.js?ver=3.6.6",
+      "https://www.worksite.nz/wp-content/plugins/elementor/assets/js/frontend-modules.min.js?ver=3.6.6",
+      "https://www.worksite.nz/wp-content/plugins/elementor/assets/lib/waypoints/waypoints.min.js?ver=4.0.2",
+      "https://www.worksite.nz/wp-includes/js/jquery/ui/core.min.js?ver=1.13.3"
+    ],
+    "downloadedCss": [
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/cache/wpfc-minified/1pa0qxnw/8f0h3.css",
+        "file": "inspected/assets/css/001_8f0h3_0453b22367.css",
+        "contentType": "text/css",
+        "bytes": 109061
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/cache/wpfc-minified/lmq6wgit/8f0h3.css",
+        "file": "inspected/assets/css/002_8f0h3_5c452512a8.css",
+        "contentType": "text/css",
+        "bytes": 109816
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/cache/wpfc-minified/20lkqz90/4akbo.css",
+        "file": "inspected/assets/css/003_4akbo_612dc8f1d0.css",
+        "contentType": "text/css",
+        "bytes": 199673
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/uploads/elementor/css/post-552.css?ver=1681709003",
+        "file": "inspected/assets/css/004_post-552_2a0172cf0e.css",
+        "contentType": "text/css",
+        "bytes": 1248
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/cache/wpfc-minified/8lipljus/8f0h2.css",
+        "file": "inspected/assets/css/005_8f0h2_fedb76523c.css",
+        "contentType": "text/css",
+        "bytes": 86898
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/uploads/elementor/css/post-106.css?ver=1716162563",
+        "file": "inspected/assets/css/006_post-106_5da1111d36.css",
+        "contentType": "text/css",
+        "bytes": 14220
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/cache/wpfc-minified/9j2ab3bm/4akbo.css",
+        "file": "inspected/assets/css/007_4akbo_5b90b26d35.css",
+        "contentType": "text/css",
+        "bytes": 452952
+      },
+      {
+        "sourceUrl": "https://fonts.googleapis.com/css?family=Roboto%3A100%2C100italic%2C200%2C200italic%2C300%2C300italic%2C400%2C400italic%2C500%2C500italic%2C600%2C600italic%2C700%2C700italic%2C800%2C800italic%2C900%2C900italic%7CRoboto+Slab%3A100%2C100italic%2C200%2C200italic%2C300%2C300italic%2C400%2C400italic%2C500%2C500italic%2C600%2C600italic%2C700%2C700italic%2C800%2C800italic%2C900%2C900italic%7CSource+Sans+Pro%3A100%2C100italic%2C200%2C200italic%2C300%2C300italic%2C400%2C400italic%2C500%2C500italic%2C600%2C600italic%2C700%2C700italic%2C800%2C800italic%2C900%2C900italic&display=auto&ver=6.6.2",
+        "file": "inspected/assets/css/008_css_7de5494d37.css",
+        "contentType": "text/css; charset=utf-8",
+        "bytes": 8722
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/cache/wpfc-minified/dr8haa4j/8f0h2.css",
+        "file": "inspected/assets/css/009_8f0h2_fccc977aab.css",
+        "contentType": "text/css",
+        "bytes": 18468
+      },
+      {
+        "sourceUrl": "https://www.gstatic.com/recaptcha/releases/QvLuXwupqtKCyjBw2xIzFLIf/styles__ltr.css",
+        "file": "inspected/assets/css/010_styles__ltr_620154a312.css",
+        "contentType": "text/css",
+        "bytes": 83366
+      }
+    ],
+    "downloadedJs": [
+      {
+        "sourceUrl": "https://www.google-analytics.com/analytics.js",
+        "file": "inspected/assets/js/001_analytics_6e0d87d95b.js",
+        "contentType": "text/javascript",
+        "bytes": 52310
+      },
+      {
+        "sourceUrl": "https://www.googletagmanager.com/gtag/js?id=G-H13TYXX4QG&cx=c&gtm=4e63a1",
+        "file": "inspected/assets/js/002_js_cd02db2d5e.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 505716
+      },
+      {
+        "sourceUrl": "https://scripts.clarity.ms/0.8.57/clarity.js",
+        "file": "inspected/assets/js/003_clarity_748797b126.js",
+        "contentType": "application/javascript;charset=utf-8",
+        "bytes": 81521
+      },
+      {
+        "sourceUrl": "https://www.gstatic.com/recaptcha/releases/QvLuXwupqtKCyjBw2xIzFLIf/recaptcha__en.js",
+        "file": "inspected/assets/js/004_recaptcha__en_db7a4ac26b.js",
+        "contentType": "text/javascript",
+        "bytes": 863710
+      },
+      {
+        "sourceUrl": "https://www.googletagmanager.com/gtm.js?id=GTM-NVFVNSK",
+        "file": "inspected/assets/js/005_gtm_412076fc4c.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 356233
+      },
+      {
+        "sourceUrl": "https://www.clarity.ms/tag/g9bqpazjzz",
+        "file": "inspected/assets/js/006_g9bqpazjzz_cdfb982b76.js",
+        "contentType": "application/x-javascript",
+        "bytes": 707
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-includes/js/jquery/jquery.min.js?ver=3.7.1",
+        "file": "inspected/assets/js/007_jquery.min_cfa912a8c0.js",
+        "contentType": "text/javascript",
+        "bytes": 87553
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1",
+        "file": "inspected/assets/js/008_jquery-migrate.min_a8bc3980cf.js",
+        "contentType": "text/javascript",
+        "bytes": 13577
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/plugins/masterslider/includes/modules/elementor/assets/js/elementor-widgets.js?ver=3.6.5",
+        "file": "inspected/assets/js/009_elementor-widgets_6034005fee.js",
+        "contentType": "text/javascript",
+        "bytes": 711
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/plugins/elementor/assets/lib/font-awesome/js/v4-shims.min.js?ver=3.6.6",
+        "file": "inspected/assets/js/010_v4-shims.min_1a36f696ef.js",
+        "contentType": "text/javascript",
+        "bytes": 15055
+      },
+      {
+        "sourceUrl": "https://www.googletagmanager.com/gtag/js?id=UA-145241468-1",
+        "file": "inspected/assets/js/011_js_9bbe494bc3.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 315783
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-includes/js/wp-emoji-release.min.js?ver=6.6.2",
+        "file": "inspected/assets/js/012_wp-emoji-release.min_c657eb61c1.js",
+        "contentType": "text/javascript",
+        "bytes": 19251
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-includes/js/dist/hooks.min.js?ver=2810c76e705dd1a53b18",
+        "file": "inspected/assets/js/013_hooks.min_a371c645c0.js",
+        "contentType": "text/javascript",
+        "bytes": 4776
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-includes/js/dist/i18n.min.js?ver=5e580eb46a90c2b997e6",
+        "file": "inspected/assets/js/014_i18n.min_7fa2435a44.js",
+        "contentType": "text/javascript",
+        "bytes": 9141
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/plugins/contact-form-7/includes/swv/js/index.js?ver=5.9.8",
+        "file": "inspected/assets/js/015_index_23ce6acad7.js",
+        "contentType": "text/javascript",
+        "bytes": 12512
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/plugins/contact-form-7/includes/js/index.js?ver=5.9.8",
+        "file": "inspected/assets/js/016_index_893a1b89c5.js",
+        "contentType": "text/javascript",
+        "bytes": 13452
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/plugins/th-widget-pack/js/themo-foot.js?ver=2.2.7",
+        "file": "inspected/assets/js/017_themo-foot_e6044044e6.js",
+        "contentType": "text/javascript",
+        "bytes": 11010
+      },
+      {
+        "sourceUrl": "https://www.google.com/recaptcha/api.js?render=6Ld1Mq8UAAAAACyejNKRv_7ZROm0KrdonYwf4mJ-&ver=3.0",
+        "file": "inspected/assets/js/018_api_a5f2f5e9ae.js",
+        "contentType": "text/javascript; charset=utf-8",
+        "bytes": 1051
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-includes/js/dist/vendor/wp-polyfill.min.js?ver=3.15.0",
+        "file": "inspected/assets/js/019_wp-polyfill.min_3c20b03868.js",
+        "contentType": "text/javascript",
+        "bytes": 41247
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/plugins/contact-form-7/modules/recaptcha/index.js?ver=5.9.8",
+        "file": "inspected/assets/js/020_index_671cda7c13.js",
+        "contentType": "text/javascript",
+        "bytes": 934
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/themes/pursuitx/assets/js/vendor/vendor_footer.js?ver=1.2",
+        "file": "inspected/assets/js/021_vendor_footer_e8a9d6da7c.js",
+        "contentType": "text/javascript",
+        "bytes": 119313
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/themes/pursuitx/assets/js/main.js?ver=1.3",
+        "file": "inspected/assets/js/022_main_73bc6e6d9d.js",
+        "contentType": "text/javascript",
+        "bytes": 10136
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/plugins/wp-logo-showcase-responsive-slider-slider/assets/js/slick.min.js?ver=3.8.1",
+        "file": "inspected/assets/js/023_slick.min_f44f662c5d.js",
+        "contentType": "text/javascript",
+        "bytes": 41053
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/plugins/wp-logo-showcase-responsive-slider-slider/assets/js/wpls-public.js?ver=3.8.1",
+        "file": "inspected/assets/js/024_wpls-public_50f0f88719.js",
+        "contentType": "text/javascript",
+        "bytes": 8952
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/plugins/formidable/js/frm.min.js?ver=6.16",
+        "file": "inspected/assets/js/025_frm.min_ceb0bfc5cf.js",
+        "contentType": "text/javascript",
+        "bytes": 36580
+      },
+      {
+        "sourceUrl": "https://www.google.com/recaptcha/api.js?onload=frmRecaptcha&render=explicit&ver=3",
+        "file": "inspected/assets/js/026_api_e04d6eea28.js",
+        "contentType": "text/javascript; charset=utf-8",
+        "bytes": 1074
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/plugins/elementor/assets/js/webpack.runtime.min.js?ver=3.6.6",
+        "file": "inspected/assets/js/027_webpack.runtime.min_089454ec1f.js",
+        "contentType": "text/javascript",
+        "bytes": 4960
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/plugins/elementor/assets/js/frontend-modules.min.js?ver=3.6.6",
+        "file": "inspected/assets/js/028_frontend-modules.min_870858e64e.js",
+        "contentType": "text/javascript",
+        "bytes": 14277
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-content/plugins/elementor/assets/lib/waypoints/waypoints.min.js?ver=4.0.2",
+        "file": "inspected/assets/js/029_waypoints.min_0f76d2852e.js",
+        "contentType": "text/javascript",
+        "bytes": 12198
+      },
+      {
+        "sourceUrl": "https://www.worksite.nz/wp-includes/js/jquery/ui/core.min.js?ver=1.13.3",
+        "file": "inspected/assets/js/030_core.min_4ed1a74b88.js",
+        "contentType": "text/javascript",
+        "bytes": 21464
+      }
+    ]
+  },
+  "network": [
+    {
+      "url": "https://www.worksite.nz/",
+      "status": 200,
+      "resourceType": "document",
+      "contentType": "text/html; charset=UTF-8"
+    },
+    {
+      "url": "blob:https://www.worksite.nz/dd8cad11-4cb5-4431-9ddc-6ac085143241",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/cache/wpfc-minified/1pa0qxnw/8f0h3.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/uploads/elementor/css/post-552.css?ver=1681709003",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/cache/wpfc-minified/lmq6wgit/8f0h3.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/uploads/elementor/css/post-106.css?ver=1716162563",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/cache/wpfc-minified/8lipljus/8f0h2.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/cache/wpfc-minified/20lkqz90/4akbo.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/cache/wpfc-minified/9j2ab3bm/4akbo.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-includes/js/jquery/jquery.min.js?ver=3.7.1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://fonts.googleapis.com/css?family=Roboto%3A100%2C100italic%2C200%2C200italic%2C300%2C300italic%2C400%2C400italic%2C500%2C500italic%2C600%2C600italic%2C700%2C700italic%2C800%2C800italic%2C900%2C900italic%7CRoboto+Slab%3A100%2C100italic%2C200%2C200italic%2C300%2C300italic%2C400%2C400italic%2C500%2C500italic%2C600%2C600italic%2C700%2C700italic%2C800%2C800italic%2C900%2C900italic%7CSource+Sans+Pro%3A100%2C100italic%2C200%2C200italic%2C300%2C300italic%2C400%2C400italic%2C500%2C500italic%2C600%2C600italic%2C700%2C700italic%2C800%2C800italic%2C900%2C900italic&display=auto&ver=6.6.2",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/plugins/masterslider/includes/modules/elementor/assets/js/elementor-widgets.js?ver=3.6.5",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/plugins/elementor/assets/lib/font-awesome/js/v4-shims.min.js?ver=3.6.6",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/cache/wpfc-minified/dr8haa4j/8f0h2.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-includes/js/dist/hooks.min.js?ver=2810c76e705dd1a53b18",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/plugins/th-widget-pack/js/themo-foot.js?ver=2.2.7",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-includes/js/dist/i18n.min.js?ver=5e580eb46a90c2b997e6",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/plugins/contact-form-7/includes/js/index.js?ver=5.9.8",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/plugins/contact-form-7/includes/swv/js/index.js?ver=5.9.8",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-includes/js/dist/vendor/wp-polyfill.min.js?ver=3.15.0",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/plugins/contact-form-7/modules/recaptcha/index.js?ver=5.9.8",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/themes/pursuitx/assets/js/vendor/vendor_footer.js?ver=1.2",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/themes/pursuitx/assets/js/main.js?ver=1.3",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.google.com/recaptcha/api.js?render=6Ld1Mq8UAAAAACyejNKRv_7ZROm0KrdonYwf4mJ-&ver=3.0",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/plugins/wp-logo-showcase-responsive-slider-slider/assets/js/wpls-public.js?ver=3.8.1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/plugins/wp-logo-showcase-responsive-slider-slider/assets/js/slick.min.js?ver=3.8.1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/plugins/elementor/assets/js/webpack.runtime.min.js?ver=3.6.6",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/plugins/elementor/assets/js/frontend-modules.min.js?ver=3.6.6",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/plugins/formidable/js/frm.min.js?ver=6.16",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/plugins/elementor/assets/lib/waypoints/waypoints.min.js?ver=4.0.2",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.google.com/recaptcha/api.js?onload=frmRecaptcha&render=explicit&ver=3",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-includes/js/jquery/ui/core.min.js?ver=1.13.3",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/plugins/elementor/assets/lib/swiper/swiper.min.js?ver=5.3.6",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/plugins/elementor/assets/lib/dialog/dialog.min.js?ver=4.9.0",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/plugins/elementor/assets/lib/share-link/share-link.min.js?ver=3.6.6",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/plugins/elementor/assets/js/frontend.min.js?ver=3.6.6",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-content/plugins/elementor/assets/js/preloaded-modules.min.js?ver=3.6.6",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.clarity.ms/tag/g9bqpazjzz",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/x-javascript"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtag/js?id=UA-145241468-1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://www.worksite.nz/wp-includes/js/wp-emoji-release.min.js?ver=6.6.2",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtm.js?id=GTM-NVFVNSK",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://scripts.clarity.ms/0.8.57/clarity.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript;charset=utf-8"
+    },
+    {
+      "url": "https://www.google-analytics.com/analytics.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.gstatic.com/recaptcha/releases/QvLuXwupqtKCyjBw2xIzFLIf/recaptcha__en.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtag/js?id=G-H13TYXX4QG&cx=c&gtm=4e63a1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://www.google.com/recaptcha/api2/anchor?ar=1&k=6Ld1Mq8UAAAAACyejNKRv_7ZROm0KrdonYwf4mJ-&co=aHR0cHM6Ly93d3cud29ya3NpdGUubno6NDQz&hl=en&v=QvLuXwupqtKCyjBw2xIzFLIf&size=invisible&anchor-ms=20000&execute-ms=30000&cb=lhzl4euwbm5g",
+      "status": 200,
+      "resourceType": "document",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://www.gstatic.com/recaptcha/releases/QvLuXwupqtKCyjBw2xIzFLIf/recaptcha__en.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.google.com/recaptcha/api2/anchor?ar=1&k=6LeIMq8UAAAAACBI4PD1cT3PcGJziMm7glkMWW9I&co=aHR0cHM6Ly93d3cud29ya3NpdGUubno6NDQz&hl=en&v=QvLuXwupqtKCyjBw2xIzFLIf&theme=light&size=normal&anchor-ms=20000&execute-ms=30000&cb=xvjshl9tsk1l",
+      "status": 200,
+      "resourceType": "document",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://www.gstatic.com/recaptcha/releases/QvLuXwupqtKCyjBw2xIzFLIf/recaptcha__en.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.gstatic.com/recaptcha/releases/QvLuXwupqtKCyjBw2xIzFLIf/styles__ltr.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.gstatic.com/recaptcha/releases/QvLuXwupqtKCyjBw2xIzFLIf/styles__ltr.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.google.com/recaptcha/api2/webworker.js?hl=en&v=QvLuXwupqtKCyjBw2xIzFLIf",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://www.google.com/recaptcha/api2/webworker.js?hl=en&v=QvLuXwupqtKCyjBw2xIzFLIf",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://www.google.com/recaptcha/api2/bframe?hl=en&v=QvLuXwupqtKCyjBw2xIzFLIf&k=6LeIMq8UAAAAACBI4PD1cT3PcGJziMm7glkMWW9I&bft=0dAFcWeA76rN-EpAqrxpl7xcFwHZ1om9NLvcnmq1m_VBmD7eRLsARcCL4xYeuAmJqpp8OcR0uQspY7odySwBl2b59ZyvAWhUpqew",
+      "status": 200,
+      "resourceType": "document",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://www.gstatic.com/recaptcha/releases/QvLuXwupqtKCyjBw2xIzFLIf/styles__ltr.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.gstatic.com/recaptcha/releases/QvLuXwupqtKCyjBw2xIzFLIf/recaptcha__en.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    }
+  ],
+  "errors": []
+}

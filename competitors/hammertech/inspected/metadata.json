@@ -1,0 +1,537 @@
+{
+  "competitor": "HammerTech",
+  "sourceUrl": "https://www.hammertech.com/en-us/",
+  "finalUrl": "https://www.hammertech.com/en-us/",
+  "startedAt": "2026-03-12T07:32:48.870Z",
+  "finishedAt": "2026-03-12T07:33:10.977Z",
+  "page": {
+    "status": 200,
+    "title": "Construction Safety Software & Compliance Solutions | HammerTech",
+    "metaDescription": "Reduce incidents and admin time with construction safety software that connects your crew, digitizes compliance, and keeps work moving on site. Get a demo!",
+    "h1": [
+      "Construction Safety Software"
+    ]
+  },
+  "capture": {
+    "screenshots": [
+      "screenshots/landing-viewport.png",
+      "screenshots/landing-full.png"
+    ],
+    "html": "inspected/page.html",
+    "cssCount": 7,
+    "jsCount": 26
+  },
+  "assets": {
+    "cssUrls": [
+      "https://use.fontawesome.com/releases/v5.8.1/css/all.css",
+      "https://www.hammertech.com/hubfs/hub_generated/template_assets/1/38805016660/1773073801753/template_mjtw_styles.min.css",
+      "https://www.hammertech.com/hubfs/hub_generated/module_assets/1/186892365360/1747410824252/module_mjtw-main-nav.min.css",
+      "https://www.hammertech.com/hs/hsstatic/cos-LanguageSwitcher/static-1.336/sass/LanguageSwitcher.css",
+      "https://www.hammertech.com/hubfs/hub_generated/module_assets/1/186999092320/1753677190188/module_mjtw-main-footer.min.css",
+      "https://www.hammertech.com/hubfs/hub_generated/module_assets/1/137698087077/1753116635286/module_Logo_Slider.min.css",
+      "https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"
+    ],
+    "jsUrls": [
+      "https://connect.facebook.net/en_US/fbevents.js",
+      "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+      "https://j.6sc.co/6si.min.js",
+      "https://www.googletagmanager.com/gtag/js?id=G-7MV9K3XKCK&cx=c&gtm=4e63a1",
+      "https://js.hs-banner.com/5108829.js",
+      "https://js.hsadspixel.net/pixels.js",
+      "https://js.hubspot.com/web-interactives-embed.js",
+      "https://js.hs-analytics.net/analytics/1773300600000/5108829.js",
+      "https://js.hscollectedforms.net/collectedforms.js",
+      "https://ws.zoominfo.com/pixel/60e86b001cb4670015382313",
+      "https://cdn.metarouter.io/a/v1/kDHFbQ9vLNfjoXEL89utT.js",
+      "https://www.googletagmanager.com/gtm.js?id=GTM-5DZSXKM",
+      "https://www.hammertech.com/hs/hsstatic/jquery-libs/static-1.1/jquery/jquery-1.7.1.js",
+      "https://c.la1-core1.sfdc-vwfla6.salesforceliveagent.com/content/g/js/53.0/deployment.js",
+      "https://static.hotjar.com/c/hotjar-3734280.js?sv=6",
+      "https://script.hotjar.com/modules.ddd41caee2adfc4aedb8.js",
+      "https://www.clickcease.com/monitor/stat.js",
+      "https://www.hammertech.com/hs/hsstatic/content-cwv-embed/static-1.1293/embed.js",
+      "https://www.hammertech.com/hubfs/hub_generated/template_assets/1/38812637258/1773073801708/template_mjtw_main.min.js",
+      "https://www.hammertech.com/hs/hsstatic/cos-i18n/static-1.53/bundles/project.js",
+      "https://www.hammertech.com/hubfs/hub_generated/module_assets/1/186892365360/1747410824252/module_mjtw-main-nav.min.js",
+      "https://www.hammertech.com/_hcms/forms/v2.js",
+      "https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js",
+      "https://www.hammertech.com/hs/scriptloader/5108829.js",
+      "https://www.hammertech.com/hs/hsstatic/HubspotToolsMenu/static-1.640/js/index.js",
+      "https://d.la1-core1.sfdc-vwfla6.salesforceliveagent.com/chat/rest/System/MultiNoun.jsonp?nouns=VisitorId,Settings&VisitorId.prefix=Visitor&Settings.prefix=Visitor&Settings.buttonIds=[]&Settings.updateBreadcrumb=1&Settings.urlPrefix=undefined&callback=liveagent._.handlePing&deployment_id=5728t000000002p&org_id=00D0o0000017HWq&version=53",
+      "https://connect.facebook.net/signals/config/714657847024305?v=2.9.277&r=stable&domain=www.hammertech.com&hme=b0ad3da822578fe2b808f13c29c26424c1eec6df21f897230a1f8d7975c03c8e&ex_m=101%2C194%2C143%2C22%2C69%2C70%2C136%2C65%2C64%2C11%2C151%2C87%2C16%2C130%2C123%2C72%2C75%2C129%2C148%2C153%2C8%2C4%2C5%2C7%2C6%2C3%2C88%2C98%2C154%2C159%2C208%2C59%2C175%2C176%2C52%2C262%2C30%2C71%2C220%2C219%2C218%2C23%2C32%2C100%2C58%2C10%2C60%2C94%2C95%2C96%2C102%2C126%2C31%2C29%2C128%2C125%2C124%2C144%2C73%2C147%2C145%2C146%2C47%2C57%2C119%2C15%2C150%2C42%2C249%2C250%2C248%2C26%2C27%2C28%2C45%2C137%2C74%2C109%2C18%2C20%2C41%2C37%2C39%2C38%2C80%2C89%2C93%2C107%2C135%2C138%2C43%2C108%2C24%2C21%2C115%2C66%2C35%2C140%2C139%2C141%2C132%2C131%2C25%2C34%2C56%2C106%2C149%2C67%2C17%2C142%2C111%2C78%2C63%2C19%2C82%2C83%2C112%2C81%2C33%2C277%2C201%2C190%2C191%2C189%2C280%2C272%2C49%2C202%2C104%2C127%2C77%2C117%2C51%2C44%2C46%2C110%2C116%2C122%2C55%2C61%2C50%2C53%2C97%2C152%2C1%2C120%2C14%2C118%2C12%2C2%2C54%2C90%2C62%2C114%2C86%2C85%2C155%2C156%2C91%2C92%2C9%2C121%2C99%2C48%2C133%2C84%2C76%2C68%2C113%2C103%2C40%2C134%2C0%2C79%2C36%2C105%2C13%2C157"
+    ],
+    "downloadedCss": [
+      {
+        "sourceUrl": "https://use.fontawesome.com/releases/v5.8.1/css/all.css",
+        "file": "inspected/assets/css/001_all_ddf78aec0d.css",
+        "contentType": "text/css",
+        "bytes": 55111
+      },
+      {
+        "sourceUrl": "https://www.hammertech.com/hubfs/hub_generated/template_assets/1/38805016660/1773073801753/template_mjtw_styles.min.css",
+        "file": "inspected/assets/css/002_template_mjtw_styles.min_ed0140ffb5.css",
+        "contentType": "text/css",
+        "bytes": 188517
+      },
+      {
+        "sourceUrl": "https://www.hammertech.com/hubfs/hub_generated/module_assets/1/186892365360/1747410824252/module_mjtw-main-nav.min.css",
+        "file": "inspected/assets/css/003_module_mjtw-main-nav.min_68eea92009.css",
+        "contentType": "text/css",
+        "bytes": 26143
+      },
+      {
+        "sourceUrl": "https://www.hammertech.com/hs/hsstatic/cos-LanguageSwitcher/static-1.336/sass/LanguageSwitcher.css",
+        "file": "inspected/assets/css/004_LanguageSwitcher_86696745c5.css",
+        "contentType": "text/css",
+        "bytes": 1328
+      },
+      {
+        "sourceUrl": "https://www.hammertech.com/hubfs/hub_generated/module_assets/1/186999092320/1753677190188/module_mjtw-main-footer.min.css",
+        "file": "inspected/assets/css/005_module_mjtw-main-footer.min_1b3b8647a0.css",
+        "contentType": "text/css",
+        "bytes": 6983
+      },
+      {
+        "sourceUrl": "https://www.hammertech.com/hubfs/hub_generated/module_assets/1/137698087077/1753116635286/module_Logo_Slider.min.css",
+        "file": "inspected/assets/css/006_module_Logo_Slider.min_91450855f4.css",
+        "contentType": "text/css",
+        "bytes": 695
+      },
+      {
+        "sourceUrl": "https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css",
+        "file": "inspected/assets/css/007_swiper-bundle.min_ad3413e198.css",
+        "contentType": "text/css; charset=utf-8",
+        "bytes": 18454
+      }
+    ],
+    "downloadedJs": [
+      {
+        "sourceUrl": "https://connect.facebook.net/en_US/fbevents.js",
+        "file": "inspected/assets/js/001_fbevents_20e1ef357a.js",
+        "contentType": "application/x-javascript; charset=utf-8",
+        "bytes": 364367
+      },
+      {
+        "sourceUrl": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+        "file": "inspected/assets/js/002_insight.min_8b6988a02f.js",
+        "contentType": "application/javascript;charset=utf-8",
+        "bytes": 53612
+      },
+      {
+        "sourceUrl": "https://j.6sc.co/6si.min.js",
+        "file": "inspected/assets/js/003_6si.min_166c734803.js",
+        "contentType": "application/javascript",
+        "bytes": 69903
+      },
+      {
+        "sourceUrl": "https://www.googletagmanager.com/gtag/js?id=G-7MV9K3XKCK&cx=c&gtm=4e63a1",
+        "file": "inspected/assets/js/004_js_e707226afe.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 544859
+      },
+      {
+        "sourceUrl": "https://js.hs-banner.com/5108829.js",
+        "file": "inspected/assets/js/005_5108829_42c7206f30.js",
+        "contentType": "text/javascript; charset=UTF-8",
+        "bytes": 62619
+      },
+      {
+        "sourceUrl": "https://js.hsadspixel.net/pixels.js",
+        "file": "inspected/assets/js/006_pixels_c498a6887b.js",
+        "contentType": "application/javascript; charset=utf-8",
+        "bytes": 7644
+      },
+      {
+        "sourceUrl": "https://js.hubspot.com/web-interactives-embed.js",
+        "file": "inspected/assets/js/007_web-interactives-embed_dc57017e01.js",
+        "contentType": "application/javascript; charset=utf-8",
+        "bytes": 97535
+      },
+      {
+        "sourceUrl": "https://js.hs-analytics.net/analytics/1773300600000/5108829.js",
+        "file": "inspected/assets/js/008_5108829_098ff83e50.js",
+        "contentType": "text/javascript",
+        "bytes": 109616
+      },
+      {
+        "sourceUrl": "https://js.hscollectedforms.net/collectedforms.js",
+        "file": "inspected/assets/js/009_collectedforms_ec8094ead6.js",
+        "contentType": "application/javascript; charset=utf-8",
+        "bytes": 77137
+      },
+      {
+        "sourceUrl": "https://ws.zoominfo.com/pixel/60e86b001cb4670015382313",
+        "file": "inspected/assets/js/010_60e86b001cb4670015382313_fd3078b1a9.js",
+        "contentType": "",
+        "bytes": 0
+      },
+      {
+        "sourceUrl": "https://www.googletagmanager.com/gtm.js?id=GTM-5DZSXKM",
+        "file": "inspected/assets/js/012_gtm_806d618692.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 459882
+      },
+      {
+        "sourceUrl": "https://www.hammertech.com/hs/hsstatic/jquery-libs/static-1.1/jquery/jquery-1.7.1.js",
+        "file": "inspected/assets/js/013_jquery-1.7.1_0bcfcc76f5.js",
+        "contentType": "application/javascript",
+        "bytes": 93868
+      },
+      {
+        "sourceUrl": "https://c.la1-core1.sfdc-vwfla6.salesforceliveagent.com/content/g/js/53.0/deployment.js",
+        "file": "inspected/assets/js/014_deployment_18d5d989cd.js",
+        "contentType": "application/javascript",
+        "bytes": 43197
+      },
+      {
+        "sourceUrl": "https://static.hotjar.com/c/hotjar-3734280.js?sv=6",
+        "file": "inspected/assets/js/015_hotjar-3734280_1f6dc34740.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 15095
+      },
+      {
+        "sourceUrl": "https://script.hotjar.com/modules.ddd41caee2adfc4aedb8.js",
+        "file": "inspected/assets/js/016_modules.ddd41caee2adfc4aedb8_5c5d63841a.js",
+        "contentType": "application/javascript; charset=utf-8",
+        "bytes": 233017
+      },
+      {
+        "sourceUrl": "https://www.clickcease.com/monitor/stat.js",
+        "file": "inspected/assets/js/017_stat_7e2be9fae0.js",
+        "contentType": "application/javascript",
+        "bytes": 145218
+      },
+      {
+        "sourceUrl": "https://www.hammertech.com/hs/hsstatic/content-cwv-embed/static-1.1293/embed.js",
+        "file": "inspected/assets/js/018_embed_b6c0f5f9df.js",
+        "contentType": "application/javascript",
+        "bytes": 13757
+      },
+      {
+        "sourceUrl": "https://www.hammertech.com/hubfs/hub_generated/template_assets/1/38812637258/1773073801708/template_mjtw_main.min.js",
+        "file": "inspected/assets/js/019_template_mjtw_main.min_18c1a48aa7.js",
+        "contentType": "application/javascript",
+        "bytes": 32241
+      },
+      {
+        "sourceUrl": "https://www.hammertech.com/hs/hsstatic/cos-i18n/static-1.53/bundles/project.js",
+        "file": "inspected/assets/js/020_project_43d41fa53c.js",
+        "contentType": "application/javascript",
+        "bytes": 1243
+      },
+      {
+        "sourceUrl": "https://www.hammertech.com/hubfs/hub_generated/module_assets/1/186892365360/1747410824252/module_mjtw-main-nav.min.js",
+        "file": "inspected/assets/js/021_module_mjtw-main-nav.min_6eeba2198e.js",
+        "contentType": "application/javascript",
+        "bytes": 7120
+      },
+      {
+        "sourceUrl": "https://www.hammertech.com/_hcms/forms/v2.js",
+        "file": "inspected/assets/js/022_v2_21ab3fda7c.js",
+        "contentType": "application/javascript; charset=utf-8",
+        "bytes": 603955
+      },
+      {
+        "sourceUrl": "https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js",
+        "file": "inspected/assets/js/023_swiper-bundle.min_fa78d6d686.js",
+        "contentType": "application/javascript; charset=utf-8",
+        "bytes": 154597
+      },
+      {
+        "sourceUrl": "https://www.hammertech.com/hs/scriptloader/5108829.js",
+        "file": "inspected/assets/js/024_5108829_5fb32c44d1.js",
+        "contentType": "application/javascript;charset=utf-8",
+        "bytes": 2523
+      },
+      {
+        "sourceUrl": "https://www.hammertech.com/hs/hsstatic/HubspotToolsMenu/static-1.640/js/index.js",
+        "file": "inspected/assets/js/025_index_810aabcbaa.js",
+        "contentType": "application/javascript",
+        "bytes": 15413
+      },
+      {
+        "sourceUrl": "https://d.la1-core1.sfdc-vwfla6.salesforceliveagent.com/chat/rest/System/MultiNoun.jsonp?nouns=VisitorId,Settings&VisitorId.prefix=Visitor&Settings.prefix=Visitor&Settings.buttonIds=[]&Settings.updateBreadcrumb=1&Settings.urlPrefix=undefined&callback=liveagent._.handlePing&deployment_id=5728t000000002p&org_id=00D0o0000017HWq&version=53",
+        "file": "inspected/assets/js/026_MultiNoun_a150ac9109.jsonp",
+        "contentType": "text/javascript",
+        "bytes": 236
+      },
+      {
+        "sourceUrl": "https://connect.facebook.net/signals/config/714657847024305?v=2.9.277&r=stable&domain=www.hammertech.com&hme=b0ad3da822578fe2b808f13c29c26424c1eec6df21f897230a1f8d7975c03c8e&ex_m=101%2C194%2C143%2C22%2C69%2C70%2C136%2C65%2C64%2C11%2C151%2C87%2C16%2C130%2C123%2C72%2C75%2C129%2C148%2C153%2C8%2C4%2C5%2C7%2C6%2C3%2C88%2C98%2C154%2C159%2C208%2C59%2C175%2C176%2C52%2C262%2C30%2C71%2C220%2C219%2C218%2C23%2C32%2C100%2C58%2C10%2C60%2C94%2C95%2C96%2C102%2C126%2C31%2C29%2C128%2C125%2C124%2C144%2C73%2C147%2C145%2C146%2C47%2C57%2C119%2C15%2C150%2C42%2C249%2C250%2C248%2C26%2C27%2C28%2C45%2C137%2C74%2C109%2C18%2C20%2C41%2C37%2C39%2C38%2C80%2C89%2C93%2C107%2C135%2C138%2C43%2C108%2C24%2C21%2C115%2C66%2C35%2C140%2C139%2C141%2C132%2C131%2C25%2C34%2C56%2C106%2C149%2C67%2C17%2C142%2C111%2C78%2C63%2C19%2C82%2C83%2C112%2C81%2C33%2C277%2C201%2C190%2C191%2C189%2C280%2C272%2C49%2C202%2C104%2C127%2C77%2C117%2C51%2C44%2C46%2C110%2C116%2C122%2C55%2C61%2C50%2C53%2C97%2C152%2C1%2C120%2C14%2C118%2C12%2C2%2C54%2C90%2C62%2C114%2C86%2C85%2C155%2C156%2C91%2C92%2C9%2C121%2C99%2C48%2C133%2C84%2C76%2C68%2C113%2C103%2C40%2C134%2C0%2C79%2C36%2C105%2C13%2C157",
+        "file": "inspected/assets/js/027_714657847024305_bd9c4e4196.js",
+        "contentType": "application/x-javascript; charset=utf-8",
+        "bytes": 91552
+      }
+    ]
+  },
+  "network": [
+    {
+      "url": "https://www.hammertech.com/en-us/",
+      "status": 200,
+      "resourceType": "document",
+      "contentType": "text/html; charset=UTF-8"
+    },
+    {
+      "url": "https://use.fontawesome.com/releases/v5.8.1/css/all.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.hammertech.com/hubfs/hub_generated/template_assets/1/38805016660/1773073801753/template_mjtw_styles.min.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.hammertech.com/hubfs/hub_generated/module_assets/1/186892365360/1747410824252/module_mjtw-main-nav.min.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.hammertech.com/hs/hsstatic/cos-LanguageSwitcher/static-1.336/sass/LanguageSwitcher.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.hammertech.com/hubfs/hub_generated/module_assets/1/186999092320/1753677190188/module_mjtw-main-footer.min.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.hammertech.com/hubfs/hub_generated/module_assets/1/137698087077/1753116635286/module_Logo_Slider.min.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=utf-8"
+    },
+    {
+      "url": "https://www.hammertech.com/hs/hsstatic/jquery-libs/static-1.1/jquery/jquery-1.7.1.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://c.la1-core1.sfdc-vwfla6.salesforceliveagent.com/content/g/js/53.0/deployment.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://www.hammertech.com/hubfs/hub_generated/template_assets/1/38812637258/1773073801708/template_mjtw_main.min.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://www.hammertech.com/hs/hsstatic/cos-i18n/static-1.53/bundles/project.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://www.hammertech.com/hubfs/hub_generated/module_assets/1/186892365360/1747410824252/module_mjtw-main-nav.min.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://www.hammertech.com/_hcms/forms/v2.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://www.hammertech.com/hs/hsstatic/content-cwv-embed/static-1.1293/embed.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://www.hammertech.com/hs/scriptloader/5108829.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript;charset=utf-8"
+    },
+    {
+      "url": "https://www.hammertech.com/hs/hsstatic/HubspotToolsMenu/static-1.640/js/index.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://static.hotjar.com/c/hotjar-3734280.js?sv=6",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://ws.zoominfo.com/pixel/60e86b001cb4670015382313",
+      "status": 404,
+      "resourceType": "script",
+      "contentType": ""
+    },
+    {
+      "url": "https://d.la1-core1.sfdc-vwfla6.salesforceliveagent.com/chat/rest/System/MultiNoun.jsonp?nouns=VisitorId,Settings&VisitorId.prefix=Visitor&Settings.prefix=Visitor&Settings.buttonIds=[]&Settings.updateBreadcrumb=1&Settings.urlPrefix=undefined&callback=liveagent._.handlePing&deployment_id=5728t000000002p&org_id=00D0o0000017HWq&version=53",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://js.hs-banner.com/5108829.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://js.hsadspixel.net/pixels.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://js.hubspot.com/web-interactives-embed.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://js.hs-analytics.net/analytics/1773300600000/5108829.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://js.hscollectedforms.net/collectedforms.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtm.js?id=GTM-5DZSXKM",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://script.hotjar.com/modules.ddd41caee2adfc4aedb8.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript;charset=utf-8"
+    },
+    {
+      "url": "https://j.6sc.co/6si.min.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://connect.facebook.net/en_US/fbevents.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/x-javascript; charset=utf-8"
+    },
+    {
+      "url": "https://www.clickcease.com/monitor/stat.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtag/js?id=G-7MV9K3XKCK&cx=c&gtm=4e63a1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://connect.facebook.net/signals/config/714657847024305?v=2.9.277&r=stable&domain=www.hammertech.com&hme=b0ad3da822578fe2b808f13c29c26424c1eec6df21f897230a1f8d7975c03c8e&ex_m=101%2C194%2C143%2C22%2C69%2C70%2C136%2C65%2C64%2C11%2C151%2C87%2C16%2C130%2C123%2C72%2C75%2C129%2C148%2C153%2C8%2C4%2C5%2C7%2C6%2C3%2C88%2C98%2C154%2C159%2C208%2C59%2C175%2C176%2C52%2C262%2C30%2C71%2C220%2C219%2C218%2C23%2C32%2C100%2C58%2C10%2C60%2C94%2C95%2C96%2C102%2C126%2C31%2C29%2C128%2C125%2C124%2C144%2C73%2C147%2C145%2C146%2C47%2C57%2C119%2C15%2C150%2C42%2C249%2C250%2C248%2C26%2C27%2C28%2C45%2C137%2C74%2C109%2C18%2C20%2C41%2C37%2C39%2C38%2C80%2C89%2C93%2C107%2C135%2C138%2C43%2C108%2C24%2C21%2C115%2C66%2C35%2C140%2C139%2C141%2C132%2C131%2C25%2C34%2C56%2C106%2C149%2C67%2C17%2C142%2C111%2C78%2C63%2C19%2C82%2C83%2C112%2C81%2C33%2C277%2C201%2C190%2C191%2C189%2C280%2C272%2C49%2C202%2C104%2C127%2C77%2C117%2C51%2C44%2C46%2C110%2C116%2C122%2C55%2C61%2C50%2C53%2C97%2C152%2C1%2C120%2C14%2C118%2C12%2C2%2C54%2C90%2C62%2C114%2C86%2C85%2C155%2C156%2C91%2C92%2C9%2C121%2C99%2C48%2C133%2C84%2C76%2C68%2C113%2C103%2C40%2C134%2C0%2C79%2C36%2C105%2C13%2C157",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/x-javascript; charset=utf-8"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtag/destination?id=AW-419567343&cx=c&gtm=4e63a1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://googleads.g.doubleclick.net/pagead/viewthroughconversion/419567343/?random=1773300780248&cv=11&fst=1773300780248&bg=ffffff&guid=ON&async=1&gtm=45be63a1v9101880449z8840860024za20gzb840860024zd840860024xea&gcd=13l3l3l3l1l1&dma=0&tag_exp=103116026~103200004~115938465~115938468~116024733~117484252~117625640&u_w=1440&u_h=2200&url=https%3A%2F%2Fwww.hammertech.com%2Fen-us%2F&frm=0&tiba=Construction%20Safety%20Software%20%26%20Compliance%20Solutions%20%7C%20HammerTech&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=1756590915.1773300773&uaa=x86&uab=64&uafvl=Not%253AA-Brand%3B99.0.0.0%7CHeadlessChrome%3B145.0.7632.6%7CChromium%3B145.0.7632.6&uamb=0&uam=&uap=Windows&uapv=10.0&uaw=0&_tu=CA&rfmt=3&fmt=4",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://js.zi-scripts.com/zi-tag.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://s.adroll.com/j/roundtrip.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://s.adroll.com/j/pre/YPFX2MRFJ55CJNBQJGHP56D/XKYFPCC6T5GQTE7CSV3XWN/fpconsent.js",
+      "status": 302,
+      "resourceType": "script",
+      "contentType": "application/xml"
+    },
+    {
+      "url": "https://s.adroll.com/j/pre/YPFX2MRFJ55CJNBQJGHP56D/XKYFPCC6T5GQTE7CSV3XWN/index.js",
+      "status": 302,
+      "resourceType": "script",
+      "contentType": "application/xml"
+    },
+    {
+      "url": "https://s.adroll.com/j/pre/index.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://s.adroll.com/j/pre/index.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://d.adroll.com/consent/check/YPFX2MRFJ55CJNBQJGHP56D?pv=12196085903.239807&arrfrr=https%3A%2F%2Fwww.hammertech.com%2Fen-us%2F&_s=555b26508d5ebbec5dd1242b155ad82a&_b=2",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "blob:https://www.hammertech.com/5bfabbe9-b87e-49b4-9024-743f192b4d17",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    }
+  ],
+  "errors": [
+    "pageerror: SyntaxError: Unexpected token '<'",
+    "pageerror: SyntaxError: Unexpected token '<'",
+    "js_fetch_non_ok: 403 https://cdn.metarouter.io/a/v1/kDHFbQ9vLNfjoXEL89utT.js"
+  ]
+}

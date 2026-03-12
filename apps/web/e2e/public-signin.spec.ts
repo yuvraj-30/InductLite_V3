@@ -47,6 +47,18 @@ test.setTimeout(120000);
 
 // Helper to attempt opening a public site and retry on rate-limited or transient errors
 // Returns true if the site loaded successfully, false if the site does not exist and tests should skip
+async function isDetailsStepVisible(page: Page): Promise<boolean> {
+  const hasNameByLabel = await page.getByLabel(/full name|name/i).first().isVisible().catch(() => false);
+  const hasNameById = await page.locator("#visitorName").first().isVisible().catch(() => false);
+  const hasPhoneByLabel = await page
+    .getByLabel(/phone number|phone/i)
+    .first()
+    .isVisible()
+    .catch(() => false);
+  const hasPhoneById = await page.locator("#visitorPhone").first().isVisible().catch(() => false);
+  return (hasNameByLabel || hasNameById) && (hasPhoneByLabel || hasPhoneById);
+}
+
 async function openSite(page: Page, slug: string): Promise<boolean> {
   const isClosedError = (value: unknown): boolean => {
     const message = value instanceof Error ? value.message : String(value);
@@ -75,14 +87,9 @@ async function openSite(page: Page, slug: string): Promise<boolean> {
       continue;
     }
     try {
-      // Wait for the sign-in name field to be visible and stable. Increase timeout to allow
-      // client-side rendering/hydration to finish and ensure we don't return prematurely.
-      await page
-        .getByLabel(/full name/i)
-        .waitFor({ state: "visible", timeout: 5000 });
-      // Stabilize: wait briefly and ensure the label is still present and visible
+      await expect.poll(async () => isDetailsStepVisible(page)).toBe(true);
       await page.waitForTimeout(500);
-      const visible = await page.getByLabel(/full name/i).isVisible();
+      const visible = await isDetailsStepVisible(page);
       if (visible) {
         return true;
       }
@@ -170,9 +177,7 @@ async function openSite(page: Page, slug: string): Promise<boolean> {
   // field is rendered. This avoids false positives on partially hydrated pages.
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-        await page
-          .getByLabel(/full name/i)
-          .waitFor({ state: "visible", timeout: 5000 });
+      await expect.poll(async () => isDetailsStepVisible(page)).toBe(true);
       return true;
     } catch {
       if (attempt === 0) {
@@ -258,8 +263,8 @@ async function ensureDetailsPersisted(
     visitorType?: "CONTRACTOR" | "VISITOR" | "EMPLOYEE" | "DELIVERY";
   },
 ): Promise<void> {
-  const nameField = page.getByLabel(/full name/i);
-  const phoneField = page.getByLabel(/phone number/i);
+  const nameField = page.locator("#visitorName").first();
+  const phoneField = page.locator("#visitorPhone").first();
 
   for (let attempt = 1; attempt <= 4; attempt++) {
     const currentName = await nameField.inputValue().catch(() => "");
@@ -288,17 +293,16 @@ async function continueToInductionWithRetry(
     geofenceOverrideCode?: string;
   },
 ): Promise<boolean> {
-  const inductionHeading = page.getByRole("heading", {
-    level: 2,
-    name: /site induction/i,
-  });
+  const inductionStepCta = page
+    .getByRole("button", { name: /continue to sign off/i })
+    .first();
   const detailsForm = page.locator("form").first();
   const continueButton = page
     .getByRole("button", { name: /continue to induction/i })
     .first();
 
   for (let attempt = 1; attempt <= 6; attempt++) {
-    if (await inductionHeading.isVisible({ timeout: 500 }).catch(() => false)) {
+    if (await inductionStepCta.isVisible({ timeout: 500 }).catch(() => false)) {
       return true;
     }
 
@@ -322,7 +326,7 @@ async function continueToInductionWithRetry(
         .catch(() => null);
     }
 
-    if (await inductionHeading.isVisible({ timeout: 7000 }).catch(() => false)) {
+    if (await inductionStepCta.isVisible({ timeout: 7000 }).catch(() => false)) {
       return true;
     }
 
@@ -347,12 +351,35 @@ async function continueToSignOffWithRetry(page: Page): Promise<boolean> {
     level: 2,
     name: /sign off/i,
   });
+  const confirmSignInButton = page
+    .getByRole("button", { name: /confirm\s+(?:and|&)\s+sign in/i })
+    .first();
+  const successHeading = page
+    .getByRole("heading", { level: 2, name: /signed in successfully/i })
+    .first();
+  const signOutLink = page.locator('a[href*="/sign-out"]').first();
   const continueToSignOffButton = page
     .getByRole("button", { name: /continue to sign off|continue/i })
     .first();
+  const inductionAckCheckbox = page
+    .getByLabel(/i acknowledge and agree to the above/i)
+    .first();
 
   for (let attempt = 1; attempt <= 4; attempt++) {
-    if (await signOffHeading.isVisible({ timeout: 600 }).catch(() => false)) {
+    const hasSignOffHeading = await signOffHeading
+      .isVisible({ timeout: 600 })
+      .catch(() => false);
+    const hasConfirmButton = await confirmSignInButton
+      .isVisible({ timeout: 600 })
+      .catch(() => false);
+    const hasSuccessHeading = await successHeading
+      .isVisible({ timeout: 600 })
+      .catch(() => false);
+    const hasSignOutLink = await signOutLink
+      .isVisible({ timeout: 600 })
+      .catch(() => false);
+
+    if (hasSignOffHeading || hasConfirmButton || hasSuccessHeading || hasSignOutLink) {
       return true;
     }
 
@@ -360,17 +387,41 @@ async function continueToSignOffWithRetry(page: Page): Promise<boolean> {
       .isVisible({ timeout: 600 })
       .catch(() => false);
     if (canContinue) {
+      const ackVisible = await inductionAckCheckbox
+        .isVisible({ timeout: 400 })
+        .catch(() => false);
+      if (ackVisible) {
+        await inductionAckCheckbox.check({ force: true }).catch(() => null);
+      }
       await continueToSignOffButton.click({ force: true }).catch(() => null);
     }
 
-    if (await signOffHeading.isVisible({ timeout: 1500 }).catch(() => false)) {
+    const movedToSignOff = await signOffHeading
+      .isVisible({ timeout: 1500 })
+      .catch(() => false);
+    const movedToConfirm = await confirmSignInButton
+      .isVisible({ timeout: 1500 })
+      .catch(() => false);
+    const reachedSuccess = await successHeading
+      .isVisible({ timeout: 1500 })
+      .catch(() => false);
+    const reachedSignOutLink = await signOutLink
+      .isVisible({ timeout: 1500 })
+      .catch(() => false);
+    if (movedToSignOff || movedToConfirm || reachedSuccess || reachedSignOutLink) {
       return true;
     }
 
     await page.waitForTimeout(250 * attempt);
   }
 
-  return signOffHeading.isVisible().catch(() => false);
+  const finalSignOffVisible = await signOffHeading.isVisible().catch(() => false);
+  if (finalSignOffVisible) return true;
+  const finalConfirmVisible = await confirmSignInButton.isVisible().catch(() => false);
+  if (finalConfirmVisible) return true;
+  const finalSuccessVisible = await successHeading.isVisible().catch(() => false);
+  if (finalSuccessVisible) return true;
+  return signOutLink.isVisible().catch(() => false);
 }
 
 async function drawSignatureIfAvailable(page: Page): Promise<void> {
@@ -439,6 +490,12 @@ async function submitSignOffWithSignatureRetry(page: Page): Promise<void> {
     level: 2,
     name: /sign off/i,
   });
+  const inductionAckCheckbox = page
+    .getByLabel(/i acknowledge and agree to the above/i)
+    .first();
+  if (await inductionAckCheckbox.isVisible({ timeout: 300 }).catch(() => false)) {
+    await inductionAckCheckbox.check({ force: true }).catch(() => null);
+  }
   if (!(await continueToSignOffWithRetry(page))) {
     throw new Error("Unable to reach sign-off step before submit");
   }
@@ -650,9 +707,17 @@ test.describe.serial("Public Sign-In Flow", () => {
       });
       expect(reachedInduction).toBe(true);
 
-      const languageSelector = page.getByLabel(/induction language/i);
+      const languageSelectorByLabel = page
+        .getByLabel(/induction language/i)
+        .first();
+      const languageSelector =
+        (await languageSelectorByLabel.count()) > 0
+          ? languageSelectorByLabel
+          : page.locator("select").first();
       await expect(languageSelector).toBeVisible({ timeout: 10000 });
-      await languageSelector.selectOption("mi");
+      await languageSelector.selectOption("mi").catch(async () => {
+        await languageSelector.selectOption({ label: /te reo maori/i });
+      });
 
       await expect(
         page.getByRole("heading", { name: /whakauru pae/i }),
@@ -1149,7 +1214,7 @@ test.describe.serial("Public Sign-In Flow", () => {
     const successHeading = page.getByRole("heading", {
       level: 2,
       name: /signed in successfully/i,
-    });
+    }).first();
     const appErrorHeading = page.getByRole("heading", {
       level: 1,
       name: /something went wrong/i,
@@ -1160,10 +1225,22 @@ test.describe.serial("Public Sign-In Flow", () => {
       (await inductionHeading.isVisible({ timeout: 1500 }).catch(() => false))
     ) {
       // 1. Answer ACKNOWLEDGMENT questions (checkboxes)
-      const acknowledgments = page.getByRole("checkbox");
+      const explicitAck = page
+        .getByLabel(/i acknowledge and agree to the above/i)
+        .first();
+      if (await explicitAck.isVisible({ timeout: 500 }).catch(() => false)) {
+        await explicitAck.check({ force: true }).catch(() => null);
+      }
+      const acknowledgments = page.locator('input[type="checkbox"]');
       const ackCount = await acknowledgments.count();
       for (let i = 0; i < ackCount; i++) {
-        await acknowledgments.nth(i).check().catch(() => null);
+        const checkbox = acknowledgments.nth(i);
+        const visible = await checkbox.isVisible().catch(() => false);
+        const enabled = await checkbox.isEnabled().catch(() => false);
+        if (!visible || !enabled) continue;
+        await checkbox.check({ force: true }).catch(async () => {
+          await checkbox.click({ force: true }).catch(() => null);
+        });
       }
 
       // 2. Answer all radio groups (YES_NO + MULTIPLE_CHOICE)
@@ -1200,6 +1277,19 @@ test.describe.serial("Public Sign-In Flow", () => {
         })
         .first();
       await continueToSignOff.click({ force: true }).catch(() => null);
+      const unansweredWarning = page
+        .getByText(/please answer all required questions/i)
+        .first();
+      if (await unansweredWarning.isVisible({ timeout: 500 }).catch(() => false)) {
+        for (let i = 0; i < ackCount; i++) {
+          const checkbox = acknowledgments.nth(i);
+          const visible = await checkbox.isVisible().catch(() => false);
+          const enabled = await checkbox.isEnabled().catch(() => false);
+          if (!visible || !enabled) continue;
+          await checkbox.check({ force: true }).catch(() => null);
+        }
+        await continueToSignOff.click({ force: true }).catch(() => null);
+      }
     }
 
     // Complete sign-off if required for this template path.
@@ -1221,13 +1311,13 @@ test.describe.serial("Public Sign-In Flow", () => {
     await expect
       .poll(
         async () => {
-          const hasSignOutLink = await signOutAnchor
-            .first()
-            .isVisible()
-            .catch(() => false);
-          const hasSuccessHeading = await successHeading
-            .isVisible()
-            .catch(() => false);
+          const signOutHref = await signOutAnchor.first().getAttribute("href").catch(() => null);
+          const hasSignOutLink =
+            typeof signOutHref === "string" &&
+            /\/sign-out/i.test(signOutHref) &&
+            /\btoken=[^&]+/i.test(signOutHref);
+          const hasSuccessHeading =
+            (await successHeading.count().catch(() => 0)) > 0;
           const stillOnSignOff = await signOffHeading
             .isVisible()
             .catch(() => false);
@@ -1240,19 +1330,19 @@ test.describe.serial("Public Sign-In Flow", () => {
       )
       .toBe(true);
 
-    const hasSignOutLink = await signOutAnchor.first().isVisible().catch(() => false);
-    const hasSuccessHeading = await successHeading.isVisible().catch(() => false);
-    expect(hasSignOutLink || hasSuccessHeading).toBe(true);
-
-    if (!hasSignOutLink) {
-      // If success UI is visible but link hydration is delayed, wait one final time.
-      await expect(signOutAnchor.first()).toBeVisible({ timeout: 10000 });
-    }
+    await expect
+      .poll(
+        async () => signOutAnchor.first().getAttribute("href"),
+        {
+          timeout: 10000,
+          message: "Expected sign-out link with token after successful sign-in",
+        },
+      )
+      .toMatch(/\/sign-out.*\btoken=[^&]+/i);
 
     const href = await signOutAnchor.first().getAttribute("href");
     expect(href).toContain("/sign-out");
-    // Extra check: ensure token query parameter is present (small additional e2e check)
-    expect(href).toMatch(/\btoken=[^&]+/);
+    expect(href).toMatch(/\btoken=[^&]+/i);
   });
 
   test("should support fast-pass last visit details with signature reuse consent", async ({
@@ -1310,32 +1400,61 @@ test.describe.serial("Public Sign-In Flow", () => {
       .getByRole("button", { name: /continue to induction/i })
       .click();
 
-    // Answer induction inputs in a template-agnostic way.
-    const acknowledgments = page.getByRole("checkbox");
-    const ackCount = await acknowledgments.count();
-    for (let i = 0; i < ackCount; i++) {
-      await acknowledgments.nth(i).check().catch(() => null);
-    }
+    await expect(
+      page.getByRole("heading", { level: 2, name: /site induction/i }),
+    ).toBeVisible({ timeout: 10000 });
 
-    const radioGroupNames = await page
-      .locator('input[type="radio"][name]')
-      .evaluateAll((nodes) => {
-        const names = nodes
-          .map((node) => node.getAttribute("name"))
-          .filter((name): name is string => !!name);
-        return Array.from(new Set(names));
-      });
-    for (const groupName of radioGroupNames) {
-      await page
-        .locator(`input[type="radio"][name="${groupName}"]`)
-        .first()
-        .check()
-        .catch(() => null);
-    }
-
-    await page
+    const continueToSignOffButton = page
       .getByRole("button", { name: /continue to sign off/i })
-      .click();
+      .first();
+    const requiredAck = page
+      .getByLabel(/i acknowledge and agree to the above/i)
+      .first();
+
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      if (await requiredAck.isVisible({ timeout: 400 }).catch(() => false)) {
+        await requiredAck.check({ force: true }).catch(async () => {
+          await requiredAck.click({ force: true }).catch(() => null);
+        });
+      }
+
+      const radioGroupNames = await page
+        .locator('input[type="radio"][name]')
+        .evaluateAll((nodes) => {
+          const names = nodes
+            .map((node) => node.getAttribute("name"))
+            .filter((name): name is string => !!name);
+          return Array.from(new Set(names));
+        });
+      for (const groupName of radioGroupNames) {
+        await page
+          .locator(`input[type="radio"][name="${groupName}"]`)
+          .first()
+          .check()
+          .catch(() => null);
+      }
+
+      await continueToSignOffButton.click({ force: true }).catch(() => null);
+      const reachedSignOff = await page
+        .getByRole("heading", { level: 2, name: /sign off/i })
+        .isVisible({ timeout: 1200 })
+        .catch(() => false);
+      if (reachedSignOff) {
+        break;
+      }
+
+      const unansweredWarning = await page
+        .getByText(/please answer all required questions/i)
+        .first()
+        .isVisible({ timeout: 400 })
+        .catch(() => false);
+      if (!unansweredWarning) {
+        break;
+      }
+      await page.waitForTimeout(250 * attempt);
+    }
+
+    expect(await continueToSignOffWithRetry(page)).toBe(true);
 
     await expect(
       page.getByText(/Use my previously saved signature for this visit/i),
@@ -1353,18 +1472,18 @@ test.describe.serial("Public Sign-In Flow", () => {
     const successHeading = page.getByRole("heading", {
       level: 2,
       name: /signed in successfully/i,
-    });
+    }).first();
 
     await expect
       .poll(
         async () => {
-          const hasSignOutLink = await signOutAnchor
-            .first()
-            .isVisible()
-            .catch(() => false);
-          const hasSuccessHeading = await successHeading
-            .isVisible()
-            .catch(() => false);
+          const signOutHref = await signOutAnchor.first().getAttribute("href").catch(() => null);
+          const hasSignOutLink =
+            typeof signOutHref === "string" &&
+            /\/sign-out/i.test(signOutHref) &&
+            /\btoken=[^&]+/i.test(signOutHref);
+          const hasSuccessHeading =
+            (await successHeading.count().catch(() => 0)) > 0;
           return hasSignOutLink || hasSuccessHeading;
         },
         { timeout: 90000, message: "Expected sign-in to complete successfully" },

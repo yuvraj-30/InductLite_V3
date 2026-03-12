@@ -1,0 +1,919 @@
+{
+  "competitor": "Sitemate",
+  "sourceUrl": "https://sitemate.com/",
+  "finalUrl": "https://sitemate.com/nz/",
+  "startedAt": "2026-03-12T07:33:21.718Z",
+  "finishedAt": "2026-03-12T07:33:38.378Z",
+  "page": {
+    "status": 200,
+    "title": "Sitemate: No code software tools for the Built World",
+    "metaDescription": "Sitemate builds user friendly software which thousands of industrial companies use every day to streamline their paperwork and processes.",
+    "h1": [
+      "Get to know the Sitemate platforms"
+    ]
+  },
+  "capture": {
+    "screenshots": [
+      "screenshots/landing-viewport.png",
+      "screenshots/landing-full.png"
+    ],
+    "html": "inspected/page.html",
+    "cssCount": 15,
+    "jsCount": 29
+  },
+  "assets": {
+    "cssUrls": [
+      "https://sitemate.com/wp-includes/css/dist/block-library/style.min.css?ver=6.8.3",
+      "https://sitemate.com/wp-includes/css/dist/components/style.min.css?ver=6.8.3",
+      "https://sitemate.com/wp-includes/css/dist/preferences/style.min.css?ver=6.8.3",
+      "https://sitemate.com/wp-includes/css/dist/block-editor/style.min.css?ver=6.8.3",
+      "https://sitemate.com/wp-content/plugins/popup-maker/dist/packages/block-library-style.css?ver=dbea705cfafe089d65f1-b-modified-1760455455",
+      "https://sitemate.com/wp-content/plugins/bb-plugin/fonts/fontawesome/5.15.4/css/all.min.css?ver=2.10.1.1-b-modified-1773023482",
+      "https://sitemate.com/wp-content/uploads/bb-plugin/cache/5-layout.css?ver=572efa18474307392d3e956f7319be9d-b-modified-1773046370",
+      "https://sitemate.com/wp-content/plugins/cookie-notice/css/front.min.css?ver=2.5.14-b-modified-1773023488",
+      "https://sitemate.com/wp-content/plugins/translatepress-multilingual/assets/css/trp-language-switcher.css?ver=3.1-b-modified-1771831957",
+      "https://sitemate.com/wp-content/uploads/bb-plugin/cache/4900d7c955364a6ff6df2b1622f5c073-layout-bundle.css?ver=2.10.1.1-1.5.2.2-b-modified-1773048058",
+      "https://use.fontawesome.com/releases/v5.0.12/css/all.css?ver=6.8.3",
+      "https://sitemate.com/wp-content/plugins/bb-plugin/css/jquery.magnificpopup.min.css?ver=2.10.1.1-b-modified-1773023482",
+      "https://sitemate.com/wp-content/themes/bb-theme/css/bootstrap.min.css?ver=1.7.19.2-b-modified-1770177017",
+      "https://sitemate.com/wp-content/uploads/bb-theme/skin-6982c21b11176.css?ver=1.7.19.2-b-modified-1770177051",
+      "https://sitemate.com/wp-content/themes/bb-theme-child/style.css?ver=6.8.3-b-modified-1757636413"
+    ],
+    "jsUrls": [
+      "https://scripts.clarity.ms/0.8.57/clarity.js",
+      "https://www.google-analytics.com/analytics.js",
+      "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+      "https://www.clarity.ms/tag/ktr0ywg227?ref=gtm",
+      "https://www.googletagmanager.com/gtag/js?id=UA-122490143-1&cx=c&gtm=4e63a1",
+      "https://www.googletagmanager.com/gtag/js?id=G-Q9PCC1EY03&cx=c&gtm=4e63a1",
+      "https://www.googletagmanager.com/gtm.js?id=GTM-T46RNQF",
+      "https://sitemate.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1",
+      "https://sitemate.com/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1",
+      "https://sitemate.com/wp-content/plugins/translatepress-business/add-ons-pro/automatic-language-detection/assets/js/trp-language-cookie.js?ver=1.1.1-b-modified-1771831954",
+      "https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js",
+      "https://sitemate.com/wp-includes/js/wp-emoji-release.min.js?ver=6.8.3",
+      "https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516",
+      "https://sitemate.com/wp-content/uploads/bb-plugin/cache/5-layout.js?ver=9ad4ff5fe0cc3a5b35bb4856f76e431f-b-modified-1773046371",
+      "https://sitemate.com/wp-content/plugins/cookie-notice/js/front.min.js?ver=2.5.14-b-modified-1773023488",
+      "https://sitemate.com/wp-content/plugins/bb-plugin/js/libs/jquery.imagesloaded.min.js?ver=2.10.1.1-b-modified-1773023481",
+      "https://sitemate.com/wp-content/plugins/bb-plugin/js/libs/jquery.ba-throttle-debounce.min.js?ver=2.10.1.1-b-modified-1773023481",
+      "https://sitemate.com/wp-content/uploads/bb-plugin/cache/b4759a5042c05ae70424ef8184d26c12-layout-bundle.js?ver=2.10.1.1-1.5.2.2-b-modified-1773023943",
+      "https://sitemate.com/wp-content/plugins/wp-smushit/app/assets/js/smush-lazy-load.min.js?ver=3.24.0-b-modified-1771983555",
+      "https://sitemate.com/wp-content/plugins/bb-plugin/js/libs/jquery.magnificpopup.min.js?ver=2.10.1.1-b-modified-1773023481",
+      "https://sitemate.com/wp-content/themes/bb-theme/js/bootstrap.min.js?ver=1.7.19.2-b-modified-1770177017",
+      "https://sitemate.com/wp-content/themes/bb-theme/js/theme.min.js?ver=1.7.19.2-b-modified-1770177017",
+      "https://tag.unifyintent.com/v1/2nusk3zXNq1RVyb6ndk1bq/script.js",
+      "blob:https://sitemate.com/714b36f2-ec17-438c-a349-8191b24ec1e3",
+      "https://unpkg.com/@lottiefiles/lottie-player@2.0.12/dist/lottie-player.js",
+      "https://sitemate.com/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js",
+      "https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015",
+      "https://sitemate.com/cdn-cgi/challenge-platform/scripts/jsd/main.js",
+      "https://sitemate.com/cdn-cgi/challenge-platform/h/g/scripts/jsd/ea2d291c0fdc/main.js?",
+      "https://sitemate.com/wp-content/plugins/cookie-notice/js/front.js"
+    ],
+    "downloadedCss": [
+      {
+        "sourceUrl": "https://sitemate.com/wp-includes/css/dist/block-library/style.min.css?ver=6.8.3",
+        "file": "inspected/assets/css/001_style.min_48f0452ed5.css",
+        "contentType": "text/css; charset=UTF-8",
+        "bytes": 116345
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-includes/css/dist/components/style.min.css?ver=6.8.3",
+        "file": "inspected/assets/css/002_style.min_a4370b59f7.css",
+        "contentType": "text/css; charset=UTF-8",
+        "bytes": 87655
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-includes/css/dist/preferences/style.min.css?ver=6.8.3",
+        "file": "inspected/assets/css/003_style.min_6f3d2a374f.css",
+        "contentType": "text/css; charset=UTF-8",
+        "bytes": 1467
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-includes/css/dist/block-editor/style.min.css?ver=6.8.3",
+        "file": "inspected/assets/css/004_style.min_088c24b30f.css",
+        "contentType": "text/css; charset=UTF-8",
+        "bytes": 118854
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/plugins/popup-maker/dist/packages/block-library-style.css?ver=dbea705cfafe089d65f1-b-modified-1760455455",
+        "file": "inspected/assets/css/005_block-library-style_c7244515e9.css",
+        "contentType": "text/css; charset=UTF-8",
+        "bytes": 6874
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/plugins/bb-plugin/fonts/fontawesome/5.15.4/css/all.min.css?ver=2.10.1.1-b-modified-1773023482",
+        "file": "inspected/assets/css/006_all.min_160dd707d1.css",
+        "contentType": "text/css; charset=UTF-8",
+        "bytes": 59305
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/uploads/bb-plugin/cache/5-layout.css?ver=572efa18474307392d3e956f7319be9d-b-modified-1773046370",
+        "file": "inspected/assets/css/007_5-layout_ae69ec3c6c.css",
+        "contentType": "text/css; charset=UTF-8",
+        "bytes": 213064
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/plugins/cookie-notice/css/front.min.css?ver=2.5.14-b-modified-1773023488",
+        "file": "inspected/assets/css/008_front.min_1250862d10.css",
+        "contentType": "text/css; charset=UTF-8",
+        "bytes": 5830
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/plugins/translatepress-multilingual/assets/css/trp-language-switcher.css?ver=3.1-b-modified-1771831957",
+        "file": "inspected/assets/css/009_trp-language-switcher_139b435fc0.css",
+        "contentType": "text/css; charset=UTF-8",
+        "bytes": 2944
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/uploads/bb-plugin/cache/4900d7c955364a6ff6df2b1622f5c073-layout-bundle.css?ver=2.10.1.1-1.5.2.2-b-modified-1773048058",
+        "file": "inspected/assets/css/010_4900d7c955364a6ff6df2b1622f5c073-layout-bundle_eb3d9c7f25.css",
+        "contentType": "text/css; charset=UTF-8",
+        "bytes": 65232
+      },
+      {
+        "sourceUrl": "https://use.fontawesome.com/releases/v5.0.12/css/all.css?ver=6.8.3",
+        "file": "inspected/assets/css/011_all_c291efbd36.css",
+        "contentType": "text/css",
+        "bytes": 39063
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/plugins/bb-plugin/css/jquery.magnificpopup.min.css?ver=2.10.1.1-b-modified-1773023482",
+        "file": "inspected/assets/css/012_jquery.magnificpopup.min_3425d7e0ad.css",
+        "contentType": "text/css; charset=UTF-8",
+        "bytes": 5788
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/themes/bb-theme/css/bootstrap.min.css?ver=1.7.19.2-b-modified-1770177017",
+        "file": "inspected/assets/css/013_bootstrap.min_553858a2b2.css",
+        "contentType": "text/css; charset=UTF-8",
+        "bytes": 121412
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/uploads/bb-theme/skin-6982c21b11176.css?ver=1.7.19.2-b-modified-1770177051",
+        "file": "inspected/assets/css/014_skin-6982c21b11176_75686c7266.css",
+        "contentType": "text/css; charset=UTF-8",
+        "bytes": 61215
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/themes/bb-theme-child/style.css?ver=6.8.3-b-modified-1757636413",
+        "file": "inspected/assets/css/015_style_8798cbbc6f.css",
+        "contentType": "text/css; charset=UTF-8",
+        "bytes": 4649
+      }
+    ],
+    "downloadedJs": [
+      {
+        "sourceUrl": "https://scripts.clarity.ms/0.8.57/clarity.js",
+        "file": "inspected/assets/js/001_clarity_748797b126.js",
+        "contentType": "application/javascript;charset=utf-8",
+        "bytes": 81521
+      },
+      {
+        "sourceUrl": "https://www.google-analytics.com/analytics.js",
+        "file": "inspected/assets/js/002_analytics_6e0d87d95b.js",
+        "contentType": "text/javascript",
+        "bytes": 52310
+      },
+      {
+        "sourceUrl": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+        "file": "inspected/assets/js/003_insight.min_8b6988a02f.js",
+        "contentType": "application/javascript;charset=utf-8",
+        "bytes": 53612
+      },
+      {
+        "sourceUrl": "https://www.clarity.ms/tag/ktr0ywg227?ref=gtm",
+        "file": "inspected/assets/js/004_ktr0ywg227_c19b8ccf42.js",
+        "contentType": "application/x-javascript",
+        "bytes": 707
+      },
+      {
+        "sourceUrl": "https://www.googletagmanager.com/gtag/js?id=UA-122490143-1&cx=c&gtm=4e63a1",
+        "file": "inspected/assets/js/005_js_7350a1768b.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 313235
+      },
+      {
+        "sourceUrl": "https://www.googletagmanager.com/gtag/js?id=G-Q9PCC1EY03&cx=c&gtm=4e63a1",
+        "file": "inspected/assets/js/006_js_15563d8895.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 562925
+      },
+      {
+        "sourceUrl": "https://www.googletagmanager.com/gtm.js?id=GTM-T46RNQF",
+        "file": "inspected/assets/js/007_gtm_491c989daa.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 439492
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1",
+        "file": "inspected/assets/js/008_jquery.min_6f82193b98.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 87553
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1",
+        "file": "inspected/assets/js/009_jquery-migrate.min_c51d702f51.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 13577
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/plugins/translatepress-business/add-ons-pro/automatic-language-detection/assets/js/trp-language-cookie.js?ver=1.1.1-b-modified-1771831954",
+        "file": "inspected/assets/js/010_trp-language-cookie_8d828ac766.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 25978
+      },
+      {
+        "sourceUrl": "https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js",
+        "file": "inspected/assets/js/011_lottie-player_26a93af529.js",
+        "contentType": "text/javascript; charset=utf-8",
+        "bytes": 383981
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-includes/js/wp-emoji-release.min.js?ver=6.8.3",
+        "file": "inspected/assets/js/012_wp-emoji-release.min_6776054460.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 19251
+      },
+      {
+        "sourceUrl": "https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516",
+        "file": "inspected/assets/js/013_v8c78df7c7c0f484497ecbca7046644da1771523124516_3ca2268010.js",
+        "contentType": "text/javascript;charset=UTF-8",
+        "bytes": 31169
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/uploads/bb-plugin/cache/5-layout.js?ver=9ad4ff5fe0cc3a5b35bb4856f76e431f-b-modified-1773046371",
+        "file": "inspected/assets/js/014_5-layout_fa09a7a914.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 34159
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/plugins/cookie-notice/js/front.min.js?ver=2.5.14-b-modified-1773023488",
+        "file": "inspected/assets/js/015_front.min_4f25c45f1d.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 9144
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/plugins/bb-plugin/js/libs/jquery.imagesloaded.min.js?ver=2.10.1.1-b-modified-1773023481",
+        "file": "inspected/assets/js/016_jquery.imagesloaded.min_5ac2aee3a5.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 5595
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/plugins/bb-plugin/js/libs/jquery.ba-throttle-debounce.min.js?ver=2.10.1.1-b-modified-1773023481",
+        "file": "inspected/assets/js/017_jquery.ba-throttle-debounce.min_9c6b7f287f.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 731
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/uploads/bb-plugin/cache/b4759a5042c05ae70424ef8184d26c12-layout-bundle.js?ver=2.10.1.1-1.5.2.2-b-modified-1773023943",
+        "file": "inspected/assets/js/018_b4759a5042c05ae70424ef8184d26c12-layout-bundle_53c2aa4b16.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 31628
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/plugins/wp-smushit/app/assets/js/smush-lazy-load.min.js?ver=3.24.0-b-modified-1771983555",
+        "file": "inspected/assets/js/019_smush-lazy-load.min_1a3d78c146.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 13836
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/plugins/bb-plugin/js/libs/jquery.magnificpopup.min.js?ver=2.10.1.1-b-modified-1773023481",
+        "file": "inspected/assets/js/020_jquery.magnificpopup.min_1722e87b7f.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 21145
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/themes/bb-theme/js/bootstrap.min.js?ver=1.7.19.2-b-modified-1770177017",
+        "file": "inspected/assets/js/021_bootstrap.min_be49007a9d.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 39681
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/themes/bb-theme/js/theme.min.js?ver=1.7.19.2-b-modified-1770177017",
+        "file": "inspected/assets/js/022_theme.min_2e16a1f7e9.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 23369
+      },
+      {
+        "sourceUrl": "https://tag.unifyintent.com/v1/2nusk3zXNq1RVyb6ndk1bq/script.js",
+        "file": "inspected/assets/js/023_script_3c07619213.js",
+        "contentType": "text/javascript",
+        "bytes": 30565
+      },
+      {
+        "sourceUrl": "https://unpkg.com/@lottiefiles/lottie-player@2.0.12/dist/lottie-player.js",
+        "file": "inspected/assets/js/025_lottie-player_c1ace1402d.js",
+        "contentType": "text/javascript; charset=utf-8",
+        "bytes": 383981
+      },
+      {
+        "sourceUrl": "https://sitemate.com/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js",
+        "file": "inspected/assets/js/026_email-decode.min_45f82011aa.js",
+        "contentType": "application/javascript",
+        "bytes": 1239
+      },
+      {
+        "sourceUrl": "https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015",
+        "file": "inspected/assets/js/027_vcd15cbe7772f49c399c6a5babf22c1241717689176015_8c662a808a.js",
+        "contentType": "text/javascript;charset=UTF-8",
+        "bytes": 19948
+      },
+      {
+        "sourceUrl": "https://sitemate.com/cdn-cgi/challenge-platform/scripts/jsd/main.js",
+        "file": "inspected/assets/js/028_main_08dfd58e41.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 27366
+      },
+      {
+        "sourceUrl": "https://sitemate.com/cdn-cgi/challenge-platform/h/g/scripts/jsd/ea2d291c0fdc/main.js?",
+        "file": "inspected/assets/js/029_main_bdc718cc9a.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 29759
+      },
+      {
+        "sourceUrl": "https://sitemate.com/wp-content/plugins/cookie-notice/js/front.js",
+        "file": "inspected/assets/js/030_front_b29ac1266f.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 16104
+      }
+    ]
+  },
+  "network": [
+    {
+      "url": "https://sitemate.com/",
+      "status": 200,
+      "resourceType": "document",
+      "contentType": "text/html; charset=UTF-8"
+    },
+    {
+      "url": "blob:https://sitemate.com/714b36f2-ec17-438c-a349-8191b24ec1e3",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://sitemate.com/wp-includes/css/dist/components/style.min.css?ver=6.8.3",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-includes/css/dist/block-library/style.min.css?ver=6.8.3",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-includes/css/dist/block-editor/style.min.css?ver=6.8.3",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/uploads/bb-plugin/cache/5-layout.css?ver=572efa18474307392d3e956f7319be9d-b-modified-1773046370",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/popup-maker/dist/packages/block-library-style.css?ver=dbea705cfafe089d65f1-b-modified-1760455455",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/bb-plugin/fonts/fontawesome/5.15.4/css/all.min.css?ver=2.10.1.1-b-modified-1773023482",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/cookie-notice/css/front.min.css?ver=2.5.14-b-modified-1773023488",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/translatepress-multilingual/assets/css/trp-language-switcher.css?ver=3.1-b-modified-1771831957",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-includes/css/dist/preferences/style.min.css?ver=6.8.3",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/bb-plugin/css/jquery.magnificpopup.min.css?ver=2.10.1.1-b-modified-1773023482",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/uploads/bb-theme/skin-6982c21b11176.css?ver=1.7.19.2-b-modified-1770177051",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/uploads/bb-plugin/cache/4900d7c955364a6ff6df2b1622f5c073-layout-bundle.css?ver=2.10.1.1-1.5.2.2-b-modified-1773048058",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/themes/bb-theme-child/style.css?ver=6.8.3-b-modified-1757636413",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/themes/bb-theme/css/bootstrap.min.css?ver=1.7.19.2-b-modified-1770177017",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://use.fontawesome.com/releases/v5.0.12/css/all.css?ver=6.8.3",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js",
+      "status": 302,
+      "resourceType": "script",
+      "contentType": "text/plain;charset=UTF-8"
+    },
+    {
+      "url": "https://unpkg.com/@lottiefiles/lottie-player@2.0.12/dist/lottie-player.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://sitemate.com/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://sitemate.com/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/translatepress-business/add-ons-pro/automatic-language-detection/assets/js/trp-language-cookie.js?ver=1.1.1-b-modified-1771831954",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/wp-smushit/app/assets/js/smush-lazy-load.min.js?ver=3.24.0-b-modified-1771983555",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/bb-plugin/js/libs/jquery.imagesloaded.min.js?ver=2.10.1.1-b-modified-1773023481",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/bb-plugin/js/libs/jquery.ba-throttle-debounce.min.js?ver=2.10.1.1-b-modified-1773023481",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/cookie-notice/js/front.min.js?ver=2.5.14-b-modified-1773023488",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/uploads/bb-plugin/cache/5-layout.js?ver=9ad4ff5fe0cc3a5b35bb4856f76e431f-b-modified-1773046371",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/themes/bb-theme/js/theme.min.js?ver=1.7.19.2-b-modified-1770177017",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/uploads/bb-plugin/cache/b4759a5042c05ae70424ef8184d26c12-layout-bundle.js?ver=2.10.1.1-1.5.2.2-b-modified-1773023943",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/themes/bb-theme/js/bootstrap.min.js?ver=1.7.19.2-b-modified-1770177017",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/bb-plugin/js/libs/jquery.magnificpopup.min.js?ver=2.10.1.1-b-modified-1773023481",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript;charset=UTF-8"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtm.js?id=GTM-T46RNQF",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/cdn-cgi/challenge-platform/scripts/jsd/main.js",
+      "status": 302,
+      "resourceType": "script",
+      "contentType": ""
+    },
+    {
+      "url": "https://sitemate.com/wp-includes/js/wp-emoji-release.min.js?ver=6.8.3",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/cdn-cgi/challenge-platform/h/g/scripts/jsd/ea2d291c0fdc/main.js?",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/nz/",
+      "status": 200,
+      "resourceType": "document",
+      "contentType": "text/html; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-includes/css/dist/block-library/style.min.css?ver=6.8.3",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-includes/css/dist/components/style.min.css?ver=6.8.3",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-includes/css/dist/preferences/style.min.css?ver=6.8.3",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-includes/css/dist/block-editor/style.min.css?ver=6.8.3",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/popup-maker/dist/packages/block-library-style.css?ver=dbea705cfafe089d65f1-b-modified-1760455455",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/bb-plugin/fonts/fontawesome/5.15.4/css/all.min.css?ver=2.10.1.1-b-modified-1773023482",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/uploads/bb-plugin/cache/5-layout.css?ver=572efa18474307392d3e956f7319be9d-b-modified-1773046370",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/cookie-notice/css/front.min.css?ver=2.5.14-b-modified-1773023488",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/translatepress-multilingual/assets/css/trp-language-switcher.css?ver=3.1-b-modified-1771831957",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/uploads/bb-plugin/cache/4900d7c955364a6ff6df2b1622f5c073-layout-bundle.css?ver=2.10.1.1-1.5.2.2-b-modified-1773048058",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://use.fontawesome.com/releases/v5.0.12/css/all.css?ver=6.8.3",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/bb-plugin/css/jquery.magnificpopup.min.css?ver=2.10.1.1-b-modified-1773023482",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/themes/bb-theme/css/bootstrap.min.css?ver=1.7.19.2-b-modified-1770177017",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/uploads/bb-theme/skin-6982c21b11176.css?ver=1.7.19.2-b-modified-1770177051",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/themes/bb-theme-child/style.css?ver=6.8.3-b-modified-1757636413",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-includes/js/jquery/jquery.min.js?ver=3.7.1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/translatepress-business/add-ons-pro/automatic-language-detection/assets/js/trp-language-cookie.js?ver=1.1.1-b-modified-1771831954",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://sitemate.com/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/uploads/bb-plugin/cache/5-layout.js?ver=9ad4ff5fe0cc3a5b35bb4856f76e431f-b-modified-1773046371",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/cookie-notice/js/front.min.js?ver=2.5.14-b-modified-1773023488",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/bb-plugin/js/libs/jquery.imagesloaded.min.js?ver=2.10.1.1-b-modified-1773023481",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/bb-plugin/js/libs/jquery.ba-throttle-debounce.min.js?ver=2.10.1.1-b-modified-1773023481",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/uploads/bb-plugin/cache/b4759a5042c05ae70424ef8184d26c12-layout-bundle.js?ver=2.10.1.1-1.5.2.2-b-modified-1773023943",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/wp-smushit/app/assets/js/smush-lazy-load.min.js?ver=3.24.0-b-modified-1771983555",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/bb-plugin/js/libs/jquery.magnificpopup.min.js?ver=2.10.1.1-b-modified-1773023481",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/themes/bb-theme/js/bootstrap.min.js?ver=1.7.19.2-b-modified-1770177017",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/themes/bb-theme/js/theme.min.js?ver=1.7.19.2-b-modified-1770177017",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtm.js?id=GTM-T46RNQF",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript;charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-includes/js/wp-emoji-release.min.js?ver=6.8.3",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://sitemate.com/cdn-cgi/challenge-platform/scripts/jsd/main.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript;charset=utf-8"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtag/js?id=UA-122490143-1&cx=c&gtm=4e63a1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtag/js?id=G-Q9PCC1EY03&cx=c&gtm=4e63a1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://www.clarity.ms/tag/ktr0ywg227?ref=gtm",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/x-javascript"
+    },
+    {
+      "url": "https://tag.unifyintent.com/v1/2nusk3zXNq1RVyb6ndk1bq/script.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.google-analytics.com/analytics.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://scripts.clarity.ms/0.8.57/clarity.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript;charset=utf-8"
+    },
+    {
+      "url": "https://sitemate.com/wp-content/plugins/cookie-notice/js/front.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://widget.intercom.io/widget/mif72555",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://js.intercomcdn.com/frame-modern.0a55b088.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://js.intercomcdn.com/vendor-modern.ce930dee.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://js.intercomcdn.com/vendors~app~tooltips-modern.b7912b3d.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://js.intercomcdn.com/vendors~sentry~app-modern.6ffaf6b6.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://js.intercomcdn.com/vendors~app-modern.83c11406.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://js.intercomcdn.com/app~tooltips-modern.301c5cf2.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://js.intercomcdn.com/app-modern.8ad47c1f.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://www.youtube.com/iframe_api",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://connect.facebook.net/en_US/fbevents.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/x-javascript; charset=utf-8"
+    },
+    {
+      "url": "https://www.youtube.com/s/player/18d29a11/www-widgetapi.vflset/www-widgetapi.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtag/js?id=UA-122490143-1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtag/js?id=AW-794234722&cx=c&gtm=4e63a1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://googleads.g.doubleclick.net/pagead/viewthroughconversion/794234722/?random=1773300815261&cv=11&fst=1773300815261&bg=ffffff&guid=ON&async=1&en=gtag.config&gtm=45be63a1v9215626044za200zb79461154zd79461154xec&gcd=13l3l3l3l1l1&dma=0&tag_exp=102015666~103116026~103200004~115616985~115938466~115938469~116024733~117484252~117625637~117625641&u_w=1440&u_h=2200&url=https%3A%2F%2Fsitemate.com%2Fnz%2F&ref=https%3A%2F%2Fsitemate.com%2F&frm=0&tiba=Sitemate%3A%20No%20code%20software%20tools%20for%20the%20Built%20World&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=1808008334.1773300815&uaa=x86&uab=64&uafvl=Not%253AA-Brand%3B99.0.0.0%7CHeadlessChrome%3B145.0.7632.6%7CChromium%3B145.0.7632.6&uamb=0&uam=&uap=Windows&uapv=10.0&uaw=0&data=event%3Dgtag.config&gap.plf=5&rfmt=3&fmt=4",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://js.intercomcdn.com/message-modern.2757c197.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    }
+  ],
+  "errors": [
+    "pageerror: Uncaught ReferenceError: fbq is not defined",
+    "js_fetch_error: blob:https://sitemate.com/714b36f2-ec17-438c-a349-8191b24ec1e3 :: TypeError: fetch failed"
+  ]
+}

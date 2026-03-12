@@ -1,8 +1,49 @@
 import { test } from "./test-fixtures";
-import { injectAxe, checkA11y } from "axe-playwright";
+import { checkA11y, injectAxe } from "axe-playwright";
+import type { Page } from "@playwright/test";
 
 test.describe("Accessibility Checks", () => {
+  test.describe.configure({ mode: "serial" });
+
   let TEST_SITE_SLUG = "test-site";
+
+  const adminRoutes = [
+    "/admin/dashboard",
+    "/admin/live-register",
+    "/admin/sites",
+    "/admin/sites/new",
+    "/admin/templates",
+    "/admin/templates/new",
+    "/admin/history",
+    "/admin/exports",
+    "/admin/audit-log",
+    "/admin/users",
+    "/admin/users/new",
+    "/admin/contractors",
+    "/admin/pre-registrations",
+    "/admin/hazards",
+    "/admin/incidents",
+    "/admin/settings",
+    "/admin/plan-configurator",
+    "/admin/policy-simulator",
+    "/admin/risk-passport",
+  ] as const;
+
+  async function runSeriousA11yCheck(path: string, page: Page) {
+    await page.goto(path);
+    await page.waitForLoadState("domcontentloaded");
+    await injectAxe(page);
+    await checkA11y(
+      page,
+      undefined,
+      {
+        includedImpacts: ["critical", "serious"],
+        detailedReport: true,
+        detailedReportOptions: { html: true },
+      },
+      true,
+    );
+  }
 
   test.beforeAll(async ({ request, seedPublicSite }) => {
     try {
@@ -12,7 +53,6 @@ test.describe("Accessibility Checks", () => {
         return;
       }
     } catch (error) {
-      // fallback to existing seed
       console.warn("a11y seedPublicSite failed, trying fallback slug:", String(error));
     }
 
@@ -31,19 +71,45 @@ test.describe("Accessibility Checks", () => {
     }
   });
 
-  test("homepage should be accessible", async ({ page }) => {
-    await page.goto("/");
-    await injectAxe(page);
-    // Keep full exhaustive stable while homepage contrast remediation is tracked separately.
-    await checkA11y(page, undefined, undefined, true);
+  test("public routes meet serious+critical a11y", async ({ page }) => {
+    await runSeriousA11yCheck("/", page);
+    await runSeriousA11yCheck("/login", page);
+    await runSeriousA11yCheck(`/s/${TEST_SITE_SLUG}`, page);
   });
 
-  test("sign-in flow should be accessible", async ({ page }) => {
-    await page.goto(`/s/${TEST_SITE_SLUG}`);
-    await injectAxe(page);
-    await checkA11y(page, undefined, {
-      detailedReport: true,
-      detailedReportOptions: { html: true },
-    }, true);
+  for (const route of adminRoutes) {
+    test(`${route} meets serious+critical a11y`, async ({ page, loginAs }) => {
+      await loginAs();
+      await runSeriousA11yCheck(route, page);
+    });
+  }
+
+  test("focus indicators remain visible in both themes", async ({ page, loginAs }) => {
+    await loginAs();
+
+    const verifyFocusVisible = async (theme: "warm-light" | "high-contrast-dark") => {
+      await page.goto("/admin/dashboard");
+      await page.evaluate((value) => {
+        document.documentElement.setAttribute("data-theme", value);
+      }, theme);
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Tab");
+
+      const hasVisibleFocus = await page.evaluate(() => {
+        const active = document.activeElement as HTMLElement | null;
+        if (!active) return false;
+        const style = window.getComputedStyle(active);
+        const outlineVisible = style.outlineStyle !== "none" && style.outlineWidth !== "0px";
+        const boxShadowVisible = style.boxShadow !== "none";
+        return outlineVisible || boxShadowVisible;
+      });
+
+      if (!hasVisibleFocus) {
+        throw new Error(`Focus indicator not visible under theme ${theme}`);
+      }
+    };
+
+    await verifyFocusVisible("warm-light");
+    await verifyFocusVisible("high-contrast-dark");
   });
 });

@@ -1,0 +1,193 @@
+{
+  "competitor": "InductLite Local Prod",
+  "sourceUrl": "http://localhost:3000/",
+  "finalUrl": "http://localhost:3000/",
+  "startedAt": "2026-03-12T08:25:02.774Z",
+  "finishedAt": "2026-03-12T08:25:06.885Z",
+  "page": {
+    "status": 200,
+    "title": "InductLite - Site Induction Management",
+    "metaDescription": "Multi-tenant SaaS for NZ construction site inductions and visitor management",
+    "h1": [
+      "Replace paper inductions with a live compliance system."
+    ]
+  },
+  "capture": {
+    "screenshots": [
+      "screenshots/landing-viewport.png",
+      "screenshots/landing-full.png"
+    ],
+    "html": "inspected/page.html",
+    "cssCount": 1,
+    "jsCount": 11
+  },
+  "assets": {
+    "cssUrls": [
+      "http://localhost:3000/_next/static/css/7d49285a5850c98b.css"
+    ],
+    "jsUrls": [
+      "http://localhost:3000/_next/static/chunks/87c73c54-d5c79025671c9a4e.js",
+      "http://localhost:3000/_next/static/chunks/1968-35d74da3effd0fa7.js",
+      "http://localhost:3000/_next/static/chunks/main-app-4376761b0c68f8a7.js",
+      "http://localhost:3000/_next/static/chunks/app/layout-218631fcd9d7d2e2.js",
+      "http://localhost:3000/_next/static/chunks/app/error-d2be7af5b90fed35.js",
+      "http://localhost:3000/_next/static/chunks/5587-3447c9135433b21e.js",
+      "http://localhost:3000/_next/static/chunks/app/page-8485762b0658daea.js",
+      "http://localhost:3000/_next/static/chunks/app/global-error-5e42c968532bcffd.js",
+      "http://localhost:3000/_next/static/chunks/polyfills-42372ed130431b0a.js",
+      "http://localhost:3000/_next/static/chunks/webpack-440ebee6f2552b58.js",
+      "http://localhost:3000/_next/static/chunks/app/demo/page-59b41b09ac4e455c.js"
+    ],
+    "downloadedCss": [
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/css/7d49285a5850c98b.css",
+        "file": "inspected/assets/css/001_7d49285a5850c98b_16f0f60fe1.css",
+        "contentType": "text/css; charset=UTF-8",
+        "bytes": 91512
+      }
+    ],
+    "downloadedJs": [
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/87c73c54-d5c79025671c9a4e.js",
+        "file": "inspected/assets/js/001_87c73c54_d5c79025671c9a4e_c6dd643214.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 198485
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/1968-35d74da3effd0fa7.js",
+        "file": "inspected/assets/js/002_1968_35d74da3effd0fa7_8ed3636be3.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 187784
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/main-app-4376761b0c68f8a7.js",
+        "file": "inspected/assets/js/003_main_app_4376761b0c68f8a7_6b768948b4.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 467
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/app/layout-218631fcd9d7d2e2.js",
+        "file": "inspected/assets/js/004_layout_218631fcd9d7d2e2_fb049f21fb.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 3527
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/app/error-d2be7af5b90fed35.js",
+        "file": "inspected/assets/js/005_error_d2be7af5b90fed35_7ccaa82521.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 2062
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/5587-3447c9135433b21e.js",
+        "file": "inspected/assets/js/006_5587_3447c9135433b21e_5f70372ca2.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 8720
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/app/page-8485762b0658daea.js",
+        "file": "inspected/assets/js/007_page_8485762b0658daea_fe89f51f25.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 344
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/app/global-error-5e42c968532bcffd.js",
+        "file": "inspected/assets/js/008_global_error_5e42c968532bcffd_64bff25c8c.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 2214
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/polyfills-42372ed130431b0a.js",
+        "file": "inspected/assets/js/009_polyfills_42372ed130431b0a_64105872ed.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 112594
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/webpack-440ebee6f2552b58.js",
+        "file": "inspected/assets/js/010_webpack_440ebee6f2552b58_bd8d2659c5.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 3362
+      },
+      {
+        "sourceUrl": "http://localhost:3000/_next/static/chunks/app/demo/page-59b41b09ac4e455c.js",
+        "file": "inspected/assets/js/011_page_59b41b09ac4e455c_f6c179e861.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 4908
+      }
+    ]
+  },
+  "network": [
+    {
+      "url": "http://localhost:3000/",
+      "status": 200,
+      "resourceType": "document",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/css/7d49285a5850c98b.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/webpack-440ebee6f2552b58.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/87c73c54-d5c79025671c9a4e.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/1968-35d74da3effd0fa7.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/main-app-4376761b0c68f8a7.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/app/layout-218631fcd9d7d2e2.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/app/error-d2be7af5b90fed35.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/5587-3447c9135433b21e.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/app/page-8485762b0658daea.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/app/global-error-5e42c968532bcffd.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "http://localhost:3000/_next/static/chunks/app/demo/page-59b41b09ac4e455c.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    }
+  ],
+  "errors": []
+}

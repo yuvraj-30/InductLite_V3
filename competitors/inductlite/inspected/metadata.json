@@ -1,0 +1,180 @@
+{
+  "competitor": "InductLite",
+  "sourceUrl": "https://inductlite-app.onrender.com/",
+  "finalUrl": "https://inductlite-app.onrender.com/",
+  "startedAt": "2026-03-12T07:36:05.305Z",
+  "finishedAt": "2026-03-12T07:36:16.825Z",
+  "page": {
+    "status": 200,
+    "title": "InductLite - Site Induction Management",
+    "metaDescription": "Multi-tenant SaaS for NZ construction site inductions and visitor management",
+    "h1": [
+      "InductLite"
+    ]
+  },
+  "capture": {
+    "screenshots": [
+      "screenshots/landing-viewport.png",
+      "screenshots/landing-full.png"
+    ],
+    "html": "inspected/page.html",
+    "cssCount": 1,
+    "jsCount": 10
+  },
+  "assets": {
+    "cssUrls": [
+      "https://inductlite-app.onrender.com/_next/static/css/6557c83f467fee2e.css"
+    ],
+    "jsUrls": [
+      "https://inductlite-app.onrender.com/_next/static/chunks/87c73c54-d5c79025671c9a4e.js",
+      "https://inductlite-app.onrender.com/_next/static/chunks/445-36f7a9fce3edb1ef.js",
+      "https://inductlite-app.onrender.com/_next/static/chunks/main-app-99f4caf4617b16af.js",
+      "https://inductlite-app.onrender.com/_next/static/chunks/app/layout-e8ba41fc008aa9e2.js",
+      "https://inductlite-app.onrender.com/_next/static/chunks/app/error-e4cd509a7fcffbf8.js",
+      "https://inductlite-app.onrender.com/_next/static/chunks/5587-3447c9135433b21e.js",
+      "https://inductlite-app.onrender.com/_next/static/chunks/app/page-a4ca1be313ecd507.js",
+      "https://inductlite-app.onrender.com/_next/static/chunks/app/global-error-22a5c33aeee924ef.js",
+      "https://inductlite-app.onrender.com/_next/static/chunks/polyfills-42372ed130431b0a.js",
+      "https://inductlite-app.onrender.com/_next/static/chunks/webpack-47930eb226b226ec.js"
+    ],
+    "downloadedCss": [
+      {
+        "sourceUrl": "https://inductlite-app.onrender.com/_next/static/css/6557c83f467fee2e.css",
+        "file": "inspected/assets/css/001_6557c83f467fee2e_0596b67d8a.css",
+        "contentType": "text/css; charset=UTF-8",
+        "bytes": 54354
+      }
+    ],
+    "downloadedJs": [
+      {
+        "sourceUrl": "https://inductlite-app.onrender.com/_next/static/chunks/87c73c54-d5c79025671c9a4e.js",
+        "file": "inspected/assets/js/001_87c73c54-d5c79025671c9a4e_7f49dc69ea.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 198485
+      },
+      {
+        "sourceUrl": "https://inductlite-app.onrender.com/_next/static/chunks/445-36f7a9fce3edb1ef.js",
+        "file": "inspected/assets/js/002_445-36f7a9fce3edb1ef_61237501a5.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 194240
+      },
+      {
+        "sourceUrl": "https://inductlite-app.onrender.com/_next/static/chunks/main-app-99f4caf4617b16af.js",
+        "file": "inspected/assets/js/003_main-app-99f4caf4617b16af_9e0e5e086f.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 474
+      },
+      {
+        "sourceUrl": "https://inductlite-app.onrender.com/_next/static/chunks/app/layout-e8ba41fc008aa9e2.js",
+        "file": "inspected/assets/js/004_layout-e8ba41fc008aa9e2_85b4fe793c.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 3478
+      },
+      {
+        "sourceUrl": "https://inductlite-app.onrender.com/_next/static/chunks/app/error-e4cd509a7fcffbf8.js",
+        "file": "inspected/assets/js/005_error-e4cd509a7fcffbf8_f89707398a.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 2385
+      },
+      {
+        "sourceUrl": "https://inductlite-app.onrender.com/_next/static/chunks/5587-3447c9135433b21e.js",
+        "file": "inspected/assets/js/006_5587-3447c9135433b21e_6758eff2a2.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 8720
+      },
+      {
+        "sourceUrl": "https://inductlite-app.onrender.com/_next/static/chunks/app/page-a4ca1be313ecd507.js",
+        "file": "inspected/assets/js/007_page-a4ca1be313ecd507_5df97e1c82.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 226
+      },
+      {
+        "sourceUrl": "https://inductlite-app.onrender.com/_next/static/chunks/app/global-error-22a5c33aeee924ef.js",
+        "file": "inspected/assets/js/008_global-error-22a5c33aeee924ef_dc2e0873cc.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 2525
+      },
+      {
+        "sourceUrl": "https://inductlite-app.onrender.com/_next/static/chunks/polyfills-42372ed130431b0a.js",
+        "file": "inspected/assets/js/009_polyfills-42372ed130431b0a_70388e5373.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 112594
+      },
+      {
+        "sourceUrl": "https://inductlite-app.onrender.com/_next/static/chunks/webpack-47930eb226b226ec.js",
+        "file": "inspected/assets/js/010_webpack-47930eb226b226ec_c0b27154ec.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 3267
+      }
+    ]
+  },
+  "network": [
+    {
+      "url": "https://inductlite-app.onrender.com/",
+      "status": 200,
+      "resourceType": "document",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://inductlite-app.onrender.com/_next/static/chunks/main-app-99f4caf4617b16af.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://inductlite-app.onrender.com/_next/static/css/6557c83f467fee2e.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css; charset=UTF-8"
+    },
+    {
+      "url": "https://inductlite-app.onrender.com/_next/static/chunks/app/error-e4cd509a7fcffbf8.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://inductlite-app.onrender.com/_next/static/chunks/app/page-a4ca1be313ecd507.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://inductlite-app.onrender.com/_next/static/chunks/webpack-47930eb226b226ec.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://inductlite-app.onrender.com/_next/static/chunks/app/layout-e8ba41fc008aa9e2.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://inductlite-app.onrender.com/_next/static/chunks/5587-3447c9135433b21e.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://inductlite-app.onrender.com/_next/static/chunks/445-36f7a9fce3edb1ef.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://inductlite-app.onrender.com/_next/static/chunks/app/global-error-22a5c33aeee924ef.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://inductlite-app.onrender.com/_next/static/chunks/87c73c54-d5c79025671c9a4e.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    }
+  ],
+  "errors": []
+}

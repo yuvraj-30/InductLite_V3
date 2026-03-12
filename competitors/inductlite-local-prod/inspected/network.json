@@ -1,0 +1,74 @@
+[
+  {
+    "url": "http://localhost:3000/",
+    "status": 200,
+    "resourceType": "document",
+    "contentType": "text/html; charset=utf-8"
+  },
+  {
+    "url": "http://localhost:3000/_next/static/css/7d49285a5850c98b.css",
+    "status": 200,
+    "resourceType": "stylesheet",
+    "contentType": "text/css; charset=UTF-8"
+  },
+  {
+    "url": "http://localhost:3000/_next/static/chunks/webpack-440ebee6f2552b58.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "http://localhost:3000/_next/static/chunks/87c73c54-d5c79025671c9a4e.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "http://localhost:3000/_next/static/chunks/1968-35d74da3effd0fa7.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "http://localhost:3000/_next/static/chunks/main-app-4376761b0c68f8a7.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "http://localhost:3000/_next/static/chunks/app/layout-218631fcd9d7d2e2.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "http://localhost:3000/_next/static/chunks/app/error-d2be7af5b90fed35.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "http://localhost:3000/_next/static/chunks/5587-3447c9135433b21e.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "http://localhost:3000/_next/static/chunks/app/page-8485762b0658daea.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "http://localhost:3000/_next/static/chunks/app/global-error-5e42c968532bcffd.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "http://localhost:3000/_next/static/chunks/app/demo/page-59b41b09ac4e455c.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  }
+]

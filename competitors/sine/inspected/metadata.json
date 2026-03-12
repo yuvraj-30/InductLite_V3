@@ -1,0 +1,171 @@
+{
+  "competitor": "Sine",
+  "sourceUrl": "https://www.sine.co/",
+  "finalUrl": "https://www.sine.co/",
+  "startedAt": "2026-03-12T07:34:37.868Z",
+  "finishedAt": "2026-03-12T07:34:46.098Z",
+  "page": {
+    "status": 200,
+    "title": "Visitor, Contractor, Staff and Compliance Management - Sine by Honeywell",
+    "metaDescription": "Digitize check-in and streamline workplace compliance with Sine by Honeywell.",
+    "h1": [
+      "Leading Visitor and Contractor Management software",
+      "Contractor ready.Paperwork done.Work started.",
+      "Follow Sine by Honeywell on LinkedIn"
+    ]
+  },
+  "capture": {
+    "screenshots": [
+      "screenshots/landing-viewport.png",
+      "screenshots/landing-full.png"
+    ],
+    "html": "inspected/page.html",
+    "cssCount": 4,
+    "jsCount": 5
+  },
+  "assets": {
+    "cssUrls": [
+      "https://cdn-ildocai.nitrocdn.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ/assets/static/optimized/rev-e6c119f/www.sine.co/combinedCss/nitro-min-noimport-2718049b1db33a90655e38a96272e315-stylesheet.css",
+      "https://cdn-ildocai.nitrocdn.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ/assets/static/optimized/rev-e6c119f/www.sine.co/combinedCss/nitro-min-noimport-d339a045caacd57873c5cfbb8d22c2b3-stylesheet.css",
+      "https://cdn-ildocai.nitrocdn.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ/assets/static/optimized/rev-e6c119f/www.sine.co/combinedCss/nitro-min-noimport-155090be655b6feb4e9cf19ea7db4641-stylesheet.css",
+      "https://cdn-ildocai.nitrocdn.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ/assets/static/optimized/rev-e6c119f/www.sine.co/externalFontFace/nitro-min-noimport-375f5528bf4164875f1e0bbf9c904ef4-stylesheet.css"
+    ],
+    "jsUrls": [
+      "https://cdn.cookielaw.org/consent/d994650d-c62d-4938-bd24-ae44d108d620/OtAutoBlock.js",
+      "https://cdn.cookielaw.org/scripttemplates/otSDKStub.js",
+      "https://nitroscripts.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ",
+      "https://cdn.cookielaw.org/scripttemplates/202601.1.0/otBannerSdk.js",
+      "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+      "blob:https://www.sine.co/3c35b1a1-8369-4b7d-bd3c-f9a394e808c1"
+    ],
+    "downloadedCss": [
+      {
+        "sourceUrl": "https://cdn-ildocai.nitrocdn.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ/assets/static/optimized/rev-e6c119f/www.sine.co/combinedCss/nitro-min-noimport-2718049b1db33a90655e38a96272e315-stylesheet.css",
+        "file": "inspected/assets/css/001_nitro-min-noimport-2718049b1db33a90655e38a96272e315-stylesheet_22753fd964.css",
+        "contentType": "text/css",
+        "bytes": 20673
+      },
+      {
+        "sourceUrl": "https://cdn-ildocai.nitrocdn.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ/assets/static/optimized/rev-e6c119f/www.sine.co/combinedCss/nitro-min-noimport-d339a045caacd57873c5cfbb8d22c2b3-stylesheet.css",
+        "file": "inspected/assets/css/002_nitro-min-noimport-d339a045caacd57873c5cfbb8d22c2b3-stylesheet_ea651ba592.css",
+        "contentType": "text/css",
+        "bytes": 135395
+      },
+      {
+        "sourceUrl": "https://cdn-ildocai.nitrocdn.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ/assets/static/optimized/rev-e6c119f/www.sine.co/combinedCss/nitro-min-noimport-155090be655b6feb4e9cf19ea7db4641-stylesheet.css",
+        "file": "inspected/assets/css/003_nitro-min-noimport-155090be655b6feb4e9cf19ea7db4641-stylesheet_51ec72e8db.css",
+        "contentType": "text/css",
+        "bytes": 26053
+      },
+      {
+        "sourceUrl": "https://cdn-ildocai.nitrocdn.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ/assets/static/optimized/rev-e6c119f/www.sine.co/externalFontFace/nitro-min-noimport-375f5528bf4164875f1e0bbf9c904ef4-stylesheet.css",
+        "file": "inspected/assets/css/004_nitro-min-noimport-375f5528bf4164875f1e0bbf9c904ef4-stylesheet_21bbe1a83b.css",
+        "contentType": "text/css",
+        "bytes": 2734
+      }
+    ],
+    "downloadedJs": [
+      {
+        "sourceUrl": "https://cdn.cookielaw.org/consent/d994650d-c62d-4938-bd24-ae44d108d620/OtAutoBlock.js",
+        "file": "inspected/assets/js/001_OtAutoBlock_7d52af152d.js",
+        "contentType": "application/javascript",
+        "bytes": 218684
+      },
+      {
+        "sourceUrl": "https://cdn.cookielaw.org/scripttemplates/otSDKStub.js",
+        "file": "inspected/assets/js/002_otSDKStub_abf2260208.js",
+        "contentType": "application/javascript",
+        "bytes": 26546
+      },
+      {
+        "sourceUrl": "https://nitroscripts.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ",
+        "file": "inspected/assets/js/003_cneMytWhfkamYZpqtWmmQAZusJbfIbZZ_a95d1de3da.js",
+        "contentType": "text/javascript",
+        "bytes": 993
+      },
+      {
+        "sourceUrl": "https://cdn.cookielaw.org/scripttemplates/202601.1.0/otBannerSdk.js",
+        "file": "inspected/assets/js/004_otBannerSdk_875cc997f3.js",
+        "contentType": "application/javascript",
+        "bytes": 535571
+      },
+      {
+        "sourceUrl": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+        "file": "inspected/assets/js/005_insight.min_8b6988a02f.js",
+        "contentType": "application/javascript;charset=utf-8",
+        "bytes": 53612
+      }
+    ]
+  },
+  "network": [
+    {
+      "url": "https://www.sine.co/",
+      "status": 200,
+      "resourceType": "document",
+      "contentType": "text/html; charset=UTF-8"
+    },
+    {
+      "url": "blob:https://www.sine.co/3c35b1a1-8369-4b7d-bd3c-f9a394e808c1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.cookielaw.org/scripttemplates/otSDKStub.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.cookielaw.org/consent/d994650d-c62d-4938-bd24-ae44d108d620/OtAutoBlock.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://nitroscripts.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn-ildocai.nitrocdn.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ/assets/static/optimized/rev-e6c119f/www.sine.co/combinedCss/nitro-min-noimport-2718049b1db33a90655e38a96272e315-stylesheet.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://cdn-ildocai.nitrocdn.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ/assets/static/optimized/rev-e6c119f/www.sine.co/combinedCss/nitro-min-noimport-d339a045caacd57873c5cfbb8d22c2b3-stylesheet.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://cdn-ildocai.nitrocdn.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ/assets/static/optimized/rev-e6c119f/www.sine.co/combinedCss/nitro-min-noimport-155090be655b6feb4e9cf19ea7db4641-stylesheet.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://cdn-ildocai.nitrocdn.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ/assets/static/optimized/rev-e6c119f/www.sine.co/externalFontFace/nitro-min-noimport-375f5528bf4164875f1e0bbf9c904ef4-stylesheet.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://cdn.cookielaw.org/scripttemplates/202601.1.0/otBannerSdk.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript;charset=utf-8"
+    }
+  ],
+  "errors": [
+    "js_fetch_error: blob:https://www.sine.co/3c35b1a1-8369-4b7d-bd3c-f9a394e808c1 :: TypeError: fetch failed"
+  ]
+}

@@ -1,0 +1,1118 @@
+{
+  "competitor": "ThinkSafe",
+  "sourceUrl": "https://www.thinksafe.co.nz/",
+  "finalUrl": "https://www.thinksafe.co.nz/",
+  "startedAt": "2026-03-12T07:35:04.344Z",
+  "finishedAt": "2026-03-12T07:35:24.051Z",
+  "page": {
+    "status": 200,
+    "title": "ThinkSafe - Health & Safety App NZ | Free Trial | ThinkSafe",
+    "metaDescription": "Complete H&S compliance from $59/month. Mobile app, documentation & HASANZ support included. Free trial, no credit card. Trusted across 90+ NZ industries.",
+    "h1": [
+      "Stop wasting time on safety admin"
+    ]
+  },
+  "capture": {
+    "screenshots": [
+      "screenshots/landing-viewport.png",
+      "screenshots/landing-full.png"
+    ],
+    "html": "inspected/page.html",
+    "cssCount": 19,
+    "jsCount": 30
+  },
+  "assets": {
+    "cssUrls": [
+      "https://cdn.rocketspark.com/_dist/css/auth~vendors.de3de7822dc8.bundle.css",
+      "https://cdn.rocketspark.com/_dist/css/public.c96fdbea6cf7.bundle.css",
+      "https://cdn.rocketspark.com/_dist/css/public~vendors.24ec0c1183a5.bundle.css",
+      "https://cdn.rocketspark.com/_dist/css/dashboard~vendors.eb1bb0054174.bundle.css",
+      "https://cdn.icomoon.io/181725/Rocketspark/style.css?8gzh5b",
+      "https://www.thinksafe.co.nz/node_modules/@rocketspark/flint-ui/dist/rocketspark/rocketspark.css?v=1773283128",
+      "https://www.thinksafe.co.nz/node_modules/@rocketspark/image-gallery/build/css/index.css",
+      "https://nz.rs-cdn.com/site_files/22160/53014/css/css.css?v=20260302093251",
+      "https://nz.rs-cdn.com/site_files/22160/assets/page/page606903_deferred.css?v=20260312091029",
+      "https://cdn.rocketspark.com/_dist/css/ImagePopup8f57db52cf87.css",
+      "https://cdn.rocketspark.com/_dist/css/FormBuilder5aeb30439484.css",
+      "https://ds-cdn.prod-east.frontend.public.atl-paas.net/assets/font-rules/v5/atlassian-fonts.css",
+      "https://cdn.loom.com/assets/css/embed-video-5d097fc13c1d39ed.css",
+      "https://cdn.loom.com/assets/css/vendor-6-28992268812300b1.css",
+      "https://cdn.loom.com/assets/css/vendor-7-28992268812300b1.css",
+      "https://cdn.loom.com/assets/css/vendor-5-28992268812300b1.css",
+      "https://cdn.loom.com/assets/css/vendor-45-d4f9c068f095be5d.css",
+      "https://cdn.loom.com/assets/css/vendor-8-28992268812300b1.css",
+      "https://www.youtube.com/s/player/18d29a11/www-player.css"
+    ],
+    "jsUrls": [
+      "https://www.googletagmanager.com/gtag/js?id=G-B76TFE0887&cx=c&gtm=4e63a1",
+      "https://www.googletagmanager.com/gtag/js?id=AW-404030454&cx=c&gtm=4e63a1",
+      "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+      "https://connect.facebook.net/signals/config/2672220096460646?v=2.9.277&r=stable&domain=www.thinksafe.co.nz&hme=b0ad3da822578fe2b808f13c29c26424c1eec6df21f897230a1f8d7975c03c8e&ex_m=101%2C194%2C143%2C22%2C69%2C70%2C136%2C65%2C64%2C11%2C151%2C87%2C16%2C130%2C123%2C72%2C75%2C129%2C148%2C153%2C8%2C4%2C5%2C7%2C6%2C3%2C88%2C98%2C154%2C159%2C208%2C59%2C175%2C176%2C52%2C262%2C30%2C71%2C220%2C219%2C218%2C23%2C32%2C100%2C58%2C10%2C60%2C94%2C95%2C96%2C102%2C126%2C31%2C29%2C128%2C125%2C124%2C144%2C73%2C147%2C145%2C146%2C47%2C57%2C119%2C15%2C150%2C42%2C249%2C250%2C248%2C26%2C27%2C28%2C45%2C137%2C74%2C109%2C18%2C20%2C41%2C37%2C39%2C38%2C80%2C89%2C93%2C107%2C135%2C138%2C43%2C108%2C24%2C21%2C115%2C66%2C35%2C140%2C139%2C141%2C132%2C131%2C25%2C34%2C56%2C106%2C149%2C67%2C17%2C142%2C111%2C78%2C63%2C19%2C82%2C83%2C112%2C81%2C33%2C277%2C201%2C190%2C191%2C189%2C280%2C272%2C49%2C202%2C104%2C127%2C77%2C117%2C51%2C44%2C46%2C110%2C116%2C122%2C55%2C61%2C50%2C53%2C97%2C152%2C1%2C120%2C14%2C118%2C12%2C2%2C54%2C90%2C62%2C114%2C86%2C85%2C155%2C156%2C91%2C92%2C9%2C121%2C99%2C48%2C133%2C84%2C76%2C68%2C113%2C103%2C40%2C134%2C0%2C79%2C36%2C105%2C13%2C157",
+      "https://connect.facebook.net/en_US/fbevents.js",
+      "https://www.googletagmanager.com/gtm.js?id=GTM-TZQNSXHV",
+      "https://cdn.rocketspark.com/jquery-1.7.2.min.js?v=20260312153848",
+      "https://cdn.rocketspark.com/_dist/js/public.min.v20260312153848.js",
+      "https://cdn.rocketspark.com/_dist/js/commons.694cb0212d2f.bundle.js",
+      "https://cdn.rocketspark.com/_dist/js/blog~vendors.33618b6145a5.bundle.js",
+      "https://cdn.rocketspark.com/_dist/js/shop~vendors.c0601673efb1.bundle.js",
+      "https://cdn.rocketspark.com/_dist/js/houston~vendors.938afeba088b.bundle.js",
+      "https://cdn.rocketspark.com/_dist/js/auth~vendors.1265b1c31cc3.bundle.js",
+      "https://cdn.rocketspark.com/_dist/js/dashboard~vendors.192675722bc3.bundle.js",
+      "https://cdn.rocketspark.com/_dist/js/blastoff~vendors.bb4f8a2101db.bundle.js",
+      "https://cdn.rocketspark.com/_dist/js/public~vendors.8820ff537e13.bundle.js",
+      "https://cdn.rocketspark.com/_dist/js/public.549fd4900d4d.bundle.js",
+      "https://nz.rs-cdn.com/node_modules/@rocketspark/flint-ui/dist/rocketspark/rocketspark.esm.js?v=1773283128",
+      "https://use.typekit.net/ik/IVTIz4rZ7vs27T25YQCswQ4JBtXZ2MDKUOgy_i65k5Ife06ffOxAJyJ8FQjtwQJaWasG-AonShBcZAUXZfokdhFnZWsDSeBk-koRdko0pyGMJ6sESY4lJ6s7ieF7J6shdAiRJ6snjai1J6sndesEJ6sX-YFnJ6shjaFlH6GJ1S6gIMMjgfMfH6GJTS6gIMMjIPMfH6GJGC6gIMMj2KMfH6GJGS6gIMMjMkMfH6GJ1v6gIMMjgKMfH6GJTC6gIMMjgkMfH6qJuYIbMs6IJMJ7fbR5SsMgegI6MKG4fFBUIMIj2KMfH6qJDWIbMs6YJMJ7fbRmSsMgeMj6MKG4fF4UIMIjMkMfH6GJnZtfIMJjgKMfH6GJ7otfIMJjgPMfH6GJrdCfIMwjgPMfH6GJrnCfIMwjgKMfH6GJN_CfIMwjMkMfH6qJz93bgg62JMJ7f6KbTbJbgs6eJMJ7f6K4TbJbgs62JMJ7fbKzMsMeeMb6MKG4fHXgIMjjgKMfH6qJCMIbgy65JMHbMZH5rv6e.js",
+      "https://www.googletagmanager.com/gtag/js?id=G-B76TFE0887",
+      "https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.13/vue.min.js",
+      "https://googleads.g.doubleclick.net/pagead/viewthroughconversion/404030454/?random=1773300907303&cv=11&fst=1773300907303&bg=ffffff&guid=ON&async=1&en=gtag.config&gtm=45be63a1v9191402277z89192327446za20gzb9192327446zd9192327446xec&gcd=13l3l3l3l1l1&dma=0&tag_exp=103116026~103200004~115616985~115938466~115938468~116024733~117484252~117625638&u_w=1440&u_h=2200&url=https%3A%2F%2Fwww.thinksafe.co.nz%2F&frm=0&tiba=ThinkSafe%20-%20Health%20%26%20Safety%20App%20NZ%20%7C%20Free%20Trial%20%7C%20ThinkSafe&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=1512021300.1773300907&uaa=x86&uab=64&uafvl=Not%253AA-Brand%3B99.0.0.0%7CHeadlessChrome%3B145.0.7632.6%7CChromium%3B145.0.7632.6&uamb=0&uam=&uap=Windows&uapv=10.0&uaw=0&data=event%3Dgtag.config&rfmt=3&fmt=4",
+      "https://cdn.jsdelivr.net/npm/ua-parser-js@0/dist/ua-parser.min.js",
+      "https://nz.rs-cdn.com/node_modules/@rocketspark/flint-ui/dist/rocketspark/p-CV4Z9_bF.js",
+      "https://cdn.rocketspark.com/_dist/js/chunks/Modules/Analytics.de6b570ec371.bundle.js",
+      "https://cdn.rocketspark.com/_dist/js/chunks/LazySizes.d66705c83a2a.bundle.js",
+      "https://cdn.rocketspark.com/_dist/js/chunks/Modules/Design.894c321fadc0.bundle.js",
+      "https://cdn.rocketspark.com/_dist/js/chunks/Modules/Picture/LazyLoad.d21acc5ff0ef.bundle.js",
+      "https://cdn.rocketspark.com/_dist/js/chunks/ImagePopup.74dcbd3a58c8.bundle.js",
+      "https://cdn.rocketspark.com/_dist/js/chunks/RS/Modules/Header/ShopIcons.aabae7fbfc85.bundle.js"
+    ],
+    "downloadedCss": [
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/css/auth~vendors.de3de7822dc8.bundle.css",
+        "file": "inspected/assets/css/001_auth~vendors.de3de7822dc8.bundle_3766d2157f.css",
+        "contentType": "text/css",
+        "bytes": 52283
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/css/public.c96fdbea6cf7.bundle.css",
+        "file": "inspected/assets/css/002_public.c96fdbea6cf7.bundle_070c20c1fc.css",
+        "contentType": "text/css",
+        "bytes": 115362
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/css/public~vendors.24ec0c1183a5.bundle.css",
+        "file": "inspected/assets/css/003_public~vendors.24ec0c1183a5.bundle_bac1f7f969.css",
+        "contentType": "text/css",
+        "bytes": 34514
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/css/dashboard~vendors.eb1bb0054174.bundle.css",
+        "file": "inspected/assets/css/004_dashboard~vendors.eb1bb0054174.bundle_8ccc0fa794.css",
+        "contentType": "text/css",
+        "bytes": 33551
+      },
+      {
+        "sourceUrl": "https://cdn.icomoon.io/181725/Rocketspark/style.css?8gzh5b",
+        "file": "inspected/assets/css/005_style_2436d80cf9.css",
+        "contentType": "text/css",
+        "bytes": 11688
+      },
+      {
+        "sourceUrl": "https://www.thinksafe.co.nz/node_modules/@rocketspark/flint-ui/dist/rocketspark/rocketspark.css?v=1773283128",
+        "file": "inspected/assets/css/006_rocketspark_0081dffa16.css",
+        "contentType": "text/css",
+        "bytes": 1366
+      },
+      {
+        "sourceUrl": "https://www.thinksafe.co.nz/node_modules/@rocketspark/image-gallery/build/css/index.css",
+        "file": "inspected/assets/css/007_index_a04b64f8a9.css",
+        "contentType": "text/css",
+        "bytes": 5209
+      },
+      {
+        "sourceUrl": "https://nz.rs-cdn.com/site_files/22160/53014/css/css.css?v=20260302093251",
+        "file": "inspected/assets/css/008_css_aa219cedf5.css",
+        "contentType": "text/css",
+        "bytes": 161854
+      },
+      {
+        "sourceUrl": "https://nz.rs-cdn.com/site_files/22160/assets/page/page606903_deferred.css?v=20260312091029",
+        "file": "inspected/assets/css/009_page606903_deferred_87275b9535.css",
+        "contentType": "text/css",
+        "bytes": 42980
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/css/ImagePopup8f57db52cf87.css",
+        "file": "inspected/assets/css/010_ImagePopup8f57db52cf87_0782d3b7fa.css",
+        "contentType": "text/css",
+        "bytes": 3099
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/css/FormBuilder5aeb30439484.css",
+        "file": "inspected/assets/css/011_FormBuilder5aeb30439484_4f82e1a666.css",
+        "contentType": "text/css",
+        "bytes": 9118
+      },
+      {
+        "sourceUrl": "https://ds-cdn.prod-east.frontend.public.atl-paas.net/assets/font-rules/v5/atlassian-fonts.css",
+        "file": "inspected/assets/css/012_atlassian-fonts_8db5e67dc7.css",
+        "contentType": "text/css",
+        "bytes": 10625
+      },
+      {
+        "sourceUrl": "https://cdn.loom.com/assets/css/embed-video-5d097fc13c1d39ed.css",
+        "file": "inspected/assets/css/013_embed-video-5d097fc13c1d39ed_c9b33582f8.css",
+        "contentType": "text/css",
+        "bytes": 143396
+      },
+      {
+        "sourceUrl": "https://cdn.loom.com/assets/css/vendor-6-28992268812300b1.css",
+        "file": "inspected/assets/css/014_vendor-6-28992268812300b1_049bf9785a.css",
+        "contentType": "text/css",
+        "bytes": 8403
+      },
+      {
+        "sourceUrl": "https://cdn.loom.com/assets/css/vendor-7-28992268812300b1.css",
+        "file": "inspected/assets/css/015_vendor-7-28992268812300b1_edb76ae56f.css",
+        "contentType": "text/css",
+        "bytes": 8403
+      },
+      {
+        "sourceUrl": "https://cdn.loom.com/assets/css/vendor-5-28992268812300b1.css",
+        "file": "inspected/assets/css/016_vendor-5-28992268812300b1_c63f449bab.css",
+        "contentType": "text/css",
+        "bytes": 8403
+      },
+      {
+        "sourceUrl": "https://cdn.loom.com/assets/css/vendor-45-d4f9c068f095be5d.css",
+        "file": "inspected/assets/css/017_vendor-45-d4f9c068f095be5d_ed24d1072e.css",
+        "contentType": "text/css",
+        "bytes": 76635
+      },
+      {
+        "sourceUrl": "https://cdn.loom.com/assets/css/vendor-8-28992268812300b1.css",
+        "file": "inspected/assets/css/018_vendor-8-28992268812300b1_bf889f1167.css",
+        "contentType": "text/css",
+        "bytes": 8403
+      },
+      {
+        "sourceUrl": "https://www.youtube.com/s/player/18d29a11/www-player.css",
+        "file": "inspected/assets/css/019_www-player_79efd789c9.css",
+        "contentType": "text/css",
+        "bytes": 526221
+      }
+    ],
+    "downloadedJs": [
+      {
+        "sourceUrl": "https://www.googletagmanager.com/gtag/js?id=G-B76TFE0887&cx=c&gtm=4e63a1",
+        "file": "inspected/assets/js/001_js_4f3bedd5b6.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 544782
+      },
+      {
+        "sourceUrl": "https://www.googletagmanager.com/gtag/js?id=AW-404030454&cx=c&gtm=4e63a1",
+        "file": "inspected/assets/js/002_js_83c57e19bd.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 549491
+      },
+      {
+        "sourceUrl": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+        "file": "inspected/assets/js/003_insight.min_8b6988a02f.js",
+        "contentType": "application/javascript;charset=utf-8",
+        "bytes": 53612
+      },
+      {
+        "sourceUrl": "https://connect.facebook.net/signals/config/2672220096460646?v=2.9.277&r=stable&domain=www.thinksafe.co.nz&hme=b0ad3da822578fe2b808f13c29c26424c1eec6df21f897230a1f8d7975c03c8e&ex_m=101%2C194%2C143%2C22%2C69%2C70%2C136%2C65%2C64%2C11%2C151%2C87%2C16%2C130%2C123%2C72%2C75%2C129%2C148%2C153%2C8%2C4%2C5%2C7%2C6%2C3%2C88%2C98%2C154%2C159%2C208%2C59%2C175%2C176%2C52%2C262%2C30%2C71%2C220%2C219%2C218%2C23%2C32%2C100%2C58%2C10%2C60%2C94%2C95%2C96%2C102%2C126%2C31%2C29%2C128%2C125%2C124%2C144%2C73%2C147%2C145%2C146%2C47%2C57%2C119%2C15%2C150%2C42%2C249%2C250%2C248%2C26%2C27%2C28%2C45%2C137%2C74%2C109%2C18%2C20%2C41%2C37%2C39%2C38%2C80%2C89%2C93%2C107%2C135%2C138%2C43%2C108%2C24%2C21%2C115%2C66%2C35%2C140%2C139%2C141%2C132%2C131%2C25%2C34%2C56%2C106%2C149%2C67%2C17%2C142%2C111%2C78%2C63%2C19%2C82%2C83%2C112%2C81%2C33%2C277%2C201%2C190%2C191%2C189%2C280%2C272%2C49%2C202%2C104%2C127%2C77%2C117%2C51%2C44%2C46%2C110%2C116%2C122%2C55%2C61%2C50%2C53%2C97%2C152%2C1%2C120%2C14%2C118%2C12%2C2%2C54%2C90%2C62%2C114%2C86%2C85%2C155%2C156%2C91%2C92%2C9%2C121%2C99%2C48%2C133%2C84%2C76%2C68%2C113%2C103%2C40%2C134%2C0%2C79%2C36%2C105%2C13%2C157",
+        "file": "inspected/assets/js/004_2672220096460646_f5842bc484.js",
+        "contentType": "application/x-javascript; charset=utf-8",
+        "bytes": 123728
+      },
+      {
+        "sourceUrl": "https://connect.facebook.net/en_US/fbevents.js",
+        "file": "inspected/assets/js/005_fbevents_20e1ef357a.js",
+        "contentType": "application/x-javascript; charset=utf-8",
+        "bytes": 364367
+      },
+      {
+        "sourceUrl": "https://www.googletagmanager.com/gtm.js?id=GTM-TZQNSXHV",
+        "file": "inspected/assets/js/006_gtm_3fe74cac64.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 395510
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/jquery-1.7.2.min.js?v=20260312153848",
+        "file": "inspected/assets/js/007_jquery-1.7.2.min_ca57bb9e0a.js",
+        "contentType": "application/javascript",
+        "bytes": 94840
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/js/public.min.v20260312153848.js",
+        "file": "inspected/assets/js/008_public.min.v20260312153848_0db95f40f5.js",
+        "contentType": "application/javascript",
+        "bytes": 27696
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/js/commons.694cb0212d2f.bundle.js",
+        "file": "inspected/assets/js/009_commons.694cb0212d2f.bundle_68fce8d3b4.js",
+        "contentType": "application/javascript",
+        "bytes": 42355
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/js/blog~vendors.33618b6145a5.bundle.js",
+        "file": "inspected/assets/js/010_blog~vendors.33618b6145a5.bundle_bfe7a9cadc.js",
+        "contentType": "application/javascript",
+        "bytes": 182129
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/js/shop~vendors.c0601673efb1.bundle.js",
+        "file": "inspected/assets/js/011_shop~vendors.c0601673efb1.bundle_f76f826ca4.js",
+        "contentType": "application/javascript",
+        "bytes": 302865
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/js/houston~vendors.938afeba088b.bundle.js",
+        "file": "inspected/assets/js/012_houston~vendors.938afeba088b.bundle_74f3d94106.js",
+        "contentType": "application/javascript",
+        "bytes": 145670
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/js/auth~vendors.1265b1c31cc3.bundle.js",
+        "file": "inspected/assets/js/013_auth~vendors.1265b1c31cc3.bundle_502f0a4768.js",
+        "contentType": "application/javascript",
+        "bytes": 581099
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/js/dashboard~vendors.192675722bc3.bundle.js",
+        "file": "inspected/assets/js/014_dashboard~vendors.192675722bc3.bundle_cb7ae4d510.js",
+        "contentType": "application/javascript",
+        "bytes": 513486
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/js/blastoff~vendors.bb4f8a2101db.bundle.js",
+        "file": "inspected/assets/js/015_blastoff~vendors.bb4f8a2101db.bundle_aba5b65fc7.js",
+        "contentType": "application/javascript",
+        "bytes": 100959
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/js/public~vendors.8820ff537e13.bundle.js",
+        "file": "inspected/assets/js/016_public~vendors.8820ff537e13.bundle_f6089e99f7.js",
+        "contentType": "application/javascript",
+        "bytes": 282261
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/js/public.549fd4900d4d.bundle.js",
+        "file": "inspected/assets/js/017_public.549fd4900d4d.bundle_c71ecf4f87.js",
+        "contentType": "application/javascript",
+        "bytes": 226536
+      },
+      {
+        "sourceUrl": "https://nz.rs-cdn.com/node_modules/@rocketspark/flint-ui/dist/rocketspark/rocketspark.esm.js?v=1773283128",
+        "file": "inspected/assets/js/018_rocketspark.esm_199a90bbf1.js",
+        "contentType": "application/javascript",
+        "bytes": 10931
+      },
+      {
+        "sourceUrl": "https://use.typekit.net/ik/IVTIz4rZ7vs27T25YQCswQ4JBtXZ2MDKUOgy_i65k5Ife06ffOxAJyJ8FQjtwQJaWasG-AonShBcZAUXZfokdhFnZWsDSeBk-koRdko0pyGMJ6sESY4lJ6s7ieF7J6shdAiRJ6snjai1J6sndesEJ6sX-YFnJ6shjaFlH6GJ1S6gIMMjgfMfH6GJTS6gIMMjIPMfH6GJGC6gIMMj2KMfH6GJGS6gIMMjMkMfH6GJ1v6gIMMjgKMfH6GJTC6gIMMjgkMfH6qJuYIbMs6IJMJ7fbR5SsMgegI6MKG4fFBUIMIj2KMfH6qJDWIbMs6YJMJ7fbRmSsMgeMj6MKG4fF4UIMIjMkMfH6GJnZtfIMJjgKMfH6GJ7otfIMJjgPMfH6GJrdCfIMwjgPMfH6GJrnCfIMwjgKMfH6GJN_CfIMwjMkMfH6qJz93bgg62JMJ7f6KbTbJbgs6eJMJ7f6K4TbJbgs62JMJ7fbKzMsMeeMb6MKG4fHXgIMjjgKMfH6qJCMIbgy65JMHbMZH5rv6e.js",
+        "file": "inspected/assets/js/019_IVTIz4rZ7vs27T25YQCswQ4JBtXZ2MDKUOgy_i65k5Ife06ffOxAJyJ8FQjtwQJaWasG-AonShBcZAUXZfokdhFnZWsDSeBk-koRdko0pyGMJ6sESY4lJ6s7ieF7J6shdAiRJ6snjai1_f0d2442115.js",
+        "contentType": "text/javascript;charset=utf-8",
+        "bytes": 23369
+      },
+      {
+        "sourceUrl": "https://www.googletagmanager.com/gtag/js?id=G-B76TFE0887",
+        "file": "inspected/assets/js/020_js_566e4a513c.js",
+        "contentType": "application/javascript; charset=UTF-8",
+        "bytes": 547910
+      },
+      {
+        "sourceUrl": "https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.13/vue.min.js",
+        "file": "inspected/assets/js/021_vue.min_230bdf8d0d.js",
+        "contentType": "application/javascript; charset=utf-8",
+        "bytes": 86510
+      },
+      {
+        "sourceUrl": "https://googleads.g.doubleclick.net/pagead/viewthroughconversion/404030454/?random=1773300907303&cv=11&fst=1773300907303&bg=ffffff&guid=ON&async=1&en=gtag.config&gtm=45be63a1v9191402277z89192327446za20gzb9192327446zd9192327446xec&gcd=13l3l3l3l1l1&dma=0&tag_exp=103116026~103200004~115616985~115938466~115938468~116024733~117484252~117625638&u_w=1440&u_h=2200&url=https%3A%2F%2Fwww.thinksafe.co.nz%2F&frm=0&tiba=ThinkSafe%20-%20Health%20%26%20Safety%20App%20NZ%20%7C%20Free%20Trial%20%7C%20ThinkSafe&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=1512021300.1773300907&uaa=x86&uab=64&uafvl=Not%253AA-Brand%3B99.0.0.0%7CHeadlessChrome%3B145.0.7632.6%7CChromium%3B145.0.7632.6&uamb=0&uam=&uap=Windows&uapv=10.0&uaw=0&data=event%3Dgtag.config&rfmt=3&fmt=4",
+        "file": "inspected/assets/js/022_404030454_87398f7577.js",
+        "contentType": "text/javascript; charset=ISO-8859-1",
+        "bytes": 5475
+      },
+      {
+        "sourceUrl": "https://cdn.jsdelivr.net/npm/ua-parser-js@0/dist/ua-parser.min.js",
+        "file": "inspected/assets/js/023_ua-parser.min_496cf05bbe.js",
+        "contentType": "application/javascript; charset=utf-8",
+        "bytes": 25377
+      },
+      {
+        "sourceUrl": "https://nz.rs-cdn.com/node_modules/@rocketspark/flint-ui/dist/rocketspark/p-CV4Z9_bF.js",
+        "file": "inspected/assets/js/024_p-CV4Z9_bF_6a92c42790.js",
+        "contentType": "application/javascript",
+        "bytes": 26864
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/js/chunks/Modules/Analytics.de6b570ec371.bundle.js",
+        "file": "inspected/assets/js/025_Analytics.de6b570ec371.bundle_c95f09076e.js",
+        "contentType": "application/javascript",
+        "bytes": 734
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/js/chunks/LazySizes.d66705c83a2a.bundle.js",
+        "file": "inspected/assets/js/026_LazySizes.d66705c83a2a.bundle_8d347995ea.js",
+        "contentType": "application/javascript",
+        "bytes": 7453
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/js/chunks/Modules/Design.894c321fadc0.bundle.js",
+        "file": "inspected/assets/js/027_Design.894c321fadc0.bundle_c2926ba7b7.js",
+        "contentType": "application/javascript",
+        "bytes": 409
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/js/chunks/Modules/Picture/LazyLoad.d21acc5ff0ef.bundle.js",
+        "file": "inspected/assets/js/028_LazyLoad.d21acc5ff0ef.bundle_1912c79215.js",
+        "contentType": "application/javascript",
+        "bytes": 2401
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/js/chunks/ImagePopup.74dcbd3a58c8.bundle.js",
+        "file": "inspected/assets/js/029_ImagePopup.74dcbd3a58c8.bundle_6ad0d75b0d.js",
+        "contentType": "application/javascript",
+        "bytes": 13047
+      },
+      {
+        "sourceUrl": "https://cdn.rocketspark.com/_dist/js/chunks/RS/Modules/Header/ShopIcons.aabae7fbfc85.bundle.js",
+        "file": "inspected/assets/js/030_ShopIcons.aabae7fbfc85.bundle_c7efeabbb2.js",
+        "contentType": "application/javascript",
+        "bytes": 1822
+      }
+    ]
+  },
+  "network": [
+    {
+      "url": "https://www.thinksafe.co.nz/",
+      "status": 200,
+      "resourceType": "document",
+      "contentType": "text/html; charset=UTF-8"
+    },
+    {
+      "url": "https://www.thinksafe.co.nz/node_modules/@rocketspark/flint-ui/dist/rocketspark/rocketspark.css?v=1773283128",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.thinksafe.co.nz/node_modules/@rocketspark/image-gallery/build/css/index.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://cdn.jsdelivr.net/npm/ua-parser-js@0/dist/ua-parser.min.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/css/auth~vendors.de3de7822dc8.bundle.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/css/public~vendors.24ec0c1183a5.bundle.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/css/dashboard~vendors.eb1bb0054174.bundle.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://nz.rs-cdn.com/site_files/22160/assets/page/page606903_deferred.css?v=20260312091029",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/public.min.v20260312153848.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://nz.rs-cdn.com/site_files/22160/53014/css/css.css?v=20260302093251",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://nz.rs-cdn.com/node_modules/@rocketspark/flint-ui/dist/rocketspark/rocketspark.esm.js?v=1773283128",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/css/public.c96fdbea6cf7.bundle.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/public.549fd4900d4d.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/commons.694cb0212d2f.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/public~vendors.8820ff537e13.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/blog~vendors.33618b6145a5.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/jquery-1.7.2.min.js?v=20260312153848",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/blastoff~vendors.bb4f8a2101db.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/dashboard~vendors.192675722bc3.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/auth~vendors.1265b1c31cc3.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/houston~vendors.938afeba088b.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/shop~vendors.c0601673efb1.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.icomoon.io/181725/Rocketspark/style.css?8gzh5b",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://nz.rs-cdn.com/node_modules/@rocketspark/flint-ui/dist/rocketspark/p-CV4Z9_bF.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://use.typekit.net/ik/IVTIz4rZ7vs27T25YQCswQ4JBtXZ2MDKUOgy_i65k5Ife06ffOxAJyJ8FQjtwQJaWasG-AonShBcZAUXZfokdhFnZWsDSeBk-koRdko0pyGMJ6sESY4lJ6s7ieF7J6shdAiRJ6snjai1J6sndesEJ6sX-YFnJ6shjaFlH6GJ1S6gIMMjgfMfH6GJTS6gIMMjIPMfH6GJGC6gIMMj2KMfH6GJGS6gIMMjMkMfH6GJ1v6gIMMjgKMfH6GJTC6gIMMjgkMfH6qJuYIbMs6IJMJ7fbR5SsMgegI6MKG4fFBUIMIj2KMfH6qJDWIbMs6YJMJ7fbRmSsMgeMj6MKG4fF4UIMIjMkMfH6GJnZtfIMJjgKMfH6GJ7otfIMJjgPMfH6GJrdCfIMwjgPMfH6GJrnCfIMwjgKMfH6GJN_CfIMwjMkMfH6qJz93bgg62JMJ7f6KbTbJbgs6eJMJ7f6K4TbJbgs62JMJ7fbKzMsMeeMb6MKG4fHXgIMjjgKMfH6qJCMIbgy65JMHbMZH5rv6e.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript;charset=utf-8"
+    },
+    {
+      "url": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript;charset=utf-8"
+    },
+    {
+      "url": "https://connect.facebook.net/en_US/fbevents.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/x-javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/css/ImagePopup8f57db52cf87.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/css/FormBuilder5aeb30439484.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/chunks/Modules/Analytics.de6b570ec371.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/chunks/LazySizes.d66705c83a2a.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/chunks/Modules/Design.894c321fadc0.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/chunks/Modules/Picture/LazyLoad.d21acc5ff0ef.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/chunks/ImagePopup.74dcbd3a58c8.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/chunks/RS/Modules/Header/ShopIcons.aabae7fbfc85.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/chunks/Choices.f5521ccbfc38.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/chunks//Modules/Header/MenuItemDropdowns.c3860875a28e.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/chunks/FormBuilder.cf89e5d9297e.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/chunks/GoogleAnalytics.81c7dec5668e.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/chunks/Bean.c3371094db9b.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/chunks/10971.ef909b6da490.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/chunks/Dropzone.a2e7e265bf4a.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/chunks/3000.b72755c6a21c.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/chunks/Modules/Utils/Events.814b2a99228f.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://www.loom.com/embed/f2f74934a037489a8599957cf097f412",
+      "status": 200,
+      "resourceType": "document",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://cdn.rocketspark.com/_dist/js/chunks/Modules/Devices.1adf4f1c0bcb.bundle.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    },
+    {
+      "url": "https://connect.facebook.net/signals/config/2672220096460646?v=2.9.277&r=stable&domain=www.thinksafe.co.nz&hme=b0ad3da822578fe2b808f13c29c26424c1eec6df21f897230a1f8d7975c03c8e&ex_m=101%2C194%2C143%2C22%2C69%2C70%2C136%2C65%2C64%2C11%2C151%2C87%2C16%2C130%2C123%2C72%2C75%2C129%2C148%2C153%2C8%2C4%2C5%2C7%2C6%2C3%2C88%2C98%2C154%2C159%2C208%2C59%2C175%2C176%2C52%2C262%2C30%2C71%2C220%2C219%2C218%2C23%2C32%2C100%2C58%2C10%2C60%2C94%2C95%2C96%2C102%2C126%2C31%2C29%2C128%2C125%2C124%2C144%2C73%2C147%2C145%2C146%2C47%2C57%2C119%2C15%2C150%2C42%2C249%2C250%2C248%2C26%2C27%2C28%2C45%2C137%2C74%2C109%2C18%2C20%2C41%2C37%2C39%2C38%2C80%2C89%2C93%2C107%2C135%2C138%2C43%2C108%2C24%2C21%2C115%2C66%2C35%2C140%2C139%2C141%2C132%2C131%2C25%2C34%2C56%2C106%2C149%2C67%2C17%2C142%2C111%2C78%2C63%2C19%2C82%2C83%2C112%2C81%2C33%2C277%2C201%2C190%2C191%2C189%2C280%2C272%2C49%2C202%2C104%2C127%2C77%2C117%2C51%2C44%2C46%2C110%2C116%2C122%2C55%2C61%2C50%2C53%2C97%2C152%2C1%2C120%2C14%2C118%2C12%2C2%2C54%2C90%2C62%2C114%2C86%2C85%2C155%2C156%2C91%2C92%2C9%2C121%2C99%2C48%2C133%2C84%2C76%2C68%2C113%2C103%2C40%2C134%2C0%2C79%2C36%2C105%2C13%2C157",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/x-javascript; charset=utf-8"
+    },
+    {
+      "url": "https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.13/vue.min.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtm.js?id=GTM-TZQNSXHV",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://ds-cdn.prod-east.frontend.public.atl-paas.net/assets/font-rules/v5/atlassian-fonts.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtag/js?id=G-B76TFE0887",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/css/embed-video-5d097fc13c1d39ed.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/css/vendor-6-28992268812300b1.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/css/vendor-7-28992268812300b1.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/css/vendor-5-28992268812300b1.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/css/vendor-45-d4f9c068f095be5d.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/css/vendor-8-28992268812300b1.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-41-dfb450657b45c921.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-40-eefd77646baaf660.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-43-530751aded863632.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-45-97255589c3c2adb2.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-46-23b019c44336a21a.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-42-e700c26ca2893d20.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-0-5cebe11dd42457b6.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtag/js?id=G-B76TFE0887&cx=c&gtm=4e63a1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://www.googletagmanager.com/gtag/js?id=AW-404030454&cx=c&gtm=4e63a1",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-6-23963af1967a5010.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-4-fe73919308c7749a.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-2-82ebbe97e75bb194.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-3-9133b7bc7a979f23.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-1-aeffea378b23138e.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/0runtime-49e2ab6e3236faaa.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-44-2d1f48e5816f5d92.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-39-c84e6a5928d8ee40.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-29-433c7be8ebc639c2.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-28-225fbad99ddc148a.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-15-9890289cddc12556.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-18-e8814f2f1a592c35.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-8-3dea6637dcd83ffd.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-13-6add939f13360245.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-9-eed7c37d0a1f042e.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/embed-video-8a0cca02413e37fa.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-19-b2b21cd903f93697.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://googleads.g.doubleclick.net/pagead/viewthroughconversion/404030454/?random=1773300907303&cv=11&fst=1773300907303&bg=ffffff&guid=ON&async=1&en=gtag.config&gtm=45be63a1v9191402277z89192327446za20gzb9192327446zd9192327446xec&gcd=13l3l3l3l1l1&dma=0&tag_exp=103116026~103200004~115616985~115938466~115938468~116024733~117484252~117625638&u_w=1440&u_h=2200&url=https%3A%2F%2Fwww.thinksafe.co.nz%2F&frm=0&tiba=ThinkSafe%20-%20Health%20%26%20Safety%20App%20NZ%20%7C%20Free%20Trial%20%7C%20ThinkSafe&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=1512021300.1773300907&uaa=x86&uab=64&uafvl=Not%253AA-Brand%3B99.0.0.0%7CHeadlessChrome%3B145.0.7632.6%7CChromium%3B145.0.7632.6&uamb=0&uam=&uap=Windows&uapv=10.0&uaw=0&data=event%3Dgtag.config&rfmt=3&fmt=4",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=UTF-8"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-14-eff27f4d041ea614.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-17-1194e1d6db3b8290.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-16-ac5bbb1aff3557a5.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-10-7733ce3cbb208e4f.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-27-767ad21e0397f56f.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-2b72e02e-95411b76e155d278.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-12-dc757658faa59677.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-23-26d4c9b926cfb4d4.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-26-9d50b3a25d9476c5.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.youtube.com/embed/vy3jIUD-g8o?modestbranding=1&rel=0&showinfo=0&wmode=opaque",
+      "status": 200,
+      "resourceType": "document",
+      "contentType": "text/html; charset=utf-8"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-24-5eb1475ce753d39e.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-22-35cd3ac919faf2e6.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-7-94c7dc1fbcaefafb.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-518a401a-ed4177bff24429b0.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-35-2a39d6f995096f53.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-34-1f3d5461ade6be8a.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.youtube.com/s/player/18d29a11/www-player.css",
+      "status": 200,
+      "resourceType": "stylesheet",
+      "contentType": "text/css"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-33-f7e1306fe6565548.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-32-0a60606023bc48f3.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-31-94b7d9e54e9ed8ac.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-21-110ef6ee28ee54e3.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-20-9f2ea7a68c4622b3.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.youtube.com/s/player/18d29a11/player_es6.vflset/en_US/embed.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-30-0218c21da68138da.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-36-794d3d0c69661a42.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-38-d767113a887d71be.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/vendor-37-e9c8a76a8593157e.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.youtube.com/s/embeds/c21deb16/www-embed-player-es6.vflset/www-embed-player-es6.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.youtube.com/s/player/18d29a11/player_es6.vflset/en_US/base.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/3398-a7904d3ded8213ed.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/9931-9a2551b4d4cd6f1f.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "blob:https://www.loom.com/c6f2e3ff-969d-4d00-9e1f-0736318c668b",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": ""
+    },
+    {
+      "url": "https://evs.sgmt.loom.com/yhPeelcEJD/eejxbDiFfK.min.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript; charset=utf-8"
+    },
+    {
+      "url": "https://www.youtube.com/s/player/18d29a11/player_es6.vflset/en_US/remote.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://static.doubleclick.net/instream/ad_status.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.loom.com/assets/js/850-4a5f01ecaaefe62c.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.google.com/js/th/69Iz8vuflAljWdu1Loh2eovlW85kX9coPHwM8_J8NfQ.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://www.gstatic.com/cv/js/sender/v1/cast_sender.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "text/javascript"
+    },
+    {
+      "url": "https://cdn.segment.com/analytics-next/bundles/tsub-middleware.bundle.d94be5c4b3baf7f16aa2.js",
+      "status": 200,
+      "resourceType": "script",
+      "contentType": "application/javascript"
+    }
+  ],
+  "errors": []
+}

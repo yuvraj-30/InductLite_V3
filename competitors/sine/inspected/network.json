@@ -1,0 +1,68 @@
+[
+  {
+    "url": "https://www.sine.co/",
+    "status": 200,
+    "resourceType": "document",
+    "contentType": "text/html; charset=UTF-8"
+  },
+  {
+    "url": "blob:https://www.sine.co/3c35b1a1-8369-4b7d-bd3c-f9a394e808c1",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://cdn.cookielaw.org/scripttemplates/otSDKStub.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript"
+  },
+  {
+    "url": "https://cdn.cookielaw.org/consent/d994650d-c62d-4938-bd24-ae44d108d620/OtAutoBlock.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript"
+  },
+  {
+    "url": "https://nitroscripts.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://cdn-ildocai.nitrocdn.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ/assets/static/optimized/rev-e6c119f/www.sine.co/combinedCss/nitro-min-noimport-2718049b1db33a90655e38a96272e315-stylesheet.css",
+    "status": 200,
+    "resourceType": "stylesheet",
+    "contentType": "text/css"
+  },
+  {
+    "url": "https://cdn-ildocai.nitrocdn.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ/assets/static/optimized/rev-e6c119f/www.sine.co/combinedCss/nitro-min-noimport-d339a045caacd57873c5cfbb8d22c2b3-stylesheet.css",
+    "status": 200,
+    "resourceType": "stylesheet",
+    "contentType": "text/css"
+  },
+  {
+    "url": "https://cdn-ildocai.nitrocdn.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ/assets/static/optimized/rev-e6c119f/www.sine.co/combinedCss/nitro-min-noimport-155090be655b6feb4e9cf19ea7db4641-stylesheet.css",
+    "status": 200,
+    "resourceType": "stylesheet",
+    "contentType": "text/css"
+  },
+  {
+    "url": "https://cdn-ildocai.nitrocdn.com/cneMytWhfkamYZpqtWmmQAZusJbfIbZZ/assets/static/optimized/rev-e6c119f/www.sine.co/externalFontFace/nitro-min-noimport-375f5528bf4164875f1e0bbf9c904ef4-stylesheet.css",
+    "status": 200,
+    "resourceType": "stylesheet",
+    "contentType": "text/css"
+  },
+  {
+    "url": "https://cdn.cookielaw.org/scripttemplates/202601.1.0/otBannerSdk.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript"
+  },
+  {
+    "url": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript;charset=utf-8"
+  }
+]

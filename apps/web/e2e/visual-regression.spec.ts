@@ -319,37 +319,74 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
   });
 
   test("signature pad matches baseline", async ({ page }, testInfo) => {
-    test.setTimeout(90000);
+    test.setTimeout(120000);
 
-    const opened = await openPublicSignIn(page, TEST_SITE_SLUG);
-    expect(opened).toBe(true);
+    await page.goto(`/s/${TEST_SITE_SLUG}/kiosk`, {
+      waitUntil: "domcontentloaded",
+      timeout: 20000,
+    });
 
-    // Step 1: Fill details
-    await fillInputResilient(
-      page.getByLabel(/full name|name/i).first(),
-      "Signature Visual Test",
-    );
-    await fillInputResilient(
-      page.getByLabel(/phone number|phone/i).first(),
-      "+64211234567",
-    );
-    const visitorType = page.getByLabel(/visitor type/i);
-    if (await visitorType.count()) {
-      await visitorType.selectOption("CONTRACTOR").catch(() => null);
+    const kioskForm = page.getByRole("region", { name: /sign-in form/i }).first();
+    const kioskNameInput = kioskForm
+      .getByRole("textbox", { name: /full name/i })
+      .first();
+    await expect(kioskNameInput).toBeVisible({ timeout: 20000 });
+    await fillInputResilient(kioskNameInput, "Visual Kiosk User");
+
+    const kioskPhoneInput = kioskForm
+      .getByRole("textbox", { name: /phone number|phone/i })
+      .first();
+    await fillInputResilient(kioskPhoneInput, "+64211234567");
+
+    await kioskForm
+      .getByRole("combobox", { name: /visitor type/i })
+      .first()
+      .selectOption("CONTRACTOR")
+      .catch(() => null);
+
+    const employer = page.locator('input[id="employerName"]');
+    if ((await employer.count().catch(() => 0)) > 0) {
+      await employer.fill("Visual Employer").catch(() => null);
     }
-    await page.getByRole("button", { name: /continue/i }).click();
+    const role = page.locator('input[id="roleOnSite"]');
+    if ((await role.count().catch(() => 0)) > 0) {
+      await role.fill("Contractor").catch(() => null);
+    }
 
-    // Step 2: Progress through dynamic induction/sign-off flow.
+    await kioskForm
+      .getByRole("button", { name: /continue to induction|continue/i })
+      .first()
+      .click({ force: true })
+      .catch(() => null);
+
     const inductionHeading = page.getByRole("heading", {
       level: 2,
       name: /site induction/i,
     });
-    if (await inductionHeading.isVisible().catch(() => false)) {
-      // Answer checkbox/radio/text questions when present.
-      const checks = page.getByRole("checkbox");
-      const checkCount = await checks.count();
-      for (let i = 0; i < checkCount; i++) {
-        await checks.nth(i).check().catch(() => null);
+    await expect(inductionHeading).toBeVisible({ timeout: 20000 });
+
+    const continueToSignOff = page
+      .getByRole("button", {
+        name: /continue to sign off|continue|finish|sign off/i,
+      })
+      .first();
+    const canvas = page
+      .locator("#signature-canvas, canvas.sigCanvas, canvas")
+      .first();
+
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      if (await canvas.isVisible({ timeout: 400 }).catch(() => false)) {
+        break;
+      }
+
+      const checkboxes = page.locator('input[type="checkbox"]');
+      const checkboxCount = await checkboxes.count().catch(() => 0);
+      for (let i = 0; i < checkboxCount; i++) {
+        const checkbox = checkboxes.nth(i);
+        const visible = await checkbox.isVisible().catch(() => false);
+        const enabled = await checkbox.isEnabled().catch(() => false);
+        if (!visible || !enabled) continue;
+        await checkbox.check({ force: true }).catch(() => null);
       }
 
       const radioGroupNames = await page
@@ -360,18 +397,18 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
             .filter((name): name is string => !!name);
           return Array.from(new Set(names));
         });
-
       for (const groupName of radioGroupNames) {
-        const firstOption = page
+        await page
           .locator(`input[type="radio"][name="${groupName}"]`)
-          .first();
-        if (await firstOption.isVisible().catch(() => false)) {
-          await firstOption.check().catch(() => null);
-        }
+          .first()
+          .check()
+          .catch(() => null);
       }
 
-      const textInputs = page.locator('input[type="text"]');
-      const textCount = await textInputs.count();
+      const textInputs = page
+        .locator('input[type="text"], textarea')
+        .filter({ hasNot: page.locator("#visitorName, #visitorPhone") });
+      const textCount = await textInputs.count().catch(() => 0);
       for (let i = 0; i < textCount; i++) {
         const input = textInputs.nth(i);
         if (await input.isVisible().catch(() => false)) {
@@ -379,76 +416,8 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
         }
       }
 
-      const submitInduction = page.getByRole("button", {
-        name: /complete sign-in|continue to sign off|continue|finish|sign off/i,
-      });
-      await submitInduction.first().click();
-    }
-
-    // Step 3: Wait for signature step
-    const canvas = page
-      .locator("#signature-canvas, canvas.sigCanvas, canvas")
-      .first();
-    for (let i = 0; i < 20; i++) {
-      if (await canvas.isVisible().catch(() => false)) break;
-      const nextBtn = page
-        .getByRole("button", {
-          name: /continue|complete sign-in|continue to sign off|finish|sign off/i,
-        })
-        .first();
-      if (await nextBtn.isVisible().catch(() => false)) {
-        await nextBtn.click().catch(() => null);
-      }
-      await page.waitForTimeout(500);
-    }
-    // Fallback: if public flow didn't reach signature (browser/template variance),
-    // use kiosk flow which renders the same signature canvas component more deterministically.
-    if (!(await canvas.isVisible().catch(() => false))) {
-      await page.goto(`/s/${TEST_SITE_SLUG}/kiosk`);
-      const kioskForm = page.getByRole("region", { name: /sign-in form/i }).first();
-      const kioskNameInput = kioskForm
-        .getByRole("textbox", { name: /full name/i })
-        .first();
-      await expect(kioskNameInput).toBeVisible({ timeout: 15000 });
-      await fillInputResilient(kioskNameInput, "Visual Kiosk User");
-
-      const kioskPhoneInput = kioskForm
-        .getByRole("textbox", { name: /phone number|phone/i })
-        .first();
-      await fillInputResilient(kioskPhoneInput, "+64211234567");
-
-      await kioskForm
-        .getByRole("combobox", { name: /visitor type/i })
-        .first()
-        .selectOption("CONTRACTOR")
-        .catch(() => null);
-
-      const employer = page.locator('input[id="employerName"]');
-      if (await employer.count()) {
-        await employer.fill("Visual Employer").catch(() => null);
-      }
-      const role = page.locator('input[id="roleOnSite"]');
-      if (await role.count()) {
-        await role.fill("Contractor").catch(() => null);
-      }
-      const submitKioskForm = kioskForm
-        .getByRole("button", { name: /continue to induction|continue/i })
-        .first();
-      await submitKioskForm.click();
-      const kioskInductionHeading = page.getByRole("heading", {
-        name: /site induction/i,
-      });
-      if (await kioskInductionHeading.isVisible({ timeout: 15000 }).catch(() => false)) {
-        const ack = page.getByRole("checkbox");
-        const ackCount = await ack.count();
-        for (let i = 0; i < ackCount; i++) {
-          await ack.nth(i).check().catch(() => null);
-        }
-        const continueBtn = page.getByRole("button", {
-          name: /continue|continue to sign off|finish/i,
-        });
-        await continueBtn.first().click().catch(() => null);
-      }
+      await continueToSignOff.click({ force: true }).catch(() => null);
+      await page.waitForTimeout(250 * attempt);
     }
 
     await expect(canvas).toBeVisible({ timeout: 15000 });

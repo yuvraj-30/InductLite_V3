@@ -1,0 +1,446 @@
+[
+  {
+    "url": "https://siteconnect.io/",
+    "status": 200,
+    "resourceType": "document",
+    "contentType": "text/html; charset=UTF-8"
+  },
+  {
+    "url": "https://siteconnect.io/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/chart-builder/public/js/chart-builder-public.js?ver=20.0.8",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/wonderplugin-carousel/engine/wonderplugincarouselskins.js?ver=19.5",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/chart-builder/public/js/chart-builder-public-plugin.js?ver=20.0.8",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-includes/js/jquery/jquery.min.js?ver=3.7.1",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/wonderplugin-carousel/engine/wonderplugincarousel.js?ver=19.5",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/themes/salient/js/build/priority.js?ver=18.0.2",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/themes/salient/js/build/third-party/anime.min.js?ver=4.5.1",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/chart-builder/public/js/google-chart.js?ver=20.0.8",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-includes/js/underscore.min.js?ver=1.13.7",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/themes/salient/js/build/third-party/select2.min.js?ver=4.0.1",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/chart-builder/public/js/export/jhxlsx.js?ver=20.0.8",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/counter-number-pro/assets/js/waypoint.js?ver=6.9",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/chart-builder/public/js/export/CSVExport.js?ver=20.0.8",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/chart-builder/public/js/export/FileSaver.js?ver=20.0.8",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/themes/salient/js/build/third-party/imagesLoaded.min.js?ver=4.1.4",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/counter-number-pro/assets/js/bootstrap.js?ver=6.9",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/themes/salient/js/build/elements/nectar-animated-gradient.js?ver=18.0.2",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/themes/salient/js/build/elements/nectar-lottie.js?ver=18.0.2",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/responsive-accordion-and-collapse/js/accordion.js?ver=6.9",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/counter-number-pro/assets/js/jquery.counterup.min.js?ver=6.9",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/responsive-accordion-and-collapse/js/accordion-custom.js?ver=6.9",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/google-analytics-premium/assets/js/frontend-gtag.min.js?ver=9.10.1",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/themes/salient/js/build/nectar-delay-javascript.js?ver=18.0.2",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/counter-number-pro/assets/js/counter_nscript.js?ver=6.9",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/sitepress-multilingual-cms/res/js/cookies/language-cookie.js?ver=486900",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/google-site-kit/dist/assets/js/googlesitekit-events-provider-ninja-forms-1bcc43dc33ac5df43991.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/ewww-image-optimizer/includes/lazysizes.min.js?ver=831",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/wp-rocket/assets/js/lazyload/17.8.3/lazyload.min.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/complianz-gdpr/cookiebanner/js/complianz.min.js?ver=1765185572",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/themes/salient/js/build/third-party/transit.min.js?ver=0.9.9",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-includes/js/backbone.min.js?ver=1.6.0",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://cdn.trustindex.io/loader.js?ver=1",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/chart-builder/public/js/export/xlsx.core.min.js?ver=20.0.8",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/themes/salient/js/build/third-party/lottie-player.min.js?ver=5.13.0",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/revslider/public/js/sr7.js?ver=6.7.29",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/plugins/revslider/public/js/libs/tptools.js?ver=6.7.29",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://ajax.googleapis.com/ajax/libs/webfont/1/webfont.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://js.hs-scripts.com/8030145.js?integration=WordPress&ver=11.3.33",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript;charset=utf-8"
+  },
+  {
+    "url": "https://fonts.googleapis.com/css?family=Poppins",
+    "status": 200,
+    "resourceType": "stylesheet",
+    "contentType": "text/css; charset=utf-8"
+  },
+  {
+    "url": "https://siteconnect.io/wp-content/uploads/complianz/css/banner-1-optin.css?v=45",
+    "status": 200,
+    "resourceType": "stylesheet",
+    "contentType": "text/css"
+  },
+  {
+    "url": "https://www.googletagmanager.com/gtm.js?id=GTM-P47T6QG2",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://www.googletagmanager.com/gtag/js?id=GT-KTBC77BX",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://js.hsadspixel.net/pixels.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=utf-8"
+  },
+  {
+    "url": "https://js.usemessages.com/conversations-embed.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=utf-8"
+  },
+  {
+    "url": "https://js.hscollectedforms.net/collectedforms.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=utf-8"
+  },
+  {
+    "url": "https://js.hs-analytics.net/analytics/1773300600000/8030145.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://js.hubspot.com/web-interactives-embed.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=utf-8"
+  },
+  {
+    "url": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript;charset=utf-8"
+  },
+  {
+    "url": "https://assets.apollo.io/micro/website-tracker/tracker.iife.js?nocache=sm65sn",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript"
+  },
+  {
+    "url": "https://www.googletagmanager.com/gtag/js?id=G-FSC9L7D449&cx=c&gtm=4e63a1",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://www.googletagmanager.com/gtag/js?id=GT-KTBC77BX&cx=c&gtm=4e63a1",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://js.hs-banner.com/v2/8030145/banner.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://www.clarity.ms/tag/scwo5susmv?ref=gtm",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/x-javascript"
+  },
+  {
+    "url": "https://scripts.clarity.ms/0.8.57/clarity.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript;charset=utf-8"
+  },
+  {
+    "url": "https://app.hubspot.com/conversations-visitor/8030145/threads/utk/8edf7ffcdb8b4cedb7d0f73965f7606f?uuid=90f6c56c74db4ea5898a478e798554af&mobile=false&mobileSafari=false&hideWelcomeMessage=false&hstc=&domain=siteconnect.io&inApp53=false&messagesUtk=8edf7ffcdb8b4cedb7d0f73965f7606f&url=https%3A%2F%2Fsiteconnect.io%2F&inline=false&isFullscreen=false&globalCookieOptOut=&isFirstVisitorSession=true&isAttachmentDisabled=false&isInitialInputFocusDisabled=false&enableWidgetCookieBanner=false&isInCMS=false&hideScrollToButton=true&isIOSMobile=false",
+    "status": 200,
+    "resourceType": "document",
+    "contentType": "text/html; charset=utf-8"
+  },
+  {
+    "url": "https://static.hsappstatic.net/foundations-theming-base/static-1.3158/stylesheets/hubspot-theme.stable.css",
+    "status": 200,
+    "resourceType": "stylesheet",
+    "contentType": "text/css"
+  },
+  {
+    "url": "https://static.hsappstatic.net/foundations-theming-base/static-1.3158/bundles/hubspot-theme.stable.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript"
+  },
+  {
+    "url": "https://static.hsappstatic.net/conversations-visitor-ui/static-1.28207/sass/visitor.css",
+    "status": 200,
+    "resourceType": "stylesheet",
+    "contentType": "text/css"
+  },
+  {
+    "url": "https://static.hsappstatic.net/hubspot-dlb/static-2.1796/bundle.production.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript"
+  },
+  {
+    "url": "https://static.hsappstatic.net/head-dlb/static-1.4754/bundle.production.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript"
+  },
+  {
+    "url": "https://static.hsappstatic.net/react-dlb/static-1.71/bundle.production.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript"
+  },
+  {
+    "url": "https://static.hsappstatic.net/conversations-visitor-ui/static-1.28207/bundles/visitor.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript"
+  },
+  {
+    "url": "https://www.googletagmanager.com/gtag/js?id=AW-491315409",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://www.googletagmanager.com/gtag/js?id=AW-491315409&cx=c&gtm=4e63a1",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://static.hsappstatic.net/conversations-visitor-ui/static-1.28207/i18n-data-data-modern-locales-en-us.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript"
+  },
+  {
+    "url": "https://static.hsappstatic.net/whisper-core/ex/whisper-core.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript"
+  },
+  {
+    "url": "https://static.hsappstatic.net/whisper-core/static-1.8755/whisper-core-entry.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript"
+  },
+  {
+    "url": "https://googleads.g.doubleclick.net/pagead/viewthroughconversion/491315409/?random=1773300842146&cv=11&fst=1773300842146&bg=ffffff&guid=ON&async=1&en=gtag.config&gtm=45be63a1v9213472989za200zb9178534214zd9178534214xec&gcd=13l3l3l3l1l1&dma=0&tag_exp=103116026~103200004~115938466~115938469~116024733~117484252&u_w=1440&u_h=2200&url=https%3A%2F%2Fsiteconnect.io%2F&frm=0&tiba=SiteConnect%20-%20Health%20%26%20Safety%20Software%20NZ&did=dZTNiMT%2CdZTQ1Zm&gdid=dZTNiMT.dZTQ1Zm&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=1729463783.1773300840&uaa=x86&uab=64&uafvl=Not%253AA-Brand%3B99.0.0.0%7CHeadlessChrome%3B145.0.7632.6%7CChromium%3B145.0.7632.6&uamb=0&uam=&uap=Windows&uapv=10.0&uaw=0&data=event%3Dgtag.config&rfmt=3&fmt=4",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://js-na1.hs-scripts.com/8030145.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript;charset=utf-8"
+  },
+  {
+    "url": "https://www.clarity.ms/tag/scwo5susmv?ref=gtm",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/x-javascript"
+  },
+  {
+    "url": "https://connect.facebook.net/en_US/fbevents.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/x-javascript; charset=utf-8"
+  },
+  {
+    "url": "https://connect.facebook.net/signals/config/1253698435092504?v=2.9.277&r=stable&domain=siteconnect.io&hme=b0ad3da822578fe2b808f13c29c26424c1eec6df21f897230a1f8d7975c03c8e&ex_m=101%2C194%2C143%2C22%2C69%2C70%2C136%2C65%2C64%2C11%2C151%2C87%2C16%2C130%2C123%2C72%2C75%2C129%2C148%2C153%2C8%2C4%2C5%2C7%2C6%2C3%2C88%2C98%2C154%2C159%2C208%2C59%2C175%2C176%2C52%2C262%2C30%2C71%2C220%2C219%2C218%2C23%2C32%2C100%2C58%2C10%2C60%2C94%2C95%2C96%2C102%2C126%2C31%2C29%2C128%2C125%2C124%2C144%2C73%2C147%2C145%2C146%2C47%2C57%2C119%2C15%2C150%2C42%2C249%2C250%2C248%2C26%2C27%2C28%2C45%2C137%2C74%2C109%2C18%2C20%2C41%2C37%2C39%2C38%2C80%2C89%2C93%2C107%2C135%2C138%2C43%2C108%2C24%2C21%2C115%2C66%2C35%2C140%2C139%2C141%2C132%2C131%2C25%2C34%2C56%2C106%2C149%2C67%2C17%2C142%2C111%2C78%2C63%2C19%2C82%2C83%2C112%2C81%2C33%2C277%2C201%2C190%2C191%2C189%2C280%2C272%2C49%2C202%2C104%2C127%2C77%2C117%2C51%2C44%2C46%2C110%2C116%2C122%2C55%2C61%2C50%2C53%2C97%2C152%2C1%2C120%2C14%2C118%2C12%2C2%2C54%2C90%2C62%2C114%2C86%2C85%2C155%2C156%2C91%2C92%2C9%2C121%2C99%2C48%2C133%2C84%2C76%2C68%2C113%2C103%2C40%2C134%2C0%2C79%2C36%2C105%2C13%2C157",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/x-javascript; charset=utf-8"
+  }
+]

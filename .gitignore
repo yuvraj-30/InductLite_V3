@@ -78,5 +78,8 @@ apps/web/next-env.d.ts
 
 # Misc
 *.pem
-competitors
+
+# Artifact screenshots (keep analysis files, skip image artifacts)
+apps/web/e2e/visual-regression.spec.ts-snapshots/**/*.png
+competitors/**/*.png
 

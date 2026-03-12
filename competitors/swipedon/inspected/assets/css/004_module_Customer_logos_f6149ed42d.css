@@ -1,0 +1,36 @@
+.large-text {
+  font-size: 23px;
+  line-height: 33px;
+}
+
+.cta_button {
+  margin: 5px; 
+}
+
+.customer-logo {
+  width: 14.6%; 
+  margin: 0 1%; 
+  float: left; 
+  height: 100px; 
+  position: relative;
+  text-align: center;
+}
+
+.customer-logo img {
+  position: absolute; 
+  top: 50%; 
+  left: 50%; 
+  transform: translate(-50%, -50%);
+}
+
+@media (max-width: 780px) {
+  
+  .hide-image {
+      display: none;
+      visibility: hidden;
+  }
+  
+  .customer-logo {
+      width: 25%;
+      margin: 0 4%; 
+}

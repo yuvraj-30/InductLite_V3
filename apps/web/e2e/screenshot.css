@@ -1,4 +1,12 @@
 /* Hide dynamic parts that frequently change between runs (timestamps, flash messages, tooltips) */
+:root {
+  --screenshot-font-body: "Segoe UI", "Manrope", Arial, sans-serif;
+}
+
+body {
+  font-family: var(--screenshot-font-body) !important;
+}
+
 time,
 .timestamp,
 .uptime,

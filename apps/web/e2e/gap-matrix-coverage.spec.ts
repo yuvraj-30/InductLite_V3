@@ -122,7 +122,7 @@ test.describe("Gap Matrix Coverage Inventory", () => {
 
     for (const rawPath of UI_GAP_PATH_SAMPLES) {
       const path = materializeUiPath(rawPath, seeded);
-      const response = await page.request.get(path, { maxRedirects: 5 });
+      const response = await page.request.get(path, { maxRedirects: 0 });
       const status = response.status();
       expect(
         status,

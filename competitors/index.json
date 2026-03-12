@@ -1,0 +1,142 @@
+[
+  {
+    "name": "SignOnSite",
+    "slug": "signonsite",
+    "sourceUrl": "https://www.signonsite.com/",
+    "finalUrl": "https://www.signonsite.com/",
+    "status": 200,
+    "cssDownloaded": 1,
+    "jsDownloaded": 29,
+    "errorCount": 1
+  },
+  {
+    "name": "SiteDocs",
+    "slug": "sitedocs",
+    "sourceUrl": "https://www.sitedocs.com/",
+    "finalUrl": "https://www.sitedocs.com/",
+    "status": 200,
+    "cssDownloaded": 20,
+    "jsDownloaded": 30,
+    "errorCount": 1
+  },
+  {
+    "name": "HammerTech",
+    "slug": "hammertech",
+    "sourceUrl": "https://www.hammertech.com/en-us/",
+    "finalUrl": "https://www.hammertech.com/en-us/",
+    "status": 200,
+    "cssDownloaded": 7,
+    "jsDownloaded": 26,
+    "errorCount": 3
+  },
+  {
+    "name": "SaferMe",
+    "slug": "saferme",
+    "sourceUrl": "https://saferme.com/",
+    "finalUrl": "https://saferme.com/en-nz/",
+    "status": 200,
+    "cssDownloaded": 0,
+    "jsDownloaded": 21,
+    "errorCount": 5
+  },
+  {
+    "name": "Sitemate",
+    "slug": "sitemate",
+    "sourceUrl": "https://sitemate.com/",
+    "finalUrl": "https://sitemate.com/nz/",
+    "status": 200,
+    "cssDownloaded": 15,
+    "jsDownloaded": 29,
+    "errorCount": 2
+  },
+  {
+    "name": "EVA Check-in",
+    "slug": "eva-check-in",
+    "sourceUrl": "https://www.evacheckin.com/",
+    "finalUrl": "https://www.evacheckin.com/",
+    "status": 200,
+    "cssDownloaded": 7,
+    "jsDownloaded": 30,
+    "errorCount": 0
+  },
+  {
+    "name": "SiteConnect",
+    "slug": "siteconnect",
+    "sourceUrl": "https://siteconnect.io/",
+    "finalUrl": "https://siteconnect.io/",
+    "status": 200,
+    "cssDownloaded": 4,
+    "jsDownloaded": 30,
+    "errorCount": 0
+  },
+  {
+    "name": "SwipedOn",
+    "slug": "swipedon",
+    "sourceUrl": "https://www.swipedon.com/",
+    "finalUrl": "https://www.swipedon.com/",
+    "status": 200,
+    "cssDownloaded": 19,
+    "jsDownloaded": 30,
+    "errorCount": 0
+  },
+  {
+    "name": "Sine",
+    "slug": "sine",
+    "sourceUrl": "https://www.sine.co/",
+    "finalUrl": "https://www.sine.co/",
+    "status": 200,
+    "cssDownloaded": 4,
+    "jsDownloaded": 5,
+    "errorCount": 1
+  },
+  {
+    "name": "Worksite",
+    "slug": "worksite",
+    "sourceUrl": "https://www.worksite.nz/",
+    "finalUrl": "https://www.worksite.nz/",
+    "status": 200,
+    "cssDownloaded": 10,
+    "jsDownloaded": 30,
+    "errorCount": 0
+  },
+  {
+    "name": "ThinkSafe",
+    "slug": "thinksafe",
+    "sourceUrl": "https://www.thinksafe.co.nz/",
+    "finalUrl": "https://www.thinksafe.co.nz/",
+    "status": 200,
+    "cssDownloaded": 19,
+    "jsDownloaded": 30,
+    "errorCount": 0
+  },
+  {
+    "name": "Site App Pro",
+    "slug": "site-app-pro",
+    "sourceUrl": "https://www.siteapppro.com/",
+    "finalUrl": "https://www.siteapppro.com/",
+    "status": 200,
+    "cssDownloaded": 3,
+    "jsDownloaded": 30,
+    "errorCount": 0
+  },
+  {
+    "name": "1Breadcrumb",
+    "slug": "1breadcrumb",
+    "sourceUrl": "https://www.1breadcrumb.com/",
+    "finalUrl": "https://www.breadcrumb.co/en-au",
+    "status": 200,
+    "cssDownloaded": 3,
+    "jsDownloaded": 29,
+    "errorCount": 1
+  },
+  {
+    "name": "InductLite",
+    "slug": "inductlite",
+    "sourceUrl": "https://inductlite-app.onrender.com/",
+    "finalUrl": "https://inductlite-app.onrender.com/",
+    "status": 200,
+    "cssDownloaded": 1,
+    "jsDownloaded": 10,
+    "errorCount": 0
+  }
+]

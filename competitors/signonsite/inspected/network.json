@@ -1,0 +1,188 @@
+[
+  {
+    "url": "https://www.signonsite.com/",
+    "status": 200,
+    "resourceType": "document",
+    "contentType": "text/html; charset=utf-8"
+  },
+  {
+    "url": "https://cdn.prod.website-files.com/65b70c6cbb8a340a71af04e0/css/signonsites.webflow.shared.32e5f5c13.css",
+    "status": 200,
+    "resourceType": "stylesheet",
+    "contentType": "text/css"
+  },
+  {
+    "url": "https://www.google.com/recaptcha/api.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript; charset=utf-8"
+  },
+  {
+    "url": "https://cdn.prod.website-files.com/65b70c6cbb8a340a71af04e0/js/webflow.schunk.36b8fb49256177c8.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://cdn.prod.website-files.com/65b70c6cbb8a340a71af04e0%2F6470f5217e03b0faa8a404de%2F660b48b9bf7fdebe791f3f68%2Fhs_trackcode_7969674-1.0.6.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript"
+  },
+  {
+    "url": "https://cdn.prod.website-files.com/65b70c6cbb8a340a71af04e0/js/webflow.fa187844.38946a2efdbfb30f.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://cdn.prod.website-files.com/65b70c6cbb8a340a71af04e0/js/webflow.schunk.6865b0bcb6c3bb7f.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://d3e54v103j8qbb.cloudfront.net/js/jquery-3.5.1.min.dc5e7f18c8.js?site=65b70c6cbb8a340a71af04e0",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript"
+  },
+  {
+    "url": "https://cdn.jsdelivr.net/npm/@finsweet/attributes-sliderdots@1/sliderdots.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=utf-8"
+  },
+  {
+    "url": "https://www.googletagmanager.com/gtag/js?id=G-FQ1BWXNR8G",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://hubspotonwebflow.com/assets/js/form-124.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=utf-8"
+  },
+  {
+    "url": "https://connect.facebook.net/en_US/fbevents.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/x-javascript; charset=utf-8"
+  },
+  {
+    "url": "https://www.googletagmanager.com/gtm.js?id=GTM-NNPDKN",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://www.clarity.ms/tag/gn4ptzu1om",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/x-javascript"
+  },
+  {
+    "url": "https://snap.licdn.com/li.lms-analytics/insight.min.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript;charset=utf-8"
+  },
+  {
+    "url": "https://www.gstatic.com/recaptcha/releases/QvLuXwupqtKCyjBw2xIzFLIf/recaptcha__en.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://js.hs-scripts.com/7969674.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript;charset=utf-8"
+  },
+  {
+    "url": "https://a.quora.com/qevents.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/plain"
+  },
+  {
+    "url": "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=utf-8"
+  },
+  {
+    "url": "https://ws.zoominfo.com/pixel/611df87eef124c001c3ccc72",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://bat.bing.com/bat.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript"
+  },
+  {
+    "url": "https://scripts.clarity.ms/0.8.57/clarity.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript;charset=utf-8"
+  },
+  {
+    "url": "https://js.hsadspixel.net/pixels.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=utf-8"
+  },
+  {
+    "url": "https://js.usemessages.com/conversations-embed.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=utf-8"
+  },
+  {
+    "url": "https://bat.bing.com/p/action/25016959.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=utf-8"
+  },
+  {
+    "url": "https://js.hs-banner.com/7969674.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://js.hs-analytics.net/analytics/1773300600000/7969674.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript"
+  },
+  {
+    "url": "https://www.googletagmanager.com/gtag/js?id=AW-876013045&cx=c&gtm=4e63a1",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://www.googletagmanager.com/gtag/js?id=AW-876013045",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://googleads.g.doubleclick.net/pagead/viewthroughconversion/876013045/?random=1773300737215&cv=11&fst=1773300737215&bg=ffffff&guid=ON&async=1&en=gtag.config&gtm=45be63a1v879600129za200zb873806602zd873806602xec&gcd=13l3l3l3l1l1&dma=0&tag_exp=103116026~103200004~115616986~115938465~115938468~116024733~117484252&u_w=1440&u_h=2200&url=https%3A%2F%2Fwww.signonsite.com%2F&frm=0&tiba=SignOnSite%3A%20An%20Online%20Productivity%2C%20Data%20%26%20Safety%20Platform%20for%20Construction&did=dZGVlNj%2CdZTQ1Zm&gdid=dZGVlNj.dZTQ1Zm&hn=www.googleadservices.com&npa=0&pscdl=noapi&auid=1186887472.1773300735&uaa=x86&uab=64&uafvl=Not%253AA-Brand%3B99.0.0.0%7CHeadlessChrome%3B145.0.7632.6%7CChromium%3B145.0.7632.6&uamb=0&uam=&uap=Windows&uapv=10.0&uaw=0&data=event%3Dgtag.config&rfmt=3&fmt=4",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "text/javascript; charset=UTF-8"
+  },
+  {
+    "url": "https://js-na1.hs-scripts.com/7969674.js",
+    "status": 200,
+    "resourceType": "script",
+    "contentType": "application/javascript;charset=utf-8"
+  }
+]

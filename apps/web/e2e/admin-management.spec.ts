@@ -175,7 +175,7 @@ test.describe.serial("Admin Management", () => {
       expect(body?.success).toBeTruthy();
     };
 
-    await page.getByRole("link", { name: "Add Contractor" }).click();
+    await page.getByRole("link", { name: "Add Contractor" }).first().click();
     await page.getByLabel("Contractor Name").fill(contractorName);
     await page.getByLabel("Trade").fill("General");
     await page.getByLabel("Contact Name").fill("Field Lead");

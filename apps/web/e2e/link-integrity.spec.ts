@@ -36,6 +36,41 @@ function shouldSkipPath(path: string): boolean {
   return false;
 }
 
+async function requestPathWithStableHost(
+  page: import("@playwright/test").Page,
+  baseUrl: string,
+  path: string,
+): Promise<number> {
+  const base = new URL(baseUrl);
+  const visited = new Set<string>();
+  let target = `${baseUrl}${path}`;
+
+  for (let hop = 0; hop < 5; hop++) {
+    const response = await page.request.get(target, { maxRedirects: 0 });
+    const status = response.status();
+    if (status < 300 || status >= 400) {
+      return status;
+    }
+
+    const location = response.headers()["location"];
+    if (!location) {
+      return status;
+    }
+
+    const redirected = new URL(location, target);
+    redirected.protocol = base.protocol;
+    redirected.host = base.host;
+    const redirectedHref = redirected.toString();
+    if (visited.has(redirectedHref)) {
+      return status;
+    }
+    visited.add(redirectedHref);
+    target = redirectedHref;
+  }
+
+  return 508;
+}
+
 async function collectInternalLinks(): Promise<LinkTarget[]> {
   const out = new Map<string, string>();
   const anchors = Array.from(document.querySelectorAll("a[href]"));
@@ -92,12 +127,14 @@ test.describe("Link/Navigation Integrity", () => {
     }
 
     for (const path of Array.from(discovered).sort()) {
-      const res = await page.request.get(`${workerServer.baseUrl}${path}`, {
-        maxRedirects: 5,
-      });
+      const status = await requestPathWithStableHost(
+        page,
+        workerServer.baseUrl,
+        path,
+      );
       expect(
-        res.status(),
-        `Broken internal link target: ${path} (status ${res.status()})`,
+        status,
+        `Broken internal link target: ${path} (status ${status})`,
       ).toBeLessThan(400);
     }
   });
@@ -141,12 +178,14 @@ test.describe("Link/Navigation Integrity", () => {
     }
 
     for (const path of Array.from(discovered).sort()) {
-      const res = await page.request.get(`${workerServer.baseUrl}${path}`, {
-        maxRedirects: 5,
-      });
+      const status = await requestPathWithStableHost(
+        page,
+        workerServer.baseUrl,
+        path,
+      );
       expect(
-        res.status(),
-        `Broken admin internal link target: ${path} (status ${res.status()})`,
+        status,
+        `Broken admin internal link target: ${path} (status ${status})`,
       ).toBeLessThan(400);
     }
   });

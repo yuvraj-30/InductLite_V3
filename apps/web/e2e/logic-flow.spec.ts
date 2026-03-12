@@ -1,4 +1,5 @@
 import { test, expect } from "./test-fixtures";
+import { getTestRouteHeaders } from "./utils/test-route-auth";
 
 async function fillFieldWithRetry(input: {
   page: import("@playwright/test").Page;
@@ -7,18 +8,46 @@ async function fillFieldWithRetry(input: {
 }) {
   const { page, label, value } = input;
   const field = page.getByLabel(label).first();
-  await field.waitFor({ state: "visible", timeout: 15000 });
+
+  const labelSource = label.source.toLowerCase();
+  const fallbackSelector =
+    labelSource.includes("phone")
+      ? "#visitorPhone"
+      : labelSource.includes("name")
+        ? "#visitorName"
+        : null;
+  const fallbackField = fallbackSelector ? page.locator(fallbackSelector).first() : null;
+
+  let hasVisibleField = await field.isVisible().catch(() => false);
+  if (!hasVisibleField && fallbackField) {
+    hasVisibleField = await fallbackField.isVisible().catch(() => false);
+  }
+
+  await expect
+    .poll(async () => {
+      const primaryVisible = await field.isVisible().catch(() => false);
+      if (primaryVisible) return true;
+      if (!fallbackField) return false;
+      return fallbackField.isVisible().catch(() => false);
+    })
+    .toBe(true);
+
+  const target = hasVisibleField
+    ? field
+    : fallbackField && (await fallbackField.isVisible().catch(() => false))
+      ? fallbackField
+      : field;
 
   for (let attempt = 1; attempt <= 4; attempt++) {
-    await field.click({ force: true }).catch(() => null);
-    await field.fill(value).catch(() => null);
-    const current = await field.inputValue().catch(() => "");
+    await target.click({ force: true }).catch(() => null);
+    await target.fill(value).catch(() => null);
+    const current = await target.inputValue().catch(() => "");
     if (current === value) {
       return;
     }
 
-    await field.type(value, { delay: 10 }).catch(() => null);
-    const typed = await field.inputValue().catch(() => "");
+    await target.type(value, { delay: 10 }).catch(() => null);
+    const typed = await target.inputValue().catch(() => "");
     if (typed === value) {
       return;
     }
@@ -53,11 +82,24 @@ test.describe("Induction Skip Logic", () => {
     await deletePublicSite(testSiteSlug);
   });
 
-  test("skips configured questions when trigger answer matches", async ({ page }) => {
+  test("skips configured questions when trigger answer matches", async ({ page, request }) => {
     expect(skipLogicSourceQuestionId).toBeTruthy();
     const triggerQuestionId = skipLogicSourceQuestionId!;
 
+    await request
+      .post("/api/test/clear-rate-limit", {
+        headers: getTestRouteHeaders(),
+      })
+      .catch(() => null);
+
     await page.goto(`/s/${testSiteSlug}`);
+    await expect
+      .poll(async () => {
+        const byLabel = await page.getByLabel(/full name|name/i).first().isVisible().catch(() => false);
+        if (byLabel) return true;
+        return page.locator("#visitorName").first().isVisible().catch(() => false);
+      })
+      .toBe(true);
 
     await fillFieldWithRetry({
       page,
@@ -75,10 +117,9 @@ test.describe("Induction Skip Logic", () => {
       await visitorType.selectOption("CONTRACTOR").catch(() => null);
     }
 
-    const inductionHeading = page.getByRole("heading", {
-      level: 2,
-      name: /site induction/i,
-    });
+    const inductionHeading = page
+      .locator("h2", { hasText: /^site induction$/i })
+      .first();
     const continueButton = page
       .getByRole("button", { name: /continue to induction|continue/i })
       .first();
@@ -89,16 +130,23 @@ test.describe("Induction Skip Logic", () => {
         reachedInduction = true;
         break;
       }
-      await fillFieldWithRetry({
-        page,
-        label: /full name|name/i,
-        value: "Skip Logic Tester",
-      });
-      await fillFieldWithRetry({
-        page,
-        label: /phone number|phone/i,
-        value: "+64211234567",
-      });
+      const detailsVisible = await page
+        .locator("#visitorName")
+        .first()
+        .isVisible()
+        .catch(() => false);
+      if (detailsVisible) {
+        await fillFieldWithRetry({
+          page,
+          label: /full name|name/i,
+          value: "Skip Logic Tester",
+        });
+        await fillFieldWithRetry({
+          page,
+          label: /phone number|phone/i,
+          value: "+64211234567",
+        });
+      }
       await page.waitForTimeout(300 * attempt);
     }
     expect(reachedInduction).toBe(true);
