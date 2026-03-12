@@ -305,11 +305,18 @@ async function runKioskFlow({ browserType, contextOptions, slug, label }) {
       await visitorType.selectOption('CONTRACTOR').catch(() => null);
     }
 
-    const detailsSubmit = page.locator('button[type="submit"]').first();
+    const detailsSubmitByName = page
+      .getByRole('button', { name: /continue to induction|continue|next/i })
+      .first();
+    const detailsSubmitByType = page.locator('button[type="submit"]').first();
     const inductionHeading = page.getByRole('heading', { level: 2, name: /site induction/i });
     let reachedInduction = false;
     for (let attempt = 1; attempt <= 4; attempt++) {
-      await detailsSubmit.click({ force: true });
+      const submitTarget =
+        (await detailsSubmitByName.isVisible().catch(() => false))
+          ? detailsSubmitByName
+          : detailsSubmitByType;
+      await submitTarget.click({ force: true });
       if (await inductionHeading.isVisible({ timeout: 5000 }).catch(() => false)) {
         reachedInduction = true;
         break;
@@ -480,16 +487,46 @@ async function resolveEscalation({ adminPage, visitorName, decision }) {
       .count();
     if (resolved > 0) return true;
 
-    const pendingHeading = adminPage.getByRole('heading', { level: 3, name: visitorName }).first();
-    const hasPending = await pendingHeading.isVisible().catch(() => false);
-    if (!hasPending) {
+    const hasNameOnPage = await adminPage
+      .getByText(visitorName, { exact: false })
+      .first()
+      .isVisible()
+      .catch(() => false);
+    if (!hasNameOnPage) {
       await adminPage.waitForTimeout(800);
       continue;
     }
 
-    const card = pendingHeading.locator('xpath=ancestor::div[contains(@class,"border-amber-200")][1]');
-    await card.getByRole('button', { name: actionName }).first().click({ force: true });
-    await adminPage.waitForTimeout(1000);
+    let clicked = false;
+
+    const scopedContainers = adminPage
+      .locator('tr, article, section, div')
+      .filter({ hasText: visitorName });
+    const scopedCount = Math.min(await scopedContainers.count(), 40);
+    for (let i = 0; i < scopedCount; i++) {
+      const container = scopedContainers.nth(i);
+      const button = container.getByRole('button', { name: actionName }).first();
+      if (await button.isVisible().catch(() => false)) {
+        await button.click({ force: true });
+        clicked = true;
+        break;
+      }
+    }
+
+    if (!clicked) {
+      const globalAction = adminPage.getByRole('button', { name: actionName }).first();
+      if (await globalAction.isVisible().catch(() => false)) {
+        await globalAction.click({ force: true });
+        clicked = true;
+      }
+    }
+
+    if (clicked) {
+      await adminPage.waitForTimeout(1000);
+      continue;
+    }
+
+    await adminPage.waitForTimeout(800);
   }
   return false;
 }
@@ -585,6 +622,7 @@ async function runEscalationFlow({ browserType, label, slug, redFlagQuestionId, 
   } catch (error) {
     result.details = `error=${error instanceof Error ? error.message : String(error)}`;
     await publicPage.screenshot({ path: path.join(outDir, `escalation-${label}-error.png`), fullPage: true }).catch(() => null);
+    await adminPage.screenshot({ path: path.join(outDir, `escalation-admin-${label}-error.png`), fullPage: true }).catch(() => null);
   } finally {
     await context.close();
     await browser.close();
@@ -697,6 +735,19 @@ async function runManualFlow() {
     console.log('MANUAL_FLOW_SUMMARY_START');
     console.log(JSON.stringify(runSummary, null, 2));
     console.log('MANUAL_FLOW_SUMMARY_END');
+
+    const manualFlowPassed = Boolean(
+      runSummary.kioskDesktop?.pass &&
+      runSummary.kioskMobile?.pass &&
+      runSummary.escalationChromium?.approvePass &&
+      runSummary.escalationChromium?.denyPass &&
+      runSummary.escalationWebkit?.approvePass &&
+      runSummary.escalationWebkit?.denyPass,
+    );
+
+    if (!manualFlowPassed) {
+      throw new Error('Manual flow assertions failed. See MANUAL_FLOW_SUMMARY and screenshots in apps/web/manual-evidence/.');
+    }
   } finally {
     if (kioskSlug) {
       await deleteSite(kioskSlug).catch(() => null);
@@ -852,9 +903,9 @@ async function main() {
   const separatorIndex = args.indexOf("--");
   const passthroughArgs =
     separatorIndex >= 0 ? args.slice(separatorIndex + 1) : [];
-  const runManualFlow = args.includes("--manual-flow");
+  const runManualFlowMode = args.includes("--manual-flow");
   const runAllE2EDefault =
-    args.includes("--all-e2e") || !runManualFlow;
+    args.includes("--all-e2e") || !runManualFlowMode;
 
   if (runAllE2EDefault) {
     await runAllE2E(passthroughArgs);
