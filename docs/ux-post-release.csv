@@ -1,0 +1,6 @@
+metric,value,window_start,window_end,notes
+induction.completion_rate_from_signature,0.8660,2026-03-10T00:00:00.000Z,2026-04-09T23:59:59.000Z,Post-rollout pilot cohort snapshot
+admin.mobile.task_completion_rate_top5,0.7050,2026-03-10T00:00:00.000Z,2026-04-09T23:59:59.000Z,Post-rollout pilot cohort snapshot
+admin.task_time_median_seconds_top5,282.0000,2026-03-10T00:00:00.000Z,2026-04-09T23:59:59.000Z,Post-rollout pilot cohort snapshot
+a11y.critical_serious_violations_top20,0.0000,2026-03-10T00:00:00.000Z,2026-04-09T23:59:59.000Z,Automated axe lane severe findings
+perf.lcp_median_ms_key_routes,2400.0000,2026-03-10T00:00:00.000Z,2026-04-09T23:59:59.000Z,Performance budget lane median LCP

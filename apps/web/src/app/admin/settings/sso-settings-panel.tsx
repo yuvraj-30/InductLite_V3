@@ -72,9 +72,9 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
   };
 
   return (
-    <section className="mb-6 rounded-lg border bg-white p-4">
-      <h2 className="text-lg font-semibold text-gray-900">SSO and Directory Sync</h2>
-      <p className="mt-1 text-sm text-gray-600">
+    <section className="surface-panel mb-6 p-4">
+      <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">SSO and Directory Sync</h2>
+      <p className="mt-1 text-sm text-secondary">
         Configure enterprise identity provider login and optional directory provisioning.
       </p>
 
@@ -90,19 +90,19 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
       )}
 
       <form action={formAction} className="mt-4 space-y-4">
-        <label className="flex items-center gap-2 text-sm text-gray-700">
+        <label className="flex items-center gap-2 text-sm text-secondary">
           <input
             type="checkbox"
             name="enabled"
             value="true"
             defaultChecked={initialConfig.enabled}
-            className="h-4 w-4 rounded border-gray-300"
+            className="h-4 w-4 rounded border-[color:var(--border-soft)]"
           />
           Enable SSO login
         </label>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Provider
             <select
               name="provider"
@@ -114,7 +114,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
             </select>
           </label>
 
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Display name
             <input
               name="displayName"
@@ -124,7 +124,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
             />
           </label>
 
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Issuer URL
             <input
               name="issuerUrl"
@@ -137,7 +137,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
             )}
           </label>
 
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Client ID
             <input
               name="clientId"
@@ -149,7 +149,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
             )}
           </label>
 
-          <label className="text-sm text-gray-700 md:col-span-2">
+          <label className="text-sm text-secondary md:col-span-2">
             Client secret (leave blank to keep existing)
             <input
               name="clientSecret"
@@ -164,7 +164,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
             />
           </label>
 
-          <label className="text-sm text-gray-700 md:col-span-2">
+          <label className="text-sm text-secondary md:col-span-2">
             Scopes (comma or newline separated)
             <textarea
               name="scopes"
@@ -176,14 +176,14 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
           </label>
         </div>
 
-        <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
-          <h3 className="text-sm font-semibold text-gray-900">Role Mapping</h3>
-          <p className="mt-1 text-xs text-gray-600">
+        <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-4">
+          <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">Role Mapping</h3>
+          <p className="mt-1 text-xs text-secondary">
             Match provider claims to app roles.
           </p>
 
           <div className="mt-3 grid grid-cols-1 gap-4 md:grid-cols-2">
-            <label className="text-sm text-gray-700">
+            <label className="text-sm text-secondary">
               Default role
               <select
                 name="defaultRole"
@@ -196,7 +196,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
               </select>
             </label>
 
-            <label className="text-sm text-gray-700">
+            <label className="text-sm text-secondary">
               Role claim path
               <input
                 name="roleClaimPath"
@@ -206,7 +206,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
               />
             </label>
 
-            <label className="text-sm text-gray-700">
+            <label className="text-sm text-secondary">
               Admin claim values
               <textarea
                 name="roleMappingAdmin"
@@ -216,7 +216,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
               />
             </label>
 
-            <label className="text-sm text-gray-700">
+            <label className="text-sm text-secondary">
               Site manager claim values
               <textarea
                 name="roleMappingSiteManager"
@@ -226,7 +226,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
               />
             </label>
 
-            <label className="text-sm text-gray-700 md:col-span-2">
+            <label className="text-sm text-secondary md:col-span-2">
               Viewer claim values
               <textarea
                 name="roleMappingViewer"
@@ -238,7 +238,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
           </div>
         </div>
 
-        <label className="block text-sm text-gray-700">
+        <label className="block text-sm text-secondary">
           Allowed email domains (optional)
           <textarea
             name="allowedEmailDomains"
@@ -249,47 +249,47 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
           />
         </label>
 
-        <label className="flex items-center gap-2 text-sm text-gray-700">
+        <label className="flex items-center gap-2 text-sm text-secondary">
           <input
             type="checkbox"
             name="autoProvisionUsers"
             value="true"
             defaultChecked={initialConfig.autoProvisionUsers}
-            className="h-4 w-4 rounded border-gray-300"
+            className="h-4 w-4 rounded border-[color:var(--border-soft)]"
           />
           Auto-provision users on first successful SSO login
         </label>
 
-        <label className="flex items-center gap-2 text-sm text-gray-700">
+        <label className="flex items-center gap-2 text-sm text-secondary">
           <input
             type="checkbox"
             name="directorySyncEnabled"
             value="true"
             defaultChecked={initialConfig.directorySyncEnabled}
-            className="h-4 w-4 rounded border-gray-300"
+            className="h-4 w-4 rounded border-[color:var(--border-soft)]"
           />
           Enable directory sync API
         </label>
 
-        <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
-          <h3 className="text-sm font-semibold text-gray-900">Partner API v1</h3>
-          <p className="mt-1 text-xs text-gray-600">
+        <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-4">
+          <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">Partner API v1</h3>
+          <p className="mt-1 text-xs text-secondary">
             Configure versioned partner API access with scoped key permissions and monthly quotas.
           </p>
 
-          <label className="mt-3 flex items-center gap-2 text-sm text-gray-700">
+          <label className="mt-3 flex items-center gap-2 text-sm text-secondary">
             <input
               type="checkbox"
               name="partnerApiEnabled"
               value="true"
               defaultChecked={initialConfig.partnerApiEnabled}
-              className="h-4 w-4 rounded border-gray-300"
+              className="h-4 w-4 rounded border-[color:var(--border-soft)]"
             />
             Enable partner API
           </label>
 
           <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
-            <label className="text-sm text-gray-700 md:col-span-2">
+            <label className="text-sm text-secondary md:col-span-2">
               API scopes (comma or newline separated)
               <textarea
                 name="partnerApiScopes"
@@ -305,7 +305,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
               )}
             </label>
 
-            <label className="text-sm text-gray-700">
+            <label className="text-sm text-secondary">
               Monthly request quota
               <input
                 name="partnerApiMonthlyQuota"
@@ -327,24 +327,24 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
         <div className="flex items-center justify-end border-t pt-4">
           <button
             type="submit"
-            className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="inline-flex items-center rounded-md bg-[color:var(--accent-primary)] px-4 py-2 text-sm font-medium text-white hover:brightness-95"
           >
             Save SSO Settings
           </button>
         </div>
       </form>
 
-      <div className="mt-6 rounded-md border border-gray-200 bg-gray-50 p-4">
-        <h3 className="text-sm font-semibold text-gray-900">
+      <div className="mt-6 rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-4">
+        <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">
           Directory Sync API Key
         </h3>
-        <p className="mt-1 text-xs text-gray-600">
+        <p className="mt-1 text-xs text-secondary">
           Endpoint:
-          <code className="ml-1 rounded bg-gray-100 px-1 py-0.5 text-[11px]">
+          <code className="ml-1 rounded bg-[color:var(--bg-surface-strong)] px-1 py-0.5 text-[11px]">
             POST /api/auth/directory-sync?company=your-company-slug
           </code>
         </p>
-        <p className="mt-1 text-xs text-gray-600">
+        <p className="mt-1 text-xs text-secondary">
           Token status:{" "}
           <span className="font-medium">
             {initialConfig.hasDirectorySyncToken ? "Configured" : "Not configured"}
@@ -362,7 +362,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
             <p className="mt-1 text-xs">
               Copy this key now. It is only shown once.
             </p>
-            <div className="mt-2 rounded border border-green-200 bg-white p-2 font-mono text-xs text-gray-900">
+            <div className="mt-2 rounded border border-green-200 bg-[color:var(--bg-surface)] p-2 font-mono text-xs text-[color:var(--text-primary)]">
               {rotateResult.apiKey}
             </div>
           </div>
@@ -373,26 +373,26 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
             type="button"
             onClick={handleRotateToken}
             disabled={isRotating}
-            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100 disabled:opacity-50"
+            className="btn-secondary disabled:opacity-50"
           >
             {isRotating ? "Rotating..." : "Rotate Directory Sync Key"}
           </button>
         </div>
       </div>
 
-      <div className="mt-6 rounded-md border border-gray-200 bg-gray-50 p-4">
-        <h3 className="text-sm font-semibold text-gray-900">Partner API Key</h3>
-        <p className="mt-1 text-xs text-gray-600">
+      <div className="mt-6 rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-4">
+        <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">Partner API Key</h3>
+        <p className="mt-1 text-xs text-secondary">
           Endpoints:
-          <code className="ml-1 rounded bg-gray-100 px-1 py-0.5 text-[11px]">
+          <code className="ml-1 rounded bg-[color:var(--bg-surface-strong)] px-1 py-0.5 text-[11px]">
             GET /api/v1/partner/sites?company=your-company-slug
           </code>{" "}
           and
-          <code className="ml-1 rounded bg-gray-100 px-1 py-0.5 text-[11px]">
+          <code className="ml-1 rounded bg-[color:var(--bg-surface-strong)] px-1 py-0.5 text-[11px]">
             GET /api/v1/partner/sign-ins?company=your-company-slug
           </code>
         </p>
-        <p className="mt-1 text-xs text-gray-600">
+        <p className="mt-1 text-xs text-secondary">
           Token status:{" "}
           <span className="font-medium">
             {initialConfig.hasPartnerApiToken ? "Configured" : "Not configured"}
@@ -410,7 +410,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
             <p className="mt-1 text-xs">
               Copy this key now. It is only shown once.
             </p>
-            <div className="mt-2 rounded border border-green-200 bg-white p-2 font-mono text-xs text-gray-900">
+            <div className="mt-2 rounded border border-green-200 bg-[color:var(--bg-surface)] p-2 font-mono text-xs text-[color:var(--text-primary)]">
               {partnerRotateResult.apiKey}
             </div>
           </div>
@@ -421,7 +421,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
             type="button"
             onClick={handleRotatePartnerToken}
             disabled={isRotatingPartner}
-            className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-100 disabled:opacity-50"
+            className="btn-secondary disabled:opacity-50"
           >
             {isRotatingPartner ? "Rotating..." : "Rotate Partner API Key"}
           </button>
@@ -430,3 +430,5 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
     </section>
   );
 }
+
+

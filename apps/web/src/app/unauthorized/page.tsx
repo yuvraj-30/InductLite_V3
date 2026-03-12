@@ -9,8 +9,8 @@ export const dynamic = "force-dynamic";
 
 export default function UnauthorizedPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white p-8 text-center shadow-sm">
+    <div className="flex min-h-screen items-center justify-center px-4 py-12 sm:px-6 lg:px-8">
+      <div className="surface-panel-strong w-full max-w-md p-8 text-center">
         <div className="mb-6 text-red-500">
           <svg
             className="mx-auto h-14 w-14"
@@ -27,9 +27,11 @@ export default function UnauthorizedPage() {
           </svg>
         </div>
 
-        <h1 className="mb-4 text-3xl font-bold text-gray-900">Access Denied</h1>
+        <h1 className="kinetic-title mb-4 text-3xl font-black text-[color:var(--text-primary)]">
+          Access Denied
+        </h1>
 
-        <p className="mb-8 text-gray-600">
+        <p className="mb-8 text-secondary">
           You don&apos;t have permission to access this page. Contact your
           administrator if you believe this is an error.
         </p>

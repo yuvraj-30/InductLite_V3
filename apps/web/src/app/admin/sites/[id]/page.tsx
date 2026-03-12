@@ -22,6 +22,7 @@ import { headers } from "next/headers";
 import { getPublicBaseUrl } from "@/lib/url/public-url";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
+import { PageWarningState } from "@/components/ui/page-state";
 
 export const metadata = {
   title: "Site Details | InductLite",
@@ -57,10 +58,16 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
   const guard = await checkAuthReadOnly();
   if (!guard.success) {
     return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-700">{guard.error}</p>
+      <div className="space-y-6 p-3 sm:p-4">
+        <div className="surface-panel-strong p-5">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+            Site Details
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
+            View and manage site access, sign-in links, and operational settings.
+          </p>
         </div>
+        <PageWarningState title="Unable to load site." description={guard.error} />
       </div>
     );
   }
@@ -88,18 +95,19 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
   if (!site) {
     if (siteLoadFailed) {
       return (
-        <div className="p-6">
-          <div className="mb-4">
+        <div className="space-y-4 p-3 sm:p-4">
+          <div>
             <Link
               href="/admin/sites"
-              className="text-sm text-gray-500 hover:text-gray-700"
+              className="text-sm font-semibold text-accent hover:underline"
             >
               Back to Sites
             </Link>
           </div>
-          <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            Site data could not be loaded. Please refresh and try again.
-          </div>
+          <PageWarningState
+            title="Site data could not be loaded."
+            description="Please refresh and try again."
+          />
         </div>
       );
     }
@@ -160,22 +168,22 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
     : null;
 
   return (
-    <div className="p-6">
+    <div className="space-y-6 p-3 sm:p-4">
       {/* Breadcrumb */}
-      <div className="mb-6">
+      <div>
         <nav className="flex" aria-label="Breadcrumb">
           <ol className="flex items-center space-x-2">
             <li>
               <Link
                 href="/admin/sites"
-                className="text-gray-500 hover:text-gray-700"
+                className="text-muted hover:text-secondary"
               >
                 Sites
               </Link>
             </li>
             <li>
               <svg
-                className="flex-shrink-0 h-5 w-5 text-gray-400"
+                className="flex-shrink-0 h-5 w-5 text-muted"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -187,33 +195,34 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
               </svg>
             </li>
             <li>
-              <span className="text-gray-900 font-medium">{site.name}</span>
+              <span className="text-[color:var(--text-primary)] font-medium">{site.name}</span>
             </li>
           </ol>
         </nav>
       </div>
 
       {dataLoadFailed && (
-        <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Some site details could not be loaded. Please refresh and try again.
-        </div>
+        <PageWarningState
+          title="Some site details could not be loaded."
+          description="Please refresh and try again."
+        />
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6 lg:col-span-2">
           {/* Site Header */}
-          <div className="bg-white shadow rounded-lg p-6">
+          <div className="surface-panel p-5 sm:p-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
                   {site.name}
                 </h1>
                 <span
                   className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                     site.is_active
                       ? "bg-green-100 text-green-800"
-                      : "bg-gray-100 text-gray-800"
+                      : "bg-[color:var(--bg-surface-strong)] text-[color:var(--text-primary)]"
                   }`}
                 >
                   {site.is_active ? "Active" : "Inactive"}
@@ -221,19 +230,19 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
               </div>
             </div>
             {site.address && (
-              <p className="text-gray-600 mb-2">
+              <p className="text-secondary mb-2">
                 <span className="font-medium">Address:</span> {site.address}
               </p>
             )}
             {site.description && (
-              <p className="text-gray-600">
+              <p className="text-secondary">
                 <span className="font-medium">Description:</span>{" "}
                 {site.description}
               </p>
             )}
             {site.location_latitude !== null &&
               site.location_longitude !== null && (
-                <p className="text-gray-600 mt-2">
+                <p className="text-secondary mt-2">
                   <span className="font-medium">Location Audit:</span>{" "}
                   {site.location_latitude.toFixed(6)},{" "}
                   {site.location_longitude.toFixed(6)}
@@ -241,15 +250,15 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
                   Radius {site.location_radius_m ?? 150}m
                 </p>
               )}
-            <p className="text-sm text-gray-400 mt-4">
+            <p className="text-sm text-muted mt-4">
               Created: {formatNzDate(site.created_at)}
             </p>
           </div>
 
           {/* Edit Form (if permitted) */}
           {canManageSites && (
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-4">
+            <div className="surface-panel p-5 sm:p-6">
+              <h2 className="text-lg font-medium text-[color:var(--text-primary)] mb-4">
                 Edit Site
               </h2>
               <EditSiteForm site={site} />
@@ -257,58 +266,58 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
           )}
 
           {/* Recent Sign-Ins */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">
+          <div className="surface-panel p-5 sm:p-6">
+            <h2 className="text-lg font-medium text-[color:var(--text-primary)] mb-4">
               Recent Sign-Ins
             </h2>
             {recentSignIns.length === 0 ? (
-              <p className="text-gray-500 text-sm">No sign-ins recorded yet.</p>
+              <p className="text-muted text-sm">No sign-ins recorded yet.</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
+                <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
                   <thead>
                     <tr>
-                      <th className="px-3 py-2 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                      <th className="px-3 py-2 text-left text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
                         Visitor
                       </th>
-                      <th className="px-3 py-2 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                      <th className="px-3 py-2 text-left text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
                         Employer
                       </th>
-                      <th className="px-3 py-2 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                      <th className="px-3 py-2 text-left text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
                         Signed In
                       </th>
-                      <th className="px-3 py-2 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                      <th className="px-3 py-2 text-left text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
                         Signed Out
                       </th>
-                      <th className="px-3 py-2 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                      <th className="px-3 py-2 text-left text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
                         Location
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-[color:var(--border-soft)]">
                     {recentSignIns.map((record) => (
                       <tr key={record.id}>
-                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-[color:var(--text-primary)]">
                           {record.visitor_name}
                         </td>
-                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-secondary">
                           {record.employer_name || "-"}
                         </td>
-                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-secondary">
                           {formatNzDateTime(record.sign_in_ts)}
                         </td>
-                        <td className="px-3 py-2 whitespace-nowrap text-sm text-gray-600">
+                        <td className="px-3 py-2 whitespace-nowrap text-sm text-secondary">
                           {record.sign_out_ts ? (
                             formatNzDateTime(record.sign_out_ts)
                           ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-[color:var(--bg-surface-strong)] text-accent">
                               On site
                             </span>
                           )}
                         </td>
                         <td className="px-3 py-2 whitespace-nowrap text-sm">
                           {!record.location_captured_at ? (
-                            <span className="text-gray-500">Unavailable</span>
+                            <span className="text-muted">Unavailable</span>
                           ) : record.location_within_radius === true ? (
                             <span className="text-emerald-700">Within radius</span>
                           ) : record.location_within_radius === false ? (
@@ -329,16 +338,16 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
         {/* Sidebar */}
         <div className="space-y-6">
           {/* QR Code / Public Link */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">
+          <div className="surface-panel p-5 sm:p-6">
+            <h2 className="text-lg font-medium text-[color:var(--text-primary)] mb-4">
               Public Sign-In Link
             </h2>
 
             {publicUrl ? (
               <div className="space-y-4">
-                <div className="bg-gray-50 p-3 rounded-md">
-                  <p className="text-xs text-gray-500 mb-1">Public URL:</p>
-                  <p className="text-sm font-mono text-gray-800 break-all">
+                <div className="bg-[color:var(--bg-surface-strong)] p-3 rounded-md">
+                  <p className="text-xs text-muted mb-1">Public URL:</p>
+                  <p className="text-sm font-mono text-[color:var(--text-primary)] break-all">
                     {publicUrl}
                   </p>
                 </div>
@@ -348,7 +357,7 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
                     href={publicUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                    className="btn-secondary"
                   >
                     <svg
                       className="-ml-0.5 mr-1.5 h-4 w-4"
@@ -371,8 +380,8 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
                 </div>
 
                 {canManageSites && (
-                  <div className="pt-4 border-t">
-                    <p className="text-xs text-gray-500 mb-2">
+                  <div className="border-t border-[color:var(--border-soft)] pt-4">
+                    <p className="text-xs text-muted mb-2">
                       Rotate to invalidate the current link and generate a new
                       one:
                     </p>
@@ -381,31 +390,31 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
                 )}
               </div>
             ) : (
-              <p className="text-gray-500 text-sm">
+              <p className="text-muted text-sm">
                 No active public link for this site.
               </p>
             )}
           </div>
 
           {/* Site Stats */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-4">
+          <div className="surface-panel p-5 sm:p-6">
+            <h2 className="text-lg font-medium text-[color:var(--text-primary)] mb-4">
               Quick Stats
             </h2>
             <dl className="space-y-4">
               <div>
-                <dt className="text-sm font-medium text-gray-500">
+                <dt className="text-sm font-medium text-muted">
                   Currently On-Site
                 </dt>
-                <dd className="mt-1 text-2xl font-semibold text-blue-600">
+                <dd className="mt-1 text-2xl font-semibold text-accent">
                   {currentlyOnSite}
                 </dd>
               </div>
               <div>
-                <dt className="text-sm font-medium text-gray-500">
+                <dt className="text-sm font-medium text-muted">
                   Recent Sign-Ins
                 </dt>
-                <dd className="mt-1 text-2xl font-semibold text-gray-900">
+                <dd className="mt-1 text-2xl font-semibold text-[color:var(--text-primary)]">
                   {recentSignIns.length}
                 </dd>
               </div>
@@ -413,16 +422,16 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
           </div>
 
           {canManageSites && (
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-3">
+            <div className="surface-panel p-5 sm:p-6">
+              <h2 className="text-lg font-medium text-[color:var(--text-primary)] mb-3">
                 Emergency Setup
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-secondary">
                 Configure emergency contacts and procedures shown during induction.
               </p>
               <Link
                 href={`/admin/sites/${siteId}/emergency`}
-                className="mt-4 inline-flex min-h-[44px] items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                className="mt-4 btn-primary min-h-[44px]"
               >
                 Manage Emergency Setup
               </Link>
@@ -430,20 +439,20 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
           )}
 
           {canManageSites && (
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-3">
+            <div className="surface-panel p-5 sm:p-6">
+              <h2 className="text-lg font-medium text-[color:var(--text-primary)] mb-3">
                 Webhook Integrations
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-secondary">
                 Configure endpoint delivery and signing for
-                <code className="mx-1 rounded bg-gray-100 px-1 py-0.5 text-xs">
+                <code className="mx-1 rounded bg-[color:var(--bg-surface-strong)] px-1 py-0.5 text-xs">
                   induction.completed
                 </code>
                 events.
               </p>
               <Link
                 href={`/admin/sites/${siteId}/webhooks`}
-                className="mt-4 inline-flex min-h-[44px] items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                className="mt-4 btn-primary min-h-[44px]"
               >
                 Manage Webhooks
               </Link>
@@ -451,16 +460,16 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
           )}
 
           {canManageSites && (
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-3">
+            <div className="surface-panel p-5 sm:p-6">
+              <h2 className="text-lg font-medium text-[color:var(--text-primary)] mb-3">
                 LMS Connector
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-secondary">
                 Configure one-way induction completion sync to your LMS endpoint.
               </p>
               <Link
                 href={`/admin/sites/${siteId}/lms`}
-                className="mt-4 inline-flex min-h-[44px] items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                className="mt-4 btn-primary min-h-[44px]"
               >
                 Manage LMS Connector
               </Link>
@@ -468,17 +477,17 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
           )}
 
           {canManageSites && (
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-3">
+            <div className="surface-panel p-5 sm:p-6">
+              <h2 className="text-lg font-medium text-[color:var(--text-primary)] mb-3">
                 Access Controls
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-secondary">
                 Configure optional geofence enforcement and hardware gate/turnstile
                 decision integrations.
               </p>
               <Link
                 href={`/admin/sites/${siteId}/access`}
-                className="mt-4 inline-flex min-h-[44px] items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                className="mt-4 btn-primary min-h-[44px]"
               >
                 Manage Access Controls
               </Link>
@@ -486,16 +495,16 @@ export default async function SiteDetailPage({ params }: SiteDetailPageProps) {
           )}
 
           {canManageSites && (
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium text-gray-900 mb-3">
+            <div className="surface-panel p-5 sm:p-6">
+              <h2 className="text-lg font-medium text-[color:var(--text-primary)] mb-3">
                 Pre-Registrations
               </h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-secondary">
                 Create invite links with prefilled visitor details before arrival.
               </p>
               <Link
                 href={`/admin/pre-registrations?siteId=${siteId}`}
-                className="mt-4 inline-flex min-h-[44px] items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                className="mt-4 btn-primary min-h-[44px]"
               >
                 Manage Pre-Registrations
               </Link>

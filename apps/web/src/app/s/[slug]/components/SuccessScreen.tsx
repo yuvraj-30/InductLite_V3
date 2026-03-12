@@ -29,6 +29,8 @@ interface BadgeQrProps {
 }
 
 type BadgePrintProfile = "A4" | "THERMAL";
+const BADGE_PRINT_INK_COLOR = "#171924";
+const BADGE_PRINT_SURFACE_COLOR = "#ffffff";
 
 export function SuccessScreen({ slug, result }: SuccessScreenProps) {
   const [BadgeQrComponent, setBadgeQrComponent] =
@@ -125,7 +127,7 @@ export function SuccessScreen({ slug, result }: SuccessScreenProps) {
       </div>
 
       <div className="space-y-4 px-6 py-6">
-        <div className="rounded-xl border border-white/35 bg-white/45 p-4">
+        <div className="rounded-xl border border-surface-soft bg-surface-soft p-4">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-muted">Name</p>
@@ -185,7 +187,7 @@ export function SuccessScreen({ slug, result }: SuccessScreenProps) {
               onChange={(event) =>
                 setBadgePrintProfile(event.target.value as BadgePrintProfile)
               }
-              className="mt-1 block w-full rounded-md border border-cyan-300/50 bg-white px-2 py-1 text-sm text-gray-900"
+              className="mt-1 block w-full rounded-md border border-cyan-300/50 bg-[color:var(--bg-surface)] px-2 py-1 text-sm text-[color:var(--text-primary)]"
             >
               <option value="A4">A4 badge sheet</option>
               <option value="THERMAL">Thermal label (62mm)</option>
@@ -205,12 +207,12 @@ export function SuccessScreen({ slug, result }: SuccessScreenProps) {
               </p>
             </div>
 
-            <div className="rounded-lg border border-cyan-300/40 bg-white p-2">
+            <div className="rounded-lg border border-cyan-300/40 bg-[color:var(--bg-surface)] p-2">
               {BadgeQrComponent ? (
                 <BadgeQrComponent value={badgePayload} size={badgeQrSize} level="M" />
               ) : (
                 <div
-                  className="flex items-center justify-center text-xs text-gray-500"
+                  className="flex items-center justify-center text-xs text-muted"
                   style={{ height: badgeQrSize, width: badgeQrSize }}
                 >
                   Loading QR...
@@ -243,7 +245,7 @@ export function SuccessScreen({ slug, result }: SuccessScreenProps) {
         </div>
       </div>
 
-      <div className="border-t border-white/25 bg-white/35 px-6 py-4 text-center">
+      <div className="border-t border-surface-soft bg-surface-soft px-6 py-4 text-center">
         <p className="text-sm text-secondary">Need help? Contact site reception.</p>
       </div>
 
@@ -262,9 +264,9 @@ export function SuccessScreen({ slug, result }: SuccessScreenProps) {
             position: absolute !important;
             left: 0 !important;
             top: 0 !important;
-            border: 1px solid #111827 !important;
-            background: #ffffff !important;
-            color: #111827 !important;
+            border: 1px solid ${BADGE_PRINT_INK_COLOR} !important;
+            background: ${BADGE_PRINT_SURFACE_COLOR} !important;
+            color: ${BADGE_PRINT_INK_COLOR} !important;
             box-shadow: none !important;
             margin: 0 !important;
           }
@@ -285,3 +287,4 @@ export function SuccessScreen({ slug, result }: SuccessScreenProps) {
     </div>
   );
 }
+

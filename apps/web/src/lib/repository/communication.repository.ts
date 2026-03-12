@@ -465,6 +465,8 @@ export async function listCommunicationEvents(
     broadcast_id?: string;
     event_type?: string;
     status?: string;
+    created_at_from?: Date;
+    created_at_to?: Date;
     limit?: number;
   },
 ): Promise<CommunicationEvent[]> {
@@ -479,9 +481,36 @@ export async function listCommunicationEvents(
         ...(options?.broadcast_id ? { broadcast_id: options.broadcast_id } : {}),
         ...(options?.event_type ? { event_type: options.event_type } : {}),
         ...(options?.status ? { status: options.status } : {}),
+        ...((options?.created_at_from || options?.created_at_to)
+          ? {
+              created_at: {
+                ...(options?.created_at_from ? { gte: options.created_at_from } : {}),
+                ...(options?.created_at_to ? { lte: options.created_at_to } : {}),
+              },
+            }
+          : {}),
       },
       orderBy: [{ created_at: "desc" }],
       take: limit,
+    });
+  } catch (error) {
+    handlePrismaError(error, "CommunicationEvent");
+  }
+}
+
+export async function findCommunicationEventById(
+  companyId: string,
+  eventId: string,
+): Promise<CommunicationEvent | null> {
+  requireCompanyId(companyId);
+  if (!eventId.trim()) return null;
+
+  try {
+    const db = scopedDb(companyId);
+    return await db.communicationEvent.findFirst({
+      where: {
+        id: eventId.trim(),
+      },
     });
   } catch (error) {
     handlePrismaError(error, "CommunicationEvent");

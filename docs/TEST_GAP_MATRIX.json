@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-03-08T12:12:17.927Z",
+  "generatedAt": "2026-03-11T07:09:09.404Z",
   "summary": {
-    "totalSourceFiles": 374,
-    "coveredByDirectTests": 374,
-    "gaps": 0
+    "totalSourceFiles": 390,
+    "coveredByDirectTests": 383,
+    "gaps": 7
   },
   "rows": [
     {
@@ -177,6 +177,16 @@
       "status": "Covered"
     },
     {
+      "sourceFile": "apps/web/src/app/(auth)/login/login-intent-selector.tsx",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/(auth)/login/login-intent-selector.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
       "sourceFile": "apps/web/src/app/(auth)/login/page.tsx",
       "hasDirectTest": true,
       "directTests": [
@@ -251,6 +261,16 @@
       "hasDirectTest": true,
       "directTests": [
         "apps/web/src/app/admin/admin-command-palette.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/admin-nav.tsx",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/admin-nav.test.ts"
       ],
       "priority": "P1",
       "risk": "Application logic",
@@ -357,6 +377,24 @@
       "status": "Covered"
     },
     {
+      "sourceFile": "apps/web/src/app/admin/components/inline-copilot-panel.tsx",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/components/inline-copilot-panel.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/components/status-chip.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
       "sourceFile": "apps/web/src/app/admin/contractors/[id]/edit-contractor-form.tsx",
       "hasDirectTest": true,
       "directTests": [
@@ -451,6 +489,16 @@
       "hasDirectTest": true,
       "directTests": [
         "apps/web/src/app/admin/deliveries/page.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/error.tsx",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/error.test.ts"
       ],
       "priority": "P1",
       "risk": "Application logic",
@@ -701,6 +749,16 @@
       "hasDirectTest": true,
       "directTests": [
         "apps/web/src/app/admin/live-register/sign-out-button.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/loading.tsx",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/loading.test.ts"
       ],
       "priority": "P1",
       "risk": "Application logic",
@@ -1897,6 +1955,16 @@
       "status": "Covered"
     },
     {
+      "sourceFile": "apps/web/src/app/api/ux-events/route.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/api/ux-events/route.test.ts"
+      ],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Covered"
+    },
+    {
       "sourceFile": "apps/web/src/app/api/v1/partner/sign-ins/route.ts",
       "hasDirectTest": true,
       "directTests": [
@@ -2157,6 +2225,16 @@
       "status": "Covered"
     },
     {
+      "sourceFile": "apps/web/src/app/signout/page.tsx",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/signout/page.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
       "sourceFile": "apps/web/src/app/sitemap.xml/route.ts",
       "hasDirectTest": true,
       "directTests": [
@@ -2201,6 +2279,40 @@
       "hasDirectTest": true,
       "directTests": [
         "apps/web/src/components/ui/alert.test.ts"
+      ],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/components/ui/badge.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/components/ui/button.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/components/ui/card.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/components/ui/page-state.tsx",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/components/ui/page-state.test.ts"
       ],
       "priority": "P2",
       "risk": "Application logic",
@@ -2585,6 +2697,14 @@
       "priority": "P1",
       "risk": "Application logic",
       "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/differentiation/safety-copilot-metrics.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
     },
     {
       "sourceFile": "apps/web/src/lib/differentiation/safety-copilot.ts",
@@ -3031,6 +3151,16 @@
       "hasDirectTest": true,
       "directTests": [
         "apps/web/src/lib/plans/__tests__/pricing.unit.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/plans/tier-presentation.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/plans/__tests__/tier-presentation.unit.test.ts"
       ],
       "priority": "P1",
       "risk": "Application logic",
@@ -3667,6 +3797,22 @@
       "status": "Covered"
     },
     {
+      "sourceFile": "apps/web/src/lib/utils.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/ux-events/client.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
       "sourceFile": "apps/web/src/lib/validation/schemas.ts",
       "hasDirectTest": true,
       "directTests": [
@@ -3765,6 +3911,7 @@
     "apps/web/src/app/(auth)/contractor/page.test.ts",
     "apps/web/src/app/(auth)/layout.test.ts",
     "apps/web/src/app/(auth)/login/login-form.test.ts",
+    "apps/web/src/app/(auth)/login/login-intent-selector.test.ts",
     "apps/web/src/app/(auth)/login/page.test.ts",
     "apps/web/src/app/(auth)/logout/route.test.ts",
     "apps/web/src/app/(auth)/register/page.test.ts",
@@ -3774,6 +3921,8 @@
     "apps/web/src/app/admin/access-ops/page.test.ts",
     "apps/web/src/app/admin/actions.csrf.test.ts",
     "apps/web/src/app/admin/admin-command-palette.test.ts",
+    "apps/web/src/app/admin/admin-nav.mobile.test.ts",
+    "apps/web/src/app/admin/admin-nav.test.ts",
     "apps/web/src/app/admin/approvals/actions.test.ts",
     "apps/web/src/app/admin/approvals/page.test.ts",
     "apps/web/src/app/admin/audit-analytics/page.test.ts",
@@ -3784,6 +3933,7 @@
     "apps/web/src/app/admin/communications/actions.test.ts",
     "apps/web/src/app/admin/communications/page.test.ts",
     "apps/web/src/app/admin/components/OnboardingChecklist.test.ts",
+    "apps/web/src/app/admin/components/inline-copilot-panel.test.ts",
     "apps/web/src/app/admin/contractors/[id]/edit-contractor-form.test.ts",
     "apps/web/src/app/admin/contractors/[id]/page.test.ts",
     "apps/web/src/app/admin/contractors/actions.test.ts",
@@ -3794,6 +3944,7 @@
     "apps/web/src/app/admin/dashboard/page.test.ts",
     "apps/web/src/app/admin/deliveries/actions.test.ts",
     "apps/web/src/app/admin/deliveries/page.test.ts",
+    "apps/web/src/app/admin/error.test.ts",
     "apps/web/src/app/admin/escalations/actions.test.ts",
     "apps/web/src/app/admin/escalations/page.test.ts",
     "apps/web/src/app/admin/evidence/actions.test.ts",
@@ -3819,6 +3970,7 @@
     "apps/web/src/app/admin/live-register/auto-refresh.test.ts",
     "apps/web/src/app/admin/live-register/page.test.ts",
     "apps/web/src/app/admin/live-register/sign-out-button.test.ts",
+    "apps/web/src/app/admin/loading.test.ts",
     "apps/web/src/app/admin/mobile/actions.test.ts",
     "apps/web/src/app/admin/mobile/native/page.test.ts",
     "apps/web/src/app/admin/mobile/page.test.ts",
@@ -3940,6 +4092,7 @@
     "apps/web/src/app/api/test/runtime/route.test.ts",
     "apps/web/src/app/api/test/seed-public-site/route.test.ts",
     "apps/web/src/app/api/test/set-user-lock/route.test.ts",
+    "apps/web/src/app/api/ux-events/route.test.ts",
     "apps/web/src/app/api/v1/partner/sign-ins/route.test.ts",
     "apps/web/src/app/api/v1/partner/sites/route.test.ts",
     "apps/web/src/app/compare/page.test.ts",
@@ -3966,11 +4119,13 @@
     "apps/web/src/app/s/[slug]/page.test.ts",
     "apps/web/src/app/sign-out/components/SignOutForm.test.ts",
     "apps/web/src/app/sign-out/page.test.ts",
+    "apps/web/src/app/signout/page.test.ts",
     "apps/web/src/app/sitemap.xml/route.test.ts",
     "apps/web/src/app/terms/page.test.ts",
     "apps/web/src/app/unauthorized/page.test.ts",
     "apps/web/src/app/~offline/page.test.ts",
     "apps/web/src/components/ui/alert.test.ts",
+    "apps/web/src/components/ui/page-state.test.ts",
     "apps/web/src/components/ui/public-shell.test.ts",
     "apps/web/src/components/ui/theme-preference.test.ts",
     "apps/web/src/components/ui/theme-runtime.test.ts",
@@ -4063,6 +4218,7 @@
     "apps/web/src/lib/plans/__tests__/invoice-preview.unit.test.ts",
     "apps/web/src/lib/plans/__tests__/invoice-sync.unit.test.ts",
     "apps/web/src/lib/plans/__tests__/pricing.unit.test.ts",
+    "apps/web/src/lib/plans/__tests__/tier-presentation.unit.test.ts",
     "apps/web/src/lib/plans/index.test.ts",
     "apps/web/src/lib/quiz/__tests__/scoring.unit.test.ts",
     "apps/web/src/lib/rate-limit/__tests__/clientKey.test.ts",

@@ -5,6 +5,8 @@ import { isFeatureEnabled } from "@/lib/feature-flags";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 import { findAllSites } from "@/lib/repository/site.repository";
+import { PageWarningState } from "@/components/ui/page-state";
+import { InlineCopilotPanel } from "../components/inline-copilot-panel";
 import { listContractors } from "@/lib/repository/contractor.repository";
 import { listUsers } from "@/lib/repository/user.repository";
 import {
@@ -25,6 +27,26 @@ export const metadata = {
   title: "Permits | InductLite",
 };
 
+function permitRequestStatusChipClass(status: string): string {
+  if (status === "APPROVED" || status === "ACTIVE") {
+    return "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100";
+  }
+  if (status === "CLOSED") {
+    return "border-[color:var(--border-soft)] bg-[color:var(--bg-surface)]0/12 text-secondary";
+  }
+  return "border-amber-400/45 bg-amber-500/15 text-amber-900 dark:text-amber-100";
+}
+
+function prequalificationStatusChipClass(status: string): string {
+  if (status === "APPROVED") {
+    return "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100";
+  }
+  if (status === "DENIED" || status === "EXPIRED") {
+    return "border-red-500/45 bg-red-500/15 text-red-950 dark:text-red-100";
+  }
+  return "border-amber-400/45 bg-amber-500/15 text-amber-900 dark:text-amber-100";
+}
+
 export default async function PermitsPage() {
   const guard = await checkPermissionReadOnly("site:manage");
   if (!guard.success) {
@@ -36,11 +58,19 @@ export default async function PermitsPage() {
 
   if (!isFeatureEnabled("PERMITS_V1")) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-900">Permit-to-Work</h1>
-        <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          Permit workflows are disabled by rollout flag (CONTROL_ID: FLAG-ROLLOUT-001).
-        </p>
+      <div className="space-y-6 p-3 sm:p-4">
+        <div className="surface-panel-strong p-5">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+            Permit-to-Work
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
+            Manage permit templates, issuance lifecycle, and contractor prequalification.
+          </p>
+        </div>
+        <PageWarningState
+          title="Permit workflows are disabled by rollout flag."
+          description="CONTROL_ID: FLAG-ROLLOUT-001."
+        />
       </div>
     );
   }
@@ -50,12 +80,19 @@ export default async function PermitsPage() {
   } catch (error) {
     if (error instanceof EntitlementDeniedError) {
       return (
-        <div className="p-6">
-          <h1 className="text-2xl font-bold text-gray-900">Permit-to-Work</h1>
-          <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            Permit workflows are not enabled for this plan (CONTROL_ID:
-            PLAN-ENTITLEMENT-001).
-          </p>
+        <div className="space-y-6 p-3 sm:p-4">
+          <div className="surface-panel-strong p-5">
+            <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+              Permit-to-Work
+            </h1>
+            <p className="mt-1 text-sm text-secondary">
+              Manage permit templates, issuance lifecycle, and contractor prequalification.
+            </p>
+          </div>
+          <PageWarningState
+            title="Permit workflows are not enabled for this plan."
+            description="CONTROL_ID: PLAN-ENTITLEMENT-001."
+          />
         </div>
       );
     }
@@ -90,24 +127,32 @@ export default async function PermitsPage() {
   );
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-start justify-between gap-3">
+    <div className="space-y-6 p-3 sm:p-4">
+      <div className="surface-panel-strong flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Permit-to-Work</h1>
-          <p className="mt-1 text-sm text-gray-600">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+            Permit-to-Work
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
             Manage permit templates, issuance lifecycle, and contractor prequalification.
           </p>
         </div>
         <Link
           href="/admin/permits/templates"
-          className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="btn-secondary"
         >
           Template Builder
         </Link>
       </div>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <InlineCopilotPanel
+        companyId={context.companyId}
+        prompt="Where are the biggest permit and prequalification bottlenecks right now, and what should we action first?"
+        title="Permit Workflow Copilot"
+      />
+
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Create Permit Template
         </h2>
         <form
@@ -117,7 +162,7 @@ export default async function PermitsPage() {
           }}
           className="mt-3 grid gap-3 md:grid-cols-2"
         >
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Site (optional)
             <select name="siteId" className="input mt-1">
               <option value="">All sites</option>
@@ -128,15 +173,15 @@ export default async function PermitsPage() {
               ))}
             </select>
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Permit Type
             <input name="permitType" className="input mt-1" placeholder="Hot work" required />
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Template Name
             <input name="name" className="input mt-1" placeholder="Hot Work Permit" required />
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Description
             <input
               name="description"
@@ -144,14 +189,14 @@ export default async function PermitsPage() {
               placeholder="Scope and approval notes"
             />
           </label>
-          <label className="col-span-full flex items-center gap-2 text-sm text-gray-700">
+          <label className="col-span-full flex items-center gap-2 text-sm text-secondary">
             <input name="requiredForSignIn" type="checkbox" className="h-4 w-4" />
             Require active permit before sign-in for this template/site.
           </label>
           <div className="col-span-full">
             <button
               type="submit"
-              className="min-h-[40px] rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+              className="btn-primary"
             >
               Create Template
             </button>
@@ -159,8 +204,8 @@ export default async function PermitsPage() {
         </form>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Permit Request
         </h2>
         <form
@@ -170,7 +215,7 @@ export default async function PermitsPage() {
           }}
           className="mt-3 grid gap-3 md:grid-cols-3"
         >
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Site
             <select name="siteId" className="input mt-1" required>
               <option value="">Select site</option>
@@ -181,7 +226,7 @@ export default async function PermitsPage() {
               ))}
             </select>
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Permit Template
             <select name="permitTemplateId" className="input mt-1" required>
               <option value="">Select template</option>
@@ -192,7 +237,7 @@ export default async function PermitsPage() {
               ))}
             </select>
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Contractor (optional)
             <select name="contractorId" className="input mt-1">
               <option value="">None</option>
@@ -203,23 +248,23 @@ export default async function PermitsPage() {
               ))}
             </select>
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Visitor Name
             <input name="visitorName" className="input mt-1" placeholder="Worker full name" />
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Visitor Phone
             <input name="visitorPhone" className="input mt-1" placeholder="+64..." />
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Visitor Email
             <input name="visitorEmail" className="input mt-1" placeholder="worker@company.nz" />
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Employer
             <input name="employerName" className="input mt-1" placeholder="Employer name" />
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Assignee
             <select name="assigneeUserId" className="input mt-1">
               <option value="">Unassigned</option>
@@ -230,22 +275,22 @@ export default async function PermitsPage() {
               ))}
             </select>
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Valid From
             <input name="validityStart" type="datetime-local" className="input mt-1" />
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Valid To
             <input name="validityEnd" type="datetime-local" className="input mt-1" />
           </label>
-          <label className="md:col-span-2 text-sm text-gray-700">
+          <label className="md:col-span-2 text-sm text-secondary">
             Notes
             <input name="notes" className="input mt-1" placeholder="Permit notes" />
           </label>
           <div>
             <button
               type="submit"
-              className="mt-6 min-h-[40px] rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+              className="btn-primary mt-6"
             >
               Submit Request
             </button>
@@ -253,44 +298,52 @@ export default async function PermitsPage() {
         </form>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Active Templates
         </h2>
         <div className="mt-3 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
+            <thead className="bg-[color:var(--bg-surface-strong)]">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Template
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Type
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Required at Sign-In
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Conditions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
               {templates.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-3 py-3 text-sm text-gray-500">
+                  <td colSpan={4} className="px-3 py-3 text-sm text-muted">
                     No permit templates yet.
                   </td>
                 </tr>
               ) : (
                 templates.map((template) => (
-                  <tr key={template.id}>
-                    <td className="px-3 py-3 text-sm text-gray-700">{template.name}</td>
-                    <td className="px-3 py-3 text-sm text-gray-700">{template.permit_type}</td>
-                    <td className="px-3 py-3 text-sm text-gray-700">
-                      {template.is_required_for_signin ? "Yes" : "No"}
+                  <tr key={template.id} className="hover:bg-[color:var(--bg-surface-strong)]">
+                    <td className="px-3 py-3 text-sm text-secondary">{template.name}</td>
+                    <td className="px-3 py-3 text-sm text-secondary">{template.permit_type}</td>
+                    <td className="px-3 py-3 text-sm">
+                      <span
+                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${
+                          template.is_required_for_signin
+                            ? "border-amber-400/45 bg-amber-500/15 text-amber-900 dark:text-amber-100"
+                            : "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100"
+                        }`}
+                      >
+                        {template.is_required_for_signin ? "Required" : "Optional"}
+                      </span>
                     </td>
-                    <td className="px-3 py-3 text-sm text-gray-700">
+                    <td className="px-3 py-3 text-sm text-secondary">
                       {(conditionsByTemplate.get(template.id) ?? []).length}
                     </td>
                   </tr>
@@ -301,45 +354,51 @@ export default async function PermitsPage() {
         </div>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Permit Lifecycle
         </h2>
         <div className="mt-3 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
+            <thead className="bg-[color:var(--bg-surface-strong)]">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Request
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Site
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Status
                 </th>
-                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
               {requests.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-3 py-3 text-sm text-gray-500">
+                  <td colSpan={4} className="px-3 py-3 text-sm text-muted">
                     No permit requests yet.
                   </td>
                 </tr>
               ) : (
                 requests.map((request) => (
-                  <tr key={request.id}>
-                    <td className="px-3 py-3 text-sm text-gray-700">
+                  <tr key={request.id} className="hover:bg-[color:var(--bg-surface-strong)]">
+                    <td className="px-3 py-3 text-sm text-secondary">
                       {request.visitor_name || request.visitor_phone || request.id.slice(0, 8)}
                     </td>
-                    <td className="px-3 py-3 text-sm text-gray-700">
+                    <td className="px-3 py-3 text-sm text-secondary">
                       {sites.find((site) => site.id === request.site_id)?.name ?? "Site"}
                     </td>
-                    <td className="px-3 py-3 text-sm text-gray-700">{request.status}</td>
+                    <td className="px-3 py-3 text-sm">
+                      <span
+                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${permitRequestStatusChipClass(request.status)}`}
+                      >
+                        {request.status}
+                      </span>
+                    </td>
                     <td className="px-3 py-3 text-right">
                       <div className="flex flex-wrap justify-end gap-2">
                         {request.status !== "APPROVED" && request.status !== "ACTIVE" && (
@@ -351,7 +410,7 @@ export default async function PermitsPage() {
                           >
                             <button
                               type="submit"
-                              className="rounded border border-blue-300 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50"
+                              className="rounded-lg border border-indigo-400/45 bg-indigo-500/12 px-2 py-1 text-xs font-semibold text-indigo-950 hover:bg-indigo-500/20 dark:text-indigo-100"
                             >
                               Approve
                             </button>
@@ -366,7 +425,7 @@ export default async function PermitsPage() {
                           >
                             <button
                               type="submit"
-                              className="rounded border border-emerald-300 px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50"
+                              className="rounded-lg border border-emerald-400/40 bg-emerald-500/12 px-2 py-1 text-xs font-semibold text-emerald-900 hover:bg-emerald-500/20 dark:text-emerald-100"
                             >
                               Activate
                             </button>
@@ -381,7 +440,7 @@ export default async function PermitsPage() {
                           >
                             <button
                               type="submit"
-                              className="rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                              className="btn-secondary min-h-[30px] px-2 py-1 text-xs"
                             >
                               Close
                             </button>
@@ -397,8 +456,8 @@ export default async function PermitsPage() {
         </div>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Contractor Prequalification
         </h2>
         <form
@@ -408,7 +467,7 @@ export default async function PermitsPage() {
           }}
           className="mt-3 grid gap-3 md:grid-cols-3"
         >
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Contractor
             <select name="contractorId" className="input mt-1" required>
               <option value="">Select contractor</option>
@@ -419,7 +478,7 @@ export default async function PermitsPage() {
               ))}
             </select>
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Site (optional)
             <select name="siteId" className="input mt-1">
               <option value="">All sites</option>
@@ -430,7 +489,7 @@ export default async function PermitsPage() {
               ))}
             </select>
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Status
             <select name="status" className="input mt-1" defaultValue="PENDING">
               <option value="PENDING">PENDING</option>
@@ -439,15 +498,15 @@ export default async function PermitsPage() {
               <option value="DENIED">DENIED</option>
             </select>
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Score (0-100)
             <input name="score" type="number" min={0} max={100} defaultValue={70} className="input mt-1" />
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Expires At
             <input name="expiresAt" type="datetime-local" className="input mt-1" />
           </label>
-          <label className="text-sm text-gray-700 md:col-span-3">
+          <label className="text-sm text-secondary md:col-span-3">
             Checklist JSON (optional)
             <input
               name="checklistJson"
@@ -455,7 +514,7 @@ export default async function PermitsPage() {
               placeholder='{"licenses":true,"insurance":true}'
             />
           </label>
-          <label className="text-sm text-gray-700 md:col-span-3">
+          <label className="text-sm text-secondary md:col-span-3">
             Evidence JSON (optional)
             <input
               name="evidenceJson"
@@ -466,7 +525,7 @@ export default async function PermitsPage() {
           <div className="md:col-span-3">
             <button
               type="submit"
-              className="min-h-[40px] rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700"
+              className="btn-primary"
             >
               Save Prequalification
             </button>
@@ -474,42 +533,48 @@ export default async function PermitsPage() {
         </form>
 
         <div className="mt-4 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
+            <thead className="bg-[color:var(--bg-surface-strong)]">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Contractor
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Site
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Status
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Score
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
               {prequals.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-3 py-3 text-sm text-gray-500">
+                  <td colSpan={4} className="px-3 py-3 text-sm text-muted">
                     No prequalification records yet.
                   </td>
                 </tr>
               ) : (
                 prequals.map((prequal) => (
-                  <tr key={prequal.id}>
-                    <td className="px-3 py-3 text-sm text-gray-700">
+                  <tr key={prequal.id} className="hover:bg-[color:var(--bg-surface-strong)]">
+                    <td className="px-3 py-3 text-sm text-secondary">
                       {contractors.find((contractor) => contractor.id === prequal.contractor_id)
                         ?.name ?? prequal.contractor_id.slice(0, 8)}
                     </td>
-                    <td className="px-3 py-3 text-sm text-gray-700">
+                    <td className="px-3 py-3 text-sm text-secondary">
                       {sites.find((site) => site.id === prequal.site_id)?.name ?? "All sites"}
                     </td>
-                    <td className="px-3 py-3 text-sm text-gray-700">{prequal.status}</td>
-                    <td className="px-3 py-3 text-sm text-gray-700">{prequal.score}</td>
+                    <td className="px-3 py-3 text-sm">
+                      <span
+                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${prequalificationStatusChipClass(prequal.status)}`}
+                      >
+                        {prequal.status}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-sm text-secondary">{prequal.score}</td>
                   </tr>
                 ))
               )}
@@ -518,8 +583,8 @@ export default async function PermitsPage() {
         </div>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Add Permit Condition
         </h2>
         <form
@@ -529,7 +594,7 @@ export default async function PermitsPage() {
           }}
           className="mt-3 grid gap-3 md:grid-cols-2"
         >
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Template
             <select name="permitTemplateId" className="input mt-1" required>
               <option value="">Select template</option>
@@ -540,27 +605,27 @@ export default async function PermitsPage() {
               ))}
             </select>
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Stage
             <input name="stage" className="input mt-1" placeholder="pre-start" required />
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Condition Type
             <input name="conditionType" className="input mt-1" placeholder="hold-point" required />
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Title
             <input name="title" className="input mt-1" placeholder="Gas monitoring in place" required />
           </label>
-          <label className="text-sm text-gray-700 md:col-span-2">
+          <label className="text-sm text-secondary md:col-span-2">
             Details
             <input name="details" className="input mt-1" placeholder="Optional context" />
           </label>
-          <label className="flex items-center gap-2 text-sm text-gray-700">
+          <label className="flex items-center gap-2 text-sm text-secondary">
             <input name="isRequired" type="checkbox" defaultChecked className="h-4 w-4" />
             Required
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Sort Order
             <input
               name="sortOrder"
@@ -574,7 +639,7 @@ export default async function PermitsPage() {
           <div className="md:col-span-2">
             <button
               type="submit"
-              className="min-h-[40px] rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+              className="btn-primary"
             >
               Add Condition
             </button>

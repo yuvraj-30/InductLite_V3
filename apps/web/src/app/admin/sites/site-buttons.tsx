@@ -14,9 +14,14 @@ import {
 interface SiteButtonProps {
   siteId: string;
   siteName: string;
+  className?: string;
 }
 
-export function DeactivateSiteButton({ siteId, siteName }: SiteButtonProps) {
+export function DeactivateSiteButton({
+  siteId,
+  siteName,
+  className = "",
+}: SiteButtonProps) {
   const [isPending, startTransition] = useTransition();
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -32,24 +37,26 @@ export function DeactivateSiteButton({ siteId, siteName }: SiteButtonProps) {
 
   if (showConfirm) {
     return (
-      <div className="flex items-center space-x-2">
-        <span className="text-sm text-gray-600">
+      <div className="space-y-2 rounded-lg border border-red-400/35 bg-red-500/10 p-2">
+        <span className="block text-sm text-secondary">
           Deactivate &quot;{siteName}&quot;?
         </span>
-        <button
-          onClick={handleDeactivate}
-          disabled={isPending}
-          className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 disabled:opacity-50"
-        >
-          {isPending ? "..." : "Yes"}
-        </button>
-        <button
-          onClick={() => setShowConfirm(false)}
-          disabled={isPending}
-          className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
-        >
-          No
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={handleDeactivate}
+            disabled={isPending}
+            className="inline-flex min-h-[36px] items-center rounded-md border border-transparent bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+          >
+            {isPending ? "Working..." : "Yes, deactivate"}
+          </button>
+          <button
+            onClick={() => setShowConfirm(false)}
+            disabled={isPending}
+            className="btn-secondary min-h-[36px] px-3 py-1.5 text-xs"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
     );
   }
@@ -57,14 +64,18 @@ export function DeactivateSiteButton({ siteId, siteName }: SiteButtonProps) {
   return (
     <button
       onClick={() => setShowConfirm(true)}
-      className="inline-flex items-center px-3 py-1.5 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50"
+      className={`inline-flex min-h-[40px] items-center rounded-lg border border-red-400/45 bg-red-500/12 px-3 py-1.5 text-sm font-semibold text-red-900 hover:bg-red-500/20 dark:text-red-100 ${className}`.trim()}
     >
       Deactivate
     </button>
   );
 }
 
-export function ReactivateSiteButton({ siteId, siteName }: SiteButtonProps) {
+export function ReactivateSiteButton({
+  siteId,
+  siteName,
+  className = "",
+}: SiteButtonProps) {
   const [isPending, startTransition] = useTransition();
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -80,24 +91,26 @@ export function ReactivateSiteButton({ siteId, siteName }: SiteButtonProps) {
 
   if (showConfirm) {
     return (
-      <div className="flex items-center space-x-2">
-        <span className="text-sm text-gray-600">
+      <div className="space-y-2 rounded-lg border border-emerald-400/35 bg-emerald-500/10 p-2">
+        <span className="block text-sm text-secondary">
           Reactivate &quot;{siteName}&quot;?
         </span>
-        <button
-          onClick={handleReactivate}
-          disabled={isPending}
-          className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 disabled:opacity-50"
-        >
-          {isPending ? "..." : "Yes"}
-        </button>
-        <button
-          onClick={() => setShowConfirm(false)}
-          disabled={isPending}
-          className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
-        >
-          No
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={handleReactivate}
+            disabled={isPending}
+            className="inline-flex min-h-[36px] items-center rounded-md border border-transparent bg-green-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+          >
+            {isPending ? "Working..." : "Yes, reactivate"}
+          </button>
+          <button
+            onClick={() => setShowConfirm(false)}
+            disabled={isPending}
+            className="btn-secondary min-h-[36px] px-3 py-1.5 text-xs"
+          >
+            Cancel
+          </button>
+        </div>
       </div>
     );
   }
@@ -105,7 +118,7 @@ export function ReactivateSiteButton({ siteId, siteName }: SiteButtonProps) {
   return (
     <button
       onClick={() => setShowConfirm(true)}
-      className="inline-flex items-center px-3 py-1.5 border border-green-300 shadow-sm text-sm font-medium rounded-md text-green-700 bg-white hover:bg-green-50"
+      className={`inline-flex min-h-[40px] items-center rounded-lg border border-emerald-400/45 bg-emerald-500/12 px-3 py-1.5 text-sm font-semibold text-emerald-900 hover:bg-emerald-500/20 dark:text-emerald-100 ${className}`.trim()}
     >
       Reactivate
     </button>
@@ -175,7 +188,7 @@ export function RotateLinkButton({ siteId, onRotated }: RotateLinkButtonProps) {
         <button
           onClick={() => setShowConfirm(false)}
           disabled={isPending}
-          className="inline-flex items-center px-2 py-1 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50"
+          className="btn-secondary min-h-[30px] px-2 py-1 text-xs"
         >
           Cancel
         </button>
@@ -186,7 +199,7 @@ export function RotateLinkButton({ siteId, onRotated }: RotateLinkButtonProps) {
   return (
     <button
       onClick={() => setShowConfirm(true)}
-      className="inline-flex items-center px-3 py-1.5 border border-yellow-300 shadow-sm text-sm font-medium rounded-md text-yellow-700 bg-white hover:bg-yellow-50"
+      className="inline-flex items-center px-3 py-1.5 border border-yellow-300 shadow-sm text-sm font-medium rounded-md text-yellow-700 bg-[color:var(--bg-surface)] hover:bg-yellow-50"
     >
       <svg
         className="-ml-0.5 mr-1.5 h-4 w-4"
@@ -205,3 +218,4 @@ export function RotateLinkButton({ siteId, onRotated }: RotateLinkButtonProps) {
     </button>
   );
 }
+

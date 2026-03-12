@@ -9,6 +9,7 @@ import {
 } from "@/lib/repository/risk-passport.repository";
 import { findAllSites } from "@/lib/repository/site.repository";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
+import { PageWarningState } from "@/components/ui/page-state";
 import {
   refreshAllRiskScoresAction,
   refreshSingleRiskScoreAction,
@@ -60,11 +61,19 @@ export default async function RiskPassportPage({ searchParams }: RiskPassportPag
 
   if (!isFeatureEnabled("RISK_PASSPORT_V1")) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-900">Contractor Risk Passport</h1>
-        <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          Risk passport is disabled by rollout flag (CONTROL_ID: FLAG-ROLLOUT-001).
-        </p>
+      <div className="space-y-6 p-3 sm:p-4">
+        <div className="surface-panel-strong p-5">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+            Contractor Risk Passport
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
+            Score contractor risk across incidents, document expiry, permits, and prequalification outcomes.
+          </p>
+        </div>
+        <PageWarningState
+          title="Risk passport is disabled by rollout flag."
+          description="CONTROL_ID: FLAG-ROLLOUT-001."
+        />
       </div>
     );
   }
@@ -74,11 +83,19 @@ export default async function RiskPassportPage({ searchParams }: RiskPassportPag
   } catch (error) {
     if (error instanceof EntitlementDeniedError) {
       return (
-        <div className="p-6">
-          <h1 className="text-2xl font-bold text-gray-900">Contractor Risk Passport</h1>
-          <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            Risk passport is not enabled for this plan (CONTROL_ID: PLAN-ENTITLEMENT-001).
-          </p>
+        <div className="space-y-6 p-3 sm:p-4">
+          <div className="surface-panel-strong p-5">
+            <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+              Contractor Risk Passport
+            </h1>
+            <p className="mt-1 text-sm text-secondary">
+              Score contractor risk across incidents, document expiry, permits, and prequalification outcomes.
+            </p>
+          </div>
+          <PageWarningState
+            title="Risk passport is not enabled for this plan."
+            description="CONTROL_ID: PLAN-ENTITLEMENT-001."
+          />
         </div>
       );
     }
@@ -153,10 +170,10 @@ export default async function RiskPassportPage({ searchParams }: RiskPassportPag
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-3 sm:p-4">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Contractor Risk Passport</h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">Contractor Risk Passport</h1>
+        <p className="mt-1 text-sm text-secondary">
           Score contractor risk across incidents, document expiry, permits, and prequalification outcomes.
         </p>
       </div>
@@ -167,12 +184,12 @@ export default async function RiskPassportPage({ searchParams }: RiskPassportPag
         </div>
       ) : null}
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Refresh Scores
         </h2>
         <form action={refreshAllRiskScoresAction} className="mt-3 flex flex-wrap items-end gap-3">
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Site Scope
             <select name="siteId" className="input mt-1 min-w-[220px]">
               <option value="">All sites</option>
@@ -185,47 +202,47 @@ export default async function RiskPassportPage({ searchParams }: RiskPassportPag
           </label>
           <button
             type="submit"
-            className="min-h-[40px] rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            className="btn-primary"
           >
             Refresh All
           </button>
         </form>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Site Risk Trend (30 Days)
         </h2>
         <div className="mt-3 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
+            <thead className="bg-[color:var(--bg-surface-strong)]">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Site</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Profiles</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Avg Score</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">High</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Medium</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Low</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Site</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Profiles</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Avg Score</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">High</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Medium</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Low</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
               {siteSummary.size === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-3 py-3 text-sm text-gray-500">No site risk data yet.</td>
+                  <td colSpan={6} className="px-3 py-3 text-sm text-muted">No site risk data yet.</td>
                 </tr>
               ) : (
                 Array.from(siteSummary.values())
                   .sort((a, b) => a.siteName.localeCompare(b.siteName))
                   .map((row) => (
                     <tr key={row.siteName}>
-                      <td className="px-3 py-3 text-sm text-gray-700">{row.siteName}</td>
-                      <td className="px-3 py-3 text-sm text-gray-700">{row.count}</td>
-                      <td className="px-3 py-3 text-sm text-gray-700">
+                      <td className="px-3 py-3 text-sm text-secondary">{row.siteName}</td>
+                      <td className="px-3 py-3 text-sm text-secondary">{row.count}</td>
+                      <td className="px-3 py-3 text-sm text-secondary">
                         {Math.round(row.totalScore / Math.max(1, row.count))}
                       </td>
-                      <td className="px-3 py-3 text-sm text-gray-700">{row.high}</td>
-                      <td className="px-3 py-3 text-sm text-gray-700">{row.medium}</td>
-                      <td className="px-3 py-3 text-sm text-gray-700">{row.low}</td>
+                      <td className="px-3 py-3 text-sm text-secondary">{row.high}</td>
+                      <td className="px-3 py-3 text-sm text-secondary">{row.medium}</td>
+                      <td className="px-3 py-3 text-sm text-secondary">{row.low}</td>
                     </tr>
                   ))
               )}
@@ -234,28 +251,28 @@ export default async function RiskPassportPage({ searchParams }: RiskPassportPag
         </div>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Current Risk Scores
         </h2>
         <div className="mt-3 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
+            <thead className="bg-[color:var(--bg-surface-strong)]">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Contractor</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Site</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Score</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Threshold</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Trend (30d)</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Last Calculated</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Components</th>
-                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Action</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Contractor</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Site</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Score</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Threshold</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Trend (30d)</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Last Calculated</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Components</th>
+                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
               {riskScores.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-3 py-3 text-sm text-gray-500">No risk scores calculated yet.</td>
+                  <td colSpan={8} className="px-3 py-3 text-sm text-muted">No risk scores calculated yet.</td>
                 </tr>
               ) : (
                 riskScores.map((score) => {
@@ -269,19 +286,19 @@ export default async function RiskPassportPage({ searchParams }: RiskPassportPag
 
                   return (
                     <tr key={score.id}>
-                      <td className="px-3 py-3 text-sm text-gray-700">{contractorName}</td>
-                      <td className="px-3 py-3 text-sm text-gray-700">{siteName}</td>
-                      <td className="px-3 py-3 text-sm font-semibold text-gray-900">{score.current_score}</td>
-                      <td className="px-3 py-3 text-sm text-gray-700">{score.threshold_state}</td>
-                      <td className="px-3 py-3 text-sm text-gray-700">
+                      <td className="px-3 py-3 text-sm text-secondary">{contractorName}</td>
+                      <td className="px-3 py-3 text-sm text-secondary">{siteName}</td>
+                      <td className="px-3 py-3 text-sm font-semibold text-[color:var(--text-primary)]">{score.current_score}</td>
+                      <td className="px-3 py-3 text-sm text-secondary">{score.threshold_state}</td>
+                      <td className="px-3 py-3 text-sm text-secondary">
                         {formatTrend(trendByScoreId.get(score.id) ?? null)}
                       </td>
-                      <td className="px-3 py-3 text-sm text-gray-700">
+                      <td className="px-3 py-3 text-sm text-secondary">
                         {score.last_calculated_at
                           ? score.last_calculated_at.toLocaleString("en-NZ")
                           : "-"}
                       </td>
-                      <td className="px-3 py-3 text-xs text-gray-600">
+                      <td className="px-3 py-3 text-xs text-secondary">
                         <div className="space-y-1">
                           <div>
                             docs expired: {parseComponentNumber(components, "expired_documents")} |
@@ -323,3 +340,4 @@ export default async function RiskPassportPage({ searchParams }: RiskPassportPag
     </div>
   );
 }
+

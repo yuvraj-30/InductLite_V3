@@ -5,6 +5,8 @@ import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import type { UserRole } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { UserActionButtons } from "./user-action-buttons";
+import { statusChipClass } from "../components/status-chip";
+import { PageEmptyState } from "@/components/ui/page-state";
 
 export const metadata = {
   title: "Users | InductLite",
@@ -63,9 +65,13 @@ function buildPageHref(
 }
 
 function roleBadgeClass(role: UserRole): string {
-  if (role === "ADMIN") return "bg-red-100 text-red-800";
-  if (role === "SITE_MANAGER") return "bg-blue-100 text-blue-800";
-  return "bg-gray-100 text-gray-700";
+  if (role === "ADMIN") {
+    return statusChipClass("danger");
+  }
+  if (role === "SITE_MANAGER") {
+    return statusChipClass("info");
+  }
+  return statusChipClass("neutral");
 }
 
 export default async function UsersPage({ searchParams }: UsersPageProps) {
@@ -106,54 +112,60 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
   const currentPage = clampPage(page, result.totalPages);
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex items-start justify-between gap-4">
+    <div className="space-y-6 p-3 sm:p-4">
+      <div className="surface-panel-strong flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-          <p className="mt-1 text-gray-600">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+            Users
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
             Manage authenticated users and role assignments.
           </p>
         </div>
         <Link
           href="/admin/users/new"
-          className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="btn-primary w-full sm:w-auto"
         >
           Add User
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-6">
-        <div className="rounded-lg border bg-white p-4">
-          <p className="text-sm text-gray-500">Total Users</p>
-          <p className="mt-1 text-2xl font-semibold text-gray-900">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="surface-panel p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+            Total Users
+          </p>
+          <p className="mt-1 text-2xl font-black text-[color:var(--text-primary)]">
             {activeSummary.total + inactiveSummary.total}
           </p>
         </div>
-        <div className="rounded-lg border bg-white p-4">
-          <p className="text-sm text-gray-500">Active</p>
-          <p className="mt-1 text-2xl font-semibold text-green-600">
+        <div className="surface-panel p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+            Active
+          </p>
+          <p className="mt-1 text-2xl font-black text-[color:var(--accent-success)]">
             {activeSummary.total}
           </p>
         </div>
-        <div className="rounded-lg border bg-white p-4">
-          <p className="text-sm text-gray-500">Inactive</p>
-          <p className="mt-1 text-2xl font-semibold text-gray-700">
+        <div className="surface-panel p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+            Inactive
+          </p>
+          <p className="mt-1 text-2xl font-black text-secondary">
             {inactiveSummary.total}
           </p>
         </div>
       </div>
 
-      <form
-        action="/admin/users"
-        method="get"
-        className="rounded-lg border bg-white p-4 mb-6"
-      >
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-6">
+      <form action="/admin/users" method="get" className="table-toolbar">
+        <div className="table-toolbar-heading">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-secondary">
+            Filter Users
+          </h2>
+        </div>
+        <div className="table-toolbar-grid md:grid-cols-6">
           <div className="md:col-span-2">
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="name" className="label">
               Name
             </label>
             <input
@@ -162,14 +174,11 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
               type="text"
               defaultValue={name}
               maxLength={120}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="input mt-1"
             />
           </div>
           <div className="md:col-span-2">
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="email" className="label">
               Email
             </label>
             <input
@@ -178,21 +187,18 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
               type="text"
               defaultValue={email}
               maxLength={160}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="input mt-1"
             />
           </div>
           <div>
-            <label
-              htmlFor="role"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="role" className="label">
               Role
             </label>
             <select
               id="role"
               name="role"
               defaultValue={role || ""}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="input mt-1"
             >
               <option value="">All</option>
               <option value="ADMIN">ADMIN</option>
@@ -201,17 +207,14 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
             </select>
           </div>
           <div>
-            <label
-              htmlFor="status"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="status" className="label">
               Status
             </label>
             <select
               id="status"
               name="status"
               defaultValue={status}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="input mt-1"
             >
               <option value="all">All</option>
               <option value="active">Active</option>
@@ -219,99 +222,96 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
             </select>
           </div>
         </div>
-        <div className="mt-4 flex items-center gap-2">
-          <button
-            type="submit"
-            className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            Apply
-          </button>
-          <Link
-            href="/admin/users"
-            className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
-            Reset
-          </Link>
+        <div className="table-toolbar-footer">
+          <div className="table-toolbar-actions">
+            <button type="submit" className="btn-primary">
+              Apply
+            </button>
+            <Link href="/admin/users" className="btn-secondary">
+              Reset
+            </Link>
+          </div>
         </div>
       </form>
 
       {result.items.length === 0 ? (
-        <div className="rounded-lg border bg-white p-8 text-center">
-          <h2 className="text-lg font-medium text-gray-900">No users found</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Try adjusting your filters.
-          </p>
-        </div>
+        <PageEmptyState
+          title="No users found"
+          description="Try adjusting your filters or add a new user."
+          actionHref="/admin/users/new"
+          actionLabel="Add User"
+        />
       ) : (
-        <div className="overflow-x-auto rounded-lg border bg-white">
-          <table className="min-w-[920px] divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="surface-panel overflow-x-auto">
+          <table className="min-w-[920px] divide-y divide-[color:var(--border-soft)]">
+            <thead className="bg-[color:var(--bg-surface-strong)]">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                   User
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                   Role
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                   Status
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                   Last Login
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                   Created
                 </th>
-                <th className="px-4 py-3 text-right text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
               {result.items.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
+                <tr
+                  key={user.id}
+                  className="hover:bg-[color:var(--bg-surface-strong)]"
+                >
                   <td className="px-4 py-3">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-semibold text-[color:var(--text-primary)]">
                       {user.name}
                       {user.id === context.userId ? (
-                        <span className="ml-2 rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-700">
+                        <span
+                          className={`ml-2 ${statusChipClass("info")}`}
+                        >
                           You
                         </span>
                       ) : null}
                     </p>
-                    <p className="break-all text-sm text-gray-600">{user.email}</p>
+                    <p className="break-all text-xs text-muted">{user.email}</p>
                   </td>
                   <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${roleBadgeClass(user.role)}`}
-                    >
+                    <span className={roleBadgeClass(user.role)}>
                       {user.role}
                     </span>
                   </td>
                   <td className="px-4 py-3">
                     <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                        user.is_active
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
+                      className={statusChipClass(
+                        user.is_active ? "success" : "neutral",
+                      )}
                     >
                       {user.is_active ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
+                  <td className="px-4 py-3 text-sm text-secondary">
                     {user.last_login_at
                       ? user.last_login_at.toLocaleString("en-NZ")
                       : "Never"}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-600">
+                  <td className="px-4 py-3 text-sm text-secondary">
                     {user.created_at.toLocaleDateString("en-NZ")}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
                       <Link
                         href={`/admin/users/${user.id}`}
-                        className="inline-flex items-center rounded-md border border-gray-300 px-2.5 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        className="btn-secondary min-h-[38px] px-3 py-1.5 text-xs"
                       >
                         Edit
                       </Link>
@@ -331,7 +331,7 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
       )}
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-secondary">
           Showing {result.items.length} of {result.total} user
           {result.total === 1 ? "" : "s"}
         </p>
@@ -345,15 +345,15 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                 status,
               })}
               aria-disabled={currentPage === 1}
-              className={`rounded-md border px-3 py-1.5 text-sm ${
+              className={`btn-secondary min-h-[38px] px-3 py-1.5 text-sm ${
                 currentPage === 1
-                  ? "pointer-events-none cursor-not-allowed text-gray-400"
-                  : "text-gray-700 hover:bg-gray-50"
+                  ? "pointer-events-none cursor-not-allowed opacity-50"
+                  : ""
               }`}
             >
               Previous
             </Link>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-secondary">
               Page {currentPage} of {result.totalPages}
             </span>
             <Link
@@ -362,10 +362,10 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                 { name, email, role, status },
               )}
               aria-disabled={currentPage === result.totalPages}
-              className={`rounded-md border px-3 py-1.5 text-sm ${
+              className={`btn-secondary min-h-[38px] px-3 py-1.5 text-sm ${
                 currentPage === result.totalPages
-                  ? "pointer-events-none cursor-not-allowed text-gray-400"
-                  : "text-gray-700 hover:bg-gray-50"
+                  ? "pointer-events-none cursor-not-allowed opacity-50"
+                  : ""
               }`}
             >
               Next

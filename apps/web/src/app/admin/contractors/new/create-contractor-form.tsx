@@ -17,7 +17,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+      className="btn-primary"
     >
       {pending ? "Creating..." : "Create Contractor"}
     </button>
@@ -57,7 +57,7 @@ export default function CreateContractorForm() {
         <div>
           <label
             htmlFor="name"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-secondary"
           >
             Contractor Name
           </label>
@@ -68,7 +68,7 @@ export default function CreateContractorForm() {
             required
             minLength={2}
             maxLength={120}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
           />
           {getFieldError("name") && (
             <p className="mt-1 text-xs text-red-600">{getFieldError("name")}</p>
@@ -78,7 +78,7 @@ export default function CreateContractorForm() {
         <div>
           <label
             htmlFor="trade"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-secondary"
           >
             Trade
           </label>
@@ -88,7 +88,7 @@ export default function CreateContractorForm() {
             type="text"
             maxLength={120}
             placeholder="Electrician"
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
           />
           {getFieldError("trade") && (
             <p className="mt-1 text-xs text-red-600">{getFieldError("trade")}</p>
@@ -100,7 +100,7 @@ export default function CreateContractorForm() {
         <div>
           <label
             htmlFor="contactName"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-secondary"
           >
             Contact Name
           </label>
@@ -109,7 +109,7 @@ export default function CreateContractorForm() {
             name="contactName"
             type="text"
             maxLength={120}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
           />
           {getFieldError("contactName") && (
             <p className="mt-1 text-xs text-red-600">
@@ -121,7 +121,7 @@ export default function CreateContractorForm() {
         <div>
           <label
             htmlFor="contactEmail"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-secondary"
           >
             Contact Email
           </label>
@@ -130,7 +130,7 @@ export default function CreateContractorForm() {
             name="contactEmail"
             type="email"
             maxLength={160}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
           />
           {getFieldError("contactEmail") && (
             <p className="mt-1 text-xs text-red-600">
@@ -142,7 +142,7 @@ export default function CreateContractorForm() {
         <div>
           <label
             htmlFor="contactPhone"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-secondary"
           >
             Contact Phone
           </label>
@@ -152,7 +152,7 @@ export default function CreateContractorForm() {
             type="text"
             maxLength={30}
             placeholder="+64..."
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
           />
           {getFieldError("contactPhone") && (
             <p className="mt-1 text-xs text-red-600">
@@ -165,7 +165,7 @@ export default function CreateContractorForm() {
       <div>
         <label
           htmlFor="notes"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-secondary"
         >
           Notes
         </label>
@@ -174,7 +174,7 @@ export default function CreateContractorForm() {
           name="notes"
           rows={4}
           maxLength={500}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
         />
         {getFieldError("notes") && (
           <p className="mt-1 text-xs text-red-600">{getFieldError("notes")}</p>
@@ -184,7 +184,7 @@ export default function CreateContractorForm() {
       <div className="flex items-center justify-end gap-3 border-t pt-4">
         <Link
           href="/admin/contractors"
-          className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="btn-secondary"
         >
           Cancel
         </Link>
@@ -193,3 +193,4 @@ export default function CreateContractorForm() {
     </form>
   );
 }
+

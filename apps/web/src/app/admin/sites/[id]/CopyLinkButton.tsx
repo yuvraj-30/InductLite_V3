@@ -13,7 +13,7 @@ export function CopyLinkButton({ url }: { url: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
-      className="inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+      className="inline-flex items-center justify-center px-3 py-2 border border-[color:var(--border-soft)] shadow-sm text-sm font-medium rounded-md text-secondary bg-[color:var(--bg-surface)] hover:bg-[color:var(--bg-surface-strong)]"
     >
       <svg
         className="-ml-0.5 mr-1.5 h-4 w-4"
@@ -32,3 +32,4 @@ export function CopyLinkButton({ url }: { url: string }) {
     </button>
   );
 }
+

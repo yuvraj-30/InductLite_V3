@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import type { TierPresentation } from "@/lib/plans/tier-presentation";
+import { TIER_PRESENTATION } from "@/lib/plans/tier-presentation";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "InductLite vs NZ Competitors | Feature Comparison",
@@ -104,6 +110,21 @@ const WHY_INDUCTLITE = [
   "Built for NZ operational expectations and field realities.",
 ];
 
+const PLAN_TIERS = TIER_PRESENTATION.filter(
+  (item): item is TierPresentation & { key: "STANDARD" | "PLUS" | "PRO"; priceCents: number } =>
+    item.key !== "ADD_ONS" && Number.isFinite(item.priceCents),
+);
+
+const ADD_ONS_TIER = TIER_PRESENTATION.find((item) => item.key === "ADD_ONS");
+
+function formatPlanPrice(cents: number): string {
+  return new Intl.NumberFormat("en-NZ", {
+    style: "currency",
+    currency: "NZD",
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
+}
+
 export default function ComparePage() {
   return (
     <main className="relative isolate min-h-screen overflow-hidden px-4 py-8 sm:px-6 sm:py-10">
@@ -113,7 +134,7 @@ export default function ComparePage() {
       </div>
 
       <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-5">
-        <header className="surface-panel flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+        <header className="glass-card flex flex-wrap items-center justify-between gap-3 px-4 py-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-secondary">
               Compare
@@ -121,13 +142,13 @@ export default function ComparePage() {
             <p className="text-sm text-secondary">InductLite versus common NZ alternatives.</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Link href="/" className="btn-secondary">
+            <Link href="/" className={buttonVariants({ variant: "secondary", size: "sm" })}>
               Home
             </Link>
-            <Link href="/pricing" className="btn-secondary">
+            <Link href="/pricing" className={buttonVariants({ variant: "secondary", size: "sm" })}>
               Pricing
             </Link>
-            <Link href="/demo" className="btn-primary">
+            <Link href="/demo" className={buttonVariants({ size: "sm" })}>
               Book Demo
             </Link>
           </div>
@@ -141,13 +162,55 @@ export default function ComparePage() {
             Use this comparison to shortlist solutions quickly. It reflects public
             competitor positioning and current InductLite scope.
           </p>
-          <p className="mt-2 text-xs text-muted">Snapshot date: March 8, 2026.</p>
+          <p className="mt-2 text-xs text-muted">Snapshot date: March 11, 2026.</p>
+        </section>
+
+        <section className="bento-grid">
+          {PLAN_TIERS.map((plan) => (
+            <Card key={plan.key} tone={plan.key === "PRO" ? "elevated" : "default"} interactive>
+              <CardHeader>
+                <Badge variant={plan.badgeTone} className="w-fit">
+                  {plan.label}
+                </Badge>
+                <CardTitle className="mt-2 text-3xl font-black">{formatPlanPrice(plan.priceCents)}</CardTitle>
+                <CardDescription>Per site / month</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <p className="text-sm text-secondary">{plan.audience}</p>
+                <ul className="space-y-2 text-xs text-secondary">
+                  {plan.highlights.slice(0, 3).map((item) => (
+                    <li key={item} className="rounded-lg border border-surface-soft bg-surface-soft px-2 py-1.5">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+          ))}
+          {ADD_ONS_TIER ? (
+            <Card tone="glass">
+              <CardHeader>
+                <Badge variant={ADD_ONS_TIER.badgeTone} className="w-fit">
+                  {ADD_ONS_TIER.label}
+                </Badge>
+                <CardTitle className="mt-2 text-xl">{ADD_ONS_TIER.subtitle}</CardTitle>
+                <CardDescription>{ADD_ONS_TIER.audience}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2 text-xs text-secondary">
+                {ADD_ONS_TIER.highlights.slice(0, 3).map((item) => (
+                  <p key={item} className="rounded-lg border border-surface-soft bg-surface-soft px-2 py-1.5">
+                    {item}
+                  </p>
+                ))}
+              </CardContent>
+            </Card>
+          ) : null}
         </section>
 
         <section className="surface-panel overflow-x-auto px-4 py-5 sm:px-6">
           <h2 className="text-2xl font-bold">Feature Comparison Snapshot</h2>
-          <table className="mt-4 min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="mt-4 min-w-full divide-y divide-[color:var(--border-soft)]">
+            <thead className="bg-[color:var(--bg-surface-strong)]">
               <tr>
                 <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Feature
@@ -160,10 +223,12 @@ export default function ComparePage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
               {COMPARISON_ROWS.map((row) => (
                 <tr key={row.feature}>
-                  <td className="px-3 py-2 text-sm font-semibold text-gray-900">{row.feature}</td>
+                  <td className="px-3 py-2 text-sm font-semibold text-[color:var(--text-primary)]">
+                    {row.feature}
+                  </td>
                   <td className="px-3 py-2 text-sm text-secondary">{row.inductLite}</td>
                   <td className="px-3 py-2 text-sm text-secondary">{row.competitors}</td>
                 </tr>
@@ -177,7 +242,7 @@ export default function ComparePage() {
             <h2 className="text-xl font-bold">Competitor Positioning Notes</h2>
             <div className="mt-4 space-y-3">
               {COMPETITOR_NOTES.map((entry) => (
-                <div key={entry.name} className="rounded-xl border border-white/25 bg-white/35 p-3">
+                <div key={entry.name} className="rounded-xl border border-surface-soft bg-surface-soft p-3">
                   <p className="text-sm font-semibold text-[color:var(--text-primary)]">{entry.name}</p>
                   <p className="mt-1 text-xs text-secondary">{entry.summary}</p>
                 </div>
@@ -189,16 +254,19 @@ export default function ComparePage() {
             <h2 className="text-xl font-bold">Why teams choose InductLite</h2>
             <ul className="mt-4 space-y-2 text-sm text-secondary">
               {WHY_INDUCTLITE.map((item) => (
-                <li key={item} className="rounded-xl border border-white/25 bg-white/35 px-3 py-2">
+                <li key={item} className="rounded-xl border border-surface-soft bg-surface-soft px-3 py-2">
                   {item}
                 </li>
               ))}
             </ul>
             <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-              <Link href="/demo" className="btn-primary sm:min-w-[180px]">
+              <Link href="/demo" className={cn(buttonVariants(), "sm:min-w-[180px]")}>
                 Book Demo
               </Link>
-              <Link href="/pricing" className="btn-secondary sm:min-w-[180px]">
+              <Link
+                href="/pricing"
+                className={cn(buttonVariants({ variant: "secondary" }), "sm:min-w-[180px]")}
+              >
                 View Pricing
               </Link>
             </div>

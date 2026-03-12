@@ -26,59 +26,56 @@ export default async function MobileNativeRuntimePage() {
   const releaseChannel = readValue(process.env.MOBILE_RELEASE_CHANNEL);
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-start justify-between gap-3">
+    <div className="space-y-6 p-3 sm:p-4">
+      <div className="surface-panel-strong flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Native iOS/Android Runtime</h1>
-          <p className="mt-1 text-sm text-gray-600">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">Native iOS/Android Runtime</h1>
+          <p className="mt-1 text-sm text-secondary">
             Operational controls for app-store distribution and wrapper channel readiness.
           </p>
         </div>
-        <Link
-          href="/admin/mobile"
-          className="inline-flex min-h-[40px] items-center rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-        >
+        <Link href="/admin/mobile" className="btn-secondary w-full sm:w-auto">
           Back to Mobile Ops
         </Link>
       </div>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Distribution Metadata
         </h2>
-        <dl className="mt-3 grid gap-3 text-sm text-gray-700 md:grid-cols-2">
-          <div className="rounded border border-gray-200 p-3">
-            <dt className="font-semibold text-gray-900">iOS App Store URL</dt>
+        <dl className="mt-3 grid gap-3 text-sm text-secondary md:grid-cols-2">
+          <div className="rounded-xl border border-[color:var(--border-soft)] p-3">
+            <dt className="font-semibold text-[color:var(--text-primary)]">iOS App Store URL</dt>
             <dd className="mt-1 break-all">{iosStoreUrl}</dd>
           </div>
-          <div className="rounded border border-gray-200 p-3">
-            <dt className="font-semibold text-gray-900">Android Play URL</dt>
+          <div className="rounded-xl border border-[color:var(--border-soft)] p-3">
+            <dt className="font-semibold text-[color:var(--text-primary)]">Android Play URL</dt>
             <dd className="mt-1 break-all">{androidStoreUrl}</dd>
           </div>
-          <div className="rounded border border-gray-200 p-3">
-            <dt className="font-semibold text-gray-900">iOS Min Supported Version</dt>
+          <div className="rounded-xl border border-[color:var(--border-soft)] p-3">
+            <dt className="font-semibold text-[color:var(--text-primary)]">iOS Min Supported Version</dt>
             <dd className="mt-1">{iosMinVersion}</dd>
           </div>
-          <div className="rounded border border-gray-200 p-3">
-            <dt className="font-semibold text-gray-900">Android Min Supported Version</dt>
+          <div className="rounded-xl border border-[color:var(--border-soft)] p-3">
+            <dt className="font-semibold text-[color:var(--text-primary)]">Android Min Supported Version</dt>
             <dd className="mt-1">{androidMinVersion}</dd>
           </div>
-          <div className="rounded border border-gray-200 p-3">
-            <dt className="font-semibold text-gray-900">Wrapper Runtime</dt>
+          <div className="rounded-xl border border-[color:var(--border-soft)] p-3">
+            <dt className="font-semibold text-[color:var(--text-primary)]">Wrapper Runtime</dt>
             <dd className="mt-1">{wrapperRuntime}</dd>
           </div>
-          <div className="rounded border border-gray-200 p-3">
-            <dt className="font-semibold text-gray-900">Release Channel</dt>
+          <div className="rounded-xl border border-[color:var(--border-soft)] p-3">
+            <dt className="font-semibold text-[color:var(--text-primary)]">Release Channel</dt>
             <dd className="mt-1">{releaseChannel}</dd>
           </div>
         </dl>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Device Runtime Requirements
         </h2>
-        <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-gray-700">
+        <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-secondary">
           <li>Use secure enrollment token issuance from `/api/mobile/enrollment-token`.</li>
           <li>Send heartbeat every 5-15 minutes to `/api/mobile/heartbeat`.</li>
           <li>Replay delayed geofence events via `/api/mobile/geofence-events/replay`.</li>

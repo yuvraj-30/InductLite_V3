@@ -7,6 +7,7 @@ import {
 } from "@/lib/repository/hardware-trace.repository";
 import { findAllSites } from "@/lib/repository/site.repository";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
+import { PageWarningState } from "@/components/ui/page-state";
 import { resolveHardwareOutageAction } from "./actions";
 
 export const metadata = {
@@ -54,11 +55,19 @@ export default async function AccessOpsPage({ searchParams }: AccessOpsPageProps
   const enabled = await ensureAccessOpsFeature(context.companyId);
   if (!enabled) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-900">Gate & Access Operations</h1>
-        <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          Access operation traceability is not enabled for this plan (CONTROL_ID: PLAN-ENTITLEMENT-001).
-        </p>
+      <div className="space-y-6 p-3 sm:p-4">
+        <div className="surface-panel-strong p-5">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+            Gate & Access Operations
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
+            Correlate gate decisions end-to-end and track hardware outages with fallback continuity.
+          </p>
+        </div>
+        <PageWarningState
+          title="Access operation traceability is not enabled for this plan."
+          description="CONTROL_ID: PLAN-ENTITLEMENT-001."
+        />
       </div>
     );
   }
@@ -76,10 +85,10 @@ export default async function AccessOpsPage({ searchParams }: AccessOpsPageProps
   ]);
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-3 sm:p-4">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Gate & Access Operations</h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">Gate & Access Operations</h1>
+        <p className="mt-1 text-sm text-secondary">
           Correlate gate decisions end-to-end and track hardware outages with fallback continuity.
         </p>
       </div>
@@ -90,9 +99,9 @@ export default async function AccessOpsPage({ searchParams }: AccessOpsPageProps
         </div>
       ) : null}
 
-      <section className="rounded-lg border bg-white p-4">
+      <section className="surface-panel p-4">
         <form method="get" className="flex flex-wrap items-end gap-3">
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Site Scope
             <select name="site" defaultValue={params.site ?? ""} className="input mt-1 min-w-[240px]">
               <option value="">All sites</option>
@@ -105,33 +114,33 @@ export default async function AccessOpsPage({ searchParams }: AccessOpsPageProps
           </label>
           <button
             type="submit"
-            className="min-h-[40px] rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            className="btn-primary"
           >
             Apply Filter
           </button>
         </form>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Access Decision Trace
         </h2>
         <div className="mt-3 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
+            <thead className="bg-[color:var(--bg-surface-strong)]">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Requested</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Site</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Correlation</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Decision</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Latency (ms)</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Fallback</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Requested</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Site</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Correlation</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Decision</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Latency (ms)</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Fallback</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
               {traces.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-3 py-3 text-sm text-gray-500">No access decision traces yet.</td>
+                  <td colSpan={6} className="px-3 py-3 text-sm text-muted">No access decision traces yet.</td>
                 </tr>
               ) : (
                 traces.map((trace) => {
@@ -141,18 +150,18 @@ export default async function AccessOpsPage({ searchParams }: AccessOpsPageProps
                       : null;
                   return (
                     <tr key={trace.id}>
-                      <td className="px-3 py-3 text-sm text-gray-700">
+                      <td className="px-3 py-3 text-sm text-secondary">
                         {trace.requested_at.toLocaleString("en-NZ")}
                       </td>
-                      <td className="px-3 py-3 text-sm text-gray-700">
+                      <td className="px-3 py-3 text-sm text-secondary">
                         {sites.find((site) => site.id === trace.site_id)?.name ?? trace.site_id}
                       </td>
-                      <td className="px-3 py-3 text-xs text-gray-600">
+                      <td className="px-3 py-3 text-xs text-secondary">
                         <code>{trace.correlation_id}</code>
                       </td>
-                      <td className="px-3 py-3 text-sm text-gray-700">{trace.decision_status}</td>
-                      <td className="px-3 py-3 text-sm text-gray-700">{latencyMs ?? "-"}</td>
-                      <td className="px-3 py-3 text-sm text-gray-700">
+                      <td className="px-3 py-3 text-sm text-secondary">{trace.decision_status}</td>
+                      <td className="px-3 py-3 text-sm text-secondary">{latencyMs ?? "-"}</td>
+                      <td className="px-3 py-3 text-sm text-secondary">
                         {trace.fallback_mode ? "Yes" : "No"}
                       </td>
                     </tr>
@@ -164,43 +173,43 @@ export default async function AccessOpsPage({ searchParams }: AccessOpsPageProps
         </div>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Hardware Outage Events
         </h2>
         <div className="mt-3 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
+            <thead className="bg-[color:var(--bg-surface-strong)]">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Started</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Site</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Provider</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Severity</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Reason</th>
-                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Action</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Started</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Site</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Provider</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Severity</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Reason</th>
+                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
               {outages.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-3 py-3 text-sm text-gray-500">No hardware outage events recorded.</td>
+                  <td colSpan={6} className="px-3 py-3 text-sm text-muted">No hardware outage events recorded.</td>
                 </tr>
               ) : (
                 outages.map((outage) => (
                   <tr key={outage.id}>
-                    <td className="px-3 py-3 text-sm text-gray-700">
+                    <td className="px-3 py-3 text-sm text-secondary">
                       {outage.started_at.toLocaleString("en-NZ")}
                     </td>
-                    <td className="px-3 py-3 text-sm text-gray-700">
+                    <td className="px-3 py-3 text-sm text-secondary">
                       {sites.find((site) => site.id === outage.site_id)?.name ??
                         (outage.site_id ? outage.site_id : "All sites")}
                     </td>
-                    <td className="px-3 py-3 text-sm text-gray-700">{outage.provider ?? "-"}</td>
-                    <td className="px-3 py-3 text-sm text-gray-700">{outage.severity}</td>
-                    <td className="px-3 py-3 text-sm text-gray-700">{outage.reason}</td>
+                    <td className="px-3 py-3 text-sm text-secondary">{outage.provider ?? "-"}</td>
+                    <td className="px-3 py-3 text-sm text-secondary">{outage.severity}</td>
+                    <td className="px-3 py-3 text-sm text-secondary">{outage.reason}</td>
                     <td className="px-3 py-3 text-right">
                       {outage.resolved_at ? (
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-muted">
                           Resolved {outage.resolved_at.toLocaleString("en-NZ")}
                         </span>
                       ) : (
@@ -225,3 +234,4 @@ export default async function AccessOpsPage({ searchParams }: AccessOpsPageProps
     </div>
   );
 }
+

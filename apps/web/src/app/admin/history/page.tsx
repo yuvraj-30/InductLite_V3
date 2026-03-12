@@ -26,6 +26,7 @@ import { Pagination } from "./pagination";
 import { SignOutButton } from "../live-register/sign-out-button";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
+import { PageEmptyState, PageLoadingState, PageWarningState } from "@/components/ui/page-state";
 
 export const metadata = {
   title: "Sign-In History | InductLite",
@@ -58,24 +59,24 @@ function getLocationStatus(record: {
   location_distance_m: number | null;
 }): { label: string; tone: string } {
   if (!record.location_captured_at) {
-    return { label: "Unavailable", tone: "text-gray-500" };
+    return { label: "Unavailable", tone: "text-secondary" };
   }
 
   if (record.location_within_radius === true) {
     return {
       label: `Within radius${record.location_distance_m !== null ? ` (${Math.round(record.location_distance_m)}m)` : ""}`,
-      tone: "text-emerald-700",
+      tone: "text-emerald-900 dark:text-emerald-100",
     };
   }
 
   if (record.location_within_radius === false) {
     return {
       label: `Outside radius${record.location_distance_m !== null ? ` (${Math.round(record.location_distance_m)}m)` : ""}`,
-      tone: "text-amber-700",
+      tone: "text-amber-900 dark:text-amber-100",
     };
   }
 
-  return { label: "Captured", tone: "text-cyan-700" };
+  return { label: "Captured", tone: "text-cyan-950 dark:text-cyan-100" };
 }
 
 async function HistoryContent({
@@ -176,17 +177,19 @@ async function HistoryContent({
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6 p-3 sm:p-4">
+      <div className="surface-panel-strong flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Sign-In History</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+            Sign-In History
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
             View and filter site attendance records.
           </p>
         </div>
         <Link
           href="/admin/live-register"
-          className="text-sm text-blue-600 hover:text-blue-800"
+          className="text-sm font-semibold text-accent hover:underline"
         >
           {"<-"} Live Register
         </Link>
@@ -199,73 +202,57 @@ async function HistoryContent({
       />
 
       {dataLoadFailed && (
-        <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Sign-in history data could not be loaded. Please try again.
-        </div>
+        <PageWarningState
+          title="Sign-in history unavailable"
+          description="Sign-in history data could not be loaded. Please try again."
+          actionHref="/admin/history"
+          actionLabel="Retry"
+        />
       )}
 
       {/* Results */}
       {historyResult.items.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-8 text-center">
-          <div className="text-gray-400 mb-4">
-            <svg
-              className="mx-auto h-12 w-12"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No records found
-          </h3>
-          <p className="text-gray-600">
-            Try adjusting your filters to find what you&apos;re looking for.
-          </p>
-        </div>
+        <PageEmptyState
+          title="No records found"
+          description="Try adjusting your filters to find what you are looking for."
+        />
       ) : (
         <>
-          <div className="bg-white rounded-lg shadow overflow-hidden mb-4">
+          <div className="surface-panel mb-4 overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+              <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
+                <thead className="bg-[color:var(--bg-surface-strong)]">
                   <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                       Visitor
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                       Site
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                       Type
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                       Employer
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                       Sign In
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                       Sign Out
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                       Duration
                     </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                       Location
                     </th>
-                    <th className="px-6 py-3 text-right text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
                   {historyResult.items.map((record) => {
                     const isOnSite = !record.sign_out_ts;
                     const locationStatus = getLocationStatus(record);
@@ -288,11 +275,14 @@ async function HistoryContent({
                     }
 
                     return (
-                      <tr key={record.id} className="hover:bg-gray-50">
+                      <tr
+                        key={record.id}
+                        className="hover:bg-[color:var(--bg-surface-strong)]"
+                      >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="flex-shrink-0 h-8 w-8 bg-gray-200 rounded-full flex items-center justify-center">
-                              <span className="text-sm font-medium text-gray-600">
+                            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-surface-soft bg-[color:var(--bg-surface)]">
+                              <span className="text-sm font-semibold text-secondary">
                                 {record.visitor_name
                                   .split(" ")
                                   .map((n) => n[0])
@@ -302,41 +292,41 @@ async function HistoryContent({
                               </span>
                             </div>
                             <div className="ml-3">
-                              <div className="text-sm font-medium text-gray-900">
+                              <div className="text-sm font-semibold text-[color:var(--text-primary)]">
                                 {record.visitor_name}
                               </div>
-                              <div className="text-sm text-gray-600">
+                              <div className="text-xs text-muted">
                                 {record.visitor_phone || "Unavailable"}
                               </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[color:var(--text-primary)]">
                           {record.site.name}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded text-sm font-medium ${
+                            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${
                               record.visitor_type === "CONTRACTOR"
-                                ? "bg-blue-100 text-blue-800"
+                                ? "border-cyan-400/35 bg-cyan-500/15 text-cyan-950 dark:text-cyan-100"
                                 : record.visitor_type === "VISITOR"
-                                  ? "bg-purple-100 text-purple-800"
+                                  ? "border-violet-400/35 bg-violet-500/15 text-violet-950 dark:text-violet-100"
                                   : record.visitor_type === "EMPLOYEE"
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-yellow-100 text-yellow-800"
+                                    ? "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100"
+                                    : "border-amber-400/35 bg-amber-500/15 text-amber-900 dark:text-amber-100"
                             }`}
                           >
                             {record.visitor_type.toLowerCase()}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary">
                           {record.employer_name || "-"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary">
                           <div>
                             {record.sign_in_ts.toLocaleDateString("en-NZ")}
                           </div>
-                          <div className="text-sm text-gray-600">
+                          <div className="text-sm text-muted">
                             {record.sign_in_ts.toLocaleTimeString("en-NZ", {
                               hour: "2-digit",
                               minute: "2-digit",
@@ -345,17 +335,17 @@ async function HistoryContent({
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           {isOnSite ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-sm font-medium bg-green-100 text-green-800">
+                            <span className="inline-flex items-center rounded-full border border-emerald-400/35 bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-900 dark:text-emerald-100">
                               On Site
                             </span>
                           ) : (
-                            <div className="text-gray-500">
+                            <div className="text-secondary">
                               <div>
                                 {record.sign_out_ts!.toLocaleDateString(
                                   "en-NZ",
                                 )}
                               </div>
-                              <div className="text-sm text-gray-600">
+                              <div className="text-sm text-muted">
                                 {record.sign_out_ts!.toLocaleTimeString(
                                   "en-NZ",
                                   {
@@ -367,7 +357,7 @@ async function HistoryContent({
                             </div>
                           )}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary">
                           {durationStr}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -421,17 +411,14 @@ export default async function HistoryPage({ searchParams }: HistoryPageProps) {
   return (
     <Suspense
       fallback={
-        <div className="p-6">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-48 mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-32 mb-8"></div>
-            <div className="h-32 bg-gray-200 rounded mb-4"></div>
-            <div className="h-64 bg-gray-200 rounded"></div>
-          </div>
-        </div>
+        <PageLoadingState
+          title="Loading sign-in history"
+          description="Gathering attendance records and filter options."
+        />
       }
     >
       <HistoryContent filters={filters} />
     </Suspense>
   );
 }
+

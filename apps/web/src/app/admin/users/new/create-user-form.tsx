@@ -14,7 +14,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+      className="btn-primary"
     >
       {pending ? "Creating..." : "Create User"}
     </button>
@@ -51,7 +51,7 @@ export default function CreateUserForm() {
         <div>
           <label
             htmlFor="name"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-secondary"
           >
             Full Name
           </label>
@@ -62,7 +62,7 @@ export default function CreateUserForm() {
             required
             minLength={2}
             maxLength={120}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
           />
           {getFieldError("name") && (
             <p className="mt-1 text-xs text-red-600">{getFieldError("name")}</p>
@@ -72,7 +72,7 @@ export default function CreateUserForm() {
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-secondary"
           >
             Email
           </label>
@@ -83,7 +83,7 @@ export default function CreateUserForm() {
             autoComplete="username"
             required
             maxLength={160}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
           />
           {getFieldError("email") && (
             <p className="mt-1 text-xs text-red-600">{getFieldError("email")}</p>
@@ -95,7 +95,7 @@ export default function CreateUserForm() {
         <div>
           <label
             htmlFor="role"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-secondary"
           >
             Role
           </label>
@@ -103,7 +103,7 @@ export default function CreateUserForm() {
             id="role"
             name="role"
             defaultValue="VIEWER"
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
           >
             <option value="ADMIN">ADMIN</option>
             <option value="SITE_MANAGER">SITE_MANAGER</option>
@@ -117,7 +117,7 @@ export default function CreateUserForm() {
         <div>
           <label
             htmlFor="password"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-secondary"
           >
             Temporary Password
           </label>
@@ -129,9 +129,9 @@ export default function CreateUserForm() {
             required
             minLength={8}
             maxLength={128}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-muted">
             Must include uppercase, lowercase, and number.
           </p>
           {getFieldError("password") && (
@@ -145,7 +145,7 @@ export default function CreateUserForm() {
       <div className="flex items-center justify-end gap-3 border-t pt-4">
         <Link
           href="/admin/users"
-          className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="btn-secondary"
         >
           Cancel
         </Link>
@@ -154,3 +154,4 @@ export default function CreateUserForm() {
     </form>
   );
 }
+

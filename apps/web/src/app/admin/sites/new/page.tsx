@@ -31,14 +31,14 @@ export default async function NewSitePage() {
             <li>
               <Link
                 href="/admin/sites"
-                className="text-gray-500 hover:text-gray-700"
+                className="text-muted hover:text-secondary"
               >
                 Sites
               </Link>
             </li>
             <li>
               <svg
-                className="flex-shrink-0 h-5 w-5 text-gray-400"
+                className="flex-shrink-0 h-5 w-5 text-muted"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -50,14 +50,14 @@ export default async function NewSitePage() {
               </svg>
             </li>
             <li>
-              <span className="text-gray-900 font-medium">New Site</span>
+              <span className="text-[color:var(--text-primary)] font-medium">New Site</span>
             </li>
           </ol>
         </nav>
       </div>
 
       <div className="max-w-2xl">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">
+        <h1 className="kinetic-title mb-6 text-2xl font-black text-[color:var(--text-primary)]">
           Create New Site
         </h1>
         <CreateSiteForm />

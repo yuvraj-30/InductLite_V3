@@ -13,11 +13,13 @@ import { isSuccess } from "@/lib/api";
 interface SignOutButtonProps {
   signInId: string;
   visitorName: string;
+  className?: string;
 }
 
 export function SignOutButton({
   signInId,
-  visitorName: _visitorName,
+  visitorName,
+  className = "",
 }: SignOutButtonProps) {
   const [isPending, startTransition] = useTransition();
   const [showConfirm, setShowConfirm] = useState(false);
@@ -36,23 +38,27 @@ export function SignOutButton({
 
   if (showConfirm) {
     return (
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-gray-600">Confirm sign-out?</span>
-        <button
-          onClick={handleSignOut}
-          disabled={isPending}
-          className="px-2 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700 disabled:opacity-50"
-        >
-          {isPending ? "..." : "Yes"}
-        </button>
-        <button
-          onClick={() => setShowConfirm(false)}
-          disabled={isPending}
-          className="px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 disabled:opacity-50"
-        >
-          No
-        </button>
-        {error && <span className="text-xs text-red-700">{error}</span>}
+      <div className="space-y-2 rounded-lg border border-red-400/35 bg-red-500/10 p-2">
+        <p className="text-sm text-secondary">
+          Sign out {visitorName}?
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={handleSignOut}
+            disabled={isPending}
+            className="inline-flex min-h-[36px] items-center rounded-md border border-transparent bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+          >
+            {isPending ? "Working..." : "Yes, sign out"}
+          </button>
+          <button
+            onClick={() => setShowConfirm(false)}
+            disabled={isPending}
+            className="btn-secondary min-h-[36px] px-3 py-1.5 text-xs"
+          >
+            Cancel
+          </button>
+        </div>
+        {error ? <span className="text-xs text-red-700">{error}</span> : null}
       </div>
     );
   }
@@ -60,7 +66,7 @@ export function SignOutButton({
   return (
     <button
       onClick={() => setShowConfirm(true)}
-      className="px-3 py-1 text-sm font-medium text-red-800 bg-red-100 rounded hover:bg-red-200 transition-colors"
+      className={`inline-flex min-h-[40px] items-center rounded-lg border border-red-400/45 bg-red-500/12 px-3 py-1.5 text-sm font-semibold text-red-900 transition-colors hover:bg-red-500/20 dark:text-red-100 ${className}`.trim()}
     >
       Sign Out
     </button>

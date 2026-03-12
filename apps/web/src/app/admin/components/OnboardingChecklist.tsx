@@ -21,7 +21,7 @@ interface StepCardProps {
 
 function StepCard({ done, title, href, actionLabel, canAct = true }: StepCardProps) {
   return (
-    <div className="kinetic-hover rounded-xl border border-white/40 bg-white/55 p-4 shadow-soft backdrop-blur-xl">
+    <div className="kinetic-hover rounded-xl border border-surface-soft bg-[color:var(--bg-surface-strong)] p-4 shadow-soft backdrop-blur-xl">
       <div className="flex items-center justify-between">
         <p className="kinetic-title text-sm font-semibold text-[color:var(--text-primary)]">
           {title}
@@ -30,7 +30,7 @@ function StepCard({ done, title, href, actionLabel, canAct = true }: StepCardPro
           className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${
             done
               ? "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100"
-              : "border-white/35 bg-white/55 text-secondary"
+              : "border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] text-secondary"
           }`}
         >
           {done ? "Done" : "Pending"}
@@ -97,3 +97,4 @@ export function OnboardingChecklist({
     </div>
   );
 }
+

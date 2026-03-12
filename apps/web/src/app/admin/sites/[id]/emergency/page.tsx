@@ -23,6 +23,7 @@ import {
   closeRollCallEventAction,
 } from "./actions";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
+import { PageWarningState } from "@/components/ui/page-state";
 
 interface SiteEmergencyPageProps {
   params: Promise<{ id: string }>;
@@ -46,30 +47,24 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
   } catch (error) {
     if (error instanceof EntitlementDeniedError) {
       return (
-        <div className="p-6">
-          <div className="mb-6 flex items-center justify-between">
+        <div className="space-y-6 p-3 sm:p-4">
+          <div className="surface-panel-strong flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Emergency Setup</h1>
-              <p className="mt-1 text-gray-600">
+              <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">Emergency Setup</h1>
+              <p className="mt-1 text-secondary">
                 {site.name}: manage roll-call features for this site.
               </p>
             </div>
-            <Link
-              href={`/admin/sites/${siteId}`}
-              className="text-sm text-blue-600 hover:text-blue-800"
-            >
+            <Link href={`/admin/sites/${siteId}`} className="btn-secondary w-full sm:w-auto">
               Back to Site
             </Link>
           </div>
 
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-            <h2 className="text-sm font-semibold text-amber-900">
-              Feature not enabled for this site plan
-            </h2>
-            <p className="mt-1 text-sm text-amber-800">
-              Emergency roll-call is disabled by entitlements (CONTROL_ID:
-              PLAN-ENTITLEMENT-001).
-            </p>
+          <div className="max-w-3xl">
+            <PageWarningState
+              title="Feature not enabled for this site plan."
+              description="Emergency roll-call is disabled by entitlements (CONTROL_ID: PLAN-ENTITLEMENT-001)."
+            />
           </div>
         </div>
       );
@@ -91,25 +86,22 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
   const closedRollCallEvents = rollCallEvents.filter((event) => event.status === "CLOSED");
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="space-y-6 p-3 sm:p-4">
+      <div className="surface-panel-strong flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Emergency Setup</h1>
-          <p className="mt-1 text-gray-600">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">Emergency Setup</h1>
+          <p className="mt-1 text-secondary">
             {site.name}: maintain emergency contacts and procedures for inductions.
           </p>
         </div>
-        <Link
-          href={`/admin/sites/${siteId}`}
-          className="text-sm text-blue-600 hover:text-blue-800"
-        >
+        <Link href={`/admin/sites/${siteId}`} className="btn-secondary w-full sm:w-auto">
           Back to Site
         </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <section className="rounded-lg border bg-white p-4">
-          <h2 className="text-lg font-semibold text-gray-900">Emergency Contacts</h2>
+        <section className="surface-panel p-4">
+          <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">Emergency Contacts</h2>
 
           <form
             action={async (formData) => {
@@ -148,23 +140,20 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
               defaultValue={0}
               className="input"
             />
-            <button
-              type="submit"
-              className="min-h-[44px] rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-            >
+            <button type="submit" className="btn-primary">
               Add Contact
             </button>
           </form>
 
-          <ul className="mt-4 divide-y divide-gray-200">
+          <ul className="mt-4 divide-y divide-[color:var(--border-soft)]">
             {contacts.length === 0 ? (
-              <li className="py-3 text-sm text-gray-500">No contacts configured yet.</li>
+              <li className="py-3 text-sm text-muted">No contacts configured yet.</li>
             ) : (
               contacts.map((contact) => (
                 <li key={contact.id} className="flex items-start justify-between py-3">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{contact.name}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm font-medium text-[color:var(--text-primary)]">{contact.name}</p>
+                    <p className="text-xs text-muted">
                       {contact.role || "Role not set"} - {contact.phone}
                     </p>
                   </div>
@@ -176,7 +165,7 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
                   >
                     <button
                       type="submit"
-                      className="rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+                      className="rounded-md border border-[color:var(--border-soft)] px-2 py-1 text-xs text-secondary hover:bg-[color:var(--bg-surface-strong)]"
                     >
                       Remove
                     </button>
@@ -187,8 +176,8 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
           </ul>
         </section>
 
-        <section className="rounded-lg border bg-white p-4">
-          <h2 className="text-lg font-semibold text-gray-900">Emergency Procedures</h2>
+        <section className="surface-panel p-4">
+          <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">Emergency Procedures</h2>
 
           <form
             action={async (formData) => {
@@ -218,24 +207,21 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
               defaultValue={0}
               className="input"
             />
-            <button
-              type="submit"
-              className="min-h-[44px] rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-            >
+            <button type="submit" className="btn-primary">
               Add Procedure
             </button>
           </form>
 
-          <ol className="mt-4 divide-y divide-gray-200">
+          <ol className="mt-4 divide-y divide-[color:var(--border-soft)]">
             {procedures.length === 0 ? (
-              <li className="py-3 text-sm text-gray-500">No procedures configured yet.</li>
+              <li className="py-3 text-sm text-muted">No procedures configured yet.</li>
             ) : (
               procedures.map((procedure) => (
                 <li key={procedure.id} className="py-3">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{procedure.title}</p>
-                      <p className="mt-1 text-xs text-gray-600">{procedure.instructions}</p>
+                      <p className="text-sm font-medium text-[color:var(--text-primary)]">{procedure.title}</p>
+                      <p className="mt-1 text-xs text-secondary">{procedure.instructions}</p>
                     </div>
                     <form
                       action={async () => {
@@ -245,7 +231,7 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
                     >
                       <button
                         type="submit"
-                        className="rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+                        className="rounded-md border border-[color:var(--border-soft)] px-2 py-1 text-xs text-secondary hover:bg-[color:var(--bg-surface-strong)]"
                       >
                         Remove
                       </button>
@@ -258,15 +244,15 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
         </section>
       </div>
 
-      <section className="mt-6 rounded-lg border bg-white p-4">
-        <h2 className="text-lg font-semibold text-gray-900">Evacuation Roll Call</h2>
-        <p className="mt-1 text-sm text-gray-600">
+      <section className="surface-panel p-4">
+        <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">Evacuation Roll Call</h2>
+        <p className="mt-1 text-sm text-secondary">
           Start a live roll call snapshot, mark attendance, then close and export evidence.
         </p>
 
         {!activeRollCall ? (
-          <div className="mt-4 rounded-md border border-gray-200 bg-gray-50 p-4">
-            <p className="text-sm text-gray-700">
+          <div className="mt-4 rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-4">
+            <p className="text-sm text-secondary">
               No active roll call for this site.
             </p>
             <form
@@ -298,13 +284,13 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
               <div className="flex flex-wrap items-center gap-2">
                 <a
                   href={`/api/rollcall/${activeRollCall.id}/export`}
-                  className="rounded-md border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100"
+                  className="rounded-md border border-amber-300 bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-900 hover:bg-amber-200"
                 >
                   Export Active CSV
                 </a>
                 <a
                   href={`/api/rollcall/${activeRollCall.id}/evidence`}
-                  className="rounded-md border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-100"
+                  className="rounded-md border border-amber-300 bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-900 hover:bg-amber-200"
                 >
                   Export Incident Evidence (JSON)
                 </a>
@@ -319,7 +305,7 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
             >
               <button
                 type="submit"
-                className="min-h-[40px] rounded-md border border-amber-400 bg-white px-3 py-2 text-xs font-semibold text-amber-900 hover:bg-amber-100"
+                className="min-h-[40px] rounded-md border border-amber-400 bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-900 hover:bg-amber-200"
               >
                 Mark All Accounted
               </button>
@@ -327,7 +313,7 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
 
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-amber-200">
-                <thead className="bg-white">
+                <thead className="bg-amber-100">
                   <tr>
                     <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-amber-900">
                       Visitor
@@ -343,12 +329,12 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-amber-200 bg-white">
+                <tbody className="divide-y divide-amber-200 bg-amber-50">
                   {activeAttendances.length === 0 ? (
                     <tr>
                       <td
                         colSpan={4}
-                        className="px-4 py-3 text-sm text-gray-500"
+                        className="px-4 py-3 text-sm text-muted"
                       >
                         No people were on-site when this roll call started.
                       </td>
@@ -359,10 +345,10 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
                         attendance.status === "ACCOUNTED" ? "MISSING" : "ACCOUNTED";
                       return (
                         <tr key={attendance.id}>
-                          <td className="px-4 py-3 text-sm text-gray-700">
+                          <td className="px-4 py-3 text-sm text-secondary">
                             {attendance.visitor_name}
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-700">
+                          <td className="px-4 py-3 text-sm text-secondary">
                             {attendance.visitor_type}
                           </td>
                           <td className="px-4 py-3 text-sm">
@@ -390,7 +376,7 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
                             >
                               <button
                                 type="submit"
-                                className="rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                                className="rounded-md border border-[color:var(--border-soft)] px-2 py-1 text-xs font-medium text-secondary hover:bg-[color:var(--bg-surface-strong)]"
                               >
                                 Mark {nextStatus === "ACCOUNTED" ? "Accounted" : "Missing"}
                               </button>
@@ -432,54 +418,54 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
         )}
 
         <div className="mt-4 overflow-x-auto">
-          <h3 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+          <h3 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
             Closed Roll Calls
           </h3>
           {closedRollCallEvents.length === 0 ? (
-            <p className="py-3 text-sm text-gray-500">No closed roll calls yet.</p>
+            <p className="py-3 text-sm text-muted">No closed roll calls yet.</p>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
+              <thead className="bg-[color:var(--bg-surface-strong)]">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
                     Started
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
                     Closed
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
                     Summary
                   </th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-4 py-3 text-right text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
                     Export
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
                 {closedRollCallEvents.map((event) => (
                   <tr key={event.id}>
-                    <td className="px-4 py-3 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-secondary">
                       {event.started_at.toLocaleString("en-NZ")}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-secondary">
                       {event.closed_at
                         ? event.closed_at.toLocaleString("en-NZ")
                         : "Open"}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-secondary">
                       Total {event.total_people} | Accounted {event.accounted_count} | Missing {event.missing_count}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex flex-wrap justify-end gap-2">
                         <a
                           href={`/api/rollcall/${event.id}/export`}
-                          className="rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                          className="rounded-md border border-[color:var(--border-soft)] px-2 py-1 text-xs font-medium text-secondary hover:bg-[color:var(--bg-surface-strong)]"
                         >
                           CSV
                         </a>
                         <a
                           href={`/api/rollcall/${event.id}/evidence`}
-                          className="rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                          className="rounded-md border border-[color:var(--border-soft)] px-2 py-1 text-xs font-medium text-secondary hover:bg-[color:var(--bg-surface-strong)]"
                         >
                           Evidence JSON
                         </a>
@@ -493,9 +479,9 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
         </div>
       </section>
 
-      <section className="mt-6 rounded-lg border bg-white p-4">
-        <h2 className="text-lg font-semibold text-gray-900">Emergency Drill Register</h2>
-        <p className="mt-1 text-sm text-gray-600">
+      <section className="surface-panel p-4">
+        <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">Emergency Drill Register</h2>
+        <p className="mt-1 text-sm text-secondary">
           Record emergency plan tests and outcomes for compliance evidence.
         </p>
 
@@ -506,7 +492,7 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
           }}
           className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2"
         >
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Drill Type
             <select
               name="drillType"
@@ -521,7 +507,7 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
             </select>
           </label>
 
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Conducted At
             <input
               name="conductedAt"
@@ -530,7 +516,7 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
             />
           </label>
 
-          <label className="text-sm text-gray-700 md:col-span-2">
+          <label className="text-sm text-secondary md:col-span-2">
             Scenario
             <textarea
               name="scenario"
@@ -541,7 +527,7 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
             />
           </label>
 
-          <label className="text-sm text-gray-700 md:col-span-2">
+          <label className="text-sm text-secondary md:col-span-2">
             Outcome Notes
             <textarea
               name="outcomeNotes"
@@ -551,7 +537,7 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
             />
           </label>
 
-          <label className="text-sm text-gray-700 md:col-span-2">
+          <label className="text-sm text-secondary md:col-span-2">
             Follow-up Actions
             <textarea
               name="followUpActions"
@@ -561,7 +547,7 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
             />
           </label>
 
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Next Due At (optional)
             <input
               name="nextDueAt"
@@ -570,21 +556,18 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
             />
           </label>
 
-          <label className="flex items-center gap-2 text-sm text-gray-700">
+          <label className="flex items-center gap-2 text-sm text-secondary">
             <input
               name="legalHold"
               type="checkbox"
               value="true"
-              className="h-4 w-4 rounded border-gray-300"
+              className="h-4 w-4 rounded border-[color:var(--border-soft)]"
             />
             Apply legal hold
           </label>
 
           <div className="md:col-span-2">
-            <button
-              type="submit"
-              className="min-h-[44px] rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-            >
+            <button type="submit" className="btn-primary">
               Log Drill
             </button>
           </div>
@@ -592,37 +575,37 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
 
         <div className="mt-4 overflow-x-auto">
           {drills.length === 0 ? (
-            <p className="py-3 text-sm text-gray-500">No drills logged yet.</p>
+            <p className="py-3 text-sm text-muted">No drills logged yet.</p>
           ) : (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
+              <thead className="bg-[color:var(--bg-surface-strong)]">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
                     Conducted
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
                     Type
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
                     Scenario
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
                     Next Due
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
                 {drills.map((drill) => (
                   <tr key={drill.id}>
-                    <td className="px-4 py-3 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-secondary">
                       {drill.conducted_at.toLocaleString("en-NZ")}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-secondary">
                       {drill.drill_type}
                       {drill.legal_hold ? " | Legal hold" : ""}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{drill.scenario}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm text-secondary">{drill.scenario}</td>
+                    <td className="px-4 py-3 text-sm text-secondary">
                       {drill.next_due_at
                         ? drill.next_due_at.toLocaleString("en-NZ")
                         : "Not set"}

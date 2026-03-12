@@ -72,6 +72,7 @@ Login as `admin.standard@inductlite.test`.
 
 - [ ] `/admin/plan-configurator` shows entitlement-denied message.
 - [ ] `/admin/policy-simulator` denied.
+- [ ] `/admin/safety-copilot` denied.
 - [ ] `/admin/risk-passport` denied.
 - [ ] `/admin/trust-graph` denied.
 - [ ] `/admin/benchmarks` denied.
@@ -87,6 +88,7 @@ Login as `admin.plus@inductlite.test`.
 ### 5.1 PLUS Features That Must Work
 
 - [ ] `/admin/policy-simulator` loads and can run a simulation.
+- [ ] `/admin/safety-copilot` loads and can record accept/reject/edit decisions.
 - [ ] `/admin/risk-passport` loads and can refresh profile/risk data.
 - [ ] `/admin/communications` loads and can draft a broadcast.
 - [ ] `/admin/evidence` loads and can verify a pack/check.
@@ -114,6 +116,7 @@ Login as `admin.pro@inductlite.test`.
 - [ ] In `/admin/plan-configurator`, create a scheduled plan change and confirm it appears in history.
 - [ ] `/admin/audit-analytics` loads advanced analytics.
 - [ ] `/admin/benchmarks` loads predictive benchmark page.
+- [ ] `/admin/safety-copilot` loads and shows confidence/source signals with explicit decision controls.
 - [ ] `/admin/trust-graph` loads trust graph insights.
 - [ ] `/admin/integrations/procore` loads connector config.
 - [ ] `/admin/prequalification-exchange` loads exchange UI.
@@ -181,7 +184,13 @@ For each slug:
 - [ ] `apps/web/.prod-3000.err.log` has no runtime crash stack after test pass.
 - [ ] Any entitlement denial seen is expected for that plan and not a defect.
 
-## 11) Pass Criteria
+## 11) UI/UX S5 Hardening Checks
+
+- [ ] Run `npm run -w apps/web test:e2e -- e2e/a11y.spec.ts`.
+- [ ] Run `npm run -w apps/web test:e2e:perf-budget`.
+- [ ] Run `npm run report:ux-perf-budget` and verify report status is PASS.
+
+## 12) Pass Criteria
 
 - [ ] All core pages render.
 - [ ] Plan gates match expected Standard/Plus/Pro/add-on behavior.

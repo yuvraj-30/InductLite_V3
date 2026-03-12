@@ -32,7 +32,7 @@ function FormFields({ site }: { site: Site }) {
       <div>
         <label
           htmlFor="name"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-secondary"
         >
           Site Name <span className="text-red-500">*</span>
         </label>
@@ -45,14 +45,14 @@ function FormFields({ site }: { site: Site }) {
           minLength={2}
           maxLength={100}
           disabled={pending}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+          className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm disabled:bg-[color:var(--bg-surface-strong)] disabled:cursor-not-allowed"
         />
       </div>
 
       <div>
         <label
           htmlFor="address"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-secondary"
         >
           Address
         </label>
@@ -63,14 +63,14 @@ function FormFields({ site }: { site: Site }) {
           defaultValue={site.address || ""}
           maxLength={200}
           disabled={pending}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+          className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm disabled:bg-[color:var(--bg-surface-strong)] disabled:cursor-not-allowed"
         />
       </div>
 
       <div>
         <label
           htmlFor="description"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-secondary"
         >
           Description
         </label>
@@ -81,22 +81,22 @@ function FormFields({ site }: { site: Site }) {
           defaultValue={site.description || ""}
           maxLength={500}
           disabled={pending}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+          className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm disabled:bg-[color:var(--bg-surface-strong)] disabled:cursor-not-allowed"
         />
       </div>
 
-      <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
-        <h3 className="text-sm font-semibold text-gray-900">
+      <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-4">
+        <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">
           Location Audit
         </h3>
-        <p className="mt-1 text-xs text-gray-600">
+        <p className="mt-1 text-xs text-secondary">
           Leave all location fields blank to disable location verification for this site.
         </p>
         <div className="mt-3 grid gap-3 md:grid-cols-3">
           <div>
             <label
               htmlFor="locationLatitude"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-secondary"
             >
               Latitude
             </label>
@@ -109,14 +109,14 @@ function FormFields({ site }: { site: Site }) {
               min="-90"
               max="90"
               disabled={pending}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm disabled:bg-[color:var(--bg-surface-strong)] disabled:cursor-not-allowed"
             />
           </div>
 
           <div>
             <label
               htmlFor="locationLongitude"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-secondary"
             >
               Longitude
             </label>
@@ -129,14 +129,14 @@ function FormFields({ site }: { site: Site }) {
               min="-180"
               max="180"
               disabled={pending}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm disabled:bg-[color:var(--bg-surface-strong)] disabled:cursor-not-allowed"
             />
           </div>
 
           <div>
             <label
               htmlFor="locationRadiusM"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-secondary"
             >
               Radius (m)
             </label>
@@ -149,7 +149,7 @@ function FormFields({ site }: { site: Site }) {
               min="25"
               max="2000"
               disabled={pending}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm disabled:bg-[color:var(--bg-surface-strong)] disabled:cursor-not-allowed"
             />
           </div>
         </div>
@@ -159,7 +159,7 @@ function FormFields({ site }: { site: Site }) {
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[color:var(--accent-primary)] hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[color:var(--accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {pending ? "Saving..." : "Save Changes"}
         </button>
@@ -191,3 +191,5 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
     </form>
   );
 }
+
+

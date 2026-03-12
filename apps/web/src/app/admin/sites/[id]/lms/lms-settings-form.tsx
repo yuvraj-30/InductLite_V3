@@ -47,12 +47,12 @@ export function LmsSettingsForm({
   const [state, formAction] = useActionState(boundAction, initialState);
 
   return (
-    <section className="rounded-lg border bg-white p-5">
-      <h2 className="text-lg font-semibold text-gray-900">LMS Completion Sync</h2>
-      <p className="mt-1 text-sm text-gray-600">
+    <section className="surface-panel p-5">
+      <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">LMS Completion Sync</h2>
+      <p className="mt-1 text-sm text-secondary">
         Configure one-way completion syncing to your LMS endpoint.
       </p>
-      <p className="mt-1 text-xs text-gray-500">
+      <p className="mt-1 text-xs text-muted">
         Last updated: {formatTimestamp(updatedAt)}
         {" | "}
         Auth token: {hasAuthToken ? "Configured" : "Not configured"}
@@ -70,12 +70,12 @@ export function LmsSettingsForm({
       )}
 
       <form action={formAction} className="mt-4 space-y-4">
-        <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+        <label className="inline-flex items-center gap-2 text-sm text-secondary">
           <input
             type="checkbox"
             name="enabled"
             defaultChecked={initialEnabled}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)]"
           />
           Enable LMS completion sync for this site
         </label>
@@ -83,7 +83,7 @@ export function LmsSettingsForm({
         <div>
           <label
             htmlFor="endpointUrl"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-secondary"
           >
             Endpoint URL
           </label>
@@ -93,7 +93,7 @@ export function LmsSettingsForm({
             type="url"
             defaultValue={initialEndpointUrl}
             placeholder="https://lms.example.com/inductlite/completions"
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)]"
           />
           {state &&
             !state.success &&
@@ -105,28 +105,28 @@ export function LmsSettingsForm({
         </div>
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Provider (optional)
             <input
               name="provider"
               defaultValue={initialProvider}
               placeholder="Moodle"
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)]"
             />
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Course Code (optional)
             <input
               name="courseCode"
               defaultValue={initialCourseCode}
               placeholder="SITE-INDUCT-101"
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)]"
             />
           </label>
         </div>
 
-        <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
-          <label className="block text-sm text-gray-700">
+        <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-4">
+          <label className="block text-sm text-secondary">
             Auth Token (optional)
             <input
               name="authToken"
@@ -136,7 +136,7 @@ export function LmsSettingsForm({
               placeholder={
                 hasAuthToken ? "Leave blank to keep current token" : "Paste token"
               }
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)]"
             />
           </label>
           {state &&
@@ -147,11 +147,11 @@ export function LmsSettingsForm({
               </p>
             )}
 
-          <label className="mt-3 inline-flex items-center gap-2 text-sm text-gray-700">
+          <label className="mt-3 inline-flex items-center gap-2 text-sm text-secondary">
             <input
               type="checkbox"
               name="clearAuthToken"
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)]"
             />
             Clear stored auth token
           </label>
@@ -159,7 +159,7 @@ export function LmsSettingsForm({
 
         <button
           type="submit"
-          className="min-h-[42px] rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="btn-primary min-h-[42px]"
         >
           Save LMS Settings
         </button>
@@ -167,4 +167,5 @@ export function LmsSettingsForm({
     </section>
   );
 }
+
 

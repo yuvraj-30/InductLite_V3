@@ -76,12 +76,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/icon.png",
-    userInterfaceStyle: "light",
+    userInterfaceStyle: "automatic",
     scheme,
     splash: {
       image: "./assets/splash-icon.png",
       resizeMode: "contain",
-      backgroundColor: "#ffffff",
+      backgroundColor: "#f8f2e8",
     },
     ios: {
       supportsTablet: true,
@@ -100,7 +100,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         foregroundImage: "./assets/android-icon-foreground.png",
         backgroundImage: "./assets/android-icon-background.png",
         monochromeImage: "./assets/android-icon-monochrome.png",
-        backgroundColor: "#E6F4FE",
+        backgroundColor: "#f2e7d2",
       },
       permissions: [
         "ACCESS_COARSE_LOCATION",

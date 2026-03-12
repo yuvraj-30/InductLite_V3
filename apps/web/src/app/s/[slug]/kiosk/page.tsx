@@ -20,7 +20,7 @@ export default async function KioskPage({ params }: Props) {
   return (
     <PublicShell brand="InductLite" subtitle={`${site.name} - Kiosk Mode`}>
       <div className="mb-6 text-center">
-        <span className="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
+        <span className="inline-flex items-center rounded-full border border-cyan-400/35 bg-cyan-500/15 px-3 py-1 text-sm font-medium text-cyan-950 dark:text-cyan-100">
           Kiosk Mode Active
         </span>
       </div>

@@ -29,9 +29,17 @@ export default async function TemplateEditorPage({ params }: Props) {
   const guard = await checkAuthReadOnly();
   if (!guard.success) {
     return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-700">{guard.error}</p>
+      <div className="space-y-6 p-3 sm:p-4">
+        <div className="surface-panel-strong p-5">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+            Template Editor
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
+            View and update template metadata and questions.
+          </p>
+        </div>
+        <div className="rounded-xl border border-red-400/45 bg-red-100/70 p-4 dark:bg-red-950/45">
+          <p className="text-sm text-red-900 dark:text-red-200">{guard.error}</p>
         </div>
       </div>
     );
@@ -63,16 +71,24 @@ export default async function TemplateEditorPage({ params }: Props) {
 
   if (dataLoadFailed) {
     return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <div className="mb-6">
+      <div className="mx-auto max-w-4xl space-y-6 p-3 sm:p-4">
+        <div className="surface-panel-strong p-5">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+            Template Editor
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
+            View and update template metadata and questions.
+          </p>
+        </div>
+        <div>
           <Link
             href="/admin/templates"
-            className="text-sm text-gray-500 hover:text-gray-700"
+            className="btn-secondary min-h-[36px] px-3 py-1.5 text-xs"
           >
             Back to Templates
           </Link>
         </div>
-        <div className="rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+        <div className="rounded-xl border border-amber-400/45 bg-amber-100/70 p-4 text-sm text-amber-900 dark:bg-amber-950/45 dark:text-amber-200">
           Template data could not be loaded. Please refresh and try again.
         </div>
       </div>
@@ -86,13 +102,13 @@ export default async function TemplateEditorPage({ params }: Props) {
   const isEditable = !template.is_archived && !template.is_published;
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-6">
+    <div className="mx-auto max-w-4xl space-y-6 p-3 sm:p-4">
+      <div>
         <Link
           href="/admin/templates"
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="btn-secondary min-h-[36px] px-3 py-1.5 text-xs"
         >
-          ← Back to Templates
+          Back to Templates
         </Link>
       </div>
 
@@ -102,12 +118,14 @@ export default async function TemplateEditorPage({ params }: Props) {
         isEditable={isEditable}
       />
 
-      <div className="mt-8">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Questions</h2>
+      <section className="surface-panel p-4">
+        <h2 className="mb-4 text-lg font-semibold text-[color:var(--text-primary)]">
+          Questions
+        </h2>
 
         {template.questions.length === 0 && !isEditable ? (
-          <div className="text-center py-8 bg-gray-50 rounded-lg">
-            <p className="text-gray-500">No questions in this template</p>
+          <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] py-8 text-center">
+            <p className="text-sm text-muted">No questions in this template</p>
           </div>
         ) : (
           <QuestionBuilder
@@ -116,42 +134,41 @@ export default async function TemplateEditorPage({ params }: Props) {
             isEditable={isEditable && canManageTemplates}
           />
         )}
-      </div>
+      </section>
 
-      {/* Template Info */}
-      <div className="mt-8 border-t pt-6">
-        <h3 className="text-sm font-medium text-gray-500 mb-3">
+      <section className="surface-panel p-4">
+        <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Template Information
         </h3>
         <dl className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <dt className="text-gray-500">Created</dt>
-            <dd className="text-gray-900">
+            <dt className="text-muted">Created</dt>
+            <dd className="text-[color:var(--text-primary)]">
               {template.created_at.toLocaleDateString()}
             </dd>
           </div>
           <div>
-            <dt className="text-gray-500">Last Updated</dt>
-            <dd className="text-gray-900">
+            <dt className="text-muted">Last Updated</dt>
+            <dd className="text-[color:var(--text-primary)]">
               {template.updated_at.toLocaleDateString()}
             </dd>
           </div>
           {template.published_at && (
             <div>
-              <dt className="text-gray-500">Published</dt>
-              <dd className="text-gray-900">
+              <dt className="text-muted">Published</dt>
+              <dd className="text-[color:var(--text-primary)]">
                 {template.published_at.toLocaleDateString()}
               </dd>
             </div>
           )}
           <div>
-            <dt className="text-gray-500">Scope</dt>
-            <dd className="text-gray-900">
+            <dt className="text-muted">Scope</dt>
+            <dd className="text-[color:var(--text-primary)]">
               {template.site ? template.site.name : "Company-wide"}
             </dd>
           </div>
         </dl>
-      </div>
+      </section>
     </div>
   );
 }

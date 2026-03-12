@@ -9,6 +9,8 @@ import {
 } from "@/lib/repository";
 import type { WebhookDeliveryStatus } from "@prisma/client";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
+import { statusChipClass } from "../components/status-chip";
+import { PageWarningState } from "@/components/ui/page-state";
 
 export const metadata = {
   title: "Webhook Deliveries | InductLite",
@@ -51,16 +53,16 @@ function formatDateTime(value: Date | null): string {
 function statusChipClasses(status: WebhookDeliveryStatus): string {
   switch (status) {
     case "SENT":
-      return "bg-emerald-100 text-emerald-800";
+      return statusChipClass("success");
     case "DEAD":
-      return "bg-red-100 text-red-800";
+      return statusChipClass("danger");
     case "RETRYING":
-      return "bg-amber-100 text-amber-800";
+      return statusChipClass("warning");
     case "PROCESSING":
-      return "bg-indigo-100 text-indigo-800";
+      return statusChipClass("accent");
     case "PENDING":
     default:
-      return "bg-slate-100 text-slate-800";
+      return statusChipClass("neutral");
   }
 }
 
@@ -96,24 +98,20 @@ export default async function AdminWebhookDeliveriesPage({
   } catch (error) {
     if (error instanceof EntitlementDeniedError) {
       return (
-        <div className="p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Webhook Deliveries</h1>
-            <p className="mt-1 text-gray-600">
+        <div className="space-y-6 p-3 sm:p-4">
+          <div className="surface-panel-strong p-5">
+            <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+              Webhook Deliveries
+            </h1>
+            <p className="mt-1 text-sm text-secondary">
               Review outbound webhook delivery outcomes, retries, and dead-letter
               events.
             </p>
           </div>
-
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-            <h2 className="text-sm font-semibold text-amber-900">
-              Feature not enabled for this plan
-            </h2>
-            <p className="mt-1 text-sm text-amber-800">
-              Outbound webhook deliveries are disabled by entitlements
-              (CONTROL_ID: PLAN-ENTITLEMENT-001).
-            </p>
-          </div>
+          <PageWarningState
+            title="Feature not enabled for this plan."
+            description="Outbound webhook deliveries are disabled by entitlements (CONTROL_ID: PLAN-ENTITLEMENT-001)."
+          />
         </div>
       );
     }
@@ -135,29 +133,31 @@ export default async function AdminWebhookDeliveriesPage({
   ]);
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Webhook Deliveries</h1>
-        <p className="mt-1 text-gray-600">
+    <div className="space-y-6 p-3 sm:p-4">
+      <div className="surface-panel-strong p-5">
+        <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+          Webhook Deliveries
+        </h1>
+        <p className="mt-1 text-sm text-secondary">
           Review outbound webhook delivery outcomes, retries, and dead-letter
           events.
         </p>
       </div>
 
-      <section className="mb-6 rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Last 7 Days Summary
         </h2>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-5">
           {WEBHOOK_STATUSES.map((status) => (
             <div
               key={status}
-              className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2"
+              className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] px-3 py-2"
             >
-              <p className="text-xs uppercase tracking-[0.08em] text-gray-600">
+              <p className="text-xs uppercase tracking-[0.08em] text-secondary">
                 {status}
               </p>
-              <p className="mt-1 text-lg font-semibold text-gray-900">
+              <p className="mt-1 text-lg font-semibold text-[color:var(--text-primary)]">
                 {weeklyCounts[status]}
               </p>
             </div>
@@ -165,17 +165,19 @@ export default async function AdminWebhookDeliveriesPage({
         </div>
       </section>
 
-      <section className="mb-4 rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
-          Filters
-        </h2>
-        <form className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-4">
-          <label className="text-sm text-gray-700">
+      <section className="table-toolbar">
+        <div className="table-toolbar-heading">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-secondary">
+            Filters
+          </h2>
+        </div>
+        <form className="table-toolbar-grid">
+          <label className="text-sm text-secondary">
             Site
             <select
               name="siteId"
               defaultValue={selectedSiteId ?? ""}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             >
               <option value="">All sites</option>
               {sites.map((site) => (
@@ -185,12 +187,12 @@ export default async function AdminWebhookDeliveriesPage({
               ))}
             </select>
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Status
             <select
               name="status"
               defaultValue={selectedStatus ?? ""}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             >
               <option value="">All statuses</option>
               {WEBHOOK_STATUSES.map((status) => (
@@ -200,7 +202,7 @@ export default async function AdminWebhookDeliveriesPage({
               ))}
             </select>
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Limit
             <input
               name="limit"
@@ -208,13 +210,13 @@ export default async function AdminWebhookDeliveriesPage({
               min={1}
               max={500}
               defaultValue={limit}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="input mt-1"
             />
           </label>
-          <div className="flex items-end">
+          <div className="table-toolbar-actions">
             <button
               type="submit"
-              className="min-h-[40px] rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="btn-primary"
             >
               Apply Filters
             </button>
@@ -222,87 +224,85 @@ export default async function AdminWebhookDeliveriesPage({
         </form>
       </section>
 
-      <section className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <section className="surface-panel overflow-x-auto">
+        <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
+          <thead className="bg-[color:var(--bg-surface-strong)]">
             <tr>
-              <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                 Created
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                 Site
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                 Event
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                 Target
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                 Status
               </th>
-              <th className="px-4 py-3 text-right text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                 Attempts
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                 Last Attempt
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                 Next Attempt
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                 Last Error
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
             {deliveries.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-6 text-center text-sm text-gray-500">
+                <td colSpan={9} className="px-4 py-6 text-center text-sm text-secondary">
                   No webhook deliveries found for the selected filters.
                 </td>
               </tr>
             ) : (
               deliveries.map((delivery) => (
-                <tr key={delivery.id}>
-                  <td className="px-4 py-3 text-sm text-gray-700">
+                <tr key={delivery.id} className="hover:bg-[color:var(--bg-surface-strong)]">
+                  <td className="px-4 py-3 text-sm text-secondary">
                     {formatDateTime(delivery.created_at)}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
+                  <td className="px-4 py-3 text-sm text-secondary">
                     <Link
                       href={`/admin/sites/${delivery.site.id}/webhooks`}
-                      className="text-blue-700 hover:text-blue-900"
+                      className="font-semibold text-accent hover:underline"
                     >
                       {delivery.site.name}
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-900">
+                  <td className="px-4 py-3 text-sm text-[color:var(--text-primary)]">
                     {delivery.event_type}
                   </td>
-                  <td className="max-w-[16rem] px-4 py-3 text-sm text-gray-700">
+                  <td className="max-w-[16rem] px-4 py-3 text-sm text-secondary">
                     <span className="block truncate" title={delivery.target_url}>
                       {delivery.target_url}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm">
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusChipClasses(delivery.status)}`}
-                    >
+                    <span className={statusChipClasses(delivery.status)}>
                       {delivery.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right text-sm text-gray-700">
+                  <td className="px-4 py-3 text-right text-sm text-secondary">
                     {delivery.attempts}/{delivery.max_attempts}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
+                  <td className="px-4 py-3 text-sm text-secondary">
                     {formatDateTime(delivery.last_attempt_at)}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
+                  <td className="px-4 py-3 text-sm text-secondary">
                     {delivery.status === "SENT" || delivery.status === "DEAD"
                       ? "-"
                       : formatDateTime(delivery.next_attempt_at)}
                   </td>
-                  <td className="max-w-[18rem] px-4 py-3 text-sm text-red-700">
+                  <td className="max-w-[18rem] px-4 py-3 text-sm text-red-900 dark:text-red-100">
                     <span className="block truncate" title={delivery.last_error ?? ""}>
                       {delivery.last_error || "-"}
                     </span>

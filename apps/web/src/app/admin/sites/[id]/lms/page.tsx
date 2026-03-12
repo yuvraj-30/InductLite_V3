@@ -5,6 +5,7 @@ import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 import { findSiteById } from "@/lib/repository/site.repository";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 import { parseLmsConnectorConfig } from "@/lib/lms/config";
+import { PageWarningState } from "@/components/ui/page-state";
 import { LmsSettingsForm } from "./lms-settings-form";
 
 interface SiteLmsPageProps {
@@ -35,30 +36,24 @@ export default async function SiteLmsPage({ params }: SiteLmsPageProps) {
   } catch (error) {
     if (error instanceof EntitlementDeniedError) {
       return (
-        <div className="p-6">
-          <div className="mb-6 flex items-start justify-between gap-4">
+        <div className="space-y-6 p-3 sm:p-4">
+          <div className="surface-panel-strong flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">LMS Connector</h1>
-              <p className="mt-1 text-gray-600">
+              <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">LMS Connector</h1>
+              <p className="mt-1 text-secondary">
                 {site.name}: manage one-way completion sync into your LMS.
               </p>
             </div>
-            <Link
-              href={`/admin/sites/${siteId}`}
-              className="inline-flex min-h-[40px] items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50"
-            >
+            <Link href={`/admin/sites/${siteId}`} className="btn-secondary w-full sm:w-auto">
               Back to Site
             </Link>
           </div>
 
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-            <h2 className="text-sm font-semibold text-amber-900">
-              Feature not enabled for this site plan
-            </h2>
-            <p className="mt-1 text-sm text-amber-800">
-              LMS connector is disabled by entitlements (CONTROL_ID:
-              PLAN-ENTITLEMENT-001).
-            </p>
+          <div className="max-w-3xl">
+            <PageWarningState
+              title="Feature not enabled for this site plan."
+              description="LMS connector is disabled by entitlements (CONTROL_ID: PLAN-ENTITLEMENT-001)."
+            />
           </div>
         </div>
       );
@@ -69,18 +64,15 @@ export default async function SiteLmsPage({ params }: SiteLmsPageProps) {
   const config = parseLmsConnectorConfig(site.lms_connector);
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex items-start justify-between gap-4">
+    <div className="space-y-6 p-3 sm:p-4">
+      <div className="surface-panel-strong flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">LMS Connector</h1>
-          <p className="mt-1 text-gray-600">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">LMS Connector</h1>
+          <p className="mt-1 text-secondary">
             {site.name}: configure one-way induction completion sync.
           </p>
         </div>
-        <Link
-          href={`/admin/sites/${siteId}`}
-          className="inline-flex min-h-[40px] items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50"
-        >
+        <Link href={`/admin/sites/${siteId}`} className="btn-secondary w-full sm:w-auto">
           Back to Site
         </Link>
       </div>
@@ -97,4 +89,3 @@ export default async function SiteLmsPage({ params }: SiteLmsPageProps) {
     </div>
   );
 }
-

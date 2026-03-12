@@ -21,10 +21,10 @@ export default function OfflinePage() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
+    <main className="flex min-h-screen items-center justify-center bg-[color:var(--bg-surface)] p-6">
       <section className="card w-full max-w-md text-center">
-        <h1 className="text-xl font-semibold text-slate-900">You are offline.</h1>
-        <p className="mt-3 text-sm text-slate-600">
+        <h1 className="text-xl font-semibold text-[color:var(--text-primary)]">You are offline.</h1>
+        <p className="mt-3 text-sm text-secondary">
           Please check your internet connection to sign in.
         </p>
         <button

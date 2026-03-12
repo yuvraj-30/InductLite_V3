@@ -36,13 +36,13 @@ export default function BillingSyncPanel({ endpointHost }: BillingSyncPanelProps
   };
 
   return (
-    <section className="rounded-lg border bg-white p-4">
-      <h2 className="text-lg font-semibold text-gray-900">Accounting Sync</h2>
-      <p className="mt-1 text-sm text-gray-600">
+    <section className="surface-panel p-4">
+      <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">Accounting Sync</h2>
+      <p className="mt-1 text-sm text-secondary">
         Push the current monthly billing preview to your configured accounting endpoint.
       </p>
 
-      <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
+      <div className="mt-3 rounded-md border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-3 text-sm text-secondary">
         Endpoint:{" "}
         <span className="font-medium">
           {endpointConfigured ? endpointHost : "Not configured"}
@@ -66,7 +66,7 @@ export default function BillingSyncPanel({ endpointHost }: BillingSyncPanelProps
           type="button"
           onClick={handleSync}
           disabled={isPending || !endpointConfigured}
-          className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="btn-primary"
         >
           {isPending ? "Syncing..." : "Sync Billing Preview"}
         </button>
@@ -74,3 +74,4 @@ export default function BillingSyncPanel({ endpointHost }: BillingSyncPanelProps
     </section>
   );
 }
+

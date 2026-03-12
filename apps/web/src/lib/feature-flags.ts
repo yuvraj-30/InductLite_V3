@@ -10,6 +10,13 @@ export const FEATURE_FLAGS = {
   PUBLIC_SIGNIN: toBool(process.env.FEATURE_PUBLIC_SIGNIN_ENABLED, true),
   VISUAL_REGRESSION: toBool(process.env.FEATURE_VISUAL_REGRESSION_ENABLED, false),
 
+  // UI/UX modernization rollout flags (default-off, fail-safe).
+  UIX_S1_VISUAL: toBool(process.env.UIX_S1_VISUAL, false),
+  UIX_S2_FLOW: toBool(process.env.UIX_S2_FLOW, false),
+  UIX_S3_MOBILE: toBool(process.env.UIX_S3_MOBILE, false),
+  UIX_S4_AI: toBool(process.env.UIX_S4_AI, false),
+  UIX_S5_A11Y: toBool(process.env.UIX_S5_A11Y, false),
+
   // Market parity + differentiation rollout flags.
   PERMITS_V1: toBool(process.env.FF_PERMITS_V1, false),
   ID_HARDENING_V1: toBool(process.env.FF_ID_HARDENING_V1, false),

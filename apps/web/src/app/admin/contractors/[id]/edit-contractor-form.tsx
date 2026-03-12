@@ -34,7 +34,7 @@ function FormFields({ contractor }: { contractor: ContractorFormModel }) {
         <div>
           <label
             htmlFor="name"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-secondary"
           >
             Contractor Name
           </label>
@@ -47,14 +47,14 @@ function FormFields({ contractor }: { contractor: ContractorFormModel }) {
             minLength={2}
             maxLength={120}
             disabled={pending}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-100"
+            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
           />
         </div>
 
         <div>
           <label
             htmlFor="trade"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-secondary"
           >
             Trade
           </label>
@@ -65,7 +65,7 @@ function FormFields({ contractor }: { contractor: ContractorFormModel }) {
             defaultValue={contractor.trade || ""}
             maxLength={120}
             disabled={pending}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-100"
+            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
           />
         </div>
       </div>
@@ -74,7 +74,7 @@ function FormFields({ contractor }: { contractor: ContractorFormModel }) {
         <div>
           <label
             htmlFor="contactName"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-secondary"
           >
             Contact Name
           </label>
@@ -85,14 +85,14 @@ function FormFields({ contractor }: { contractor: ContractorFormModel }) {
             defaultValue={contractor.contact_name || ""}
             maxLength={120}
             disabled={pending}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-100"
+            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
           />
         </div>
 
         <div>
           <label
             htmlFor="contactEmail"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-secondary"
           >
             Contact Email
           </label>
@@ -103,14 +103,14 @@ function FormFields({ contractor }: { contractor: ContractorFormModel }) {
             defaultValue={contractor.contact_email || ""}
             maxLength={160}
             disabled={pending}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-100"
+            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
           />
         </div>
 
         <div>
           <label
             htmlFor="contactPhone"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-secondary"
           >
             Contact Phone
           </label>
@@ -121,7 +121,7 @@ function FormFields({ contractor }: { contractor: ContractorFormModel }) {
             defaultValue={contractor.contact_phone || ""}
             maxLength={30}
             disabled={pending}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-100"
+            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
           />
         </div>
       </div>
@@ -129,7 +129,7 @@ function FormFields({ contractor }: { contractor: ContractorFormModel }) {
       <div>
         <label
           htmlFor="notes"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-secondary"
         >
           Notes
         </label>
@@ -140,11 +140,11 @@ function FormFields({ contractor }: { contractor: ContractorFormModel }) {
           defaultValue={contractor.notes || ""}
           maxLength={500}
           disabled={pending}
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-100"
+          className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
         />
       </div>
 
-      <div className="rounded-md border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
+      <div className="rounded-md border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-3 text-sm text-secondary">
         Status:{" "}
         <span className="font-medium">
           {contractor.is_active ? "Active" : "Inactive"}
@@ -160,7 +160,7 @@ function FormFields({ contractor }: { contractor: ContractorFormModel }) {
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="btn-primary"
         >
           {pending ? "Saving..." : "Save Changes"}
         </button>

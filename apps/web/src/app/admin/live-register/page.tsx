@@ -7,7 +7,9 @@
 
 import { Suspense } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { checkPermissionReadOnly } from "@/lib/auth";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import {
   listCurrentlyOnSite,
@@ -15,12 +17,19 @@ import {
   type SignInRecordWithDetails,
 } from "@/lib/repository";
 import { getOnboardingProgress } from "@/lib/repository/dashboard.repository";
-import { SignOutButton } from "./sign-out-button";
 import { SiteFilterSelect } from "./SiteFilterSelect";
 import { LiveRegisterAutoRefresh } from "./auto-refresh";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
 import { OnboardingChecklist } from "../components/OnboardingChecklist";
+import { PageEmptyState, PageLoadingState, PageWarningState } from "@/components/ui/page-state";
+
+const SignOutButton = dynamic(
+  () =>
+    import("./sign-out-button").then((mod) => ({
+      default: mod.SignOutButton,
+    })),
+);
 
 export const metadata = {
   title: "Live Register | InductLite",
@@ -50,27 +59,29 @@ function getLocationStatusMeta(record: SignInRecordWithDetails): {
   if (!record.location_captured_at) {
     return {
       label: "Location unavailable",
-      className: "bg-gray-100 text-gray-700",
+      className: "border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] text-secondary",
     };
   }
 
   if (record.location_within_radius === true) {
     return {
       label: "Within site radius",
-      className: "bg-emerald-100 text-emerald-800",
+      className:
+        "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100",
     };
   }
 
   if (record.location_within_radius === false) {
     return {
       label: "Outside site radius",
-      className: "bg-amber-100 text-amber-800",
+      className:
+        "border-amber-400/35 bg-amber-500/15 text-amber-900 dark:text-amber-100",
     };
   }
 
   return {
     label: "Location captured",
-    className: "bg-cyan-100 text-cyan-800",
+    className: "border-cyan-400/35 bg-cyan-500/15 text-cyan-950 dark:text-cyan-100",
   };
 }
 
@@ -132,28 +143,33 @@ async function LiveRegisterContent({
 
   const siteNames = Object.keys(groupedBySite).sort();
   const renderedAt = new Date();
+  const mobileShellEnabled = isFeatureEnabled("UIX_S3_MOBILE");
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="space-y-6 p-3 sm:p-4">
+      <div className="surface-panel-strong flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Live Register</h1>
-          <p className="mt-1 text-gray-600">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+            Live Register
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
             {records.length} {records.length === 1 ? "person" : "people"} currently on site
           </p>
         </div>
-        <Link href="/admin/history" className="text-sm text-blue-600 hover:text-blue-800">
+        <Link href="/admin/history" className="text-sm font-semibold text-accent hover:underline">
           View History -&gt;
         </Link>
       </div>
 
-      <div className="mb-4">
+      <div>
         <LiveRegisterAutoRefresh lastUpdatedIso={renderedAt.toISOString()} />
       </div>
 
-      <div className="mb-6">
-        <form className="flex items-center gap-4">
-          <label htmlFor="site" className="text-sm font-medium text-gray-700">
+      <div
+        className={`surface-panel p-4 ${mobileShellEnabled ? "sticky top-2 z-20" : ""}`}
+      >
+        <form className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <label htmlFor="site" className="label">
             Filter by site:
           </label>
           <SiteFilterSelect sites={sites} siteFilter={siteFilter} />
@@ -161,16 +177,21 @@ async function LiveRegisterContent({
       </div>
 
       {dataLoadFailed && (
-        <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Live register data could not be loaded. Please try again.
-        </div>
+        <PageWarningState
+          title="Live register unavailable"
+          description="Live register data could not be loaded. Please try again."
+          actionHref="/admin/live-register"
+          actionLabel="Retry"
+        />
       )}
 
       {records.length === 0 ? (
-        <div className="rounded-lg bg-white p-8 text-center shadow">
-          <div className="mb-4 text-gray-400">
+        <PageEmptyState
+          title="No one currently on site"
+          description="When visitors sign in, they will appear here."
+          icon={
             <svg
-              className="mx-auto h-12 w-12"
+              className="mx-auto h-12 w-12 text-muted"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -182,55 +203,151 @@ async function LiveRegisterContent({
                 d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"
               />
             </svg>
-          </div>
-          <h3 className="mb-2 text-lg font-medium text-gray-900">No one currently on site</h3>
-          <p className="text-gray-600">When visitors sign in, they will appear here.</p>
+          }
+        >
           <OnboardingChecklist
             progress={onboardingProgress}
-            className="mt-6 text-left"
+            className="text-left"
             canManageSites={canManageSites}
             canManageTemplates={canManageTemplates}
           />
-        </div>
+        </PageEmptyState>
       ) : (
         <div className="space-y-6">
           {siteNames.map((siteName) => {
             const siteRecords = groupedBySite[siteName] ?? [];
             return (
-              <div key={siteName} className="rounded-lg bg-white shadow">
-                <div className="border-b border-gray-200 px-6 py-4">
+              <div key={siteName} className="surface-panel overflow-hidden">
+                <div className="border-b border-[color:var(--border-soft)] px-6 py-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-medium text-gray-900">{siteName}</h2>
-                    <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+                    <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">
+                      {siteName}
+                    </h2>
+                    <span className="inline-flex items-center rounded-full border border-emerald-400/35 bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-900 dark:text-emerald-100">
                       {siteRecords.length} on site
                     </span>
                   </div>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
+
+                {mobileShellEnabled ? (
+                  <div className="space-y-2 p-3 md:hidden">
+                    {siteRecords.map((record) => {
+                      const durationMinutes = Math.max(
+                        0,
+                        Math.floor(
+                          (renderedAt.getTime() - record.sign_in_ts.getTime()) / (1000 * 60),
+                        ),
+                      );
+                      const durationStr = formatDurationMinutes(durationMinutes);
+                      const isLongStay = durationMinutes >= 480;
+                      const locationStatus = getLocationStatusMeta(record);
+
+                      return (
+                        <article
+                          key={record.id}
+                          className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-3"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-[color:var(--text-primary)]">
+                                {record.visitor_name}
+                              </p>
+                              <p className="text-xs text-muted">
+                                {record.visitor_phone || "Unavailable"}
+                              </p>
+                            </div>
+                            <span
+                              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${
+                                isLongStay
+                                  ? "border-amber-400/35 bg-amber-500/15 text-amber-900 dark:text-amber-100"
+                                  : "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100"
+                              }`}
+                            >
+                              {durationStr}
+                            </span>
+                          </div>
+
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            <span
+                              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${
+                                record.visitor_type === "CONTRACTOR"
+                                  ? "border-cyan-400/35 bg-cyan-500/15 text-cyan-950 dark:text-cyan-100"
+                                  : record.visitor_type === "VISITOR"
+                                    ? "border-violet-400/35 bg-violet-500/15 text-violet-950 dark:text-violet-100"
+                                    : record.visitor_type === "EMPLOYEE"
+                                      ? "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100"
+                                      : "border-amber-400/35 bg-amber-500/15 text-amber-900 dark:text-amber-100"
+                              }`}
+                            >
+                              {record.visitor_type.toLowerCase()}
+                            </span>
+                            <span
+                              className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${locationStatus.className}`}
+                            >
+                              {locationStatus.label}
+                              {record.location_distance_m !== null ? (
+                                <span className="ml-1">
+                                  ({Math.round(record.location_distance_m)}m)
+                                </span>
+                              ) : null}
+                            </span>
+                          </div>
+
+                          <p className="mt-2 text-xs text-secondary">
+                            Employer: {record.employer_name || "-"}
+                          </p>
+                          <p className="text-xs text-secondary">
+                            Signed in{" "}
+                            {record.sign_in_ts.toLocaleTimeString("en-NZ", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+
+                          <div className="mt-3 grid grid-cols-2 gap-2">
+                            <SignOutButton
+                              signInId={record.id}
+                              visitorName={record.visitor_name}
+                              className="w-full justify-center min-h-[42px]"
+                            />
+                            <Link
+                              href={`/admin/incidents?site=${record.site_id}&signInId=${record.id}`}
+                              className="btn-secondary min-h-[42px] justify-center px-3 py-2 text-xs"
+                            >
+                              Report Incident
+                            </Link>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : null}
+
+                <div className={mobileShellEnabled ? "hidden overflow-x-auto md:block" : "overflow-x-auto"}>
+                  <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
+                    <thead className="bg-[color:var(--bg-surface-strong)]">
                       <tr>
-                        <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                           Visitor
                         </th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                           Type
                         </th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                           Employer
                         </th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                           Signed In
                         </th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                        <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                           Status
                         </th>
-                        <th className="px-6 py-3 text-right text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                        <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                           Actions
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 bg-white">
+                    <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
                       {siteRecords.map((record) => {
                         const durationMinutes = Math.max(
                           0,
@@ -243,11 +360,14 @@ async function LiveRegisterContent({
                         const locationStatus = getLocationStatusMeta(record);
 
                         return (
-                          <tr key={record.id} className="hover:bg-gray-50">
+                          <tr
+                            key={record.id}
+                            className="hover:bg-[color:var(--bg-surface-strong)]"
+                          >
                             <td className="whitespace-nowrap px-6 py-4">
                               <div className="flex items-center">
-                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gray-200">
-                                  <span className="text-sm font-medium text-gray-600">
+                                <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-surface-soft bg-[color:var(--bg-surface)]">
+                                  <span className="text-sm font-semibold text-secondary">
                                     {record.visitor_name
                                       .split(" ")
                                       .map((n) => n[0])
@@ -257,30 +377,34 @@ async function LiveRegisterContent({
                                   </span>
                                 </div>
                                 <div className="ml-4">
-                                  <div className="text-sm font-medium text-gray-900">{record.visitor_name}</div>
-                                  <div className="text-sm text-gray-500">{record.visitor_phone || "Unavailable"}</div>
+                                  <div className="text-sm font-semibold text-[color:var(--text-primary)]">
+                                    {record.visitor_name}
+                                  </div>
+                                  <div className="text-xs text-muted">
+                                    {record.visitor_phone || "Unavailable"}
+                                  </div>
                                 </div>
                               </div>
                             </td>
                             <td className="whitespace-nowrap px-6 py-4">
                               <span
-                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
                                   record.visitor_type === "CONTRACTOR"
-                                    ? "bg-blue-100 text-blue-800"
+                                    ? "border-cyan-400/35 bg-cyan-500/15 text-cyan-950 dark:text-cyan-100"
                                     : record.visitor_type === "VISITOR"
-                                      ? "bg-purple-100 text-purple-800"
+                                      ? "border-violet-400/35 bg-violet-500/15 text-violet-950 dark:text-violet-100"
                                       : record.visitor_type === "EMPLOYEE"
-                                        ? "bg-green-100 text-green-800"
-                                        : "bg-yellow-100 text-yellow-800"
+                                        ? "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100"
+                                        : "border-amber-400/35 bg-amber-500/15 text-amber-900 dark:text-amber-100"
                                 }`}
                               >
                                 {record.visitor_type.toLowerCase()}
                               </span>
                             </td>
-                            <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                            <td className="whitespace-nowrap px-6 py-4 text-sm text-secondary">
                               {record.employer_name || "-"}
                             </td>
-                            <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                            <td className="whitespace-nowrap px-6 py-4 text-sm text-secondary">
                               {record.sign_in_ts.toLocaleTimeString("en-NZ", {
                                 hour: "2-digit",
                                 minute: "2-digit",
@@ -289,30 +413,30 @@ async function LiveRegisterContent({
                             <td className="whitespace-nowrap px-6 py-4">
                               <div className="flex flex-col items-start gap-1">
                                 <span
-                                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                                  className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${
                                     isLongStay
-                                      ? "bg-orange-100 text-orange-800"
-                                      : "bg-green-100 text-green-800"
+                                      ? "border-amber-400/35 bg-amber-500/15 text-amber-900 dark:text-amber-100"
+                                      : "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100"
                                   }`}
                                 >
                                   {isLongStay ? "Long stay" : "On site"}
                                 </span>
                                 <span
                                   className={`text-sm font-medium ${
-                                    isLongStay ? "text-orange-700" : "text-gray-700"
+                                    isLongStay ? "text-amber-900 dark:text-amber-100" : "text-secondary"
                                   }`}
                                 >
                                   {durationStr}
                                 </span>
                                 <span
-                                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${locationStatus.className}`}
+                                  className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${locationStatus.className}`}
                                 >
                                   {locationStatus.label}
-                                  {record.location_distance_m !== null && (
+                                  {record.location_distance_m !== null ? (
                                     <span className="ml-1">
                                       ({Math.round(record.location_distance_m)}m)
                                     </span>
-                                  )}
+                                  ) : null}
                                 </span>
                               </div>
                             </td>
@@ -324,7 +448,7 @@ async function LiveRegisterContent({
                                 />
                                 <Link
                                   href={`/admin/incidents?site=${record.site_id}&signInId=${record.id}`}
-                                  className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                                  className="text-xs font-semibold text-accent hover:underline"
                                 >
                                   Report Incident
                                 </Link>
@@ -353,16 +477,14 @@ export default async function LiveRegisterPage({
   return (
     <Suspense
       fallback={
-        <div className="p-6">
-          <div className="animate-pulse">
-            <div className="mb-4 h-8 w-48 rounded bg-gray-200"></div>
-            <div className="mb-8 h-4 w-32 rounded bg-gray-200"></div>
-            <div className="h-64 rounded bg-gray-200"></div>
-          </div>
-        </div>
+        <PageLoadingState
+          title="Loading live register"
+          description="Fetching on-site occupancy and site filters."
+        />
       }
     >
       <LiveRegisterContent siteFilter={params.site} />
     </Suspense>
   );
 }
+

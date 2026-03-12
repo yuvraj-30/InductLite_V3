@@ -23,7 +23,9 @@ const nextConfig = {
   poweredByHeader: false,
   // Enable instrumentation for startup validation
   // Note: instrumentationHook is now enabled by default in Next.js 16+
-  experimental: {},
+  experimental: {
+    optimizePackageImports: ["date-fns"],
+  },
   // Compress responses (enabled by default in production)
   compress: true,
   // Generate ETags for better caching

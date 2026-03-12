@@ -1,7 +1,20 @@
 import { requireAuthPageReadOnly } from "@/lib/auth";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import Link from "next/link";
 import { AdminCommandPalette, type CommandPaletteItem } from "./admin-command-palette";
-import { NavLink } from "./nav-link";
+import { AdminNav, type AdminNavSection } from "./admin-nav";
+
+interface NavSectionItem {
+  href: string;
+  label: string;
+  requires?: "contractors" | "escalations";
+  exact?: boolean;
+}
+
+interface NavSection {
+  title: string;
+  items: NavSectionItem[];
+}
 
 /**
  * Admin Layout
@@ -18,6 +31,8 @@ export default async function AdminLayout({
     user.role === "ADMIN" || user.role === "SITE_MANAGER";
   const canManageEscalations =
     user.role === "ADMIN" || user.role === "SITE_MANAGER";
+  const flowNavCompressionEnabled = isFeatureEnabled("UIX_S2_FLOW");
+  const mobileShellEnabled = isFeatureEnabled("UIX_S3_MOBILE");
 
   const commandItems: CommandPaletteItem[] = [
     {
@@ -349,14 +364,131 @@ export default async function AdminLayout({
     );
   }
 
+  const navSections: NavSection[] = [
+    {
+      title: "Operations",
+      items: [
+        { href: "/admin", label: "Dashboard", exact: true },
+        { href: "/admin/sites", label: "Sites" },
+        { href: "/admin/pre-registrations", label: "Pre-Registrations" },
+        ...(flowNavCompressionEnabled
+          ? []
+          : [
+              { href: "/admin/deliveries", label: "Deliveries" },
+              { href: "/admin/resources", label: "Resources" },
+            ]),
+        { href: "/admin/live-register", label: "Live Register" },
+        ...(flowNavCompressionEnabled
+          ? []
+          : [{ href: "/admin/command-mode", label: "Command Mode" }]),
+        { href: "/admin/history", label: "Sign-In History" },
+        ...(flowNavCompressionEnabled
+          ? []
+          : [{ href: "/admin/audit-analytics", label: "Audit Analytics" }]),
+        { href: "/admin/exports", label: "Exports" },
+      ],
+    },
+    {
+      title: "Safety & Compliance",
+      items: [
+        { href: "/admin/hazards", label: "Hazard Register" },
+        { href: "/admin/incidents", label: "Incidents" },
+        { href: "/admin/escalations", label: "Escalations", requires: "escalations" },
+        { href: "/admin/permits", label: "Permit-to-Work" },
+        ...(flowNavCompressionEnabled
+          ? []
+          : [{ href: "/admin/safety-forms", label: "Safety Forms" }]),
+        { href: "/admin/approvals", label: "Approvals" },
+        ...(flowNavCompressionEnabled
+          ? []
+          : [{ href: "/admin/communications", label: "Communications Hub" }]),
+      ],
+    },
+    {
+      title: "Contractors & Content",
+      items: [
+        { href: "/admin/contractors", label: "Contractors", requires: "contractors" },
+        { href: "/admin/templates", label: "Templates", requires: "contractors" },
+        { href: "/admin/risk-passport", label: "Risk Passport" },
+        ...(flowNavCompressionEnabled
+          ? []
+          : [
+              { href: "/admin/trust-graph", label: "Trust Graph" },
+              { href: "/admin/benchmarks", label: "Benchmarks" },
+            ]),
+      ],
+    },
+    {
+      title: "Integrations & Advanced",
+      items: [
+        { href: "/admin/webhooks", label: "Webhooks" },
+        { href: "/admin/integrations/channels", label: "Teams/Slack" },
+        { href: "/admin/integrations/procore", label: "Procore Connector" },
+        ...(flowNavCompressionEnabled
+          ? []
+          : [{ href: "/admin/prequalification-exchange", label: "Prequal Exchange" }]),
+        { href: "/admin/mobile", label: "Mobile Ops" },
+        ...(flowNavCompressionEnabled
+          ? []
+          : [{ href: "/admin/mobile/native", label: "Native Runtime" }]),
+        { href: "/admin/access-ops", label: "Access Ops" },
+        ...(flowNavCompressionEnabled
+          ? []
+          : [
+              { href: "/admin/evidence", label: "Evidence Packs" },
+              { href: "/admin/policy-simulator", label: "Policy Simulator" },
+            ]),
+      ],
+    },
+  ];
+
+  if (user.role === "ADMIN") {
+    navSections.push({
+      title: "Administration",
+      items: [
+        { href: "/admin/users", label: "Users" },
+        { href: "/admin/audit-log", label: "Audit Log" },
+        { href: "/admin/settings", label: "Settings" },
+        ...(flowNavCompressionEnabled
+          ? []
+          : [{ href: "/admin/plan-configurator", label: "Plan Configurator" }]),
+      ],
+    });
+  }
+
+  const canAccessNavItem = (item: NavSectionItem): boolean => {
+    if (item.requires === "contractors") return canManageContractors;
+    if (item.requires === "escalations") return canManageEscalations;
+    return true;
+  };
+  const mobileQuickSwitchCandidates: NavSectionItem[] = [
+    { href: "/admin", label: "Dashboard", exact: true },
+    { href: "/admin/sites", label: "Sites" },
+    { href: "/admin/live-register", label: "Live Register" },
+    { href: "/admin/command-mode", label: "Command Mode" },
+    { href: "/admin/incidents", label: "Incidents" },
+  ];
+  const mobileQuickSwitchItems = mobileQuickSwitchCandidates
+    .filter((item) => canAccessNavItem(item))
+    .map((item) => ({
+      href: item.href,
+      label: item.label,
+      exact: item.exact,
+      isAccessible: true,
+    }));
+  const visibleNavSections: AdminNavSection[] = navSections.map((section) => ({
+    title: section.title,
+    items: section.items.map((item) => ({
+      href: item.href,
+      label: item.label,
+      exact: item.exact,
+      isAccessible: canAccessNavItem(item),
+    })),
+  }));
+
   return (
     <div className="relative min-h-screen">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-20 -top-24 h-72 w-72 rounded-full bg-indigo-500/20 blur-3xl" />
-        <div className="absolute right-0 top-20 h-80 w-80 rounded-full bg-cyan-400/20 blur-3xl" />
-      </div>
-
-      <header className="relative z-20 border-b border-white/35 bg-[color:var(--bg-surface-strong)]">
+      <header className="relative z-20 border-b border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)]">
         <div className="mx-auto max-w-[92rem] px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex min-w-0 items-center gap-3 kinetic-hover">
@@ -375,7 +507,7 @@ export default async function AdminLayout({
             <div className="flex flex-wrap items-center gap-3">
               <AdminCommandPalette commands={commandItems} />
 
-              <span className="max-w-[16rem] truncate rounded-full border border-white/40 bg-[color:var(--bg-surface)] px-3 py-1 text-sm text-[color:var(--text-primary)] shadow-soft">
+              <span className="max-w-[16rem] truncate rounded-full border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] px-3 py-1 text-sm text-[color:var(--text-primary)] shadow-soft">
                 {user.name}{" "}
                 <span className="ml-1 rounded-full border border-indigo-600/50 bg-indigo-600 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white dark:border-indigo-400/45 dark:bg-indigo-500/25 dark:text-indigo-100">
                   {user.role}
@@ -383,14 +515,14 @@ export default async function AdminLayout({
               </span>
               <Link
                 href="/change-password"
-                className="rounded-lg border border-white/35 bg-[color:var(--bg-surface)] px-3 py-2 text-sm font-medium text-[color:var(--text-primary)] hover:bg-[color:var(--bg-surface-strong)]"
+                className="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] px-3 py-2 text-sm font-medium text-[color:var(--text-primary)] hover:bg-[color:var(--bg-surface-strong)]"
               >
                 Password
               </Link>
               <form action="/api/auth/logout" method="post">
                 <button
                   type="submit"
-                  className="rounded-lg border border-red-300 bg-red-100 px-3 py-2 text-sm font-semibold text-red-900 hover:bg-red-200 dark:border-red-400/45 dark:bg-red-500/20 dark:text-red-100 dark:hover:bg-red-500/30"
+                  className="rounded-lg border border-[color:var(--accent-danger)] bg-[color:var(--bg-surface)] px-3 py-2 text-sm font-semibold text-[color:var(--accent-danger)] hover:bg-red-100/70 dark:hover:bg-red-500/20"
                 >
                   Sign Out
                 </button>
@@ -401,143 +533,15 @@ export default async function AdminLayout({
       </header>
 
       <div className="relative z-10 flex min-w-0 flex-col md:flex-row md:gap-4 md:px-4 md:py-4 lg:px-6">
-        <nav className="border-b border-white/30 bg-[color:var(--bg-surface-strong)] md:min-h-[calc(100vh-102px)] md:w-72 md:shrink-0 md:rounded-2xl md:border md:px-2 md:py-2 md:shadow-soft">
-          <ul className="flex gap-1 overflow-x-auto px-2 py-2 md:block md:space-y-1 md:overflow-visible md:p-3">
-            <li>
-              <NavLink href="/admin" exact>
-                Dashboard
-              </NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/sites">Sites</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/pre-registrations">Pre-Registrations</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/deliveries">Deliveries</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/resources">Resources</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/hazards">Hazard Register</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/incidents">Incidents</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/live-register">Live Register</NavLink>
-            </li>
-            <li>
-              {canManageEscalations ? (
-                <NavLink href="/admin/escalations">Escalations</NavLink>
-              ) : (
-                <span className="block cursor-not-allowed rounded-xl px-4 py-2 text-sm text-muted opacity-80">
-                  Escalations
-                </span>
-              )}
-            </li>
-            <li>
-              <NavLink href="/admin/command-mode">Command Mode</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/communications">Communications Hub</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/history">Sign-In History</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/audit-analytics">Audit Analytics</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/exports">Exports</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/webhooks">Webhooks</NavLink>
-            </li>
-            <li>
-              {canManageContractors ? (
-                <NavLink href="/admin/contractors">Contractors</NavLink>
-              ) : (
-                <span className="block cursor-not-allowed rounded-xl px-4 py-2 text-sm text-muted opacity-80">
-                  Contractors
-                </span>
-              )}
-            </li>
-            <li>
-              <NavLink href="/admin/permits">Permit-to-Work</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/safety-forms">Safety Forms</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/approvals">Approvals</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/integrations/channels">Teams/Slack</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/integrations/procore">Procore Connector</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/prequalification-exchange">Prequal Exchange</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/mobile">Mobile Ops</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/mobile/native">Native Runtime</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/access-ops">Access Ops</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/evidence">Evidence Packs</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/policy-simulator">Policy Simulator</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/risk-passport">Risk Passport</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/safety-copilot">Safety Copilot</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/trust-graph">Trust Graph</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/benchmarks">Benchmarks</NavLink>
-            </li>
-            <li>
-              <NavLink href="/admin/templates">Templates</NavLink>
-            </li>
-            {user.role === "ADMIN" && (
-              <>
-                <li className="mt-4 border-t border-white/35 pt-4">
-                  <span className="block px-4 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[color:var(--text-primary)]">
-                    Admin
-                  </span>
-                </li>
-                <li>
-                  <NavLink href="/admin/users">Users</NavLink>
-                </li>
-                <li>
-                  <NavLink href="/admin/audit-log">Audit Log</NavLink>
-                </li>
-                <li>
-                  <NavLink href="/admin/settings">Settings</NavLink>
-                </li>
-                <li>
-                  <NavLink href="/admin/plan-configurator">Plan Configurator</NavLink>
-                </li>
-              </>
-            )}
-          </ul>
+        <nav className="border-b border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] md:min-h-[calc(100vh-102px)] md:w-72 md:shrink-0 md:rounded-2xl md:border md:px-2 md:py-2 md:shadow-soft">
+          <AdminNav
+            sections={visibleNavSections}
+            mobileShellEnabled={mobileShellEnabled}
+            mobileQuickSwitchItems={mobileQuickSwitchItems}
+          />
         </nav>
 
-        <main className="min-w-0 flex-1 p-4 sm:p-6 md:rounded-2xl md:border md:border-white/25 md:bg-[color:var(--bg-surface)] md:shadow-soft">
+        <main className="min-w-0 flex-1 p-4 sm:p-6 md:rounded-2xl md:border md:border-[color:var(--border-soft)] md:bg-[color:var(--bg-surface)] md:shadow-soft">
           {children}
         </main>
       </div>

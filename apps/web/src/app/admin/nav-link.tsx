@@ -8,6 +8,8 @@ interface NavLinkProps {
   href: string;
   children: ReactNode;
   exact?: boolean;
+  variant?: "default" | "compact";
+  className?: string;
 }
 
 function isActivePath(pathname: string, href: string, exact: boolean): boolean {
@@ -15,18 +17,30 @@ function isActivePath(pathname: string, href: string, exact: boolean): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function NavLink({ href, children, exact = false }: NavLinkProps) {
+export function NavLink({
+  href,
+  children,
+  exact = false,
+  variant = "default",
+  className = "",
+}: NavLinkProps) {
   const pathname = usePathname() ?? "";
   const isActive = isActivePath(pathname, href, exact);
+
+  const sharedStyles =
+    variant === "compact"
+      ? "block rounded-xl px-3 py-2 text-xs font-semibold transition-all"
+      : "kinetic-hover block rounded-xl px-4 py-2.5 text-sm font-medium transition-all";
+
+  const activeStyles =
+    "border border-[color:var(--accent-cyber)] bg-[color:var(--bg-surface-strong)] text-[color:var(--text-primary)] shadow-soft";
+  const inactiveStyles =
+    "border border-transparent text-secondary hover:border-[color:var(--border-soft)] hover:bg-[color:var(--bg-surface-strong)] hover:text-[color:var(--text-primary)]";
 
   return (
     <Link
       href={href}
-      className={`kinetic-hover block rounded-xl px-4 py-2.5 text-sm font-medium transition-all ${
-        isActive
-          ? "border border-indigo-400/40 bg-indigo-500/20 text-indigo-900 shadow-soft dark:text-indigo-100"
-          : "border border-transparent text-secondary hover:border-white/45 hover:bg-white/50 hover:text-[color:var(--text-primary)]"
-      }`}
+      className={`${sharedStyles} ${isActive ? activeStyles : inactiveStyles} ${className}`.trim()}
       aria-current={isActive ? "page" : undefined}
     >
       <span className="kinetic-title">{children}</span>

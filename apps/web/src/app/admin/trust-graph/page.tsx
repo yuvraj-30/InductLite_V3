@@ -5,6 +5,7 @@ import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 import { findAllSites } from "@/lib/repository/site.repository";
 import { buildContractorTrustGraph } from "@/lib/differentiation/trust-graph";
+import { PageWarningState } from "@/components/ui/page-state";
 
 export const metadata = {
   title: "Contractor Trust Graph | InductLite",
@@ -24,11 +25,19 @@ export default async function TrustGraphPage({ searchParams }: TrustGraphPagePro
   const context = await requireAuthenticatedContextReadOnly();
   if (!isFeatureEnabled("RISK_PASSPORT_V1")) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-900">Contractor Trust Graph</h1>
-        <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          Trust graph is disabled by rollout flag (CONTROL_ID: FLAG-ROLLOUT-001).
-        </p>
+      <div className="space-y-6 p-3 sm:p-4">
+        <div className="surface-panel-strong p-5">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+            Contractor Trust Graph
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
+            Combined internal risk + external prequalification signals with confidence and reason codes.
+          </p>
+        </div>
+        <PageWarningState
+          title="Trust graph is disabled by rollout flag."
+          description="CONTROL_ID: FLAG-ROLLOUT-001."
+        />
       </div>
     );
   }
@@ -38,11 +47,19 @@ export default async function TrustGraphPage({ searchParams }: TrustGraphPagePro
   } catch (error) {
     if (error instanceof EntitlementDeniedError) {
       return (
-        <div className="p-6">
-          <h1 className="text-2xl font-bold text-gray-900">Contractor Trust Graph</h1>
-          <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            Trust graph is not enabled for this plan (CONTROL_ID: PLAN-ENTITLEMENT-001).
-          </p>
+        <div className="space-y-6 p-3 sm:p-4">
+          <div className="surface-panel-strong p-5">
+            <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+              Contractor Trust Graph
+            </h1>
+            <p className="mt-1 text-sm text-secondary">
+              Combined internal risk + external prequalification signals with confidence and reason codes.
+            </p>
+          </div>
+          <PageWarningState
+            title="Trust graph is not enabled for this plan."
+            description="CONTROL_ID: PLAN-ENTITLEMENT-001."
+          />
         </div>
       );
     }
@@ -59,16 +76,16 @@ export default async function TrustGraphPage({ searchParams }: TrustGraphPagePro
   ]);
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-3 sm:p-4">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Contractor Trust Graph</h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">Contractor Trust Graph</h1>
+        <p className="mt-1 text-sm text-secondary">
           Combined internal risk + external prequalification signals with confidence and reason codes.
         </p>
       </div>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Scope
         </h2>
         <form className="mt-3 flex flex-wrap gap-2" method="get">
@@ -82,59 +99,59 @@ export default async function TrustGraphPage({ searchParams }: TrustGraphPagePro
           </select>
           <button
             type="submit"
-            className="rounded border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+            className="rounded border border-[color:var(--border-soft)] px-3 py-2 text-sm font-semibold text-secondary hover:bg-[color:var(--bg-surface-strong)]"
           >
             Apply
           </button>
         </form>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Trust Nodes
         </h2>
         <div className="mt-3 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
+            <thead className="bg-[color:var(--bg-surface-strong)]">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Contractor
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Trust Score
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Confidence
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Components
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Reasons
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
               {nodes.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-3 py-3 text-sm text-gray-500">
+                  <td colSpan={5} className="px-3 py-3 text-sm text-muted">
                     No contractor trust nodes available.
                   </td>
                 </tr>
               ) : (
                 nodes.map((node) => (
                   <tr key={node.contractorId}>
-                    <td className="px-3 py-3 text-sm text-gray-700">{node.contractorName}</td>
-                    <td className="px-3 py-3 text-sm font-semibold text-gray-900">
+                    <td className="px-3 py-3 text-sm text-secondary">{node.contractorName}</td>
+                    <td className="px-3 py-3 text-sm font-semibold text-[color:var(--text-primary)]">
                       {node.trustScore}
                     </td>
-                    <td className="px-3 py-3 text-sm text-gray-700">{node.confidence}%</td>
-                    <td className="px-3 py-3 text-xs text-gray-700">
+                    <td className="px-3 py-3 text-sm text-secondary">{node.confidence}%</td>
+                    <td className="px-3 py-3 text-xs text-secondary">
                       internal={node.components.internalRiskScore ?? "-"} | external=
                       {node.components.externalPrequalScore ?? "-"} | status=
                       {node.components.prequalStatus ?? "-"}
                     </td>
-                    <td className="px-3 py-3 text-xs text-gray-700">
+                    <td className="px-3 py-3 text-xs text-secondary">
                       {node.reasons.join("; ")}
                     </td>
                   </tr>
@@ -147,3 +164,4 @@ export default async function TrustGraphPage({ searchParams }: TrustGraphPagePro
     </div>
   );
 }
+

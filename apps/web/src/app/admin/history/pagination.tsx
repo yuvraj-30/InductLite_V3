@@ -70,7 +70,7 @@ export function Pagination({
 
   if (totalPages <= 1) {
     return (
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-secondary">
         Showing {total} {total === 1 ? "result" : "results"}
       </div>
     );
@@ -78,31 +78,31 @@ export function Pagination({
 
   return (
     <div className="flex items-center justify-between">
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-secondary">
         Showing {startItem} to {endItem} of {total} results
       </div>
       <div className="flex items-center gap-1">
         <button
           onClick={() => goToPage(currentPage - 1)}
           disabled={currentPage === 1}
-          className="px-3 py-2 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          className="btn-secondary min-h-[38px] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
         >
           Previous
         </button>
 
         {getPageNumbers().map((page, index) =>
           page === "..." ? (
-            <span key={`ellipsis-${index}`} className="px-2 text-gray-500">
+            <span key={`ellipsis-${index}`} className="px-2 text-muted">
               ...
             </span>
           ) : (
             <button
               key={page}
               onClick={() => goToPage(page)}
-              className={`px-3 py-2 text-sm border rounded-md ${
+              className={`min-h-[38px] rounded-md px-3 py-2 text-sm ${
                 page === currentPage
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "hover:bg-gray-50"
+                  ? "border border-indigo-400/45 bg-indigo-500/20 font-semibold text-indigo-900 dark:text-indigo-100"
+                  : "btn-secondary"
               }`}
             >
               {page}
@@ -113,7 +113,7 @@ export function Pagination({
         <button
           onClick={() => goToPage(currentPage + 1)}
           disabled={currentPage === totalPages}
-          className="px-3 py-2 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+          className="btn-secondary min-h-[38px] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
         >
           Next
         </button>

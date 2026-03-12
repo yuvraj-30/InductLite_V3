@@ -95,6 +95,7 @@ npm run test:confidence -- --with-visual
 
 Detailed test-coverage explanation (plain language): [docs/FULL_TEST_COVERAGE_AND_PURPOSE_2026-03-09.md](docs/FULL_TEST_COVERAGE_AND_PURPOSE_2026-03-09.md)
 Manual browser validation checklist: [docs/MANUAL_FEATURE_VALIDATION_CHECKLIST_2026-03-09.md](docs/MANUAL_FEATURE_VALIDATION_CHECKLIST_2026-03-09.md)
+Release confidence contract (CI-enforced, tier-complete): [docs/SAME_OR_BETTER_RELEASE_GATE_2026-03-11.md](docs/SAME_OR_BETTER_RELEASE_GATE_2026-03-11.md)
 
 ### Docker Compose (Full Stack)
 

@@ -5,6 +5,7 @@ import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import { listCurrentlyOnSite } from "@/lib/repository";
 import { listPermitRequests } from "@/lib/repository/permit.repository";
 import { findAllSites } from "@/lib/repository/site.repository";
+import { PageWarningState } from "@/components/ui/page-state";
 import { LiveRegisterAutoRefresh } from "../live-register/auto-refresh";
 import { createEmergencyBroadcastAction } from "../communications/actions";
 import { CommandRollCall } from "./roll-call";
@@ -28,6 +29,7 @@ export default async function CommandModePage() {
     findAllSites(context.companyId),
   ]);
   let permitsEnabled = false;
+  let permitsUnavailableReason: "FLAG" | "ENTITLEMENT" | null = null;
   let permitBoard: Awaited<ReturnType<typeof listPermitRequests>> = [];
   if (isFeatureEnabled("PERMITS_V1")) {
     try {
@@ -38,7 +40,10 @@ export default async function CommandModePage() {
       if (!(error instanceof EntitlementDeniedError)) {
         throw error;
       }
+      permitsUnavailableReason = "ENTITLEMENT";
     }
+  } else {
+    permitsUnavailableReason = "FLAG";
   }
   const activePermitBoard = permitBoard
     .filter((permit) => !["CLOSED", "DENIED"].includes(permit.status))
@@ -169,6 +174,17 @@ export default async function CommandModePage() {
               </tbody>
             </table>
           </div>
+        </section>
+      ) : permitsUnavailableReason ? (
+        <section className="surface-panel p-4 sm:p-5">
+          <PageWarningState
+            title="Permit board is currently unavailable."
+            description={
+              permitsUnavailableReason === "FLAG"
+                ? "Permit workflows are disabled by rollout flag (CONTROL_ID: FLAG-ROLLOUT-001)."
+                : "Permit workflows are not enabled for this plan (CONTROL_ID: PLAN-ENTITLEMENT-001)."
+            }
+          />
         </section>
       ) : null}
 

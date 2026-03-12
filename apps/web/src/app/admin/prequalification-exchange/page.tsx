@@ -5,6 +5,7 @@ import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 import { findAllSites } from "@/lib/repository/site.repository";
 import { listCommunicationEvents } from "@/lib/repository/communication.repository";
+import { PageWarningState } from "@/components/ui/page-state";
 import { importPrequalificationExchangeAction } from "./actions";
 
 export const metadata = {
@@ -21,11 +22,19 @@ export default async function PrequalificationExchangePage() {
   const context = await requireAuthenticatedContextReadOnly();
   if (!isFeatureEnabled("PERMITS_V1")) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-900">Prequalification Exchange</h1>
-        <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          Prequalification exchange is disabled by rollout flag (CONTROL_ID: FLAG-ROLLOUT-001).
-        </p>
+      <div className="space-y-6 p-3 sm:p-4">
+        <div className="surface-panel-strong p-5">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+            Prequalification Exchange
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
+            Import external prequalification snapshots and map to contractor profiles.
+          </p>
+        </div>
+        <PageWarningState
+          title="Prequalification exchange is disabled by rollout flag."
+          description="CONTROL_ID: FLAG-ROLLOUT-001."
+        />
       </div>
     );
   }
@@ -35,12 +44,19 @@ export default async function PrequalificationExchangePage() {
   } catch (error) {
     if (error instanceof EntitlementDeniedError) {
       return (
-        <div className="p-6">
-          <h1 className="text-2xl font-bold text-gray-900">Prequalification Exchange</h1>
-          <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            Prequalification exchange is not enabled for this plan (CONTROL_ID:
-            PLAN-ENTITLEMENT-001).
-          </p>
+        <div className="space-y-6 p-3 sm:p-4">
+          <div className="surface-panel-strong p-5">
+            <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+              Prequalification Exchange
+            </h1>
+            <p className="mt-1 text-sm text-secondary">
+              Import external prequalification snapshots and map to contractor profiles.
+            </p>
+          </div>
+          <PageWarningState
+            title="Prequalification exchange is not enabled for this plan."
+            description="CONTROL_ID: PLAN-ENTITLEMENT-001."
+          />
         </div>
       );
     }
@@ -53,16 +69,16 @@ export default async function PrequalificationExchangePage() {
   ]);
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-3 sm:p-4">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Prequalification Exchange</h1>
-        <p className="mt-1 text-sm text-gray-600">
+        <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">Prequalification Exchange</h1>
+        <p className="mt-1 text-sm text-secondary">
           Import external prequalification snapshots (Totika/SiteWise style) and map to contractor profiles.
         </p>
       </div>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Import Snapshot
         </h2>
         <form
@@ -73,14 +89,14 @@ export default async function PrequalificationExchangePage() {
           className="mt-3 grid gap-3"
         >
           <div className="grid gap-3 md:grid-cols-3">
-            <label className="text-sm text-gray-700">
+            <label className="text-sm text-secondary">
               Provider
               <select name="provider" className="input mt-1" defaultValue="TOTIKA">
                 <option value="TOTIKA">Totika</option>
                 <option value="SITEWISE">SiteWise</option>
               </select>
             </label>
-            <label className="text-sm text-gray-700">
+            <label className="text-sm text-secondary">
               Site scope (optional)
               <select name="siteId" className="input mt-1">
                 <option value="">All sites</option>
@@ -92,7 +108,7 @@ export default async function PrequalificationExchangePage() {
               </select>
             </label>
           </div>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Payload JSON
             <textarea
               name="payloadJson"
@@ -105,7 +121,7 @@ export default async function PrequalificationExchangePage() {
           <div>
             <button
               type="submit"
-              className="min-h-[40px] rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+              className="btn-primary"
             >
               Import Exchange Data
             </button>
@@ -113,40 +129,40 @@ export default async function PrequalificationExchangePage() {
         </form>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Recent Imports
         </h2>
         <div className="mt-3 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
+            <thead className="bg-[color:var(--bg-surface-strong)]">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Timestamp
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Status
                 </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Summary
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
               {events.length === 0 ? (
                 <tr>
-                  <td colSpan={3} className="px-3 py-3 text-sm text-gray-500">
+                  <td colSpan={3} className="px-3 py-3 text-sm text-muted">
                     No exchange imports yet.
                   </td>
                 </tr>
               ) : (
                 events.map((event) => (
                   <tr key={event.id}>
-                    <td className="px-3 py-3 text-sm text-gray-700">
+                    <td className="px-3 py-3 text-sm text-secondary">
                       {event.created_at.toLocaleString("en-NZ")}
                     </td>
-                    <td className="px-3 py-3 text-sm text-gray-700">{event.status ?? "-"}</td>
-                    <td className="px-3 py-3 text-xs text-gray-700">
+                    <td className="px-3 py-3 text-sm text-secondary">{event.status ?? "-"}</td>
+                    <td className="px-3 py-3 text-xs text-secondary">
                       <pre className="whitespace-pre-wrap break-all">
                         {JSON.stringify(event.payload ?? {}, null, 2)}
                       </pre>
@@ -161,3 +177,4 @@ export default async function PrequalificationExchangePage() {
     </div>
   );
 }
+

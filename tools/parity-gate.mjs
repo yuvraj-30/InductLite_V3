@@ -21,6 +21,7 @@ const REQUIRED_COLUMNS = [
 const ALLOWED_GATE_CLASSES = new Set(["required", "monitor"]);
 const ALLOWED_STATUSES = new Set(["implemented", "partial", "missing", "planned"]);
 const EMPTY_TOKENS = new Set(["", "-", "n/a", "na", "none"]);
+const REQUIRED_PLAN_TARGETS = ["standard", "plus", "pro", "add-on"];
 
 function parseArgs(argv) {
   const args = { matrixPath: DEFAULT_MATRIX_PATH };
@@ -186,11 +187,18 @@ function main() {
   const errors = [];
   const warnings = [];
   const seenControlIds = new Set();
+  const planTargetCoverage = new Map(
+    REQUIRED_PLAN_TARGETS.map((target) => [
+      target,
+      { total: 0, implemented: 0 },
+    ]),
+  );
   let requiredCount = 0;
   let monitorCount = 0;
 
   for (const row of rows) {
     const controlId = row["Control ID"].trim();
+    const planTarget = row["Plan Target"].trim().toLowerCase();
     const gateClass = row["Gate Class"].trim().toLowerCase();
     const status = row["Status"].trim().toLowerCase();
     const entitlementKey = row["Entitlement Key"].trim();
@@ -217,6 +225,13 @@ function main() {
       errors.push(
         `[line ${row._line}] ${controlId}: Status must be one of ${[...ALLOWED_STATUSES].join(", ")}.`,
       );
+    }
+    if (planTargetCoverage.has(planTarget)) {
+      const stats = planTargetCoverage.get(planTarget);
+      if (stats) {
+        stats.total += 1;
+        if (status === "implemented") stats.implemented += 1;
+      }
     }
 
     if (gateClass === "required") requiredCount += 1;
@@ -272,6 +287,20 @@ function main() {
     console.log("[parity-gate] Monitor gaps:");
     for (const warning of warnings) {
       console.log(`  - ${warning}`);
+    }
+  }
+
+  for (const [planTarget, stats] of planTargetCoverage.entries()) {
+    if (stats.total === 0) {
+      errors.push(
+        `[tier-coverage] Missing matrix coverage rows for Plan Target "${planTarget}".`,
+      );
+      continue;
+    }
+    if (stats.implemented === 0) {
+      errors.push(
+        `[tier-coverage] Plan Target "${planTarget}" has no implemented rows.`,
+      );
     }
   }
 

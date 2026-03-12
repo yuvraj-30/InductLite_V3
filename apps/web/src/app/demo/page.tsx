@@ -99,7 +99,7 @@ export default function DemoPage() {
           </p>
           <ol className="mt-4 space-y-2 text-sm text-secondary">
             {DEMO_AGENDA.map((item, idx) => (
-              <li key={item} className="rounded-lg border border-white/25 bg-white/35 px-3 py-2">
+              <li key={item} className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2">
                 {idx + 1}. {item}
               </li>
             ))}
@@ -114,7 +114,7 @@ export default function DemoPage() {
             </p>
             <ul className="mt-4 space-y-2 text-sm text-secondary">
               {PREP_CHECKLIST.map((item) => (
-                <li key={item} className="rounded-lg border border-white/25 bg-white/35 px-3 py-2">
+                <li key={item} className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2">
                   {item}
                 </li>
               ))}
@@ -128,7 +128,7 @@ export default function DemoPage() {
             </p>
             <ol className="mt-4 space-y-2 text-sm text-secondary">
               {SELF_GUIDED_FLOW.map((item, idx) => (
-                <li key={item} className="rounded-lg border border-white/25 bg-white/35 px-3 py-2">
+                <li key={item} className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2">
                   {idx + 1}. {item}
                 </li>
               ))}

@@ -161,7 +161,7 @@ export default async function PublicSignInPage({
     <PublicShell brand={site.companyName} subtitle={site.name}>
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-blue-600"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:rounded-md focus:bg-[color:var(--bg-surface)] focus:p-4 focus:text-accent"
       >
         Skip to content
       </a>

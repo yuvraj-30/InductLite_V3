@@ -9,7 +9,9 @@ import {
   verifyEvidenceSignature,
 } from "@/lib/repository/evidence.repository";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
+import { PageEmptyState, PageWarningState } from "@/components/ui/page-state";
 import { verifyEvidenceManifestAction } from "./actions";
+import { statusChipClass } from "../components/status-chip";
 
 export const metadata = {
   title: "Evidence Packs | InductLite",
@@ -44,11 +46,19 @@ export default async function EvidencePage({ searchParams }: EvidencePageProps) 
 
   if (!isFeatureEnabled("EVIDENCE_TAMPER_V1")) {
     return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-900">Tamper-Evident Evidence Packs</h1>
-        <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-          Evidence packs are disabled by rollout flag (CONTROL_ID: FLAG-ROLLOUT-001).
-        </p>
+      <div className="space-y-6 p-3 sm:p-4">
+        <div className="surface-panel-strong p-5">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+            Tamper-Evident Evidence Packs
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
+            Verify export bundle integrity using signed manifests and artifact hashes.
+          </p>
+        </div>
+        <PageWarningState
+          title="Evidence packs are disabled by rollout flag."
+          description="CONTROL_ID: FLAG-ROLLOUT-001."
+        />
       </div>
     );
   }
@@ -58,11 +68,19 @@ export default async function EvidencePage({ searchParams }: EvidencePageProps) 
   } catch (error) {
     if (error instanceof EntitlementDeniedError) {
       return (
-        <div className="p-6">
-          <h1 className="text-2xl font-bold text-gray-900">Tamper-Evident Evidence Packs</h1>
-          <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-            Evidence packs are not enabled for this plan (CONTROL_ID: PLAN-ENTITLEMENT-001).
-          </p>
+        <div className="space-y-6 p-3 sm:p-4">
+          <div className="surface-panel-strong p-5">
+            <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+              Tamper-Evident Evidence Packs
+            </h1>
+            <p className="mt-1 text-sm text-secondary">
+              Verify export bundle integrity using signed manifests and artifact hashes.
+            </p>
+          </div>
+          <PageWarningState
+            title="Evidence packs are not enabled for this plan."
+            description="CONTROL_ID: PLAN-ENTITLEMENT-001."
+          />
         </div>
       );
     }
@@ -91,14 +109,14 @@ export default async function EvidencePage({ searchParams }: EvidencePageProps) 
   );
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Tamper-Evident Evidence Packs</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Verify export bundle integrity using signed manifests and artifact hashes.
-          </p>
-        </div>
+    <div className="space-y-6 p-3 sm:p-4">
+      <div className="surface-panel-strong p-5">
+        <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+          Tamper-Evident Evidence Packs
+        </h1>
+        <p className="mt-1 text-sm text-secondary">
+          Verify export bundle integrity using signed manifests and artifact hashes.
+        </p>
       </div>
 
       {params.message ? (
@@ -112,69 +130,69 @@ export default async function EvidencePage({ searchParams }: EvidencePageProps) 
         </div>
       ) : null}
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           External Verification API
         </h2>
-        <p className="mt-2 text-sm text-gray-600">
+        <p className="mt-2 text-sm text-secondary">
           External auditors can verify a manifest signature without platform access.
         </p>
-        <code className="mt-3 block overflow-x-auto rounded bg-gray-900 p-3 text-xs text-green-200">
+        <code className="mt-3 block overflow-x-auto rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-3 text-xs text-[color:var(--text-primary)]">
           POST /api/evidence/verify {"{"}"companyId":"...","hashRoot":"...","signature":"..."{"}"}
         </code>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Evidence Manifests
         </h2>
-        <div className="mt-3 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
-                  Created
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
-                  Export Job
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
-                  Artifacts
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
-                  Verification
-                </th>
-                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
-              {manifestRows.length === 0 ? (
+        {manifestRows.length === 0 ? (
+          <div className="mt-3">
+            <PageEmptyState
+              title="No evidence manifests generated yet"
+              description="Run an export bundle to generate a signed manifest and artifact hashes."
+            />
+          </div>
+        ) : (
+          <div className="mt-3 overflow-x-auto">
+            <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
+              <thead className="bg-[color:var(--bg-surface-strong)]">
                 <tr>
-                  <td colSpan={5} className="px-3 py-3 text-sm text-gray-500">
-                    No evidence manifests generated yet.
-                  </td>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+                    Created
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+                    Export Job
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+                    Artifacts
+                  </th>
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+                    Verification
+                  </th>
+                  <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+                    Action
+                  </th>
                 </tr>
-              ) : (
-                manifestRows.map(({ manifest, artifacts, signatureValid, rootValid }) => {
+              </thead>
+              <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
+                {manifestRows.map(({ manifest, artifacts, signatureValid, rootValid }) => {
                   const verified = signatureValid && rootValid;
                   return (
-                    <tr key={manifest.id}>
-                      <td className="px-3 py-3 text-sm text-gray-700">
+                    <tr
+                      key={manifest.id}
+                      className="hover:bg-[color:var(--bg-surface-strong)]"
+                    >
+                      <td className="px-3 py-3 text-sm text-secondary">
                         {manifest.created_at.toLocaleString("en-NZ")}
                       </td>
-                      <td className="px-3 py-3 text-sm text-gray-700">
+                      <td className="px-3 py-3 text-sm text-secondary">
                         {manifest.export_job_id ?? "Manual/System"}
                       </td>
-                      <td className="px-3 py-3 text-sm text-gray-700">{artifacts.length}</td>
-                      <td className="px-3 py-3 text-sm text-gray-700">
+                      <td className="px-3 py-3 text-sm text-secondary">{artifacts.length}</td>
+                      <td className="px-3 py-3 text-sm text-secondary">
                         <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                            verified
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
+                          className={statusChipClass(verified ? "success" : "danger")}
                         >
                           {verified ? "VALID" : "INVALID"}
                         </span>
@@ -184,7 +202,7 @@ export default async function EvidencePage({ searchParams }: EvidencePageProps) 
                           <input type="hidden" name="manifestId" value={manifest.id} />
                           <button
                             type="submit"
-                            className="rounded border border-blue-300 px-2 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50"
+                            className="rounded border border-[color:var(--border-soft)] px-2 py-1 text-xs font-medium text-accent hover:bg-[color:var(--bg-surface-strong)]"
                           >
                             Verify + Audit
                           </button>
@@ -192,11 +210,11 @@ export default async function EvidencePage({ searchParams }: EvidencePageProps) 
                       </td>
                     </tr>
                   );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </div>
   );

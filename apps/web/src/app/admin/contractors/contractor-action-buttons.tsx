@@ -52,7 +52,7 @@ export function ContractorActionButtons({
 
     return (
       <div className="flex items-center gap-2">
-        <span className="text-sm text-gray-700">
+        <span className="text-sm text-secondary">
           {isPurge
             ? `Delete ${contractorName} permanently?`
             : `${isActive ? "Deactivate" : "Reactivate"} ${contractorName}?`}
@@ -73,7 +73,7 @@ export function ContractorActionButtons({
           type="button"
           onClick={() => setConfirmAction(null)}
           disabled={isPending}
-          className="inline-flex min-h-[36px] items-center rounded border border-gray-300 px-2.5 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="btn-secondary min-h-[36px] px-2.5 py-1.5 text-sm"
         >
           No
         </button>

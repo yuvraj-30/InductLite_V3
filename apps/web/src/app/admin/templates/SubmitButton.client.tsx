@@ -13,7 +13,7 @@ export default function SubmitButton({
     <button
       type="submit"
       disabled={pending}
-      className="text-blue-600 hover:text-blue-900 disabled:opacity-50"
+      className="text-accent hover:underline disabled:opacity-50"
     >
       {pending ? loadingLabel : label}
     </button>

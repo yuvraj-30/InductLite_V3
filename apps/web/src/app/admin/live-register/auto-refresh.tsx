@@ -37,20 +37,19 @@ export function LiveRegisterAutoRefresh({
   }, [enabled, intervalMs]);
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700">
+    <div className="surface-panel flex flex-wrap items-center gap-3 px-3 py-2 text-sm text-secondary">
       <span>Last updated: {lastUpdated}</span>
-      <span className="text-gray-400">|</span>
+      <span className="text-muted">|</span>
       <span>
         Auto-refresh {enabled ? `on (${secondsLeft}s)` : "off"}
       </span>
       <button
         type="button"
         onClick={() => setEnabled((prev) => !prev)}
-        className="rounded border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+        className="btn-secondary min-h-[34px] px-3 py-1.5 text-xs"
       >
         {enabled ? "Pause" : "Resume"}
       </button>
     </div>
   );
 }
-

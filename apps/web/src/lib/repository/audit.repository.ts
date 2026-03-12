@@ -150,6 +150,7 @@ export type AuditAction =
   | "procore.inbound.apply"
   | "prequal.exchange.import"
   | "ai.copilot.run"
+  | "ai.copilot.decision"
   // Delivery and resource operations
   | "delivery.item.create"
   | "delivery.item.transition"
@@ -157,6 +158,9 @@ export type AuditAction =
   | "resource.create"
   | "resource.booking.create"
   | "resource.booking.cancel"
+  // UI/UX telemetry
+  | "ux.admin.nav_search"
+  | "ux.induction.step_transition"
   // Construction safety form suite actions
   | "safety_form.template.install_defaults"
   | "safety_form.template.create"

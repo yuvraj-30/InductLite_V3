@@ -12,7 +12,7 @@ export function SiteFilterSelect({ sites, siteFilter }: SiteFilterSelectProps) {
       name="site"
       id="site"
       defaultValue={siteFilter || ""}
-      className="block w-64 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+      className="input min-h-[42px] w-full sm:w-64"
       onChange={(e) => {
         const url = new URL(window.location.href);
         if (e.target.value) {

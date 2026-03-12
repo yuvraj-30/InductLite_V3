@@ -18,17 +18,12 @@ export function PublicShell({
 }: PublicShellProps) {
   return (
     <div className={`relative min-h-screen overflow-hidden ${className}`.trim()}>
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-16 -top-24 h-64 w-64 rounded-full bg-cyan-400/15 blur-3xl" />
-        <div className="absolute right-0 top-1/3 h-72 w-72 rounded-full bg-indigo-500/20 blur-3xl" />
-      </div>
-
-      <header className="relative z-10 border-b border-white/30 bg-[color:var(--bg-surface-strong)]">
+      <header className="relative z-10 border-b border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)]">
         <div className="mx-auto flex max-w-4xl flex-col gap-2 px-4 py-5 sm:px-6">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
             Live Visitor Sign-In
           </p>
-          <h1 className="kinetic-title text-2xl font-black sm:text-3xl">{brand}</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">{brand}</h1>
           <p className="text-sm text-secondary">{subtitle}</p>
         </div>
       </header>
@@ -36,7 +31,7 @@ export function PublicShell({
       <main className="relative z-10 mx-auto max-w-4xl px-4 py-6 sm:px-6">{children}</main>
 
       <footer className="relative z-10 px-4 pb-6 pt-2 text-center text-sm text-secondary sm:px-6">
-        <div className="mx-auto max-w-4xl rounded-[var(--radius-card)] border border-white/35 bg-[color:var(--bg-surface)] px-4 py-3">
+        <div className="mx-auto max-w-4xl rounded-[var(--radius-card)] border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] px-4 py-3">
           {footerText ? (
             <p>{footerText}</p>
           ) : (

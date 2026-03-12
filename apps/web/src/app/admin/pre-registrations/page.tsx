@@ -12,6 +12,7 @@ import { CreateInviteForm } from "./create-invite-form";
 import { DeactivateInviteButton } from "./deactivate-invite-button";
 import { BulkInviteForm } from "./bulk-invite-form";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
+import { PageEmptyState, PageWarningState } from "@/components/ui/page-state";
 
 export const metadata = {
   title: "Pre-Registrations | InductLite",
@@ -41,9 +42,9 @@ function inviteStatus(invite: {
 
 function statusBadgeClass(status: ReturnType<typeof inviteStatus>): string {
   if (status === "Active") return "bg-green-100 text-green-800";
-  if (status === "Used") return "bg-blue-100 text-blue-800";
+  if (status === "Used") return "bg-[color:var(--bg-surface-strong)] text-accent";
   if (status === "Expired") return "bg-amber-100 text-amber-800";
-  return "bg-gray-100 text-gray-700";
+  return "bg-[color:var(--bg-surface-strong)] text-secondary";
 }
 
 export default async function PreRegistrationsPage({
@@ -74,10 +75,12 @@ export default async function PreRegistrationsPage({
   if (sites.length === 0) {
     return (
       <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-900">Pre-Registrations</h1>
-        <p className="mt-2 text-sm text-gray-600">
-          No accessible sites available for pre-registration.
-        </p>
+        <PageEmptyState
+          title="Pre-Registrations"
+          description="No accessible sites available for pre-registration."
+          actionHref="/admin/sites"
+          actionLabel="Back to Sites"
+        />
       </div>
     );
   }
@@ -113,108 +116,108 @@ export default async function PreRegistrationsPage({
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Pre-Registrations</h1>
-          <p className="mt-1 text-gray-600">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">Pre-Registrations</h1>
+          <p className="mt-1 text-secondary">
             Create invite links so visitors can arrive with prefilled details.
           </p>
         </div>
         <Link
           href="/admin/sites"
-          className="text-sm text-blue-600 hover:text-blue-800"
+          className="text-sm text-accent hover:text-accent"
         >
           Back to Sites
         </Link>
       </div>
 
       {!preregFeatureEnabled && (
-        <section className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-          <h2 className="text-sm font-semibold text-amber-900">
-            Pre-registration disabled for the currently selected site
-          </h2>
-          <p className="mt-1 text-sm text-amber-800">
-            Invite creation is disabled by entitlements (CONTROL_ID:
-            PLAN-ENTITLEMENT-001).
-          </p>
-        </section>
+        <PageWarningState
+          title="Pre-registration disabled for this site"
+          description="Invite creation is disabled by entitlements (CONTROL_ID: PLAN-ENTITLEMENT-001)."
+        />
       )}
 
       <CreateInviteForm sites={sites} defaultSiteId={selectedSiteId} />
       <BulkInviteForm sites={sites} defaultSiteId={selectedSiteId} />
 
-      <section className="mt-6 rounded-lg border bg-white p-4">
-        <h2 className="text-lg font-semibold text-gray-900">Recent Invites</h2>
-        <p className="mt-1 text-sm text-gray-600">
+      <section className="surface-panel mt-6 p-4">
+        <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">Recent Invites</h2>
+        <p className="mt-1 text-sm text-secondary">
           Showing {invites.items.length} invite
           {invites.items.length === 1 ? "" : "s"} for{" "}
           {siteNames.get(selectedSiteId) ?? "selected site"}.
         </p>
 
         {invites.items.length === 0 ? (
-          <p className="mt-4 text-sm text-gray-500">No pre-registrations yet.</p>
+          <div className="mt-4">
+            <PageEmptyState
+              title="No pre-registrations yet"
+              description="Create an invite to prefill visitor details before arrival."
+            />
+          </div>
         ) : (
           <div className="mt-4 overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
+              <thead className="bg-[color:var(--bg-surface-strong)]">
                 <tr>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                     Visitor
                   </th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                     Type
                   </th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                     Site
                   </th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                     Expires
                   </th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                     Used
                   </th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                     Status
                   </th>
-                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
                 {invites.items.map((invite) => {
                   const status = inviteStatus(invite);
                   return (
                     <tr key={invite.id}>
-                      <td className="px-3 py-2 text-sm text-gray-800">
+                      <td className="px-3 py-2 text-sm text-[color:var(--text-primary)]">
                         <p className="font-medium">{invite.visitor_name}</p>
-                        <p className="text-xs text-gray-500">{invite.visitor_phone}</p>
+                        <p className="text-xs text-muted">{invite.visitor_phone}</p>
                       </td>
-                      <td className="px-3 py-2 text-sm text-gray-700">
+                      <td className="px-3 py-2 text-sm text-secondary">
                         {invite.visitor_type}
                       </td>
-                      <td className="px-3 py-2 text-sm text-gray-700">
+                      <td className="px-3 py-2 text-sm text-secondary">
                         {siteNames.get(invite.site_id) ?? invite.site_id}
                       </td>
-                      <td className="px-3 py-2 text-sm text-gray-700">
+                      <td className="px-3 py-2 text-sm text-secondary">
                         {formatDateTime(invite.expires_at)}
                       </td>
-                      <td className="px-3 py-2 text-sm text-gray-700">
+                      <td className="px-3 py-2 text-sm text-secondary">
                         {formatDateTime(invite.used_at)}
                       </td>
-                      <td className="px-3 py-2 text-sm text-gray-700">
+                      <td className="px-3 py-2 text-sm text-secondary">
                         <span
                           className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadgeClass(status)}`}
                         >
                           {status}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-sm text-gray-700">
+                      <td className="px-3 py-2 text-sm text-secondary">
                         {status === "Active" ? (
                           <DeactivateInviteButton
                             inviteId={invite.id}
                             siteId={invite.site_id}
                           />
                         ) : (
-                          <span className="text-xs text-gray-400">-</span>
+                          <span className="text-xs text-muted">-</span>
                         )}
                       </td>
                     </tr>
@@ -228,3 +231,4 @@ export default async function PreRegistrationsPage({
     </div>
   );
 }
+

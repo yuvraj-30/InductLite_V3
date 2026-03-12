@@ -17,11 +17,10 @@ import {
   useTransition,
   type ComponentClass,
 } from "react";
+import dynamic from "next/dynamic";
 import type SignatureCanvas from "react-signature-canvas";
 import type { SignatureCanvasProps } from "react-signature-canvas";
 import { submitSignIn, type SiteInfo, type TemplateInfo } from "../actions";
-import { InductionQuestions } from "./InductionQuestions";
-import { SuccessScreen } from "./SuccessScreen";
 import { isValidPhoneE164, formatToE164 } from "@inductlite/shared";
 import { shouldSkipQuestions } from "@/lib/logic/evaluator";
 import {
@@ -30,6 +29,35 @@ import {
   saveQueuedSignIn,
 } from "@/lib/offline/signin-queue";
 import { syncQueuedSignIn } from "@/lib/offline/signin-sync";
+import { reportUxEvent } from "@/lib/ux-events/client";
+
+const InductionQuestions = dynamic(
+  () =>
+    import("./InductionQuestions").then((mod) => ({
+      default: mod.InductionQuestions,
+    })),
+  {
+    loading: () => (
+      <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4 text-sm text-secondary">
+        Loading induction questions...
+      </div>
+    ),
+  },
+);
+
+const SuccessScreen = dynamic(
+  () =>
+    import("./SuccessScreen").then((mod) => ({
+      default: mod.SuccessScreen,
+    })),
+  {
+    loading: () => (
+      <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4 text-sm text-secondary">
+        Finalizing your sign-in...
+      </div>
+    ),
+  },
+);
 
 interface SignInFlowProps {
   slug: string;
@@ -252,6 +280,7 @@ export function SignInFlow({
   );
   const [isCapturingLocation, setIsCapturingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const previousStepRef = useRef<Step>("details");
 
   const sigCanvas = useRef<SignatureCanvas>(null);
   const [SignatureCanvasComponent, setSignatureCanvasComponent] =
@@ -599,6 +628,21 @@ export function SignInFlow({
     setRememberSignature(false);
     setReuseSavedSignature(false);
   }, [isKiosk, rememberSignature, reuseSavedSignature]);
+
+  useEffect(() => {
+    const previousStep = previousStepRef.current;
+    if (previousStep === step) return;
+
+    previousStepRef.current = step;
+    reportUxEvent({
+      event: "ux.induction.step_transition",
+      slug,
+      fromStep: previousStep,
+      toStep: step,
+      flowId: idempotencyKey,
+      isKiosk,
+    });
+  }, [idempotencyKey, isKiosk, slug, step]);
 
   const applySuccessResult = (data: SignInResult) => {
     setSignInResult(data);
@@ -999,6 +1043,9 @@ export function SignInFlow({
   if (step === "success" && signInResult) {
     return <SuccessScreen slug={slug} result={signInResult} />;
   }
+  const currentStepNumber = step === "details" ? 1 : step === "induction" ? 2 : 3;
+  const currentStepLabel =
+    step === "details" ? "Your Details" : step === "induction" ? "Induction" : "Sign Off";
 
   return (
     <div
@@ -1006,7 +1053,7 @@ export function SignInFlow({
       role="region"
       aria-label="Sign-In Form"
     >
-      <div className="border-b border-white/25 bg-white/45 px-4 py-3 backdrop-blur-xl">
+      <div className="border-b border-surface-soft bg-surface-soft px-4 py-3 backdrop-blur-xl">
         {!isOnline && (
           <div className="mb-3 rounded-lg border border-amber-400/45 bg-amber-100/75 px-3 py-2 text-sm text-amber-950 dark:bg-amber-950/45 dark:text-amber-100">
             You are offline. We can save this sign-in and sync when connection returns.
@@ -1028,6 +1075,10 @@ export function SignInFlow({
           </div>
         )}
 
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+          Step {currentStepNumber} of 3 · {currentStepLabel}
+        </p>
+
         <div className="flex items-center">
           <div
             className={`flex h-10 w-10 items-center justify-center rounded-full text-base font-semibold ${
@@ -1039,7 +1090,7 @@ export function SignInFlow({
             {step === "details" ? "1" : "Done"}
           </div>
 
-          <div className="mx-2 h-1 flex-1 rounded-full bg-white/55">
+          <div className="mx-2 h-1 flex-1 rounded-full bg-surface-strong">
             <div
               className={`h-full rounded-full bg-gradient-to-r from-indigo-600 to-cyan-500 transition-all ${
                 step === "induction" || step === "signature" ? "w-full" : "w-0"
@@ -1053,13 +1104,13 @@ export function SignInFlow({
                 ? "bg-gradient-to-br from-indigo-600 to-cyan-500 text-white"
                 : step === "signature"
                   ? "bg-emerald-500 text-white"
-                  : "bg-white/55 text-secondary"
+                  : "bg-surface-strong text-secondary"
             }`}
           >
             {step === "signature" ? "Done" : "2"}
           </div>
 
-          <div className="mx-2 h-1 flex-1 rounded-full bg-white/55">
+          <div className="mx-2 h-1 flex-1 rounded-full bg-surface-strong">
             <div
               className={`h-full rounded-full bg-gradient-to-r from-indigo-600 to-cyan-500 transition-all ${
                 step === "signature" ? "w-full" : "w-0"
@@ -1071,7 +1122,7 @@ export function SignInFlow({
             className={`flex h-10 w-10 items-center justify-center rounded-full text-base font-semibold ${
               step === "signature"
                 ? "bg-gradient-to-br from-indigo-600 to-cyan-500 text-white"
-                : "bg-white/55 text-secondary"
+                : "bg-surface-strong text-secondary"
             }`}
           >
             3
@@ -1123,7 +1174,7 @@ export function SignInFlow({
                 type="button"
                 onClick={captureLocation}
                 disabled={isCapturingLocation}
-                className="btn-secondary mt-3 min-h-[44px] border-cyan-400/40 bg-white/80 px-3 py-2 text-sm text-cyan-900 hover:bg-cyan-100 disabled:opacity-60"
+                className="btn-secondary mt-3 min-h-[44px] border-cyan-400/40 bg-surface-strong px-3 py-2 text-sm text-cyan-900 hover:bg-cyan-100 disabled:opacity-60"
               >
                 {isCapturingLocation
                   ? "Capturing location..."
@@ -1177,7 +1228,7 @@ export function SignInFlow({
                         }));
                       }
                     }}
-                    className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm ${fieldErrors.geofenceOverrideCode?.length ? "border-red-400" : "border-cyan-300/40"} bg-white/90 text-gray-900`}
+                    className={`mt-1 block w-full rounded-md border px-3 py-2 text-sm ${fieldErrors.geofenceOverrideCode?.length ? "border-red-400" : "border-cyan-300/40"} bg-surface-strong text-[color:var(--text-primary)]`}
                     placeholder="Enter supervisor code"
                   />
                   {fieldErrors.geofenceOverrideCode?.[0] && (
@@ -1256,20 +1307,20 @@ export function SignInFlow({
               <button
                 type="button"
                 onClick={applyLastVisitDetails}
-                className="btn-secondary mt-2 min-h-[44px] border-emerald-400/35 bg-white/80 px-3 py-2 text-sm text-emerald-900 hover:bg-emerald-100 dark:text-emerald-100"
+                className="btn-secondary mt-2 min-h-[44px] border-emerald-400/35 bg-surface-strong px-3 py-2 text-sm text-emerald-900 hover:bg-emerald-100 dark:text-emerald-100"
               >
                 Use Last Visit Details
               </button>
             </div>
           )}
 
-          <div className="rounded-xl border border-white/35 bg-white/45 p-3">
+          <div className="rounded-xl border border-surface-soft bg-surface-soft p-3">
             <label className="flex items-start gap-3 text-sm text-secondary">
               <input
                 type="checkbox"
                 checked={rememberDetails}
                 onChange={(e) => setRememberDetails(e.target.checked)}
-                className="mt-0.5 h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                className="mt-0.5 h-5 w-5 rounded border-[color:var(--border-soft)] text-indigo-600 focus:ring-indigo-500"
               />
               <span>
                 Remember my details on this device for faster future sign-ins.
@@ -1407,7 +1458,7 @@ export function SignInFlow({
                     {emergencyContacts.map((contact) => (
                       <article
                         key={contact.id}
-                        className="rounded-lg border border-red-400/30 bg-white/75 p-3 shadow-soft dark:bg-red-950/30"
+                        className="rounded-lg border border-red-400/30 bg-surface-soft p-3 shadow-soft dark:bg-red-950/30"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
@@ -1442,7 +1493,7 @@ export function SignInFlow({
                     {emergencyProcedures.map((procedure, index) => (
                       <article
                         key={procedure.id}
-                        className="rounded-lg border border-red-300/35 bg-white/75 p-3 dark:bg-red-950/30"
+                        className="rounded-lg border border-red-300/35 bg-surface-soft p-3 dark:bg-red-950/30"
                       >
                         <div className="flex items-start gap-3">
                           <div className="mt-0.5 inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-xs font-semibold text-red-700">
@@ -1490,7 +1541,7 @@ export function SignInFlow({
             </section>
           )}
 
-          <section className="mb-5 rounded-xl border border-white/35 bg-white/45 p-4">
+          <section className="mb-5 rounded-xl border border-surface-soft bg-surface-soft p-4">
             <h3 className="text-base font-semibold text-[color:var(--text-primary)]">
               {localizedTemplateName}
             </h3>
@@ -1514,7 +1565,7 @@ export function SignInFlow({
                 {mediaConfig.blocks.map((block) => (
                   <article
                     key={block.id}
-                    className="rounded-lg border border-indigo-300/35 bg-white/80 p-3 shadow-soft"
+                    className="rounded-lg border border-indigo-300/35 bg-surface-strong p-3 shadow-soft"
                   >
                     <p className="text-sm font-semibold text-[color:var(--text-primary)]">
                       {block.title}
@@ -1531,7 +1582,7 @@ export function SignInFlow({
                         <iframe
                           src={block.url}
                           title={block.title}
-                          className="h-64 w-full rounded-md border border-gray-200 bg-white"
+                          className="h-64 w-full rounded-md border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)]"
                         />
                         <a
                           href={block.url}
@@ -1549,14 +1600,14 @@ export function SignInFlow({
                         <img
                           src={block.url}
                           alt={block.title}
-                          className="max-h-80 w-full rounded-md border border-gray-200 object-contain bg-white"
+                          className="max-h-80 w-full rounded-md border border-[color:var(--border-soft)] object-contain bg-[color:var(--bg-surface)]"
                           loading="lazy"
                         />
                         <a
                           href={block.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex min-h-[40px] items-center rounded-md border border-indigo-300 bg-white px-3 py-2 text-xs font-semibold text-indigo-900 hover:bg-indigo-50"
+                          className="inline-flex min-h-[40px] items-center rounded-md border border-indigo-300 bg-[color:var(--bg-surface)] px-3 py-2 text-xs font-semibold text-indigo-900 hover:bg-indigo-50"
                         >
                           Open image
                         </a>
@@ -1567,7 +1618,7 @@ export function SignInFlow({
               </div>
 
               {mediaAcknowledgementRequired && (
-                <div className="mt-4 rounded-lg border border-indigo-300/35 bg-white/75 p-3">
+                <div className="mt-4 rounded-lg border border-indigo-300/35 bg-surface-soft p-3">
                   <label className="flex items-start gap-2 text-sm text-indigo-950">
                     <input
                       type="checkbox"
@@ -1641,7 +1692,7 @@ export function SignInFlow({
             </label>
           )}
 
-          <div className="rounded-lg border-2 border-white/35 bg-white/45">
+          <div className="rounded-lg border-2 border-surface-soft bg-surface-soft">
             {SignatureCanvasComponent ? (
               <SignatureCanvasComponent
                 ref={sigCanvas}
@@ -1657,17 +1708,17 @@ export function SignInFlow({
                 }}
               />
             ) : (
-              <div className="h-40 w-full animate-pulse rounded-lg bg-white/70" />
+              <div className="h-40 w-full animate-pulse rounded-lg bg-surface-strong" />
             )}
           </div>
 
-          <label className="flex min-h-[48px] items-start gap-2 rounded-lg border border-white/35 bg-white/45 p-3 text-sm text-secondary">
+          <label className="flex min-h-[48px] items-start gap-2 rounded-lg border border-surface-soft bg-surface-soft p-3 text-sm text-secondary">
             <input
               type="checkbox"
               checked={rememberSignature}
               onChange={(e) => setRememberSignature(e.target.checked)}
               disabled={Boolean(isKiosk)}
-              className="mt-0.5 h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              className="mt-0.5 h-5 w-5 rounded border-[color:var(--border-soft)] text-indigo-600 focus:ring-indigo-500"
             />
             <span>
               Save my signature on this device for faster repeat sign-ins.
@@ -1707,7 +1758,7 @@ export function SignInFlow({
                     onChange={(event) => {
                       void handleIdentityImageSelect("photo", event.target.files);
                     }}
-                    className="mt-1 block w-full rounded-md border border-indigo-200 bg-white px-2 py-2 text-xs"
+                    className="mt-1 block w-full rounded-md border border-indigo-200 bg-[color:var(--bg-surface)] px-2 py-2 text-xs"
                   />
                   {fieldErrors.visitorPhotoDataUrl?.[0] && (
                     <p className="mt-1 text-xs text-red-700">
@@ -1725,7 +1776,7 @@ export function SignInFlow({
                     onChange={(event) => {
                       void handleIdentityImageSelect("id", event.target.files);
                     }}
-                    className="mt-1 block w-full rounded-md border border-indigo-200 bg-white px-2 py-2 text-xs"
+                    className="mt-1 block w-full rounded-md border border-indigo-200 bg-[color:var(--bg-surface)] px-2 py-2 text-xs"
                   />
                   {fieldErrors.visitorIdDataUrl?.[0] && (
                     <p className="mt-1 text-xs text-red-700">
@@ -1760,7 +1811,7 @@ export function SignInFlow({
 
               <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
                 {visitorPhotoDataUrl && (
-                  <div className="rounded-md border border-indigo-200 bg-white p-2">
+                  <div className="rounded-md border border-indigo-200 bg-[color:var(--bg-surface)] p-2">
                     <p className="text-xs font-semibold text-indigo-900">Photo preview</p>
                     <img
                       src={visitorPhotoDataUrl}
@@ -1770,7 +1821,7 @@ export function SignInFlow({
                   </div>
                 )}
                 {visitorIdDataUrl && (
-                  <div className="rounded-md border border-indigo-200 bg-white p-2">
+                  <div className="rounded-md border border-indigo-200 bg-[color:var(--bg-surface)] p-2">
                     <p className="text-xs font-semibold text-indigo-900">ID preview</p>
                     <img
                       src={visitorIdDataUrl}
@@ -1820,7 +1871,7 @@ export function SignInFlow({
                     hasAcceptedTerms: e.target.checked,
                   })
                 }
-                className="mt-0.5 h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                className="mt-0.5 h-5 w-5 rounded border-[color:var(--border-soft)] text-indigo-600 focus:ring-indigo-500"
               />
               <span>
                 {legalConsentStatement}{" "}
@@ -1883,3 +1934,4 @@ export function SignInFlow({
     </div>
   );
 }
+

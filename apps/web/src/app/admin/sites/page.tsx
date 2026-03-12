@@ -5,13 +5,30 @@
  */
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { checkAuthReadOnly, checkPermissionReadOnly } from "@/lib/auth";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 import { findAllSites, findSitesByIds } from "@/lib/repository";
 import { listManagedSiteIds } from "@/lib/repository/site-manager.repository";
 import { listActivePublicLinksForSites } from "@/lib/repository/site.repository";
 import { getOnboardingProgress } from "@/lib/repository/dashboard.repository";
-import { DeactivateSiteButton, ReactivateSiteButton } from "./site-buttons";
 import { OnboardingChecklist } from "../components/OnboardingChecklist";
+import { statusChipClass } from "../components/status-chip";
+import { PageEmptyState } from "@/components/ui/page-state";
+
+const DeactivateSiteButton = dynamic(
+  () =>
+    import("./site-buttons").then((mod) => ({
+      default: mod.DeactivateSiteButton,
+    })),
+);
+
+const ReactivateSiteButton = dynamic(
+  () =>
+    import("./site-buttons").then((mod) => ({
+      default: mod.ReactivateSiteButton,
+    })),
+);
 
 export const metadata = {
   title: "Sites | InductLite",
@@ -22,9 +39,22 @@ export default async function SitesPage() {
   const guard = await checkAuthReadOnly();
   if (!guard.success) {
     return (
-      <div className="p-6">
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-700">{guard.error}</p>
+      <div className="space-y-6 p-3 sm:p-4">
+        <div className="surface-panel-strong p-5">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+            Sites
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
+            Manage your construction sites and their sign-in links
+          </p>
+        </div>
+        <div className="rounded-xl border border-red-400/45 bg-red-100/70 p-4 dark:bg-red-950/45">
+          <h2 className="text-sm font-semibold text-red-950 dark:text-red-100">
+            Access unavailable
+          </h2>
+          <p className="mt-1 text-sm text-red-900 dark:text-red-200">
+            {guard.error}
+          </p>
         </div>
       </div>
     );
@@ -63,13 +93,16 @@ export default async function SitesPage() {
   // Check if user can manage sites/templates
   const canManageSites = canManage.success;
   const canManageTemplates = canManageTemplatesPermission.success;
+  const mobileShellEnabled = isFeatureEnabled("UIX_S3_MOBILE");
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6 p-3 sm:p-4">
+      <div className="surface-panel-strong flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Sites</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+            Sites
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
             Manage your construction sites and their sign-in links
           </p>
         </div>
@@ -77,7 +110,7 @@ export default async function SitesPage() {
         {canManageSites && (
           <Link
             href="/admin/sites/new"
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="btn-primary w-full sm:w-auto"
           >
             <svg
               className="-ml-1 mr-2 h-5 w-5"
@@ -98,103 +131,142 @@ export default async function SitesPage() {
       </div>
 
       {sites.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
-          <svg
-            className="mx-auto h-12 w-12 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-            />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No sites</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            Get started by creating a new site.
-          </p>
-          {canManageSites && (
-            <div className="mt-6">
-              <Link
-                href="/admin/sites/new"
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-              >
-                <svg
-                  className="-ml-1 mr-2 h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4v16m8-8H4"
-                  />
-                </svg>
-                Add Site
-              </Link>
-            </div>
-          )}
+        <PageEmptyState
+          title="No sites"
+          description="Get started by creating a new site."
+          actionHref={canManageSites ? "/admin/sites/new" : undefined}
+          actionLabel={canManageSites ? "Add Site" : undefined}
+          icon={
+            <svg
+              className="mx-auto h-12 w-12 text-muted"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              />
+            </svg>
+          }
+        >
           <OnboardingChecklist
             progress={onboardingProgress}
-            className="mt-6 text-left"
+            className="text-left"
             canManageSites={canManageSites}
             canManageTemplates={canManageTemplates}
           />
-        </div>
+        </PageEmptyState>
       ) : (
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
-          <ul className="divide-y divide-gray-200">
+        <div className="surface-panel overflow-hidden">
+          <ul className="divide-y divide-[color:var(--border-soft)]">
             {sites.map((site) => {
               const publicSlug = linksBySiteId.get(site.id);
 
               return (
                 <li key={site.id}>
-                  <div className="px-4 py-4 sm:px-6 hover:bg-gray-50">
-                    <div className="flex items-center justify-between">
+                  <div className="px-4 py-4 sm:px-6 hover:bg-[color:var(--bg-surface-strong)]">
+                    {mobileShellEnabled ? (
+                      <div className="space-y-3 md:hidden">
+                        <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-3">
+                          <div className="flex flex-wrap items-start justify-between gap-2">
+                            <Link
+                              href={`/admin/sites/${site.id}`}
+                              className="min-w-0 flex-1 truncate text-base font-semibold text-[color:var(--accent-cyber)] hover:underline"
+                            >
+                              {site.name}
+                            </Link>
+                            <span
+                              className={statusChipClass(
+                                site.is_active ? "success" : "neutral",
+                                "items-center",
+                              )}
+                            >
+                              {site.is_active ? "Active" : "Inactive"}
+                            </span>
+                          </div>
+                          {site.address ? (
+                            <p className="mt-2 text-sm text-secondary">{site.address}</p>
+                          ) : null}
+                          {site.description ? (
+                            <p className="mt-1 line-clamp-2 text-sm text-secondary">
+                              {site.description}
+                            </p>
+                          ) : null}
+                          {publicSlug ? (
+                            <p className="mt-2 text-xs text-muted">
+                              Public link: /s/{publicSlug.substring(0, 8)}...
+                            </p>
+                          ) : null}
+                        </div>
+
+                        <div
+                          className={`grid gap-2 ${canManageSites ? "grid-cols-2" : "grid-cols-1"}`}
+                        >
+                          <Link
+                            href={`/admin/sites/${site.id}`}
+                            className="btn-secondary min-h-[44px] justify-center px-3 py-2 text-sm"
+                          >
+                            View
+                          </Link>
+                          {canManageSites && site.is_active ? (
+                            <DeactivateSiteButton
+                              siteId={site.id}
+                              siteName={site.name}
+                              className="w-full justify-center min-h-[44px]"
+                            />
+                          ) : null}
+                          {canManageSites && !site.is_active ? (
+                            <ReactivateSiteButton
+                              siteId={site.id}
+                              siteName={site.name}
+                              className="w-full justify-center min-h-[44px]"
+                            />
+                          ) : null}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    <div
+                      className={`flex flex-col gap-4 md:flex-row md:items-center md:justify-between ${mobileShellEnabled ? "hidden md:flex" : ""}`}
+                    >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center">
                           <Link
                             href={`/admin/sites/${site.id}`}
-                            className="text-lg font-medium text-blue-600 hover:text-blue-800 truncate"
+                            className="truncate text-lg font-semibold text-[color:var(--accent-cyber)] hover:underline"
                           >
                             {site.name}
                           </Link>
                           <span
-                            className={`ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              site.is_active
-                                ? "bg-green-100 text-green-800"
-                                : "bg-gray-100 text-gray-800"
-                            }`}
+                            className={`ml-2 ${statusChipClass(site.is_active ? "success" : "neutral", "items-center")}`}
                           >
                             {site.is_active ? "Active" : "Inactive"}
                           </span>
                         </div>
                         {site.address && (
-                          <p className="mt-1 text-sm text-gray-500 truncate">
+                          <p className="mt-1 truncate text-sm text-secondary">
                             {site.address}
                           </p>
                         )}
                         {site.description && (
-                          <p className="mt-1 text-sm text-gray-600 line-clamp-2">
+                          <p className="mt-1 line-clamp-2 text-sm text-secondary">
                             {site.description}
                           </p>
                         )}
                         {publicSlug && (
-                          <p className="mt-2 text-xs text-gray-600">
+                          <p className="mt-2 text-xs text-muted">
                             Public link: /s/{publicSlug.substring(0, 8)}...
                           </p>
                         )}
                       </div>
 
-                      <div className="flex items-center space-x-2 ml-4">
+                      <div className="ml-0 flex items-center gap-2 md:ml-4">
                         <Link
                           href={`/admin/sites/${site.id}`}
-                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                          className="btn-secondary min-h-[38px] px-3 py-1.5 text-xs"
                         >
                           View
                         </Link>
@@ -203,6 +275,7 @@ export default async function SitesPage() {
                           <DeactivateSiteButton
                             siteId={site.id}
                             siteName={site.name}
+                            className="min-h-[38px]"
                           />
                         )}
 
@@ -210,6 +283,7 @@ export default async function SitesPage() {
                           <ReactivateSiteButton
                             siteId={site.id}
                             siteName={site.name}
+                            className="min-h-[38px]"
                           />
                         )}
                       </div>
@@ -222,7 +296,7 @@ export default async function SitesPage() {
         </div>
       )}
 
-      <div className="mt-4 text-sm text-gray-500">
+      <div className="text-sm text-secondary">
         Showing {sites.length} site{sites.length !== 1 ? "s" : ""}
       </div>
     </div>

@@ -23,6 +23,14 @@ export {
 
 export type { SitePriceBreakdown, CompanyPriceBreakdown } from "./pricing";
 
+export {
+  TIER_PRESENTATION,
+  COMPANY_TIERS,
+  getTierPresentation,
+  getCompanyTierPresentation,
+} from "./tier-presentation";
+export type { PublicTier, TierBadgeTone, TierPresentation } from "./tier-presentation";
+
 export { buildCompanyInvoicePreview } from "./invoice-preview";
 export type {
   InvoiceLineItemType,

@@ -42,9 +42,9 @@ export function ExportQueuePanel() {
   };
 
   return (
-    <div className="mb-6 rounded-lg border bg-white p-4">
-      <h2 className="text-sm font-semibold text-gray-900">Quick Export Actions</h2>
-      <p className="mt-1 text-sm text-gray-600">
+    <div className="surface-panel mb-6 p-4">
+      <h2 className="text-sm font-semibold text-[color:var(--text-primary)]">Quick Export Actions</h2>
+      <p className="mt-1 text-sm text-secondary">
         Use one click for common auditor requests, including full compliance packs.
       </p>
 
@@ -66,7 +66,7 @@ export function ExportQueuePanel() {
           type="button"
           disabled={isPending}
           onClick={() => queueExport({ exportType: "SIGN_IN_CSV" })}
-          className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="btn-primary"
         >
           {isPending ? "Queueing..." : "Queue Sign-In CSV"}
         </button>
@@ -75,7 +75,7 @@ export function ExportQueuePanel() {
           type="button"
           disabled={isPending}
           onClick={() => queueExport({ exportType: "INDUCTION_CSV" })}
-          className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          className="btn-secondary disabled:opacity-50"
         >
           Queue Induction CSV
         </button>
@@ -126,27 +126,27 @@ export function ExportQueuePanel() {
         </button>
       </div>
 
-      <div className="mt-4 rounded-md border border-gray-200 p-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+      <div className="mt-4 rounded-md border border-[color:var(--border-soft)] p-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted">
           Custom Date Range
         </p>
         <div className="mt-2 flex flex-wrap items-end gap-2">
-          <label className="text-xs text-gray-600">
+          <label className="text-xs text-secondary">
             From
             <input
               type="datetime-local"
               value={customDateFrom}
               onChange={(event) => setCustomDateFrom(event.target.value)}
-              className="mt-1 block rounded-md border border-gray-300 px-2 py-1 text-sm"
+              className="mt-1 block rounded-md border border-[color:var(--border-soft)] px-2 py-1 text-sm"
             />
           </label>
-          <label className="text-xs text-gray-600">
+          <label className="text-xs text-secondary">
             To
             <input
               type="datetime-local"
               value={customDateTo}
               onChange={(event) => setCustomDateTo(event.target.value)}
-              className="mt-1 block rounded-md border border-gray-300 px-2 py-1 text-sm"
+              className="mt-1 block rounded-md border border-[color:var(--border-soft)] px-2 py-1 text-sm"
             />
           </label>
           <button
@@ -169,7 +169,7 @@ export function ExportQueuePanel() {
                 dateTo: toIso,
               });
             }}
-            className="inline-flex items-center rounded-md border border-indigo-300 bg-white px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50"
+            className="inline-flex items-center rounded-md border border-indigo-300 bg-[color:var(--bg-surface)] px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50"
           >
             Queue Compliance Pack (Range)
           </button>
@@ -178,3 +178,5 @@ export function ExportQueuePanel() {
     </div>
   );
 }
+
+

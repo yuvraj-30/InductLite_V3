@@ -37,7 +37,7 @@ function FormFields({
         <div>
           <label
             htmlFor="name"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-secondary"
           >
             Full Name
           </label>
@@ -50,14 +50,14 @@ function FormFields({
             minLength={2}
             maxLength={120}
             disabled={pending}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-100"
+            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
           />
         </div>
 
         <div>
           <label
             htmlFor="email"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-secondary"
           >
             Email
           </label>
@@ -70,7 +70,7 @@ function FormFields({
             required
             maxLength={160}
             disabled={pending}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-100"
+            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
           />
         </div>
       </div>
@@ -79,7 +79,7 @@ function FormFields({
         <div>
           <label
             htmlFor="role"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-secondary"
           >
             Role
           </label>
@@ -88,14 +88,14 @@ function FormFields({
             name="role"
             defaultValue={user.role}
             disabled={pending || isCurrentUser}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-100"
+            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
           >
             <option value="ADMIN">ADMIN</option>
             <option value="SITE_MANAGER">SITE_MANAGER</option>
             <option value="VIEWER">VIEWER</option>
           </select>
           {isCurrentUser && (
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-muted">
               You cannot change your own role.
             </p>
           )}
@@ -104,7 +104,7 @@ function FormFields({
         <div>
           <label
             htmlFor="newPassword"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-secondary"
           >
             New Password (optional)
           </label>
@@ -116,12 +116,12 @@ function FormFields({
             minLength={8}
             maxLength={128}
             disabled={pending}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-gray-100"
+            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
           />
         </div>
       </div>
 
-      <div className="rounded-md border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
+      <div className="rounded-md border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-3 text-sm text-secondary">
         <p>
           Status:{" "}
           <span className="font-medium">
@@ -150,7 +150,7 @@ function FormFields({
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className="btn-primary"
         >
           {pending ? "Saving..." : "Save Changes"}
         </button>

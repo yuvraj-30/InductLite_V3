@@ -5,16 +5,24 @@ import { generateRequestId } from "@/lib/auth/csrf";
 import { listExportJobs } from "@/lib/repository/export.repository";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { ExportQueuePanel } from "./ExportQueuePanel";
+import { statusChipClass } from "../components/status-chip";
+import { PageEmptyState, PageWarningState } from "@/components/ui/page-state";
 
 export const metadata = {
   title: "Exports | InductLite",
 };
 
 function statusBadgeClass(status: string): string {
-  if (status === "SUCCEEDED") return "bg-green-100 text-green-800";
-  if (status === "RUNNING") return "bg-blue-100 text-blue-800";
-  if (status === "FAILED") return "bg-red-100 text-red-800";
-  return "bg-gray-100 text-gray-700";
+  if (status === "SUCCEEDED") {
+    return statusChipClass("success");
+  }
+  if (status === "RUNNING") {
+    return statusChipClass("info");
+  }
+  if (status === "FAILED") {
+    return statusChipClass("danger");
+  }
+  return statusChipClass("neutral");
 }
 
 export default async function AdminExportsPage() {
@@ -37,10 +45,12 @@ export default async function AdminExportsPage() {
   );
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Exports</h1>
-        <p className="mt-1 text-gray-600">
+    <div className="space-y-6 p-3 sm:p-4">
+      <div className="surface-panel-strong p-5">
+        <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+          Exports
+        </h1>
+        <p className="mt-1 text-sm text-secondary">
           Queue and download CSV, PDF, and compliance-pack ZIP files.
         </p>
       </div>
@@ -48,55 +58,59 @@ export default async function AdminExportsPage() {
       {isFeatureEnabled("EXPORTS") ? (
         <ExportQueuePanel />
       ) : (
-        <div className="mb-6 rounded-lg border bg-white p-4 text-sm text-gray-500">
-          Exports are disabled
-        </div>
+        <PageWarningState
+          title="Exports disabled"
+          description="Export generation is currently disabled for this environment."
+        />
       )}
 
       {jobs.items.length === 0 ? (
-        <div className="rounded-lg border bg-white p-8 text-center">
-          <h2 className="text-lg font-medium text-gray-900">No exports yet</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Queue an export to generate downloadable files.
-          </p>
-        </div>
+        <PageEmptyState
+          title="No exports yet"
+          description="Queue an export to generate downloadable files."
+        />
       ) : (
-        <div className="overflow-x-auto rounded-lg border bg-white">
-          <table className="min-w-[760px] divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="surface-panel overflow-x-auto">
+          <table className="min-w-[760px] divide-y divide-[color:var(--border-soft)]">
+            <thead className="bg-[color:var(--bg-surface-strong)]">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                   ID
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                   Type
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                   Status
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                   Requested By
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                   File
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
               {jobs.items.map((job) => (
-                <tr key={job.id} className="hover:bg-gray-50">
-                  <td className="break-all px-4 py-3 text-sm text-gray-600">
+                <tr
+                  key={job.id}
+                  className="hover:bg-[color:var(--bg-surface-strong)]"
+                >
+                  <td className="break-all px-4 py-3 text-sm text-secondary">
                     {job.id}
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-900">{job.export_type}</td>
+                  <td className="px-4 py-3 text-sm text-[color:var(--text-primary)]">
+                    {job.export_type}
+                  </td>
                   <td className="px-4 py-3">
                     <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${statusBadgeClass(job.status)}`}
+                      className={statusBadgeClass(job.status)}
                     >
                       {job.status}
                     </span>
                   </td>
-                  <td className="break-all px-4 py-3 text-sm text-gray-600">
+                  <td className="break-all px-4 py-3 text-sm text-secondary">
                     {job.requested_by}
                   </td>
                   <td className="px-4 py-3 text-sm">
@@ -105,12 +119,12 @@ export default async function AdminExportsPage() {
                         href={`/api/exports/${job.id}/download`}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-blue-600 hover:text-blue-800"
+                        className="font-semibold text-accent hover:underline"
                       >
                         {job.file_name}
                       </a>
                     ) : (
-                      <span className="text-gray-400">-</span>
+                      <span className="text-muted">-</span>
                     )}
                   </td>
                 </tr>

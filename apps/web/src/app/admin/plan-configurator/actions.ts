@@ -6,7 +6,11 @@ import { assertOrigin, checkPermission } from "@/lib/auth";
 import { generateRequestId } from "@/lib/auth/csrf";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { createRequestLogger } from "@/lib/logger";
-import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
+import {
+  COMPANY_TIERS,
+  EntitlementDeniedError,
+  assertCompanyFeatureEnabled,
+} from "@/lib/plans";
 import { checkAdminMutationRateLimit } from "@/lib/rate-limit";
 import { createAuditLog } from "@/lib/repository/audit.repository";
 import {
@@ -19,7 +23,7 @@ import {
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 
 const createChangeSchema = z.object({
-  targetPlan: z.enum(["STANDARD", "PLUS", "PRO"]),
+  targetPlan: z.enum(COMPANY_TIERS),
   effectiveAt: z.string().min(1),
   companyFeatureOverridesJson: z.string().optional().or(z.literal("")),
   companyFeatureCreditOverridesJson: z.string().optional().or(z.literal("")),

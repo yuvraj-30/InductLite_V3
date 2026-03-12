@@ -173,7 +173,7 @@ function StatusBadge({
 }) {
   if (isArchived) {
     return (
-      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[color:var(--bg-surface-strong)] text-[color:var(--text-primary)]">
         Archived (Read-only)
       </span>
     );
@@ -185,7 +185,7 @@ function StatusBadge({
           Published
         </span>
         {isDefault && (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[color:var(--bg-surface-strong)] text-accent">
             Company Default
           </span>
         )}
@@ -569,29 +569,29 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
   }
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
+    <div className="surface-panel-strong p-6">
       {isEditing ? (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-secondary">
               Template Name
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full border border-[color:var(--border-soft)] rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[color:var(--accent-primary)] focus:border-[color:var(--accent-primary)]"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-secondary">
               Description
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full border border-[color:var(--border-soft)] rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[color:var(--accent-primary)] focus:border-[color:var(--accent-primary)]"
             />
           </div>
           {template.site_id === null && (
@@ -601,11 +601,11 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                 type="checkbox"
                 checked={isDefault}
                 onChange={(e) => setIsDefault(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-accent focus:ring-[color:var(--accent-primary)] border-[color:var(--border-soft)] rounded"
               />
               <label
                 htmlFor="is-default"
-                className="ml-2 block text-sm text-gray-700"
+                className="ml-2 block text-sm text-secondary"
               >
                 Set as company default template
               </label>
@@ -615,7 +615,7 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
             <button
               onClick={handleSave}
               disabled={isLoading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              className="btn-primary disabled:opacity-50"
             >
               {isLoading ? "Saving..." : "Save"}
             </button>
@@ -652,32 +652,32 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                   JSON.stringify(initialLanguageConfig.variants, null, 2),
                 );
               }}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+              className="btn-secondary"
             >
               Cancel
             </button>
           </div>
 
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <h3 className="text-sm font-semibold text-gray-900">Quiz Scoring</h3>
+          <div className="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-4">
+            <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">Quiz Scoring</h3>
             <div className="mt-3 flex items-center">
               <input
                 id="quiz-scoring-enabled"
                 type="checkbox"
                 checked={quizScoringEnabled}
                 onChange={(event) => setQuizScoringEnabled(event.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-accent focus:ring-[color:var(--accent-primary)] border-[color:var(--border-soft)] rounded"
               />
               <label
                 htmlFor="quiz-scoring-enabled"
-                className="ml-2 block text-sm text-gray-700"
+                className="ml-2 block text-sm text-secondary"
               >
                 Enable quiz scoring (pass/fail)
               </label>
             </div>
 
             <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <label className="text-sm text-gray-700">
+              <label className="text-sm text-secondary">
                 Pass threshold (%)
                 <input
                   type="number"
@@ -688,10 +688,10 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                     setQuizPassThreshold(Number(event.target.value || 80))
                   }
                   disabled={!quizScoringEnabled}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                  className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:bg-[color:var(--bg-surface-strong)] disabled:text-muted"
                 />
               </label>
-              <label className="text-sm text-gray-700">
+              <label className="text-sm text-secondary">
                 Max attempts
                 <input
                   type="number"
@@ -702,10 +702,10 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                     setQuizMaxAttempts(Number(event.target.value || 3))
                   }
                   disabled={!quizScoringEnabled}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                  className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:bg-[color:var(--bg-surface-strong)] disabled:text-muted"
                 />
               </label>
-              <label className="text-sm text-gray-700">
+              <label className="text-sm text-secondary">
                 Cooldown (minutes)
                 <input
                   type="number"
@@ -716,7 +716,7 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                     setQuizCooldownMinutes(Number(event.target.value || 0))
                   }
                   disabled={!quizScoringEnabled}
-                  className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                  className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:bg-[color:var(--bg-surface-strong)] disabled:text-muted"
                 />
               </label>
             </div>
@@ -728,19 +728,19 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                 checked={quizRequiredForEntry}
                 onChange={(event) => setQuizRequiredForEntry(event.target.checked)}
                 disabled={!quizScoringEnabled}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-60"
+                className="h-4 w-4 text-accent focus:ring-[color:var(--accent-primary)] border-[color:var(--border-soft)] rounded disabled:opacity-60"
               />
               <label
                 htmlFor="quiz-required-for-entry"
-                className="ml-2 block text-sm text-gray-700"
+                className="ml-2 block text-sm text-secondary"
               >
                 Block site entry when quiz score is below threshold
               </label>
             </div>
           </div>
 
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <h3 className="text-sm font-semibold text-gray-900">
+          <div className="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-4">
+            <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">
               Media-First Induction
             </h3>
             <div className="mt-3 flex items-center">
@@ -749,11 +749,11 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                 type="checkbox"
                 checked={mediaEnabled}
                 onChange={(event) => setMediaEnabled(event.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-accent focus:ring-[color:var(--accent-primary)] border-[color:var(--border-soft)] rounded"
               />
               <label
                 htmlFor="media-enabled"
-                className="ml-2 block text-sm text-gray-700"
+                className="ml-2 block text-sm text-secondary"
               >
                 Show media blocks before induction questions
               </label>
@@ -790,8 +790,8 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                 }}
                 className={`rounded-md px-3 py-1.5 text-xs font-semibold ${
                   mediaEditorMode === "guided"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    ? "bg-[color:var(--accent-primary)] text-white"
+                    : "bg-[color:var(--bg-surface-strong)] text-secondary hover:bg-[color:var(--bg-surface-strong)]"
                 } disabled:opacity-60`}
               >
                 Guided editor
@@ -802,8 +802,8 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                 onClick={() => setMediaEditorMode("json")}
                 className={`rounded-md px-3 py-1.5 text-xs font-semibold ${
                   mediaEditorMode === "json"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    ? "bg-[color:var(--accent-primary)] text-white"
+                    : "bg-[color:var(--bg-surface-strong)] text-secondary hover:bg-[color:var(--bg-surface-strong)]"
                 } disabled:opacity-60`}
               >
                 Advanced JSON
@@ -813,7 +813,7 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
             {mediaEditorMode === "guided" ? (
               <div className="mt-3 space-y-3">
                 {mediaBlocks.length === 0 && (
-                  <p className="rounded-md border border-dashed border-gray-300 bg-white p-3 text-xs text-gray-500">
+                  <p className="rounded-md border border-dashed border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-3 text-xs text-muted">
                     No media blocks configured yet.
                   </p>
                 )}
@@ -821,24 +821,24 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                 {mediaBlocks.map((block, blockIndex) => (
                   <div
                     key={block.id}
-                    className="rounded-md border border-gray-300 bg-white p-3"
+                    className="rounded-md border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-3"
                   >
                     <div className="mb-2 flex items-center justify-between">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-600">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-secondary">
                         Block {blockIndex + 1}
                       </p>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => moveMediaBlock(block.id, "up")}
-                          className="text-xs font-semibold text-gray-600 hover:text-gray-800"
+                          className="text-xs font-semibold text-secondary hover:text-[color:var(--text-primary)]"
                         >
                           Up
                         </button>
                         <button
                           type="button"
                           onClick={() => moveMediaBlock(block.id, "down")}
-                          className="text-xs font-semibold text-gray-600 hover:text-gray-800"
+                          className="text-xs font-semibold text-secondary hover:text-[color:var(--text-primary)]"
                         >
                           Down
                         </button>
@@ -853,7 +853,7 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <label className="text-xs text-gray-700">
+                      <label className="text-xs text-secondary">
                         Type
                         <select
                           value={block.type}
@@ -863,14 +863,14 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                                 .value as EditableMediaBlock["type"],
                             })
                           }
-                          className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                          className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-2 py-1.5 text-sm"
                         >
                           <option value="TEXT">TEXT</option>
                           <option value="PDF">PDF</option>
                           <option value="IMAGE">IMAGE</option>
                         </select>
                       </label>
-                      <label className="text-xs text-gray-700">
+                      <label className="text-xs text-secondary">
                         Title
                         <input
                           type="text"
@@ -880,12 +880,12 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                               title: event.target.value,
                             })
                           }
-                          className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                          className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-2 py-1.5 text-sm"
                         />
                       </label>
 
                       {block.type === "TEXT" ? (
-                        <label className="text-xs text-gray-700 sm:col-span-2">
+                        <label className="text-xs text-secondary sm:col-span-2">
                           Text body
                           <textarea
                             value={block.body}
@@ -895,11 +895,11 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                               })
                             }
                             rows={3}
-                            className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-2 py-1.5 text-sm"
                           />
                         </label>
                       ) : (
-                        <label className="text-xs text-gray-700 sm:col-span-2">
+                        <label className="text-xs text-secondary sm:col-span-2">
                           Media URL
                           <input
                             type="url"
@@ -910,7 +910,7 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                               })
                             }
                             placeholder="https://example.com/file.pdf"
-                            className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-2 py-1.5 text-sm"
                           />
                         </label>
                       )}
@@ -923,7 +923,7 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                     type="button"
                     onClick={() => addMediaBlock("TEXT")}
                     disabled={!mediaEnabled}
-                    className="rounded-md border border-blue-300 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-60"
+                    className="rounded-md border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] px-3 py-2 text-xs font-semibold text-accent hover:bg-[color:var(--bg-surface-strong)] disabled:opacity-60"
                   >
                     Add TEXT block
                   </button>
@@ -931,7 +931,7 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                     type="button"
                     onClick={() => addMediaBlock("PDF")}
                     disabled={!mediaEnabled}
-                    className="rounded-md border border-blue-300 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-60"
+                    className="rounded-md border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] px-3 py-2 text-xs font-semibold text-accent hover:bg-[color:var(--bg-surface-strong)] disabled:opacity-60"
                   >
                     Add PDF block
                   </button>
@@ -939,7 +939,7 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                     type="button"
                     onClick={() => addMediaBlock("IMAGE")}
                     disabled={!mediaEnabled}
-                    className="rounded-md border border-blue-300 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-60"
+                    className="rounded-md border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] px-3 py-2 text-xs font-semibold text-accent hover:bg-[color:var(--bg-surface-strong)] disabled:opacity-60"
                   >
                     Add IMAGE block
                   </button>
@@ -947,22 +947,22 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
               </div>
             ) : (
               <>
-                <label className="mt-3 block text-sm text-gray-700">
+                <label className="mt-3 block text-sm text-secondary">
                   Media blocks JSON
                   <textarea
                     value={mediaBlocksJson}
                     onChange={(event) => setMediaBlocksJson(event.target.value)}
                     rows={8}
                     disabled={!mediaEnabled}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-mono disabled:bg-gray-100 disabled:text-gray-500"
+                    className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm font-mono disabled:bg-[color:var(--bg-surface-strong)] disabled:text-muted"
                     placeholder='[{"type":"PDF","title":"Site Rules","url":"https://example.com/rules.pdf"},{"type":"TEXT","title":"Daily briefing","body":"Read this before entering."}]'
                   />
                 </label>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-muted">
                   Supported block types:
-                  <code className="mx-1 rounded bg-gray-100 px-1">TEXT</code>,
-                  <code className="mx-1 rounded bg-gray-100 px-1">PDF</code>,
-                  <code className="mx-1 rounded bg-gray-100 px-1">IMAGE</code>.
+                  <code className="mx-1 rounded bg-[color:var(--bg-surface-strong)] px-1">TEXT</code>,
+                  <code className="mx-1 rounded bg-[color:var(--bg-surface-strong)] px-1">PDF</code>,
+                  <code className="mx-1 rounded bg-[color:var(--bg-surface-strong)] px-1">IMAGE</code>.
                 </p>
               </>
             )}
@@ -976,17 +976,17 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                   setMediaRequireAcknowledgement(event.target.checked)
                 }
                 disabled={!mediaEnabled}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-60"
+                className="h-4 w-4 text-accent focus:ring-[color:var(--accent-primary)] border-[color:var(--border-soft)] rounded disabled:opacity-60"
               />
               <label
                 htmlFor="media-ack-required"
-                className="ml-2 block text-sm text-gray-700"
+                className="ml-2 block text-sm text-secondary"
               >
                 Require acknowledgement before continuing
               </label>
             </div>
 
-            <label className="mt-3 block text-sm text-gray-700">
+            <label className="mt-3 block text-sm text-secondary">
               Acknowledgement label
               <input
                 type="text"
@@ -996,14 +996,14 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                 }
                 maxLength={200}
                 disabled={!mediaEnabled}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:bg-[color:var(--bg-surface-strong)] disabled:text-muted"
                 placeholder="I have reviewed the induction material before continuing."
               />
             </label>
           </div>
 
-          <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-            <h3 className="text-sm font-semibold text-gray-900">
+          <div className="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-4">
+            <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">
               Multi-Language Packs
             </h3>
             <div className="mt-3 flex items-center">
@@ -1012,17 +1012,17 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                 type="checkbox"
                 checked={languageEnabled}
                 onChange={(event) => setLanguageEnabled(event.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-accent focus:ring-[color:var(--accent-primary)] border-[color:var(--border-soft)] rounded"
               />
               <label
                 htmlFor="language-enabled"
-                className="ml-2 block text-sm text-gray-700"
+                className="ml-2 block text-sm text-secondary"
               >
                 Enable language variants in public sign-in flow
               </label>
             </div>
 
-            <label className="mt-3 block text-sm text-gray-700">
+            <label className="mt-3 block text-sm text-secondary">
               Default language code
               <input
                 type="text"
@@ -1030,7 +1030,7 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                 onChange={(event) => setDefaultLanguageCode(event.target.value)}
                 maxLength={20}
                 disabled={!languageEnabled}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:bg-gray-100 disabled:text-gray-500"
+                className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:bg-[color:var(--bg-surface-strong)] disabled:text-muted"
                 placeholder="en"
               />
             </label>
@@ -1065,8 +1065,8 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                 }}
                 className={`rounded-md px-3 py-1.5 text-xs font-semibold ${
                   languageEditorMode === "guided"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    ? "bg-[color:var(--accent-primary)] text-white"
+                    : "bg-[color:var(--bg-surface-strong)] text-secondary hover:bg-[color:var(--bg-surface-strong)]"
                 } disabled:opacity-60`}
               >
                 Guided editor
@@ -1077,8 +1077,8 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                 onClick={() => setLanguageEditorMode("json")}
                 className={`rounded-md px-3 py-1.5 text-xs font-semibold ${
                   languageEditorMode === "json"
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    ? "bg-[color:var(--accent-primary)] text-white"
+                    : "bg-[color:var(--bg-surface-strong)] text-secondary hover:bg-[color:var(--bg-surface-strong)]"
                 } disabled:opacity-60`}
               >
                 Advanced JSON
@@ -1088,7 +1088,7 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
             {languageEditorMode === "guided" ? (
               <div className="mt-3 space-y-3">
                 {languageVariants.length === 0 && (
-                  <p className="rounded-md border border-dashed border-gray-300 bg-white p-3 text-xs text-gray-500">
+                  <p className="rounded-md border border-dashed border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-3 text-xs text-muted">
                     No language variants configured yet. Add a variant to start.
                   </p>
                 )}
@@ -1096,10 +1096,10 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                 {languageVariants.map((variant, variantIndex) => (
                   <div
                     key={variant.id}
-                    className="rounded-md border border-gray-300 bg-white p-3"
+                    className="rounded-md border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-3"
                   >
                     <div className="mb-2 flex items-center justify-between">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-600">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-secondary">
                         Variant {variantIndex + 1}
                       </p>
                       <button
@@ -1112,7 +1112,7 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                     </div>
 
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <label className="text-xs text-gray-700">
+                      <label className="text-xs text-secondary">
                         Language code
                         <input
                           type="text"
@@ -1123,10 +1123,10 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                             })
                           }
                           placeholder="mi"
-                          className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                          className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-2 py-1.5 text-sm"
                         />
                       </label>
-                      <label className="text-xs text-gray-700">
+                      <label className="text-xs text-secondary">
                         Label
                         <input
                           type="text"
@@ -1137,10 +1137,10 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                             })
                           }
                           placeholder="Te Reo Maori"
-                          className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                          className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-2 py-1.5 text-sm"
                         />
                       </label>
-                      <label className="text-xs text-gray-700 sm:col-span-2">
+                      <label className="text-xs text-secondary sm:col-span-2">
                         Template title override
                         <input
                           type="text"
@@ -1151,10 +1151,10 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                             })
                           }
                           placeholder="Localized template title"
-                          className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                          className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-2 py-1.5 text-sm"
                         />
                       </label>
-                      <label className="text-xs text-gray-700 sm:col-span-2">
+                      <label className="text-xs text-secondary sm:col-span-2">
                         Template description override
                         <textarea
                           value={variant.templateDescription}
@@ -1165,10 +1165,10 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                           }
                           rows={2}
                           placeholder="Localized template description"
-                          className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                          className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-2 py-1.5 text-sm"
                         />
                       </label>
-                      <label className="text-xs text-gray-700 sm:col-span-2">
+                      <label className="text-xs text-secondary sm:col-span-2">
                         Media acknowledgement label override
                         <input
                           type="text"
@@ -1179,27 +1179,27 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                             })
                           }
                           placeholder="Localized acknowledgement label"
-                          className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                          className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-2 py-1.5 text-sm"
                         />
                       </label>
                     </div>
 
-                    <div className="mt-3 rounded-md border border-gray-200 bg-gray-50 p-3">
+                    <div className="mt-3 rounded-md border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-3">
                       <div className="mb-2 flex items-center justify-between">
-                        <p className="text-xs font-semibold text-gray-700">
+                        <p className="text-xs font-semibold text-secondary">
                           Question overrides
                         </p>
                         <button
                           type="button"
                           onClick={() => addQuestionOverride(variant.id)}
-                          className="text-xs font-semibold text-blue-600 hover:text-blue-700"
+                          className="text-xs font-semibold text-accent hover:text-accent"
                         >
                           Add question override
                         </button>
                       </div>
 
                       {variant.questions.length === 0 && (
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted">
                           No question overrides yet.
                         </p>
                       )}
@@ -1208,10 +1208,10 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                         {variant.questions.map((questionOverride) => (
                           <div
                             key={questionOverride.id}
-                            className="rounded-md border border-gray-200 bg-white p-2"
+                            className="rounded-md border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-2"
                           >
                             <div className="grid gap-2 sm:grid-cols-2">
-                              <label className="text-xs text-gray-700">
+                              <label className="text-xs text-secondary">
                                 Question
                                 <select
                                   value={questionOverride.questionId}
@@ -1222,7 +1222,7 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                                       { questionId: event.target.value },
                                     )
                                   }
-                                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                                  className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-2 py-1.5 text-sm"
                                 >
                                   <option value="">Select question</option>
                                   {template.questions.map((question) => (
@@ -1232,7 +1232,7 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                                   ))}
                                 </select>
                               </label>
-                              <label className="text-xs text-gray-700">
+                              <label className="text-xs text-secondary">
                                 Option labels
                                 <input
                                   type="text"
@@ -1247,10 +1247,10 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                                     )
                                   }
                                   placeholder="Comma separated labels"
-                                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                                  className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-2 py-1.5 text-sm"
                                 />
                               </label>
-                              <label className="text-xs text-gray-700 sm:col-span-2">
+                              <label className="text-xs text-secondary sm:col-span-2">
                                 Question text override
                                 <input
                                   type="text"
@@ -1263,7 +1263,7 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                                     )
                                   }
                                   placeholder="Localized question text"
-                                  className="mt-1 block w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                                  className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-2 py-1.5 text-sm"
                                 />
                               </label>
                             </div>
@@ -1292,14 +1292,14 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                   type="button"
                   onClick={addLanguageVariant}
                   disabled={!languageEnabled}
-                  className="rounded-md border border-blue-300 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 disabled:opacity-60"
+                  className="rounded-md border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] px-3 py-2 text-xs font-semibold text-accent hover:bg-[color:var(--bg-surface-strong)] disabled:opacity-60"
                 >
                   Add language variant
                 </button>
               </div>
             ) : (
               <>
-                <label className="mt-3 block text-sm text-gray-700">
+                <label className="mt-3 block text-sm text-secondary">
                   Language variants JSON
                   <textarea
                     value={languageVariantsJson}
@@ -1308,11 +1308,11 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                     }
                     rows={9}
                     disabled={!languageEnabled}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm font-mono disabled:bg-gray-100 disabled:text-gray-500"
+                    className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm font-mono disabled:bg-[color:var(--bg-surface-strong)] disabled:text-muted"
                     placeholder='[{"languageCode":"mi","label":"Te Reo Maori","templateName":"Whakauru Pae","acknowledgementLabel":"Kua panui ahau i nga rauemi.","questions":[{"questionId":"c123...","questionText":"Kei te mau koe i te PPE tika?"}]}]'
                   />
                 </label>
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-muted">
                   Advanced mode accepts raw variant JSON and is best for bulk edits.
                 </p>
               </>
@@ -1324,13 +1324,13 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
                   {template.name}
                 </h1>
-                <span className="text-gray-500">v{template.version}</span>
+                <span className="text-muted">v{template.version}</span>
               </div>
               {template.description && (
-                <p className="mt-1 text-gray-600">{template.description}</p>
+                <p className="mt-1 text-secondary">{template.description}</p>
               )}
               <div className="mt-3">
                 <StatusBadge
@@ -1339,19 +1339,19 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                   isDefault={template.is_default}
                 />
               </div>
-              <p className="mt-3 text-sm text-gray-600">
+              <p className="mt-3 text-sm text-secondary">
                 Quiz scoring:{" "}
                 {template.quiz_scoring_enabled
                   ? `enabled (${template.quiz_pass_threshold}% pass, ${template.quiz_max_attempts} attempts, ${template.quiz_cooldown_minutes} min cooldown)`
                   : "disabled"}
               </p>
-              <p className="mt-2 text-sm text-gray-600">
+              <p className="mt-2 text-sm text-secondary">
                 Media-first induction:{" "}
                 {hasInductionMedia(initialMediaConfig)
                   ? `enabled (${initialMediaConfig.blocks.length} block${initialMediaConfig.blocks.length === 1 ? "" : "s"}${initialMediaConfig.requireAcknowledgement ? ", acknowledgement required" : ""})`
                   : "disabled"}
               </p>
-              <p className="mt-2 text-sm text-gray-600">
+              <p className="mt-2 text-sm text-secondary">
                 Multi-language packs:{" "}
                 {hasInductionLanguageVariants(initialLanguageConfig)
                   ? `enabled (${initialLanguageChoices.length} languages, default ${initialLanguageConfig.defaultLanguage})`
@@ -1365,7 +1365,7 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                   <>
                     <button
                       onClick={() => setIsEditing(true)}
-                      className="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+                      className="btn-secondary min-h-[36px] px-3 py-2 text-sm"
                     >
                       Edit Details
                     </button>
@@ -1385,7 +1385,7 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
                     <button
                       onClick={handleNewVersion}
                       disabled={isLoading}
-                      className="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                      className="px-3 py-2 text-sm bg-[color:var(--accent-primary)] text-white rounded-md hover:brightness-95 disabled:opacity-50"
                     >
                       {isLoading ? "Creating..." : "New Version"}
                     </button>
@@ -1412,3 +1412,5 @@ export function TemplateHeader({ template, canManage, isEditable }: Props) {
     </div>
   );
 }
+
+

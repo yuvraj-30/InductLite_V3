@@ -30,8 +30,8 @@ export default function GlobalError({
   const isDev = process.env.NODE_ENV === "development";
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
+    <div className="flex min-h-screen flex-col items-center justify-center px-4">
+      <div className="surface-panel-strong w-full max-w-md p-8">
         <div className="mb-6 flex justify-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
             <svg
@@ -51,19 +51,19 @@ export default function GlobalError({
           </div>
         </div>
 
-        <h1 className="mb-2 text-center text-2xl font-bold text-gray-900">
+        <h1 className="kinetic-title mb-2 text-center text-2xl font-black text-[color:var(--text-primary)]">
           Something went wrong
         </h1>
 
-        <p className="mb-6 text-center text-gray-600">
+        <p className="mb-6 text-center text-secondary">
           We apologize for the inconvenience. An unexpected error has occurred.
         </p>
 
         {isDev && (
-          <div className="mb-6 overflow-auto rounded-md bg-gray-100 p-4">
+          <div className="mb-6 overflow-auto rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-4">
             <p className="font-mono text-sm text-red-600">{error.message}</p>
             {error.digest && (
-              <p className="mt-2 font-mono text-xs text-gray-500">
+              <p className="mt-2 font-mono text-xs text-muted">
                 Error ID: {error.digest}
               </p>
             )}
@@ -71,7 +71,7 @@ export default function GlobalError({
         )}
 
         {!isDev && error.digest && (
-          <p className="mb-6 text-center text-sm text-gray-500">
+          <p className="mb-6 text-center text-sm text-muted">
             Error reference: {error.digest}
           </p>
         )}
@@ -79,14 +79,14 @@ export default function GlobalError({
         <div className="flex flex-col gap-3">
           <button
             onClick={reset}
-            className="w-full rounded-md bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="btn-primary w-full"
           >
             Try again
           </button>
 
           <a
             href="/"
-            className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-center font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="btn-secondary w-full"
           >
             Return home
           </a>

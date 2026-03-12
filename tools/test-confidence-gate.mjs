@@ -87,6 +87,17 @@ function buildSteps(options) {
       });
     }
 
+    steps.push({
+      name: "Playwright UI/UX performance budget lane (chromium)",
+      command: "npm",
+      args: ["run", "test:e2e:perf-budget"],
+    });
+    steps.push({
+      name: "UI/UX performance budget report",
+      command: "npm",
+      args: ["run", "report:ux-perf-budget"],
+    });
+
     if (options.withVisual) {
       steps.push({
         name: "Playwright visual regression lane (chromium)",

@@ -43,19 +43,16 @@ export default async function SiteAccessControlPage({
   const canEnableIdentityOcr = entitlements.features.ID_OCR_VERIFICATION_V1;
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex items-start justify-between gap-4">
+    <div className="space-y-6 p-3 sm:p-4">
+      <div className="surface-panel-strong flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Access Control</h1>
-          <p className="mt-1 text-gray-600">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">Access Control</h1>
+          <p className="mt-1 text-secondary">
             {site.name}: configure geofence enforcement and hardware access
             integration.
           </p>
         </div>
-        <Link
-          href={`/admin/sites/${siteId}`}
-          className="inline-flex min-h-[40px] items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-800 hover:bg-gray-50"
-        >
+        <Link href={`/admin/sites/${siteId}`} className="btn-secondary w-full sm:w-auto">
           Back to Site
         </Link>
       </div>

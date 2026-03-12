@@ -1,15 +1,22 @@
 # Test Gap Matrix
 
-Generated: 2026-03-08T12:12:17.927Z
+Generated: 2026-03-11T07:09:09.404Z
 
-- Total source files: 374
-- Covered by direct tests: 374
-- Gaps: 0
+- Total source files: 390
+- Covered by direct tests: 383
+- Gaps: 7
 
 ## Prioritized Missing-Tests Backlog
 
 | Priority | Source File | Risk | Suggested Test Type |
 | --- | --- | --- | --- |
+| P1 | `apps/web/src/app/admin/components/status-chip.ts` | Application logic | Unit test |
+| P1 | `apps/web/src/lib/differentiation/safety-copilot-metrics.ts` | Application logic | Unit test |
+| P1 | `apps/web/src/lib/utils.ts` | Application logic | Unit test |
+| P1 | `apps/web/src/lib/ux-events/client.ts` | Application logic | Unit test |
+| P2 | `apps/web/src/components/ui/badge.tsx` | Application logic | Unit test |
+| P2 | `apps/web/src/components/ui/button.tsx` | Application logic | Unit test |
+| P2 | `apps/web/src/components/ui/card.tsx` | Application logic | Unit test |
 
 ## Full Matrix
 
@@ -32,6 +39,7 @@ Generated: 2026-03-08T12:12:17.927Z
 | `apps/web/src/app/(auth)/contractor/page.tsx` | Covered | P1 | `apps/web/src/app/(auth)/contractor/page.test.ts` |
 | `apps/web/src/app/(auth)/layout.tsx` | Covered | P1 | `apps/web/src/app/(auth)/layout.test.ts` |
 | `apps/web/src/app/(auth)/login/login-form.tsx` | Covered | P1 | `apps/web/src/app/(auth)/login/login-form.test.ts` |
+| `apps/web/src/app/(auth)/login/login-intent-selector.tsx` | Covered | P1 | `apps/web/src/app/(auth)/login/login-intent-selector.test.ts` |
 | `apps/web/src/app/(auth)/login/page.tsx` | Covered | P1 | `apps/web/src/app/(auth)/login/page.test.ts` |
 | `apps/web/src/app/(auth)/logout/route.ts` | Covered | P1 | `apps/web/src/app/(auth)/logout/route.test.ts` |
 | `apps/web/src/app/(auth)/register/page.tsx` | Covered | P1 | `apps/web/src/app/(auth)/register/page.test.ts` |
@@ -40,6 +48,7 @@ Generated: 2026-03-08T12:12:17.927Z
 | `apps/web/src/app/admin/access-ops/actions.ts` | Covered | P0 | `apps/web/src/app/admin/access-ops/actions.test.ts` |
 | `apps/web/src/app/admin/access-ops/page.tsx` | Covered | P1 | `apps/web/src/app/admin/access-ops/page.test.ts` |
 | `apps/web/src/app/admin/admin-command-palette.tsx` | Covered | P1 | `apps/web/src/app/admin/admin-command-palette.test.ts` |
+| `apps/web/src/app/admin/admin-nav.tsx` | Covered | P1 | `apps/web/src/app/admin/admin-nav.test.ts` |
 | `apps/web/src/app/admin/approvals/actions.ts` | Covered | P0 | `apps/web/src/app/admin/approvals/actions.test.ts` |
 | `apps/web/src/app/admin/approvals/page.tsx` | Covered | P1 | `apps/web/src/app/admin/approvals/page.test.ts` |
 | `apps/web/src/app/admin/audit-analytics/page.tsx` | Covered | P1 | `apps/web/src/app/admin/audit-analytics/page.test.ts` |
@@ -50,6 +59,8 @@ Generated: 2026-03-08T12:12:17.927Z
 | `apps/web/src/app/admin/communications/actions.ts` | Covered | P0 | `apps/web/src/app/admin/communications/actions.test.ts` |
 | `apps/web/src/app/admin/communications/page.tsx` | Covered | P1 | `apps/web/src/app/admin/communications/page.test.ts` |
 | `apps/web/src/app/admin/components/OnboardingChecklist.tsx` | Covered | P1 | `apps/web/src/app/admin/components/OnboardingChecklist.test.ts` |
+| `apps/web/src/app/admin/components/inline-copilot-panel.tsx` | Covered | P1 | `apps/web/src/app/admin/components/inline-copilot-panel.test.ts` |
+| `apps/web/src/app/admin/components/status-chip.ts` | Gap | P1 | - |
 | `apps/web/src/app/admin/contractors/[id]/edit-contractor-form.tsx` | Covered | P1 | `apps/web/src/app/admin/contractors/[id]/edit-contractor-form.test.ts` |
 | `apps/web/src/app/admin/contractors/[id]/page.tsx` | Covered | P1 | `apps/web/src/app/admin/contractors/[id]/page.test.ts` |
 | `apps/web/src/app/admin/contractors/actions.ts` | Covered | P0 | `apps/web/src/app/admin/contractors/actions.test.ts` |
@@ -60,6 +71,7 @@ Generated: 2026-03-08T12:12:17.927Z
 | `apps/web/src/app/admin/dashboard/page.tsx` | Covered | P1 | `apps/web/src/app/admin/dashboard/page.test.ts` |
 | `apps/web/src/app/admin/deliveries/actions.ts` | Covered | P0 | `apps/web/src/app/admin/deliveries/actions.test.ts` |
 | `apps/web/src/app/admin/deliveries/page.tsx` | Covered | P1 | `apps/web/src/app/admin/deliveries/page.test.ts` |
+| `apps/web/src/app/admin/error.tsx` | Covered | P1 | `apps/web/src/app/admin/error.test.ts` |
 | `apps/web/src/app/admin/escalations/actions.ts` | Covered | P0 | `apps/web/src/app/admin/escalations/actions.test.ts` |
 | `apps/web/src/app/admin/escalations/page.tsx` | Covered | P1 | `apps/web/src/app/admin/escalations/page.test.ts` |
 | `apps/web/src/app/admin/evidence/actions.ts` | Covered | P0 | `apps/web/src/app/admin/evidence/actions.test.ts` |
@@ -85,6 +97,7 @@ Generated: 2026-03-08T12:12:17.927Z
 | `apps/web/src/app/admin/live-register/auto-refresh.tsx` | Covered | P1 | `apps/web/src/app/admin/live-register/auto-refresh.test.ts` |
 | `apps/web/src/app/admin/live-register/page.tsx` | Covered | P1 | `apps/web/src/app/admin/live-register/page.test.ts` |
 | `apps/web/src/app/admin/live-register/sign-out-button.tsx` | Covered | P1 | `apps/web/src/app/admin/live-register/sign-out-button.test.ts` |
+| `apps/web/src/app/admin/loading.tsx` | Covered | P1 | `apps/web/src/app/admin/loading.test.ts` |
 | `apps/web/src/app/admin/mobile/actions.ts` | Covered | P0 | `apps/web/src/app/admin/mobile/actions.test.ts` |
 | `apps/web/src/app/admin/mobile/native/page.tsx` | Covered | P1 | `apps/web/src/app/admin/mobile/native/page.test.ts` |
 | `apps/web/src/app/admin/mobile/page.tsx` | Covered | P1 | `apps/web/src/app/admin/mobile/page.test.ts` |
@@ -204,6 +217,7 @@ Generated: 2026-03-08T12:12:17.927Z
 | `apps/web/src/app/api/test/runtime/route.ts` | Covered | P0 | `apps/web/src/app/api/test/runtime/route.test.ts` |
 | `apps/web/src/app/api/test/seed-public-site/route.ts` | Covered | P0 | `apps/web/src/app/api/test/seed-public-site/route.test.ts` |
 | `apps/web/src/app/api/test/set-user-lock/route.ts` | Covered | P0 | `apps/web/src/app/api/test/set-user-lock/route.test.ts` |
+| `apps/web/src/app/api/ux-events/route.ts` | Covered | P0 | `apps/web/src/app/api/ux-events/route.test.ts` |
 | `apps/web/src/app/api/v1/partner/sign-ins/route.ts` | Covered | P0 | `apps/web/src/app/api/v1/partner/sign-ins/route.test.ts` |
 | `apps/web/src/app/api/v1/partner/sites/route.ts` | Covered | P0 | `apps/web/src/app/api/v1/partner/sites/route.test.ts` |
 | `apps/web/src/app/compare/page.tsx` | Covered | P1 | `apps/web/src/app/compare/page.test.ts` |
@@ -230,11 +244,16 @@ Generated: 2026-03-08T12:12:17.927Z
 | `apps/web/src/app/s/[slug]/page.tsx` | Covered | P1 | `apps/web/src/app/s/[slug]/page.test.ts` |
 | `apps/web/src/app/sign-out/components/SignOutForm.tsx` | Covered | P1 | `apps/web/src/app/sign-out/components/SignOutForm.test.ts` |
 | `apps/web/src/app/sign-out/page.tsx` | Covered | P1 | `apps/web/src/app/sign-out/page.test.ts` |
+| `apps/web/src/app/signout/page.tsx` | Covered | P1 | `apps/web/src/app/signout/page.test.ts` |
 | `apps/web/src/app/sitemap.xml/route.ts` | Covered | P1 | `apps/web/src/app/sitemap.xml/route.test.ts` |
 | `apps/web/src/app/terms/page.tsx` | Covered | P1 | `apps/web/src/app/terms/page.test.ts` |
 | `apps/web/src/app/unauthorized/page.tsx` | Covered | P1 | `apps/web/src/app/unauthorized/page.test.ts` |
 | `apps/web/src/app/~offline/page.tsx` | Covered | P1 | `apps/web/src/app/~offline/page.test.ts` |
 | `apps/web/src/components/ui/alert.tsx` | Covered | P2 | `apps/web/src/components/ui/alert.test.ts` |
+| `apps/web/src/components/ui/badge.tsx` | Gap | P2 | - |
+| `apps/web/src/components/ui/button.tsx` | Gap | P2 | - |
+| `apps/web/src/components/ui/card.tsx` | Gap | P2 | - |
+| `apps/web/src/components/ui/page-state.tsx` | Covered | P2 | `apps/web/src/components/ui/page-state.test.ts` |
 | `apps/web/src/components/ui/public-shell.tsx` | Covered | P2 | `apps/web/src/components/ui/public-shell.test.ts` |
 | `apps/web/src/components/ui/theme-preference.ts` | Covered | P2 | `apps/web/src/components/ui/theme-preference.test.ts` |
 | `apps/web/src/components/ui/theme-runtime.tsx` | Covered | P2 | `apps/web/src/components/ui/theme-runtime.test.ts` |
@@ -273,6 +292,7 @@ Generated: 2026-03-08T12:12:17.927Z
 | `apps/web/src/lib/db/scoped-db.ts` | Covered | P0 | `apps/web/src/lib/db/__tests__/scoped-db.unit.test.ts` |
 | `apps/web/src/lib/db/scoped.ts` | Covered | P0 | `apps/web/src/lib/db/scoped.test.ts` |
 | `apps/web/src/lib/differentiation/benchmark.ts` | Covered | P1 | `apps/web/src/lib/differentiation/benchmark.test.ts` |
+| `apps/web/src/lib/differentiation/safety-copilot-metrics.ts` | Gap | P1 | - |
 | `apps/web/src/lib/differentiation/safety-copilot.ts` | Covered | P1 | `apps/web/src/lib/differentiation/safety-copilot.test.ts` |
 | `apps/web/src/lib/differentiation/trust-graph.ts` | Covered | P1 | `apps/web/src/lib/differentiation/trust-graph.test.ts` |
 | `apps/web/src/lib/email/resend.ts` | Covered | P1 | `apps/web/src/lib/email/resend.test.ts` |
@@ -318,6 +338,7 @@ Generated: 2026-03-08T12:12:17.927Z
 | `apps/web/src/lib/plans/invoice-preview.ts` | Covered | P1 | `apps/web/src/lib/plans/__tests__/invoice-preview.unit.test.ts` |
 | `apps/web/src/lib/plans/invoice-sync.ts` | Covered | P1 | `apps/web/src/lib/plans/__tests__/invoice-sync.unit.test.ts` |
 | `apps/web/src/lib/plans/pricing.ts` | Covered | P1 | `apps/web/src/lib/plans/__tests__/pricing.unit.test.ts` |
+| `apps/web/src/lib/plans/tier-presentation.ts` | Covered | P1 | `apps/web/src/lib/plans/__tests__/tier-presentation.unit.test.ts` |
 | `apps/web/src/lib/quiz/scoring.ts` | Covered | P1 | `apps/web/src/lib/quiz/__tests__/scoring.unit.test.ts` |
 | `apps/web/src/lib/rate-limit/client.ts` | Covered | P1 | `apps/web/src/lib/rate-limit/client.test.ts` |
 | `apps/web/src/lib/rate-limit/clientKey.ts` | Covered | P1 | `apps/web/src/lib/rate-limit/__tests__/clientKey.test.ts` |
@@ -381,6 +402,8 @@ Generated: 2026-03-08T12:12:17.927Z
 | `apps/web/src/lib/testing/mockPrisma.ts` | Covered | P1 | `apps/web/src/lib/testing/mockPrisma.test.ts` |
 | `apps/web/src/lib/time/day-range.ts` | Covered | P1 | `apps/web/src/lib/time/__tests__/day-range.test.ts` |
 | `apps/web/src/lib/url/public-url.ts` | Covered | P1 | `apps/web/src/lib/url/public-url.test.ts` |
+| `apps/web/src/lib/utils.ts` | Gap | P1 | - |
+| `apps/web/src/lib/ux-events/client.ts` | Gap | P1 | - |
 | `apps/web/src/lib/validation/schemas.ts` | Covered | P1 | `apps/web/src/lib/validation/schemas.test.ts` |
 | `apps/web/src/lib/webhook/config.ts` | Covered | P1 | `apps/web/src/lib/webhook/__tests__/config.unit.test.ts` |
 | `apps/web/src/lib/webhook/worker.ts` | Covered | P1 | `apps/web/src/lib/webhook/__tests__/worker.unit.test.ts` |

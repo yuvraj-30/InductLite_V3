@@ -65,7 +65,7 @@ export function NewTemplateForm({ sites }: Props) {
       <div>
         <label
           htmlFor="name"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-secondary"
         >
           Template Name *
         </label>
@@ -75,7 +75,7 @@ export function NewTemplateForm({ sites }: Props) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          className="mt-1 block w-full border border-[color:var(--border-soft)] rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[color:var(--accent-primary)] focus:border-[color:var(--accent-primary)]"
           placeholder="e.g., Site Safety Induction"
         />
         {fieldErrors.name && (
@@ -86,7 +86,7 @@ export function NewTemplateForm({ sites }: Props) {
       <div>
         <label
           htmlFor="description"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-secondary"
         >
           Description
         </label>
@@ -95,7 +95,7 @@ export function NewTemplateForm({ sites }: Props) {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          className="mt-1 block w-full border border-[color:var(--border-soft)] rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[color:var(--accent-primary)] focus:border-[color:var(--accent-primary)]"
           placeholder="Brief description of this template..."
         />
         {fieldErrors.description && (
@@ -108,7 +108,7 @@ export function NewTemplateForm({ sites }: Props) {
       <div>
         <label
           htmlFor="site"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-secondary"
         >
           Site Scope
         </label>
@@ -116,7 +116,7 @@ export function NewTemplateForm({ sites }: Props) {
           id="site"
           value={siteId}
           onChange={(e) => setSiteId(e.target.value)}
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          className="mt-1 block w-full border border-[color:var(--border-soft)] rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[color:var(--accent-primary)] focus:border-[color:var(--accent-primary)]"
         >
           <option value="">Company-wide (applies to all sites)</option>
           {sites.map((site) => (
@@ -125,7 +125,7 @@ export function NewTemplateForm({ sites }: Props) {
             </option>
           ))}
         </select>
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm text-muted">
           Site-specific templates override the company-wide default for that
           site.
         </p>
@@ -138,11 +138,11 @@ export function NewTemplateForm({ sites }: Props) {
             type="checkbox"
             checked={isDefault}
             onChange={(e) => setIsDefault(e.target.checked)}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            className="h-4 w-4 text-accent focus:ring-[color:var(--accent-primary)] border-[color:var(--border-soft)] rounded"
           />
           <label
             htmlFor="is-default"
-            className="ml-2 block text-sm text-gray-700"
+            className="ml-2 block text-sm text-secondary"
           >
             Set as company default template
           </label>
@@ -153,14 +153,14 @@ export function NewTemplateForm({ sites }: Props) {
         <button
           type="submit"
           disabled={isLoading || !name.trim()}
-          className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+          className="flex-1 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[color:var(--accent-primary)] hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[color:var(--accent-primary)] disabled:opacity-50"
         >
           {isLoading ? "Creating..." : "Create Template"}
         </button>
         <button
           type="button"
           onClick={() => router.back()}
-          className="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="py-2 px-4 border border-[color:var(--border-soft)] rounded-md shadow-sm text-sm font-medium text-secondary bg-[color:var(--bg-surface)] hover:bg-[color:var(--bg-surface-strong)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[color:var(--accent-primary)]"
         >
           Cancel
         </button>
@@ -168,3 +168,5 @@ export function NewTemplateForm({ sites }: Props) {
     </form>
   );
 }
+
+

@@ -17,16 +17,19 @@ export default async function ChangePasswordPage() {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-gray-900 mb-2">
+      <h2 className="kinetic-title mb-2 text-xl font-black text-[color:var(--text-primary)]">
         Change password
       </h2>
 
-      <p className="text-sm text-gray-600 mb-6">Logged in as {user.email}</p>
+      <p className="mb-6 text-sm text-secondary">Logged in as {user.email}</p>
 
       <ChangePasswordForm />
 
       <div className="mt-6 text-center">
-        <Link href="/admin/dashboard" className="text-sm font-medium text-blue-600 hover:text-blue-500">
+        <Link
+          href="/admin/dashboard"
+          className="btn-secondary min-h-[36px] px-3 py-1.5 text-xs"
+        >
           Back to dashboard
         </Link>
       </div>

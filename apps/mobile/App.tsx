@@ -8,6 +8,7 @@ import {
   Switch,
   Text,
   TextInput,
+  useColorScheme,
   View,
 } from "react-native";
 import {
@@ -41,6 +42,103 @@ import { getDistributionMetadata, getDefaultWrapperRuntime } from "./src/config/
 
 const queueRefreshIntervalMs = 5000;
 
+type MobileTheme = {
+  bgBase: string;
+  bgSurface: string;
+  bgSurfaceStrong: string;
+  textPrimary: string;
+  textSecondary: string;
+  textMuted: string;
+  borderSoft: string;
+  accentPrimary: string;
+  accentSecondary: string;
+  success: string;
+  warning: string;
+  danger: string;
+};
+
+const mobileThemeLight: MobileTheme = {
+  bgBase: "#f3f6fb",
+  bgSurface: "#ffffff",
+  bgSurfaceStrong: "#f8fbff",
+  textPrimary: "#0f172a",
+  textSecondary: "#334155",
+  textMuted: "#64748b",
+  borderSoft: "rgba(15, 23, 42, 0.11)",
+  accentPrimary: "#1f73d8",
+  accentSecondary: "#3b91f7",
+  success: "#0f8a62",
+  warning: "#a46105",
+  danger: "#c7394a",
+};
+
+const mobileThemeDark: MobileTheme = {
+  bgBase: "#07101d",
+  bgSurface: "#0f1a2d",
+  bgSurfaceStrong: "#14223a",
+  textPrimary: "#e2e8f0",
+  textSecondary: "#cbd5e1",
+  textMuted: "#94a3b8",
+  borderSoft: "rgba(148, 163, 184, 0.24)",
+  accentPrimary: "#4b9dff",
+  accentSecondary: "#7bb8ff",
+  success: "#2fbe8b",
+  warning: "#f0a43a",
+  danger: "#fb7185",
+};
+
+type TierTone = "standard" | "plus" | "pro" | "addons";
+
+type TierSnapshot = {
+  key: "STANDARD" | "PLUS" | "PRO" | "ADD_ONS";
+  label: string;
+  tone: TierTone;
+  highlights: string[];
+};
+
+const MOBILE_TIER_SNAPSHOT: TierSnapshot[] = [
+  {
+    key: "STANDARD",
+    label: "Standard",
+    tone: "standard",
+    highlights: [
+      "QR sign-in, inductions, live register",
+      "Emergency roll-call and evidence exports",
+    ],
+  },
+  {
+    key: "PLUS",
+    label: "Plus",
+    tone: "plus",
+    highlights: ["Everything in Standard", "Quiz/media depth and stronger field workflow controls"],
+  },
+  {
+    key: "PRO",
+    label: "Pro",
+    tone: "pro",
+    highlights: ["Everything in Plus", "Advanced analytics and connector depth"],
+  },
+  {
+    key: "ADD_ONS",
+    label: "Add-ons",
+    tone: "addons",
+    highlights: ["SMS, hardware access, premium connectors, implementation support"],
+  },
+];
+
+function getTierToneColors(theme: MobileTheme, tone: TierTone) {
+  if (tone === "plus") {
+    return { backgroundColor: theme.accentPrimary, borderColor: theme.accentPrimary, textColor: "#ffffff" };
+  }
+  if (tone === "pro") {
+    return { backgroundColor: theme.success, borderColor: theme.success, textColor: "#ffffff" };
+  }
+  if (tone === "addons") {
+    return { backgroundColor: theme.warning, borderColor: theme.warning, textColor: "#ffffff" };
+  }
+  return { backgroundColor: theme.bgSurfaceStrong, borderColor: theme.borderSoft, textColor: theme.textPrimary };
+}
+
 function normalizeNumeric(
   value: string,
   fallback: number,
@@ -59,6 +157,10 @@ function formatTime(value: Date | null): string {
 }
 
 export default function App() {
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === "dark" ? mobileThemeDark : mobileThemeLight;
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const [settings, setSettings] = useState<MobileSettings | null>(null);
   const [runtimeActive, setRuntimeActive] = useState(false);
   const [queueCount, setQueueCount] = useState(0);
@@ -345,6 +447,35 @@ export default function App() {
         </Text>
 
         <View style={styles.card}>
+          <Text style={styles.cardTitle}>Tier Consistency Snapshot</Text>
+          <Text style={styles.mutedText}>
+            Standard, Plus, Pro, and Add-ons are reflected consistently across web and mobile surfaces.
+          </Text>
+          <View style={styles.tierGrid}>
+            {MOBILE_TIER_SNAPSHOT.map((tier) => {
+              const tone = getTierToneColors(theme, tier.tone);
+              return (
+                <View key={tier.key} style={[styles.tierCard, { borderColor: theme.borderSoft }]}>
+                  <View
+                    style={[
+                      styles.tierPill,
+                      { backgroundColor: tone.backgroundColor, borderColor: tone.borderColor },
+                    ]}
+                  >
+                    <Text style={[styles.tierPillText, { color: tone.textColor }]}>{tier.label}</Text>
+                  </View>
+                  {tier.highlights.map((item) => (
+                    <Text key={item} style={styles.tierHighlight}>
+                      {item}
+                    </Text>
+                  ))}
+                </View>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={styles.card}>
           <Text style={styles.cardTitle}>Core Setup</Text>
 
           <Text style={styles.label}>API Base URL</Text>
@@ -354,6 +485,7 @@ export default function App() {
             value={settings.apiBaseUrl}
             onChangeText={(value) => setSettings((prev) => (prev ? { ...prev, apiBaseUrl: value } : prev))}
             placeholder="https://your-domain.example"
+            placeholderTextColor={theme.textMuted}
           />
 
           <Text style={styles.label}>Enrollment Token</Text>
@@ -365,6 +497,7 @@ export default function App() {
               setSettings((prev) => (prev ? { ...prev, enrollmentToken: value } : prev))
             }
             placeholder="Paste token from /api/mobile/enrollment-token"
+            placeholderTextColor={theme.textMuted}
           />
 
           <View style={styles.row}>
@@ -377,6 +510,7 @@ export default function App() {
                 onChangeText={(value) =>
                   setSettings((prev) => (prev ? { ...prev, geofenceLatitude: value } : prev))
                 }
+                placeholderTextColor={theme.textMuted}
               />
             </View>
             <View style={styles.col}>
@@ -388,6 +522,7 @@ export default function App() {
                 onChangeText={(value) =>
                   setSettings((prev) => (prev ? { ...prev, geofenceLongitude: value } : prev))
                 }
+                placeholderTextColor={theme.textMuted}
               />
             </View>
           </View>
@@ -402,6 +537,7 @@ export default function App() {
                 onChangeText={(value) =>
                   setSettings((prev) => (prev ? { ...prev, geofenceRadiusM: value } : prev))
                 }
+                placeholderTextColor={theme.textMuted}
               />
             </View>
             <View style={styles.col}>
@@ -415,6 +551,7 @@ export default function App() {
                     prev ? { ...prev, heartbeatIntervalMinutes: value } : prev,
                   )
                 }
+                placeholderTextColor={theme.textMuted}
               />
             </View>
           </View>
@@ -426,6 +563,8 @@ export default function App() {
               onValueChange={(value) =>
                 setSettings((prev) => (prev ? { ...prev, autoStartRuntime: value } : prev))
               }
+              trackColor={{ false: theme.borderSoft, true: theme.accentPrimary }}
+              thumbColor={settings.autoStartRuntime ? theme.accentSecondary : theme.bgSurfaceStrong}
             />
           </View>
 
@@ -564,114 +703,143 @@ export default function App() {
   );
 }
 
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: "#0b1220",
-  },
-  container: {
-    padding: 16,
-    gap: 14,
-  },
-  title: {
-    color: "#f8fafc",
-    fontSize: 28,
-    fontWeight: "800",
-  },
-  subtitle: {
-    color: "#cbd5e1",
-    fontSize: 14,
-  },
-  card: {
-    borderWidth: 1,
-    borderColor: "#1e293b",
-    backgroundColor: "#111827",
-    borderRadius: 12,
-    padding: 14,
-    gap: 10,
-  },
-  cardTitle: {
-    color: "#f8fafc",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  label: {
-    color: "#cbd5e1",
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#334155",
-    borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    color: "#f8fafc",
-    backgroundColor: "#0f172a",
-  },
-  multilineInput: {
-    minHeight: 96,
-    textAlignVertical: "top",
-  },
-  row: {
-    flexDirection: "row",
-    gap: 10,
-  },
-  col: {
-    flex: 1,
-    gap: 6,
-  },
-  switchRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 10,
-  },
-  buttonRow: {
-    flexDirection: "row",
-    gap: 10,
-    flexWrap: "wrap",
-  },
-  button: {
-    minHeight: 40,
-    minWidth: 130,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  primaryButton: {
-    backgroundColor: "#0ea5e9",
-  },
-  secondaryButton: {
-    backgroundColor: "#1f2937",
-    borderWidth: 1,
-    borderColor: "#334155",
-  },
-  primaryButtonText: {
-    color: "#0f172a",
-    fontWeight: "700",
-  },
-  secondaryButtonText: {
-    color: "#e2e8f0",
-    fontWeight: "600",
-  },
-  statusList: {
-    gap: 4,
-  },
-  statusText: {
-    color: "#e2e8f0",
-    fontSize: 12,
-  },
-  mutedText: {
-    color: "#94a3b8",
-    fontSize: 12,
-  },
-  successText: {
-    color: "#22c55e",
-  },
-  errorText: {
-    color: "#f87171",
-  },
-});
+function createStyles(theme: MobileTheme) {
+  return StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: theme.bgBase,
+    },
+    container: {
+      padding: 16,
+      gap: 14,
+    },
+    title: {
+      color: theme.textPrimary,
+      fontSize: 28,
+      fontWeight: "800",
+    },
+    subtitle: {
+      color: theme.textSecondary,
+      fontSize: 14,
+    },
+    card: {
+      borderWidth: 1,
+      borderColor: theme.borderSoft,
+      backgroundColor: theme.bgSurface,
+      borderRadius: 12,
+      padding: 14,
+      gap: 10,
+    },
+    cardTitle: {
+      color: theme.textPrimary,
+      fontSize: 16,
+      fontWeight: "700",
+    },
+    tierGrid: {
+      gap: 8,
+    },
+    tierCard: {
+      borderWidth: 1,
+      borderRadius: 10,
+      backgroundColor: theme.bgSurfaceStrong,
+      padding: 10,
+      gap: 6,
+    },
+    tierPill: {
+      alignSelf: "flex-start",
+      borderWidth: 1,
+      borderRadius: 999,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    tierPillText: {
+      fontSize: 11,
+      fontWeight: "700",
+      textTransform: "uppercase",
+      letterSpacing: 0.4,
+    },
+    tierHighlight: {
+      color: theme.textSecondary,
+      fontSize: 12,
+    },
+    label: {
+      color: theme.textSecondary,
+      fontSize: 13,
+      fontWeight: "600",
+    },
+    input: {
+      borderWidth: 1,
+      borderColor: theme.borderSoft,
+      borderRadius: 10,
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      color: theme.textPrimary,
+      backgroundColor: theme.bgSurfaceStrong,
+    },
+    multilineInput: {
+      minHeight: 96,
+      textAlignVertical: "top",
+    },
+    row: {
+      flexDirection: "row",
+      gap: 10,
+    },
+    col: {
+      flex: 1,
+      gap: 6,
+    },
+    switchRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      gap: 10,
+    },
+    buttonRow: {
+      flexDirection: "row",
+      gap: 10,
+      flexWrap: "wrap",
+    },
+    button: {
+      minHeight: 40,
+      minWidth: 130,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    primaryButton: {
+      backgroundColor: theme.accentPrimary,
+    },
+    secondaryButton: {
+      backgroundColor: theme.bgSurfaceStrong,
+      borderWidth: 1,
+      borderColor: theme.borderSoft,
+    },
+    primaryButtonText: {
+      color: "#ffffff",
+      fontWeight: "700",
+    },
+    secondaryButtonText: {
+      color: theme.textPrimary,
+      fontWeight: "600",
+    },
+    statusList: {
+      gap: 4,
+    },
+    statusText: {
+      color: theme.textPrimary,
+      fontSize: 12,
+    },
+    mutedText: {
+      color: theme.textMuted,
+      fontSize: 12,
+    },
+    successText: {
+      color: theme.success,
+    },
+    errorText: {
+      color: theme.danger,
+    },
+  });
+}

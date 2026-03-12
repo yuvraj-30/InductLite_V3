@@ -78,7 +78,7 @@ export function QRCodeButton({ url, siteName }: QRCodeButtonProps) {
     <>
       <button
         onClick={() => setShowQR(true)}
-        className="inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+        className="inline-flex items-center justify-center px-3 py-2 border border-[color:var(--border-soft)] shadow-sm text-sm font-medium rounded-md text-white bg-[color:var(--accent-primary)] hover:brightness-95"
       >
         <svg
           className="-ml-0.5 mr-1.5 h-4 w-4"
@@ -98,7 +98,7 @@ export function QRCodeButton({ url, siteName }: QRCodeButtonProps) {
 
       {showQR && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-8 max-w-sm w-full text-center">
+          <div className="max-w-sm rounded-lg bg-[color:var(--bg-surface)] p-8 text-center">
             <h3 className="text-xl font-bold mb-4">{siteName}</h3>
             <div className="flex justify-center mb-6">
               {QRCodeSVGComponent ? (
@@ -110,7 +110,7 @@ export function QRCodeButton({ url, siteName }: QRCodeButtonProps) {
                   includeMargin={true}
                 />
               ) : (
-                <div className="h-[256px] w-[256px] rounded bg-gray-100 animate-pulse" />
+                <div className="h-[256px] w-[256px] rounded bg-[color:var(--bg-surface-strong)] animate-pulse" />
               )}
             </div>
             <div className="space-y-3">
@@ -122,7 +122,7 @@ export function QRCodeButton({ url, siteName }: QRCodeButtonProps) {
               </button>
               <button
                 onClick={() => setShowQR(false)}
-                className="w-full inline-flex justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                className="w-full inline-flex justify-center px-4 py-2 border border-[color:var(--border-soft)] text-sm font-medium rounded-md text-secondary bg-[color:var(--bg-surface)] hover:bg-[color:var(--bg-surface-strong)]"
               >
                 Close
               </button>
@@ -133,3 +133,5 @@ export function QRCodeButton({ url, siteName }: QRCodeButtonProps) {
     </>
   );
 }
+
+

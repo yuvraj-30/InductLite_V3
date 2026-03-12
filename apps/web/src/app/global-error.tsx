@@ -29,9 +29,9 @@ export default function RootGlobalError({
 
   return (
     <html lang="en" data-scroll-behavior="smooth">
-      <body className="min-h-screen bg-gray-50 antialiased">
+      <body className="min-h-screen antialiased">
         <div className="flex min-h-screen flex-col items-center justify-center px-4">
-          <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
+          <div className="surface-panel-strong w-full max-w-md p-8">
             <div className="mb-6 flex justify-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
                 <svg
@@ -51,16 +51,16 @@ export default function RootGlobalError({
               </div>
             </div>
 
-            <h1 className="mb-2 text-center text-2xl font-bold text-gray-900">
+            <h1 className="kinetic-title mb-2 text-center text-2xl font-black text-[color:var(--text-primary)]">
               Application Error
             </h1>
 
-            <p className="mb-6 text-center text-gray-600">
+            <p className="mb-6 text-center text-secondary">
               A critical error has occurred. Please try refreshing the page.
             </p>
 
             {error.digest && (
-              <p className="mb-6 text-center text-sm text-gray-500">
+              <p className="mb-6 text-center text-sm text-muted">
                 Reference: {error.digest}
               </p>
             )}
@@ -68,14 +68,14 @@ export default function RootGlobalError({
             <div className="flex flex-col gap-3">
               <button
                 onClick={reset}
-                className="w-full rounded-md bg-blue-600 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="btn-primary w-full"
               >
                 Try again
               </button>
 
               <button
                 onClick={() => (window.location.href = "/")}
-                className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="btn-secondary w-full"
               >
                 Return home
               </button>

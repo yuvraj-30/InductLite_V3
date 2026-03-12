@@ -206,10 +206,10 @@ function QuestionForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 bg-gray-50 p-4 rounded-lg"
+      className="space-y-4 bg-[color:var(--bg-surface-strong)] p-4 rounded-lg"
     >
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-secondary">
           Question Text
         </label>
         <textarea
@@ -217,20 +217,20 @@ function QuestionForm({
           onChange={(e) => setQuestionText(e.target.value)}
           required
           rows={2}
-          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          className="mt-1 block w-full border border-[color:var(--border-soft)] rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[color:var(--accent-primary)] focus:border-[color:var(--accent-primary)]"
           placeholder="Enter your question..."
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-secondary">
             Question Type
           </label>
           <select
             value={questionType}
             onChange={(e) => setQuestionType(e.target.value as QuestionType)}
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="mt-1 block w-full border border-[color:var(--border-soft)] rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[color:var(--accent-primary)] focus:border-[color:var(--accent-primary)]"
           >
             {QUESTION_TYPES.map((type) => (
               <option key={type.value} value={type.value}>
@@ -246,11 +246,11 @@ function QuestionForm({
             type="checkbox"
             checked={redFlag}
             onChange={(e) => setRedFlag(e.target.checked)}
-            className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+            className="h-4 w-4 text-red-600 focus:ring-red-500 border-[color:var(--border-soft)] rounded"
           />
           <label
             htmlFor="red-flag"
-            className="ml-2 block text-sm text-gray-700 font-medium"
+            className="ml-2 block text-sm text-secondary font-medium"
           >
             Red Flag Answer (Notify Manager)
           </label>
@@ -262,11 +262,11 @@ function QuestionForm({
             type="checkbox"
             checked={isRequired}
             onChange={(e) => setIsRequired(e.target.checked)}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            className="h-4 w-4 text-accent focus:ring-[color:var(--accent-primary)] border-[color:var(--border-soft)] rounded"
           />
           <label
             htmlFor="is-required"
-            className="ml-2 block text-sm text-gray-700"
+            className="ml-2 block text-sm text-secondary"
           >
             Required
           </label>
@@ -275,7 +275,7 @@ function QuestionForm({
 
       {needsOptions && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-secondary mb-2">
             Options
           </label>
           {options.map((option, index) => (
@@ -285,7 +285,7 @@ function QuestionForm({
                 value={option}
                 onChange={(e) => updateOption(index, e.target.value)}
                 placeholder={`Option ${index + 1}`}
-                className="flex-1 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="flex-1 border border-[color:var(--border-soft)] rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-[color:var(--accent-primary)] focus:border-[color:var(--accent-primary)]"
               />
               {options.length > 2 && (
                 <button
@@ -301,7 +301,7 @@ function QuestionForm({
           <button
             type="button"
             onClick={addOption}
-            className="text-sm text-blue-600 hover:text-blue-800"
+            className="text-sm text-accent hover:text-accent"
           >
             + Add Option
           </button>
@@ -310,7 +310,7 @@ function QuestionForm({
 
       {(questionType === "YES_NO" || questionType === "MULTIPLE_CHOICE") && (
         <div className="border-t pt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-secondary mb-2">
             Conditional Logic
           </label>
           <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -318,7 +318,7 @@ function QuestionForm({
             <select
               value={logicTrigger}
               onChange={(e) => setLogicTrigger(e.target.value)}
-              className="border border-gray-300 rounded-md shadow-sm py-1 px-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="border border-[color:var(--border-soft)] rounded-md shadow-sm py-1 px-2 focus:outline-none focus:ring-[color:var(--accent-primary)] focus:border-[color:var(--accent-primary)]"
             >
               <option value="">(No logic)</option>
               {questionType === "YES_NO" ? (
@@ -343,7 +343,7 @@ function QuestionForm({
               max="10"
               value={logicCount}
               onChange={(e) => setLogicCount(parseInt(e.target.value) || 1)}
-              className="w-16 border border-gray-300 rounded-md shadow-sm py-1 px-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+              className="w-16 border border-[color:var(--border-soft)] rounded-md shadow-sm py-1 px-2 focus:outline-none focus:ring-[color:var(--accent-primary)] focus:border-[color:var(--accent-primary)]"
             />
             <span>questions.</span>
           </div>
@@ -354,14 +354,14 @@ function QuestionForm({
         <button
           type="submit"
           disabled={isLoading || !questionText.trim()}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+          className="btn-primary disabled:opacity-50"
         >
           {isLoading ? "Saving..." : initialData ? "Update" : "Add Question"}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+          className="btn-secondary"
         >
           Cancel
         </button>
@@ -500,7 +500,7 @@ export function QuestionBuilder({
         {questions.map((question, index) => (
           <div
             key={question.id}
-            className="bg-white border border-gray-200 rounded-lg p-4"
+            className="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4"
           >
             {editingId === question.id ? (
               <QuestionForm
@@ -519,15 +519,15 @@ export function QuestionBuilder({
             ) : (
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
-                  <span className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full text-sm font-medium text-gray-600">
+                  <span className="flex items-center justify-center w-8 h-8 bg-[color:var(--bg-surface-strong)] rounded-full text-sm font-medium text-secondary">
                     {index + 1}
                   </span>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-400">
+                      <span className="text-muted">
                         <QuestionTypeIcon type={question.question_type} />
                       </span>
-                      <span className="font-medium text-gray-900">
+                      <span className="font-medium text-[color:var(--text-primary)]">
                         {question.question_text}
                       </span>
                       {question.is_required && (
@@ -541,12 +541,12 @@ export function QuestionBuilder({
                     </div>
                     {question.options &&
                       (question.options as string[]).length > 0 && (
-                        <div className="mt-2 text-sm text-gray-500">
+                        <div className="mt-2 text-sm text-muted">
                           Options: {(question.options as string[]).join(", ")}
                         </div>
                       )}
                     {question.logic && (
-                      <div className="mt-1 text-xs text-blue-600 font-medium">
+                      <div className="mt-1 text-xs text-accent font-medium">
                         ↳ If answer is "
                         {(question.logic as unknown as QuestionLogic).trigger}"
                         skip{" "}
@@ -562,7 +562,7 @@ export function QuestionBuilder({
                     <button
                       onClick={() => handleMoveUp(index)}
                       disabled={index === 0 || isLoading}
-                      className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                      className="p-1 text-muted hover:text-secondary disabled:opacity-30"
                       title="Move up"
                     >
                       ↑
@@ -570,14 +570,14 @@ export function QuestionBuilder({
                     <button
                       onClick={() => handleMoveDown(index)}
                       disabled={index === questions.length - 1 || isLoading}
-                      className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                      className="p-1 text-muted hover:text-secondary disabled:opacity-30"
                       title="Move down"
                     >
                       ↓
                     </button>
                     <button
                       onClick={() => setEditingId(question.id)}
-                      className="p-1 text-blue-600 hover:text-blue-800"
+                      className="p-1 text-accent hover:text-accent"
                       title="Edit"
                     >
                       Edit
@@ -610,7 +610,7 @@ export function QuestionBuilder({
           ) : (
             <button
               onClick={() => setIsAdding(true)}
-              className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors"
+              className="w-full py-3 border-2 border-dashed border-[color:var(--border-soft)] rounded-lg text-muted hover:border-[color:var(--accent-cyber)] hover:text-accent transition-colors"
             >
               + Add Question
             </button>
@@ -619,10 +619,11 @@ export function QuestionBuilder({
       )}
 
       {!isEditable && questions.length === 0 && (
-        <p className="text-center text-gray-500 py-4">
+        <p className="text-center text-muted py-4">
           No questions in this template
         </p>
       )}
     </div>
   );
 }
+

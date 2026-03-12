@@ -29,7 +29,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex min-h-[44px] items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+      className="btn-primary min-h-[44px] disabled:opacity-50"
     >
       {pending ? "Creating..." : "Create Invite"}
     </button>
@@ -80,10 +80,10 @@ export function CreateInviteForm({ sites, defaultSiteId }: CreateInviteFormProps
   };
 
   return (
-    <form action={formAction} className="space-y-4 rounded-lg border bg-white p-4">
+    <form action={formAction} className="surface-panel space-y-4 p-4">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">Create Pre-Registration</h2>
-        <p className="mt-1 text-sm text-gray-600">
+        <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">Create Pre-Registration</h2>
+        <p className="mt-1 text-sm text-secondary">
           Generate an invite link and QR-ready URL for faster arrival check-in.
         </p>
       </div>
@@ -100,17 +100,17 @@ export function CreateInviteForm({ sites, defaultSiteId }: CreateInviteFormProps
           {state.inviteLink && (
             <div className="mt-2">
               <p className="text-xs text-green-700">Invite link</p>
-              <p className="break-all rounded border border-green-200 bg-white px-2 py-2 text-xs text-green-900">
+              <p className="break-all rounded border border-green-200 bg-[color:var(--bg-surface)] px-2 py-2 text-xs text-green-900">
                 {state.inviteLink}
               </p>
               <button
                 type="button"
                 onClick={() => navigator.clipboard.writeText(state.inviteLink!)}
-                className="mt-2 inline-flex min-h-[40px] items-center rounded-md border border-green-300 bg-white px-3 py-2 text-xs font-semibold text-green-800 hover:bg-green-50"
+                className="mt-2 inline-flex min-h-[40px] items-center rounded-md border border-green-300 bg-[color:var(--bg-surface)] px-3 py-2 text-xs font-semibold text-green-800 hover:bg-green-50"
               >
                 Copy Invite Link
               </button>
-              <div className="mt-3 inline-flex rounded-md border border-green-200 bg-white p-3">
+              <div className="mt-3 inline-flex rounded-md border border-green-200 bg-[color:var(--bg-surface)] p-3">
                 {QRCodeSVGComponent ? (
                   <QRCodeSVGComponent
                     value={state.inviteLink}
@@ -128,7 +128,7 @@ export function CreateInviteForm({ sites, defaultSiteId }: CreateInviteFormProps
       )}
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <label className="text-sm text-gray-700">
+        <label className="text-sm text-secondary">
           Site
           <select
             name="siteId"
@@ -148,7 +148,7 @@ export function CreateInviteForm({ sites, defaultSiteId }: CreateInviteFormProps
           )}
         </label>
 
-        <label className="text-sm text-gray-700">
+        <label className="text-sm text-secondary">
           Visitor Type
           <select name="visitorType" defaultValue="CONTRACTOR" className="input mt-1" required>
             <option value="CONTRACTOR">Contractor</option>
@@ -161,7 +161,7 @@ export function CreateInviteForm({ sites, defaultSiteId }: CreateInviteFormProps
           )}
         </label>
 
-        <label className="text-sm text-gray-700">
+        <label className="text-sm text-secondary">
           Full Name
           <input
             name="visitorName"
@@ -176,7 +176,7 @@ export function CreateInviteForm({ sites, defaultSiteId }: CreateInviteFormProps
           )}
         </label>
 
-        <label className="text-sm text-gray-700">
+        <label className="text-sm text-secondary">
           Phone
           <input
             name="visitorPhone"
@@ -192,7 +192,7 @@ export function CreateInviteForm({ sites, defaultSiteId }: CreateInviteFormProps
           )}
         </label>
 
-        <label className="text-sm text-gray-700">
+        <label className="text-sm text-secondary">
           Email
           <input name="visitorEmail" type="email" maxLength={160} className="input mt-1" />
           {getFieldError("visitorEmail") && (
@@ -200,7 +200,7 @@ export function CreateInviteForm({ sites, defaultSiteId }: CreateInviteFormProps
           )}
         </label>
 
-        <label className="text-sm text-gray-700">
+        <label className="text-sm text-secondary">
           Employer
           <input name="employerName" type="text" maxLength={100} className="input mt-1" />
           {getFieldError("employerName") && (
@@ -208,7 +208,7 @@ export function CreateInviteForm({ sites, defaultSiteId }: CreateInviteFormProps
           )}
         </label>
 
-        <label className="text-sm text-gray-700">
+        <label className="text-sm text-secondary">
           Role on Site
           <input name="roleOnSite" type="text" maxLength={100} className="input mt-1" />
           {getFieldError("roleOnSite") && (
@@ -216,7 +216,7 @@ export function CreateInviteForm({ sites, defaultSiteId }: CreateInviteFormProps
           )}
         </label>
 
-        <label className="text-sm text-gray-700">
+        <label className="text-sm text-secondary">
           Expires At
           <input
             name="expiresAt"
@@ -230,7 +230,7 @@ export function CreateInviteForm({ sites, defaultSiteId }: CreateInviteFormProps
         </label>
       </div>
 
-      <label className="block text-sm text-gray-700">
+      <label className="block text-sm text-secondary">
         Notes
         <textarea name="notes" rows={2} maxLength={1000} className="input mt-1" />
         {getFieldError("notes") && (
@@ -244,3 +244,5 @@ export function CreateInviteForm({ sites, defaultSiteId }: CreateInviteFormProps
     </form>
   );
 }
+
+

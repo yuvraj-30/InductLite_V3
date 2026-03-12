@@ -31,7 +31,7 @@ function SaveButton() {
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+      className="btn-primary"
     >
       {pending ? "Saving..." : "Save Settings"}
     </button>
@@ -67,14 +67,14 @@ export default function ComplianceSettingsForm({
         </div>
       )}
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-lg font-semibold text-gray-900">Retention Windows</h2>
-        <p className="mt-1 text-sm text-gray-600">
+      <section className="surface-panel p-4">
+        <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">Retention Windows</h2>
+        <p className="mt-1 text-sm text-secondary">
           Set retention in days for each compliance record class.
         </p>
 
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Sign-in register retention (days)
             <input
               name="retentionDays"
@@ -92,7 +92,7 @@ export default function ComplianceSettingsForm({
             )}
           </label>
 
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Induction evidence retention (days)
             <input
               name="inductionRetentionDays"
@@ -110,7 +110,7 @@ export default function ComplianceSettingsForm({
             )}
           </label>
 
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Audit log retention (days)
             <input
               name="auditRetentionDays"
@@ -121,7 +121,7 @@ export default function ComplianceSettingsForm({
               defaultValue={initialSettings.audit_retention_days}
               className="input mt-1"
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-muted">
               System guardrails still enforce global minimum floors.
             </p>
             {getFieldError("auditRetentionDays") && (
@@ -131,7 +131,7 @@ export default function ComplianceSettingsForm({
             )}
           </label>
 
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Incident retention (days)
             <input
               name="incidentRetentionDays"
@@ -149,7 +149,7 @@ export default function ComplianceSettingsForm({
             )}
           </label>
 
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Emergency drill retention (days)
             <input
               name="emergencyDrillRetentionDays"
@@ -169,25 +169,25 @@ export default function ComplianceSettingsForm({
         </div>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-lg font-semibold text-gray-900">Legal Hold</h2>
-        <p className="mt-1 text-sm text-gray-600">
+      <section className="surface-panel p-4">
+        <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">Legal Hold</h2>
+        <p className="mt-1 text-sm text-secondary">
           Enable legal hold to block automated purges for compliance records.
         </p>
 
         <div className="mt-4 space-y-3">
-          <label className="flex items-center gap-2 text-sm text-gray-700">
+          <label className="flex items-center gap-2 text-sm text-secondary">
             <input
               name="complianceLegalHold"
               type="checkbox"
               value="true"
               defaultChecked={initialSettings.compliance_legal_hold}
-              className="h-4 w-4 rounded border-gray-300"
+              className="h-4 w-4 rounded border-[color:var(--border-soft)]"
             />
             Compliance legal hold enabled
           </label>
 
-          <label className="block text-sm text-gray-700">
+          <label className="block text-sm text-secondary">
             Legal hold reason
             <textarea
               name="complianceLegalHoldReason"
@@ -206,14 +206,14 @@ export default function ComplianceSettingsForm({
         </div>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-lg font-semibold text-gray-900">Data Residency</h2>
-        <p className="mt-1 text-sm text-gray-600">
+      <section className="surface-panel p-4">
+        <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">Data Residency</h2>
+        <p className="mt-1 text-sm text-secondary">
           Record tenant-level data residency choices for compliance evidence and buyer assurance.
         </p>
 
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Residency region
             <select
               name="dataResidencyRegion"
@@ -233,7 +233,7 @@ export default function ComplianceSettingsForm({
             )}
           </label>
 
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Residency scope
             <select
               name="dataResidencyScope"
@@ -253,7 +253,7 @@ export default function ComplianceSettingsForm({
           </label>
         </div>
 
-        <label className="mt-4 block text-sm text-gray-700">
+        <label className="mt-4 block text-sm text-secondary">
           Residency notes (optional)
           <textarea
             name="dataResidencyNotes"
@@ -270,7 +270,7 @@ export default function ComplianceSettingsForm({
           )}
         </label>
 
-        <p className="mt-2 text-xs text-gray-500">
+        <p className="mt-2 text-xs text-muted">
           Last attested:{" "}
           {initialSettings.data_residency_attested_at
             ? initialSettings.data_residency_attested_at.toLocaleString("en-NZ")
@@ -287,3 +287,4 @@ export default function ComplianceSettingsForm({
     </form>
   );
 }
+

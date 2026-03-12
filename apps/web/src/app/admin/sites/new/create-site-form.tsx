@@ -6,7 +6,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+      className="btn-primary disabled:opacity-50"
     >
       {pending ? "Creating..." : "Create Site"}
     </button>
@@ -60,7 +60,7 @@ export default function CreateSiteForm() {
       <div>
         <label
           htmlFor="name"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-secondary"
         >
           Site Name <span className="text-red-700 dark:text-red-300">*</span>
         </label>
@@ -71,7 +71,7 @@ export default function CreateSiteForm() {
           required
           minLength={2}
           maxLength={100}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm"
           placeholder="e.g., 123 Main Street Renovation"
         />
         {getFieldError("name") && (
@@ -83,7 +83,7 @@ export default function CreateSiteForm() {
         <button
           type="button"
           onClick={() => setShowOptionalFields((prev) => !prev)}
-          className="text-sm font-medium text-blue-600 hover:text-blue-700"
+          className="text-sm font-medium text-accent hover:text-accent"
         >
           {showOptionalFields ? "Hide optional details" : "Add optional details"}
         </button>
@@ -94,7 +94,7 @@ export default function CreateSiteForm() {
           <div>
             <label
               htmlFor="address"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-secondary"
             >
               Address
             </label>
@@ -103,7 +103,7 @@ export default function CreateSiteForm() {
               id="address"
               name="address"
               maxLength={200}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm"
               placeholder="e.g., 123 Main Street, Auckland 1010"
             />
             {getFieldError("address") && (
@@ -116,7 +116,7 @@ export default function CreateSiteForm() {
           <div>
             <label
               htmlFor="description"
-              className="block text-sm font-medium text-gray-700"
+              className="block text-sm font-medium text-secondary"
             >
               Description
             </label>
@@ -125,7 +125,7 @@ export default function CreateSiteForm() {
               name="description"
               rows={3}
               maxLength={500}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm"
               placeholder="Optional description of the site or project"
             />
             {getFieldError("description") && (
@@ -135,18 +135,18 @@ export default function CreateSiteForm() {
             )}
           </div>
 
-          <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
-            <h3 className="text-sm font-semibold text-gray-900">
+          <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-4">
+            <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">
               Location Audit (Optional)
             </h3>
-            <p className="mt-1 text-xs text-gray-600">
+            <p className="mt-1 text-xs text-secondary">
               Configure site coordinates to show in-radius/out-of-radius status during sign-in.
             </p>
             <div className="mt-3 grid gap-3 md:grid-cols-3">
               <div>
                 <label
                   htmlFor="locationLatitude"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium text-secondary"
                 >
                   Latitude
                 </label>
@@ -157,7 +157,7 @@ export default function CreateSiteForm() {
                   step="0.000001"
                   min="-90"
                   max="90"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm"
                   placeholder="-36.8485"
                 />
                 {getFieldError("locationLatitude") && (
@@ -170,7 +170,7 @@ export default function CreateSiteForm() {
               <div>
                 <label
                   htmlFor="locationLongitude"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium text-secondary"
                 >
                   Longitude
                 </label>
@@ -181,7 +181,7 @@ export default function CreateSiteForm() {
                   step="0.000001"
                   min="-180"
                   max="180"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm"
                   placeholder="174.7633"
                 />
                 {getFieldError("locationLongitude") && (
@@ -194,7 +194,7 @@ export default function CreateSiteForm() {
               <div>
                 <label
                   htmlFor="locationRadiusM"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium text-secondary"
                 >
                   Radius (m)
                 </label>
@@ -205,7 +205,7 @@ export default function CreateSiteForm() {
                   step="1"
                   min="25"
                   max="2000"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm"
                   placeholder="150"
                 />
                 {getFieldError("locationRadiusM") && (
@@ -223,7 +223,7 @@ export default function CreateSiteForm() {
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="px-4 py-2 border border-[color:var(--border-soft)] rounded-md shadow-sm text-sm font-medium text-secondary bg-[color:var(--bg-surface)] hover:bg-[color:var(--bg-surface-strong)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[color:var(--accent-primary)]"
         >
           Cancel
         </button>
@@ -232,3 +232,4 @@ export default function CreateSiteForm() {
     </form>
   );
 }
+

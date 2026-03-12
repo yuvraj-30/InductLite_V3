@@ -26,14 +26,14 @@ export default async function NewContractorPage() {
             <li>
               <Link
                 href="/admin/contractors"
-                className="text-gray-500 hover:text-gray-700"
+                className="text-muted hover:text-secondary"
               >
                 Contractors
               </Link>
             </li>
             <li>
               <svg
-                className="h-5 w-5 flex-shrink-0 text-gray-400"
+                className="h-5 w-5 flex-shrink-0 text-muted"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
@@ -45,14 +45,14 @@ export default async function NewContractorPage() {
               </svg>
             </li>
             <li>
-              <span className="font-medium text-gray-900">New Contractor</span>
+              <span className="font-medium text-[color:var(--text-primary)]">New Contractor</span>
             </li>
           </ol>
         </nav>
       </div>
 
       <div className="max-w-3xl">
-        <h1 className="mb-6 text-2xl font-bold text-gray-900">
+        <h1 className="kinetic-title mb-6 text-2xl font-black text-[color:var(--text-primary)]">
           Create Contractor
         </h1>
         <CreateContractorForm />

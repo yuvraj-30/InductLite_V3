@@ -17,6 +17,14 @@ const COMPANY_BATCH_SIZE = 50;
 const DOCUMENT_REMINDER_WINDOWS_DAYS = [1, 7, 14, 30] as const;
 const DOCUMENT_REMINDER_BATCH_LIMIT = 300;
 const DOCUMENT_REMINDER_PREVIEW_LIMIT = 30;
+const EMAIL_TABLE_BORDER_COLOR = "#d4d7e6";
+const EMAIL_TABLE_HEADER_BG = "#f8f2e8";
+const EMAIL_TEXT_PRIMARY = "#171924";
+const EMAIL_TEXT_MUTED = "#50576d";
+const EMAIL_TABLE_STYLE = `border-collapse:collapse;font-size:13px;color:${EMAIL_TEXT_PRIMARY};`;
+const EMAIL_TABLE_CELL_STYLE = `padding:6px 8px;border:1px solid ${EMAIL_TABLE_BORDER_COLOR};`;
+const EMAIL_TABLE_HEADER_CELL_STYLE = `${EMAIL_TABLE_CELL_STYLE}text-align:left;background:${EMAIL_TABLE_HEADER_BG};`;
+const EMAIL_NOTICE_STYLE = `margin-top:12px;color:${EMAIL_TEXT_MUTED};`;
 type DocumentReminderWindowDays = (typeof DOCUMENT_REMINDER_WINDOWS_DAYS)[number];
 type ContractorDocumentReminderCandidate = {
   key: string;
@@ -87,10 +95,10 @@ function buildPreRegistrationReminderHtml(input: {
     .map(
       (invite) => `
       <tr>
-        <td style="padding:6px 8px;border:1px solid #e5e7eb;">${escapeHtml(invite.siteName)}</td>
-        <td style="padding:6px 8px;border:1px solid #e5e7eb;">${escapeHtml(invite.visitorName)}</td>
-        <td style="padding:6px 8px;border:1px solid #e5e7eb;">${escapeHtml(invite.visitorType)}</td>
-        <td style="padding:6px 8px;border:1px solid #e5e7eb;">${escapeHtml(invite.expiresAt.toISOString())}</td>
+        <td style="${EMAIL_TABLE_CELL_STYLE}">${escapeHtml(invite.siteName)}</td>
+        <td style="${EMAIL_TABLE_CELL_STYLE}">${escapeHtml(invite.visitorName)}</td>
+        <td style="${EMAIL_TABLE_CELL_STYLE}">${escapeHtml(invite.visitorType)}</td>
+        <td style="${EMAIL_TABLE_CELL_STYLE}">${escapeHtml(invite.expiresAt.toISOString())}</td>
       </tr>`,
     )
     .join("");
@@ -98,19 +106,19 @@ function buildPreRegistrationReminderHtml(input: {
   const hiddenCount = Math.max(input.totalInvites - INVITE_REMINDER_PREVIEW_LIMIT, 0);
   const hiddenNotice =
     hiddenCount > 0
-      ? `<p style="margin-top:12px;">${hiddenCount} additional invite(s) are omitted from this preview.</p>`
+      ? `<p style="${EMAIL_NOTICE_STYLE}">${hiddenCount} additional invite(s) are omitted from this preview.</p>`
       : "";
 
   return `
     <h1>Pre-Registration Invites Expiring Soon</h1>
     <p><strong>${escapeHtml(input.companyName)}</strong> has ${input.totalInvites} unused pre-registration invite(s) expiring within the next ${input.windowHours} hours.</p>
-    <table style="border-collapse:collapse;font-size:13px;">
+    <table style="${EMAIL_TABLE_STYLE}">
       <thead>
         <tr>
-          <th style="padding:6px 8px;border:1px solid #e5e7eb;text-align:left;">Site</th>
-          <th style="padding:6px 8px;border:1px solid #e5e7eb;text-align:left;">Visitor</th>
-          <th style="padding:6px 8px;border:1px solid #e5e7eb;text-align:left;">Type</th>
-          <th style="padding:6px 8px;border:1px solid #e5e7eb;text-align:left;">Expires (UTC)</th>
+          <th style="${EMAIL_TABLE_HEADER_CELL_STYLE}">Site</th>
+          <th style="${EMAIL_TABLE_HEADER_CELL_STYLE}">Visitor</th>
+          <th style="${EMAIL_TABLE_HEADER_CELL_STYLE}">Type</th>
+          <th style="${EMAIL_TABLE_HEADER_CELL_STYLE}">Expires (UTC)</th>
         </tr>
       </thead>
       <tbody>${previewRows}</tbody>
@@ -296,10 +304,10 @@ function buildContractorDocumentReminderHtml(input: {
     .map(
       (reminder) => `
       <tr>
-        <td style="padding:6px 8px;border:1px solid #e5e7eb;">${escapeHtml(reminder.contractorName)}</td>
-        <td style="padding:6px 8px;border:1px solid #e5e7eb;">${escapeHtml(reminder.documentType)}</td>
-        <td style="padding:6px 8px;border:1px solid #e5e7eb;">${escapeHtml(reminder.expiresAt.toISOString())}</td>
-        <td style="padding:6px 8px;border:1px solid #e5e7eb;">${reminder.windowDays} day</td>
+        <td style="${EMAIL_TABLE_CELL_STYLE}">${escapeHtml(reminder.contractorName)}</td>
+        <td style="${EMAIL_TABLE_CELL_STYLE}">${escapeHtml(reminder.documentType)}</td>
+        <td style="${EMAIL_TABLE_CELL_STYLE}">${escapeHtml(reminder.expiresAt.toISOString())}</td>
+        <td style="${EMAIL_TABLE_CELL_STYLE}">${reminder.windowDays} day</td>
       </tr>`,
     )
     .join("");
@@ -310,19 +318,19 @@ function buildContractorDocumentReminderHtml(input: {
   );
   const hiddenNotice =
     hiddenCount > 0
-      ? `<p style="margin-top:12px;">${hiddenCount} additional reminder(s) are omitted from this preview.</p>`
+      ? `<p style="${EMAIL_NOTICE_STYLE}">${hiddenCount} additional reminder(s) are omitted from this preview.</p>`
       : "";
 
   return `
     <h1>Contractor Document Expiry Reminders</h1>
     <p><strong>${escapeHtml(input.companyName)}</strong> has ${input.reminders.length} contractor document reminder(s) due for dispatch.</p>
-    <table style="border-collapse:collapse;font-size:13px;">
+    <table style="${EMAIL_TABLE_STYLE}">
       <thead>
         <tr>
-          <th style="padding:6px 8px;border:1px solid #e5e7eb;text-align:left;">Contractor</th>
-          <th style="padding:6px 8px;border:1px solid #e5e7eb;text-align:left;">Document</th>
-          <th style="padding:6px 8px;border:1px solid #e5e7eb;text-align:left;">Expires (UTC)</th>
-          <th style="padding:6px 8px;border:1px solid #e5e7eb;text-align:left;">Window</th>
+          <th style="${EMAIL_TABLE_HEADER_CELL_STYLE}">Contractor</th>
+          <th style="${EMAIL_TABLE_HEADER_CELL_STYLE}">Document</th>
+          <th style="${EMAIL_TABLE_HEADER_CELL_STYLE}">Expires (UTC)</th>
+          <th style="${EMAIL_TABLE_HEADER_CELL_STYLE}">Window</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>

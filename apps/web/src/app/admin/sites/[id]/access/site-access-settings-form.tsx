@@ -79,15 +79,15 @@ export function SiteAccessSettingsForm({
   const [state, formAction] = useActionState(boundAction, initialState);
 
   return (
-    <section className="rounded-lg border bg-white p-5">
-      <h2 className="text-lg font-semibold text-gray-900">
+    <section className="surface-panel p-5">
+      <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">
         Geofence + Hardware Controls
       </h2>
-      <p className="mt-1 text-sm text-gray-600">
+      <p className="mt-1 text-sm text-secondary">
         Configure strict location enforcement and optional gate/turnstile
         integrations.
       </p>
-      <p className="mt-1 text-xs text-gray-500">
+      <p className="mt-1 text-xs text-muted">
         Last updated: {formatTimestamp(updatedAt)}
       </p>
 
@@ -103,22 +103,22 @@ export function SiteAccessSettingsForm({
       )}
 
       <form action={formAction} className="mt-4 space-y-5">
-        <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
-          <h3 className="text-sm font-semibold text-gray-900">
+        <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-4">
+          <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">
             Geofence Enforcement
           </h3>
-          <p className="mt-1 text-xs text-gray-600">
+          <p className="mt-1 text-xs text-secondary">
             `AUDIT` never blocks sign-in. `DENY` blocks outside radius. `OVERRIDE`
             requires a supervisor code when outside radius.
           </p>
 
-          <label className="mt-3 block text-sm text-gray-700">
+          <label className="mt-3 block text-sm text-secondary">
             Mode
             <select
               name="geofenceMode"
               defaultValue={initialGeofenceMode}
               disabled={!canEnableGeofence}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-gray-100"
+              className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
             >
               <option value="AUDIT">Audit only (Standard-safe)</option>
               <option value="DENY">Deny outside radius</option>
@@ -126,17 +126,17 @@ export function SiteAccessSettingsForm({
             </select>
           </label>
 
-          <label className="mt-3 inline-flex items-center gap-2 text-sm text-gray-700">
+          <label className="mt-3 inline-flex items-center gap-2 text-sm text-secondary">
             <input
               type="checkbox"
               name="geofenceAllowMissingLocation"
               defaultChecked={initialGeofenceAllowMissingLocation}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)]"
             />
             Allow sign-ins when location capture is missing
           </label>
 
-          <label className="mt-3 block text-sm text-gray-700">
+          <label className="mt-3 block text-sm text-secondary">
             Supervisor Override Code
             <input
               name="geofenceOverrideCode"
@@ -147,34 +147,34 @@ export function SiteAccessSettingsForm({
                   ? "Leave blank to keep current code"
                   : "Create override code"
               }
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)]"
             />
           </label>
-          <label className="mt-2 inline-flex items-center gap-2 text-sm text-gray-700">
+          <label className="mt-2 inline-flex items-center gap-2 text-sm text-secondary">
             <input
               type="checkbox"
               name="clearGeofenceOverrideCode"
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)]"
             />
             Clear existing geofence override code
           </label>
 
-          <div className="mt-4 rounded-md border border-blue-100 bg-blue-50 p-3">
-            <h4 className="text-sm font-semibold text-blue-900">
+          <div className="mt-4 rounded-md border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-3">
+            <h4 className="text-sm font-semibold text-accent">
               Mobile Geofence Automation
             </h4>
-            <p className="mt-1 text-xs text-blue-800">
+            <p className="mt-1 text-xs text-accent">
               `OFF`: no automation. `ASSIST`: app receives guidance only.
               `AUTO`: auto check-in/out where policy guardrails permit.
             </p>
 
-            <label className="mt-3 block text-sm text-gray-700">
+            <label className="mt-3 block text-sm text-secondary">
               Automation mode
               <select
                 name="geofenceAutomationMode"
                 defaultValue={initialGeofenceAutomationMode}
                 disabled={!canEnableMobileAssist}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-gray-100"
+                className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
               >
                 <option value="OFF">OFF</option>
                 <option value="ASSIST">ASSIST</option>
@@ -182,7 +182,7 @@ export function SiteAccessSettingsForm({
               </select>
             </label>
 
-            <label className="mt-3 block text-sm text-gray-700">
+            <label className="mt-3 block text-sm text-secondary">
               Auto check-out grace (minutes)
               <input
                 name="geofenceAutoCheckoutGraceMinutes"
@@ -191,41 +191,41 @@ export function SiteAccessSettingsForm({
                 max={720}
                 defaultValue={initialGeofenceAutoCheckoutGraceMinutes}
                 disabled={!canEnableMobileAssist}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-gray-100"
+                className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
               />
             </label>
           </div>
         </div>
 
-        <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
-          <h3 className="text-sm font-semibold text-gray-900">
+        <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-4">
+          <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">
             Hardware Access Adapter
           </h3>
-          <p className="mt-1 text-xs text-gray-600">
+          <p className="mt-1 text-xs text-secondary">
             Sends access allow/deny decisions to your configured endpoint through
             the delivery queue.
           </p>
 
-          <label className="mt-3 inline-flex items-center gap-2 text-sm text-gray-700">
+          <label className="mt-3 inline-flex items-center gap-2 text-sm text-secondary">
             <input
               type="checkbox"
               name="hardwareEnabled"
               defaultChecked={initialHardwareEnabled}
               disabled={!canEnableHardware}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed"
+              className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)] disabled:cursor-not-allowed"
             />
             Enable hardware access integration
           </label>
 
           <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
-            <label className="text-sm text-gray-700">
+            <label className="text-sm text-secondary">
               Provider (optional)
               <input
                 name="hardwareProvider"
                 list="hardwareProviderOptions"
                 defaultValue={initialHardwareProvider}
                 placeholder="GENERIC or named connector"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)]"
               />
               <datalist id="hardwareProviderOptions">
                 <option value="GENERIC" />
@@ -236,19 +236,19 @@ export function SiteAccessSettingsForm({
                 <option value="GENETEC" />
               </datalist>
             </label>
-            <label className="text-sm text-gray-700">
+            <label className="text-sm text-secondary">
               Endpoint URL
               <input
                 name="hardwareEndpointUrl"
                 type="url"
                 defaultValue={initialHardwareEndpointUrl}
                 placeholder="https://hardware.example.com/access-events"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)]"
               />
             </label>
           </div>
 
-          <label className="mt-3 block text-sm text-gray-700">
+          <label className="mt-3 block text-sm text-secondary">
             Hardware Auth Token (optional)
             <input
               name="hardwareAuthToken"
@@ -260,88 +260,88 @@ export function SiteAccessSettingsForm({
                   ? "Leave blank to keep current token"
                   : "Paste auth token"
               }
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)]"
             />
           </label>
-          <label className="mt-2 inline-flex items-center gap-2 text-sm text-gray-700">
+          <label className="mt-2 inline-flex items-center gap-2 text-sm text-secondary">
             <input
               type="checkbox"
               name="clearHardwareAuthToken"
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)]"
             />
             Clear stored hardware auth token
           </label>
         </div>
 
-        <div className="rounded-md border border-gray-200 bg-gray-50 p-4">
-          <h3 className="text-sm font-semibold text-gray-900">
+        <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-4">
+          <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">
             Visitor Photo + ID Evidence
           </h3>
-          <p className="mt-1 text-xs text-gray-600">
+          <p className="mt-1 text-xs text-secondary">
             Configure optional or required identity evidence capture during public sign-in.
           </p>
 
-          <label className="mt-3 inline-flex items-center gap-2 text-sm text-gray-700">
+          <label className="mt-3 inline-flex items-center gap-2 text-sm text-secondary">
             <input
               type="checkbox"
               name="identityEnabled"
               defaultChecked={initialIdentityEnabled}
               disabled={!canEnableIdentityHardening}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed"
+              className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)] disabled:cursor-not-allowed"
             />
             Enable visitor identity evidence workflow
           </label>
 
           <div className="mt-3 grid grid-cols-1 gap-2 md:grid-cols-2">
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+            <label className="inline-flex items-center gap-2 text-sm text-secondary">
               <input
                 type="checkbox"
                 name="identityRequirePhoto"
                 defaultChecked={initialIdentityRequirePhoto}
                 disabled={!canEnableIdentityHardening}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed"
+                className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)] disabled:cursor-not-allowed"
               />
               Require visitor photo capture
             </label>
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+            <label className="inline-flex items-center gap-2 text-sm text-secondary">
               <input
                 type="checkbox"
                 name="identityRequireIdScan"
                 defaultChecked={initialIdentityRequireIdScan}
                 disabled={!canEnableIdentityHardening}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed"
+                className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)] disabled:cursor-not-allowed"
               />
               Require visitor ID image upload
             </label>
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700 md:col-span-2">
+            <label className="inline-flex items-center gap-2 text-sm text-secondary md:col-span-2">
               <input
                 type="checkbox"
                 name="identityRequireConsent"
                 defaultChecked={initialIdentityRequireConsent}
                 disabled={!canEnableIdentityHardening}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed"
+                className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)] disabled:cursor-not-allowed"
               />
               Require explicit identity evidence consent
             </label>
 
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700 md:col-span-2">
+            <label className="inline-flex items-center gap-2 text-sm text-secondary md:col-span-2">
               <input
                 type="checkbox"
                 name="identityRequireOcrVerification"
                 defaultChecked={initialIdentityRequireOcrVerification}
                 disabled={!canEnableIdentityHardening || !canEnableIdentityOcr}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed"
+                className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)] disabled:cursor-not-allowed"
               />
               Require OCR verification against uploaded ID image
             </label>
 
-            <label className="text-sm text-gray-700 md:col-span-2">
+            <label className="text-sm text-secondary md:col-span-2">
               OCR Decision Mode
               <select
                 name="identityOcrDecisionMode"
                 defaultValue={initialIdentityOcrDecisionMode}
                 disabled={!canEnableIdentityHardening || !canEnableIdentityOcr}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-gray-100"
+                className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
               >
                 <option value="assist">
                   Assist (records OCR evidence, does not block sign-in)
@@ -352,14 +352,14 @@ export function SiteAccessSettingsForm({
               </select>
             </label>
 
-            <label className="text-sm text-gray-700 md:col-span-2">
+            <label className="text-sm text-secondary md:col-span-2">
               Allowed ID Document Types (comma-separated)
               <input
                 name="identityAllowedDocumentTypes"
                 defaultValue={initialIdentityAllowedDocumentTypes.join(", ")}
                 disabled={!canEnableIdentityHardening || !canEnableIdentityOcr}
                 placeholder="DRIVER_LICENCE, PASSPORT"
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-gray-100"
+                className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
               />
             </label>
           </div>
@@ -367,7 +367,7 @@ export function SiteAccessSettingsForm({
 
         <button
           type="submit"
-          className="min-h-[42px] rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="btn-primary min-h-[42px]"
         >
           Save Access Controls
         </button>
@@ -375,3 +375,5 @@ export function SiteAccessSettingsForm({
     </section>
   );
 }
+
+

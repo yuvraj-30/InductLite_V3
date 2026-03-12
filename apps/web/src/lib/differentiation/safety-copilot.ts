@@ -4,12 +4,26 @@ import { listIncidentReports } from "@/lib/repository/incident.repository";
 import { listContractorPrequalifications } from "@/lib/repository/permit.repository";
 import { listContractorRiskScores } from "@/lib/repository/risk-passport.repository";
 
+export type CopilotConfidenceBand = "low" | "medium" | "high";
+
+export interface CopilotSignalReference {
+  key:
+    | "openPermits"
+    | "openHazards"
+    | "openIncidents"
+    | "prequalPending"
+    | "highRiskProfiles";
+  value: number;
+}
+
 export interface SafetyCopilotResponse {
   summary: string;
   recommendations: Array<{
     title: string;
     reason: string;
     severity: "low" | "medium" | "high";
+    confidenceBand: CopilotConfidenceBand;
+    sourceSignals: CopilotSignalReference[];
   }>;
   signals: {
     openPermits: number;
@@ -39,6 +53,12 @@ function summarizeSeverity(input: {
   ) {
     return "medium";
   }
+  return "low";
+}
+
+function toConfidenceBand(score: number): CopilotConfidenceBand {
+  if (score >= 0.76) return "high";
+  if (score >= 0.51) return "medium";
   return "low";
 }
 
@@ -91,6 +111,17 @@ export async function generateSafetyCopilotResponse(input: {
       title: "Prioritize high-risk contractor reviews",
       reason: `${signals.highRiskProfiles} contractor profile(s) are currently in HIGH threshold state.`,
       severity: "high",
+      confidenceBand: toConfidenceBand(Math.min(1, 0.55 + signals.highRiskProfiles * 0.06)),
+      sourceSignals: [
+        {
+          key: "highRiskProfiles",
+          value: signals.highRiskProfiles,
+        },
+        {
+          key: "prequalPending",
+          value: signals.prequalPending,
+        },
+      ],
     });
   }
   if (signals.prequalPending > 0) {
@@ -98,6 +129,17 @@ export async function generateSafetyCopilotResponse(input: {
       title: "Clear pending prequalification queue",
       reason: `${signals.prequalPending} contractor prequalification record(s) are pending review.`,
       severity: signals.prequalPending >= 5 ? "high" : "medium",
+      confidenceBand: toConfidenceBand(Math.min(1, 0.48 + signals.prequalPending * 0.07)),
+      sourceSignals: [
+        {
+          key: "prequalPending",
+          value: signals.prequalPending,
+        },
+        {
+          key: "openPermits",
+          value: signals.openPermits,
+        },
+      ],
     });
   }
   if (signals.openHazards > 0) {
@@ -105,6 +147,17 @@ export async function generateSafetyCopilotResponse(input: {
       title: "Close aging hazard controls",
       reason: `${signals.openHazards} hazard record(s) are still open/monitoring.`,
       severity: signals.openHazards >= 10 ? "high" : "medium",
+      confidenceBand: toConfidenceBand(Math.min(1, 0.5 + signals.openHazards * 0.045)),
+      sourceSignals: [
+        {
+          key: "openHazards",
+          value: signals.openHazards,
+        },
+        {
+          key: "openIncidents",
+          value: signals.openIncidents,
+        },
+      ],
     });
   }
   if (signals.openIncidents > 0) {
@@ -112,6 +165,17 @@ export async function generateSafetyCopilotResponse(input: {
       title: "Finish incident investigations",
       reason: `${signals.openIncidents} incident record(s) are open or investigating.`,
       severity: signals.openIncidents >= 4 ? "high" : "medium",
+      confidenceBand: toConfidenceBand(Math.min(1, 0.52 + signals.openIncidents * 0.08)),
+      sourceSignals: [
+        {
+          key: "openIncidents",
+          value: signals.openIncidents,
+        },
+        {
+          key: "openHazards",
+          value: signals.openHazards,
+        },
+      ],
     });
   }
   if (recommendations.length === 0) {
@@ -119,6 +183,21 @@ export async function generateSafetyCopilotResponse(input: {
       title: "Maintain current controls",
       reason: "No immediate high-risk safety backlog was detected in current operational signals.",
       severity: "low",
+      confidenceBand: "high",
+      sourceSignals: [
+        {
+          key: "openHazards",
+          value: signals.openHazards,
+        },
+        {
+          key: "openIncidents",
+          value: signals.openIncidents,
+        },
+        {
+          key: "highRiskProfiles",
+          value: signals.highRiskProfiles,
+        },
+      ],
     });
   }
 

@@ -184,11 +184,11 @@ export function AdminCommandPalette({ commands }: AdminCommandPaletteProps) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="group inline-flex min-h-[42px] items-center gap-2 rounded-xl border border-white/35 bg-[color:var(--bg-surface)] px-3 py-2 text-sm font-medium text-[color:var(--text-primary)] shadow-soft hover:-translate-y-0.5 hover:border-white/60 hover:bg-[color:var(--bg-surface-strong)]"
+        className="group inline-flex min-h-[42px] items-center gap-2 rounded-xl border border-surface-soft bg-[color:var(--bg-surface)] px-3 py-2 text-sm font-medium text-[color:var(--text-primary)] shadow-soft hover:-translate-y-0.5 hover:border-[color:var(--border-strong)] hover:bg-[color:var(--bg-surface-strong)]"
         aria-label="Open command palette"
       >
         <span>Quick Actions</span>
-        <kbd className="rounded-md border border-white/40 bg-white/55 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[color:var(--text-muted)]">
+        <kbd className="rounded-md border border-surface-soft bg-[color:var(--bg-surface-strong)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[color:var(--text-muted)]">
           {shortcutLabel}
         </kbd>
       </button>
@@ -197,7 +197,7 @@ export function AdminCommandPalette({ commands }: AdminCommandPaletteProps) {
         <div className="fixed inset-0 z-[100]">
           <button
             type="button"
-            className="absolute inset-0 h-full w-full bg-slate-950/45 backdrop-blur-sm"
+            className="absolute inset-0 h-full w-full bg-[color:var(--bg-surface-strong)] backdrop-blur-sm"
             aria-label="Close command palette"
             onClick={() => setOpen(false)}
           />
@@ -206,9 +206,9 @@ export function AdminCommandPalette({ commands }: AdminCommandPaletteProps) {
             role="dialog"
             aria-modal="true"
             aria-label="Command palette"
-            className="relative mx-auto mt-10 w-[min(92vw,46rem)] overflow-hidden rounded-2xl border border-white/30 bg-[color:var(--bg-surface-strong)] shadow-float"
+            className="relative mx-auto mt-10 w-[min(92vw,46rem)] overflow-hidden rounded-2xl border border-surface-soft bg-[color:var(--bg-surface-strong)] shadow-float"
           >
-            <div className="border-b border-white/20 p-4">
+            <div className="border-b border-surface-soft p-4">
               <label htmlFor="command-search" className="sr-only">
                 Search command
               </label>
@@ -227,7 +227,7 @@ export function AdminCommandPalette({ commands }: AdminCommandPaletteProps) {
             </div>
 
             {query.length === 0 && suggestions.length > 0 && (
-              <div className="border-b border-white/15 px-4 py-3">
+              <div className="border-b border-surface-soft px-4 py-3">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
                   Suggested
                 </p>
@@ -237,7 +237,7 @@ export function AdminCommandPalette({ commands }: AdminCommandPaletteProps) {
                       key={`suggestion-${command.id}`}
                       type="button"
                       onClick={() => executeCommand(command)}
-                      className="rounded-full border border-white/35 bg-[color:var(--bg-surface)] px-3 py-1 text-xs font-medium text-[color:var(--text-primary)] hover:border-white/60 hover:bg-[color:var(--bg-surface-strong)]"
+                      className="rounded-full border border-surface-soft bg-[color:var(--bg-surface)] px-3 py-1 text-xs font-medium text-[color:var(--text-primary)] hover:border-[color:var(--border-strong)] hover:bg-[color:var(--bg-surface-strong)]"
                     >
                       {command.title}
                     </button>
@@ -271,7 +271,7 @@ export function AdminCommandPalette({ commands }: AdminCommandPaletteProps) {
                         {item.command.description}
                       </span>
                     </span>
-                    <span className="rounded-md border border-white/30 bg-[color:var(--bg-surface)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted">
+                    <span className="rounded-md border border-surface-soft bg-[color:var(--bg-surface)] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted">
                       Go
                     </span>
                   </button>
@@ -284,3 +284,4 @@ export function AdminCommandPalette({ commands }: AdminCommandPaletteProps) {
     </>
   );
 }
+

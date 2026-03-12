@@ -36,9 +36,19 @@ const RESOURCE_TYPES: ResourceType[] = [
 
 function bannerClass(statusCode: string | undefined): string {
   if (statusCode === "ok") {
-    return "border-green-200 bg-green-50 text-green-800";
+    return "border-emerald-400/40 bg-emerald-500/12 text-emerald-900 dark:text-emerald-100";
   }
-  return "border-amber-200 bg-amber-50 text-amber-900";
+  return "border-amber-400/45 bg-amber-500/12 text-amber-900 dark:text-amber-100";
+}
+
+function bookingStatusChipClass(status: string): string {
+  if (status === "CONFIRMED") {
+    return "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100";
+  }
+  if (status === "CANCELLED") {
+    return "border-red-500/45 bg-red-500/15 text-red-950 dark:text-red-100";
+  }
+  return "border-amber-400/45 bg-amber-500/15 text-amber-900 dark:text-amber-100";
 }
 
 function toDateTimeLocalValue(input: Date): string {
@@ -74,23 +84,30 @@ export default async function ResourceBookingPage({ searchParams }: ResourcePage
   ]);
 
   return (
-    <div className="space-y-6 p-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Resources & Booking</h1>
-        <p className="mt-1 text-sm text-gray-600">
+    <div className="space-y-6 p-3 sm:p-4">
+      <div className="surface-panel-strong p-5">
+        <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+          Resources & Booking
+        </h1>
+        <p className="mt-1 text-sm text-secondary">
           Configure desk/room/equipment resources and manage conflict-safe booking schedules.
         </p>
       </div>
 
       {params.flashMessage ? (
-        <div className={`rounded-lg border p-3 text-sm ${bannerClass(params.flashStatus)}`}>
+        <div className={`rounded-xl border p-3 text-sm ${bannerClass(params.flashStatus)}`}>
           {params.flashMessage}
         </div>
       ) : null}
 
-      <section className="rounded-lg border bg-white p-4">
-        <form method="get" className="flex flex-wrap items-end gap-3">
-          <label className="text-sm text-gray-700">
+      <section className="table-toolbar">
+        <div className="table-toolbar-heading">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-secondary">
+            Filters
+          </h2>
+        </div>
+        <form method="get" className="table-toolbar-grid">
+          <label className="text-sm text-secondary">
             Site filter
             <select name="site" defaultValue={params.site ?? ""} className="input mt-1 min-w-[220px]">
               <option value="">All sites</option>
@@ -101,21 +118,20 @@ export default async function ResourceBookingPage({ searchParams }: ResourcePage
               ))}
             </select>
           </label>
-          <button
-            type="submit"
-            className="min-h-[40px] rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800"
-          >
-            Apply
-          </button>
+          <div className="table-toolbar-actions">
+            <button type="submit" className="btn-primary">
+              Apply
+            </button>
+          </div>
         </form>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Create Resource
         </h2>
         <form action={createResourceAction} className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Site
             <select name="siteId" required className="input mt-1">
               <option value="">Select site</option>
@@ -126,11 +142,11 @@ export default async function ResourceBookingPage({ searchParams }: ResourcePage
               ))}
             </select>
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Resource name
             <input name="name" required maxLength={120} className="input mt-1" placeholder="Meeting room A" />
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Type
             <select name="resourceType" defaultValue="OTHER" className="input mt-1">
               {RESOURCE_TYPES.map((type) => (
@@ -140,22 +156,22 @@ export default async function ResourceBookingPage({ searchParams }: ResourcePage
               ))}
             </select>
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Capacity
             <input name="capacity" type="number" min={1} max={500} defaultValue={1} className="input mt-1" />
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Location label (optional)
             <input name="locationLabel" maxLength={120} className="input mt-1" placeholder="Level 2 East Wing" />
           </label>
-          <label className="text-sm text-gray-700 md:col-span-3">
+          <label className="text-sm text-secondary md:col-span-3">
             Notes (optional)
             <textarea name="notes" rows={2} maxLength={1000} className="input mt-1" />
           </label>
           <div className="md:col-span-3 md:text-right">
             <button
               type="submit"
-              className="min-h-[40px] rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+              className="btn-primary"
             >
               Create Resource
             </button>
@@ -163,12 +179,12 @@ export default async function ResourceBookingPage({ searchParams }: ResourcePage
         </form>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Create Booking
         </h2>
         <form action={createResourceBookingAction} className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Site
             <select name="siteId" required className="input mt-1">
               <option value="">Select site</option>
@@ -179,7 +195,7 @@ export default async function ResourceBookingPage({ searchParams }: ResourcePage
               ))}
             </select>
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Resource
             <select name="resourceId" required className="input mt-1">
               <option value="">Select resource</option>
@@ -190,19 +206,19 @@ export default async function ResourceBookingPage({ searchParams }: ResourcePage
               ))}
             </select>
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Booking title
             <input name="title" required maxLength={160} className="input mt-1" placeholder="Toolbox talk" />
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Contact name (optional)
             <input name="contactName" maxLength={120} className="input mt-1" />
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Contact email (optional)
             <input name="contactEmail" type="email" maxLength={200} className="input mt-1" />
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Starts at
             <input
               name="startsAt"
@@ -212,7 +228,7 @@ export default async function ResourceBookingPage({ searchParams }: ResourcePage
               className="input mt-1"
             />
           </label>
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Ends at
             <input
               name="endsAt"
@@ -222,14 +238,14 @@ export default async function ResourceBookingPage({ searchParams }: ResourcePage
               className="input mt-1"
             />
           </label>
-          <label className="text-sm text-gray-700 md:col-span-3">
+          <label className="text-sm text-secondary md:col-span-3">
             Notes (optional)
             <textarea name="notes" rows={2} maxLength={1000} className="input mt-1" />
           </label>
           <div className="md:col-span-3 md:text-right">
             <button
               type="submit"
-              className="min-h-[40px] rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+              className="btn-primary"
             >
               Create Booking
             </button>
@@ -237,38 +253,44 @@ export default async function ResourceBookingPage({ searchParams }: ResourcePage
         </form>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Active Resources
         </h2>
         <div className="mt-3 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
+            <thead className="bg-[color:var(--bg-surface-strong)]">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Site</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Name</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Type</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Capacity</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Location</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Site</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Name</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Type</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Capacity</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Location</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
               {resources.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-3 py-3 text-sm text-gray-500">
+                  <td colSpan={5} className="px-3 py-3 text-sm text-muted">
                     No active resources found.
                   </td>
                 </tr>
               ) : (
                 resources.map((resource) => (
-                  <tr key={resource.id}>
-                    <td className="px-3 py-3 text-sm text-gray-700">
+                  <tr key={resource.id} className="hover:bg-[color:var(--bg-surface-strong)]">
+                    <td className="px-3 py-3 text-sm text-secondary">
                       {sites.find((site) => site.id === resource.site_id)?.name ?? resource.site_id}
                     </td>
-                    <td className="px-3 py-3 text-sm text-gray-700">{resource.name}</td>
-                    <td className="px-3 py-3 text-sm text-gray-700">{resource.resource_type}</td>
-                    <td className="px-3 py-3 text-sm text-gray-700">{resource.capacity}</td>
-                    <td className="px-3 py-3 text-sm text-gray-700">{resource.location_label ?? "-"}</td>
+                    <td className="px-3 py-3 text-sm font-semibold text-[color:var(--text-primary)]">
+                      {resource.name}
+                    </td>
+                    <td className="px-3 py-3 text-sm">
+                      <span className="inline-flex rounded-full border border-cyan-400/35 bg-cyan-500/15 px-2 py-0.5 text-xs font-semibold text-cyan-950 dark:text-cyan-100">
+                        {resource.resource_type}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-sm text-secondary">{resource.capacity}</td>
+                    <td className="px-3 py-3 text-sm text-secondary">{resource.location_label ?? "-"}</td>
                   </tr>
                 ))
               )}
@@ -277,26 +299,26 @@ export default async function ResourceBookingPage({ searchParams }: ResourcePage
         </div>
       </section>
 
-      <section className="rounded-lg border bg-white p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-gray-700">
+      <section className="surface-panel p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Upcoming Bookings (14 days)
         </h2>
         <div className="mt-3 overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
+            <thead className="bg-[color:var(--bg-surface-strong)]">
               <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Start</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">End</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Resource</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Title</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Status</th>
-                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-[0.08em] text-gray-600">Action</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Start</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">End</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Resource</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Title</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Status</th>
+                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
               {bookings.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-3 py-3 text-sm text-gray-500">
+                  <td colSpan={6} className="px-3 py-3 text-sm text-muted">
                     No upcoming bookings.
                   </td>
                 </tr>
@@ -304,31 +326,39 @@ export default async function ResourceBookingPage({ searchParams }: ResourcePage
                 bookings.map((booking) => {
                   const resource = resources.find((item) => item.id === booking.resource_id);
                   return (
-                    <tr key={booking.id}>
-                      <td className="px-3 py-3 text-sm text-gray-700">
+                    <tr key={booking.id} className="hover:bg-[color:var(--bg-surface-strong)]">
+                      <td className="px-3 py-3 text-sm text-secondary">
                         {booking.starts_at.toLocaleString("en-NZ")}
                       </td>
-                      <td className="px-3 py-3 text-sm text-gray-700">
+                      <td className="px-3 py-3 text-sm text-secondary">
                         {booking.ends_at.toLocaleString("en-NZ")}
                       </td>
-                      <td className="px-3 py-3 text-sm text-gray-700">
+                      <td className="px-3 py-3 text-sm text-secondary">
                         {resource ? `${resource.name} (${resource.resource_type})` : booking.resource_id}
                       </td>
-                      <td className="px-3 py-3 text-sm text-gray-700">{booking.title}</td>
-                      <td className="px-3 py-3 text-sm text-gray-700">{booking.status}</td>
+                      <td className="px-3 py-3 text-sm font-semibold text-[color:var(--text-primary)]">
+                        {booking.title}
+                      </td>
+                      <td className="px-3 py-3 text-sm">
+                        <span
+                          className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${bookingStatusChipClass(booking.status)}`}
+                        >
+                          {booking.status}
+                        </span>
+                      </td>
                       <td className="px-3 py-3 text-right">
                         {booking.status === "CONFIRMED" ? (
                           <form action={cancelResourceBookingAction}>
                             <input type="hidden" name="bookingId" value={booking.id} />
                             <button
                               type="submit"
-                              className="rounded border border-amber-300 px-2 py-1 text-xs font-medium text-amber-700 hover:bg-amber-50"
+                              className="btn-secondary min-h-[30px] px-2 py-1 text-xs"
                             >
                               Cancel
                             </button>
                           </form>
                         ) : (
-                          <span className="text-xs text-gray-500">-</span>
+                          <span className="text-xs text-muted">-</span>
                         )}
                       </td>
                     </tr>

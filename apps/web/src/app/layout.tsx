@@ -3,6 +3,7 @@ import { Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ThemeRuntime } from "@/components/ui/theme-runtime";
 import { ThemeSwitcher } from "@/components/ui/theme-switcher";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -29,8 +30,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f8f2e8" },
-    { media: "(prefers-color-scheme: dark)", color: "#070b13" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f7fc" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b1220" },
   ],
 };
 
@@ -39,13 +40,17 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const a11yHardeningEnabled = isFeatureEnabled("UIX_S5_A11Y");
+
   return (
     <html
       lang="en"
       data-scroll-behavior="smooth"
       className={`${manrope.variable} ${spaceGrotesk.variable}`}
     >
-      <body className="min-h-screen font-body text-[color:var(--text-primary)] antialiased">
+      <body
+        className={`min-h-screen font-body text-[color:var(--text-primary)] antialiased ${a11yHardeningEnabled ? "uix-s5-a11y" : ""}`}
+      >
         <ThemeRuntime />
         <ThemeSwitcher />
         {children}

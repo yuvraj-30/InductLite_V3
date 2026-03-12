@@ -42,14 +42,16 @@ export function HistoryFiltersForm({
   );
 
   return (
-    <div className="bg-white rounded-lg shadow p-4 mb-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="table-toolbar mb-6">
+      <div className="table-toolbar-heading">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-secondary">
+          Filter Sign-In History
+        </h2>
+      </div>
+      <div className="table-toolbar-grid">
         {/* Site Filter */}
         <div>
-          <label
-            htmlFor="site"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label htmlFor="site" className="label mb-1">
             Site
           </label>
           <select
@@ -58,7 +60,7 @@ export function HistoryFiltersForm({
             onChange={(e) =>
               updateFilters({ site: e.target.value || undefined })
             }
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="input"
           >
             <option value="">All Sites</option>
             {sites.map((site) => (
@@ -71,10 +73,7 @@ export function HistoryFiltersForm({
 
         {/* Status Filter */}
         <div>
-          <label
-            htmlFor="status"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label htmlFor="status" className="label mb-1">
             Status
           </label>
           <select
@@ -83,7 +82,7 @@ export function HistoryFiltersForm({
             onChange={(e) =>
               updateFilters({ status: e.target.value || undefined })
             }
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="input"
           >
             <option value="all">All</option>
             <option value="on_site">Currently On Site</option>
@@ -93,10 +92,7 @@ export function HistoryFiltersForm({
 
         {/* Visitor Type Filter */}
         <div>
-          <label
-            htmlFor="visitorType"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label htmlFor="visitorType" className="label mb-1">
             Visitor Type
           </label>
           <select
@@ -105,7 +101,7 @@ export function HistoryFiltersForm({
             onChange={(e) =>
               updateFilters({ visitorType: e.target.value || undefined })
             }
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="input"
           >
             <option value="">All Types</option>
             <option value="CONTRACTOR">Contractor</option>
@@ -117,10 +113,7 @@ export function HistoryFiltersForm({
 
         {/* Employer Filter */}
         <div>
-          <label
-            htmlFor="employer"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label htmlFor="employer" className="label mb-1">
             Employer
           </label>
           <select
@@ -129,7 +122,7 @@ export function HistoryFiltersForm({
             onChange={(e) =>
               updateFilters({ employer: e.target.value || undefined })
             }
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="input"
           >
             <option value="">All Employers</option>
             {employers.map((employer) => (
@@ -142,10 +135,7 @@ export function HistoryFiltersForm({
 
         {/* Date From */}
         <div>
-          <label
-            htmlFor="dateFrom"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label htmlFor="dateFrom" className="label mb-1">
             From Date
           </label>
           <input
@@ -155,16 +145,13 @@ export function HistoryFiltersForm({
             onChange={(e) =>
               updateFilters({ dateFrom: e.target.value || undefined })
             }
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="input"
           />
         </div>
 
         {/* Date To */}
         <div>
-          <label
-            htmlFor="dateTo"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label htmlFor="dateTo" className="label mb-1">
             To Date
           </label>
           <input
@@ -174,16 +161,13 @@ export function HistoryFiltersForm({
             onChange={(e) =>
               updateFilters({ dateTo: e.target.value || undefined })
             }
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className="input"
           />
         </div>
 
         {/* Search */}
-        <div className="lg:col-span-2">
-          <label
-            htmlFor="search"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+        <div className="md:col-span-2">
+          <label htmlFor="search" className="label mb-1">
             Search (name or employer)
           </label>
           <div className="flex gap-2">
@@ -197,7 +181,7 @@ export function HistoryFiltersForm({
                   updateFilters({ search: e.currentTarget.value || undefined });
                 }
               }}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              className="input"
             />
             <button
               type="button"
@@ -207,7 +191,7 @@ export function HistoryFiltersForm({
                 ) as HTMLInputElement;
                 updateFilters({ search: input.value || undefined });
               }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+              className="btn-primary"
             >
               Search
             </button>
@@ -216,11 +200,11 @@ export function HistoryFiltersForm({
       </div>
 
       {/* Clear Filters */}
-      <div className="mt-4 pt-4 border-t border-gray-200 flex justify-end">
+      <div className="table-toolbar-footer flex justify-end">
         <button
           type="button"
           onClick={() => router.push("/admin/history")}
-          className="text-sm text-gray-600 hover:text-gray-900"
+          className="text-sm font-medium text-secondary hover:text-[color:var(--text-primary)]"
         >
           Clear all filters
         </button>

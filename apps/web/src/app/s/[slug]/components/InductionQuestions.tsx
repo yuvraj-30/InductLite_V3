@@ -42,7 +42,7 @@ export function InductionQuestions({
       {template.questions.map((question, index) => (
         <div
           key={question.id}
-          className={`rounded-xl border p-3 ${missingRequiredQuestionIds.includes(question.id) ? "border-red-400/45 bg-red-100/65 dark:bg-red-950/35" : "border-white/35 bg-white/45"}`}
+          className={`rounded-xl border p-3 ${missingRequiredQuestionIds.includes(question.id) ? "border-red-400/45 bg-red-100/65 dark:bg-red-950/35" : "border-surface-soft bg-surface-soft"}`}
         >
           <label
             htmlFor={`q-${question.id}`}
@@ -81,7 +81,7 @@ export function InductionQuestions({
               {question.options.map((option, optionIndex) => (
                 <label
                   key={option}
-                  className="flex min-h-[48px] cursor-pointer items-center rounded-lg border border-white/35 bg-white/45 p-3 hover:bg-white/70"
+                  className="flex min-h-[48px] cursor-pointer items-center rounded-lg border border-surface-soft bg-surface-soft p-3 hover:bg-[color:var(--bg-surface-strong)]"
                 >
                   <input
                     type="radio"
@@ -108,7 +108,7 @@ export function InductionQuestions({
                 return (
                   <label
                     key={option}
-                    className="flex min-h-[48px] cursor-pointer items-center rounded-lg border border-white/35 bg-white/45 p-3 hover:bg-white/70"
+                    className="flex min-h-[48px] cursor-pointer items-center rounded-lg border border-surface-soft bg-surface-soft p-3 hover:bg-[color:var(--bg-surface-strong)]"
                   >
                     <input
                       type="checkbox"
@@ -133,7 +133,7 @@ export function InductionQuestions({
           {/* YES_NO question */}
           {question.questionType === "YES_NO" && (
             <div className="flex space-x-4">
-              <label className="flex min-h-[48px] flex-1 cursor-pointer items-center justify-center rounded-lg border border-white/35 bg-white/45 p-3 hover:bg-white/70 focus-within:ring-2 focus-within:ring-indigo-500">
+              <label className="flex min-h-[48px] flex-1 cursor-pointer items-center justify-center rounded-lg border border-surface-soft bg-surface-soft p-3 hover:bg-[color:var(--bg-surface-strong)] focus-within:ring-2 focus-within:ring-indigo-500">
                 <input
                   type="radio"
                   name={question.id}
@@ -145,7 +145,7 @@ export function InductionQuestions({
                 />
                 <span className="ml-2 text-base font-medium text-green-700">Yes</span>
               </label>
-              <label className="flex min-h-[48px] flex-1 cursor-pointer items-center justify-center rounded-lg border border-white/35 bg-white/45 p-3 hover:bg-white/70 focus-within:ring-2 focus-within:ring-indigo-500">
+              <label className="flex min-h-[48px] flex-1 cursor-pointer items-center justify-center rounded-lg border border-surface-soft bg-surface-soft p-3 hover:bg-[color:var(--bg-surface-strong)] focus-within:ring-2 focus-within:ring-indigo-500">
                 <input
                   type="radio"
                   name={question.id}
@@ -162,7 +162,7 @@ export function InductionQuestions({
 
           {/* ACKNOWLEDGMENT question */}
           {question.questionType === "ACKNOWLEDGMENT" && (
-            <label className="flex min-h-[48px] cursor-pointer items-start rounded-lg border border-white/35 bg-white/45 p-3 hover:bg-white/70">
+            <label className="flex min-h-[48px] cursor-pointer items-start rounded-lg border border-surface-soft bg-surface-soft p-3 hover:bg-[color:var(--bg-surface-strong)]">
               <input
                 type="checkbox"
                 checked={answers[question.id] === true}

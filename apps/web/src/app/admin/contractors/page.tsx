@@ -4,6 +4,7 @@ import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import { listContractors } from "@/lib/repository";
 import { redirect } from "next/navigation";
 import { ContractorActionButtons } from "./contractor-action-buttons";
+import { PageEmptyState } from "@/components/ui/page-state";
 
 export const metadata = {
   title: "Contractors | InductLite",
@@ -84,38 +85,46 @@ export default async function ContractorsPage({
   const currentPage = clampPage(page, result.totalPages);
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex items-start justify-between gap-4">
+    <div className="space-y-6 p-3 sm:p-4">
+      <div className="surface-panel-strong flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Contractors</h1>
-          <p className="mt-1 text-gray-600">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+            Contractors
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
             Manage contractor companies and contacts for your sites.
           </p>
         </div>
         <Link
           href="/admin/contractors/new"
-          className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          className="btn-primary w-full sm:w-auto"
         >
           Add Contractor
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 mb-6">
-        <div className="rounded-lg border bg-white p-4">
-          <p className="text-sm text-gray-500">Total Contractors</p>
-          <p className="mt-1 text-2xl font-semibold text-gray-900">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="surface-panel p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+            Total Contractors
+          </p>
+          <p className="mt-1 text-2xl font-black text-[color:var(--text-primary)]">
             {activeSummary.total + inactiveSummary.total}
           </p>
         </div>
-        <div className="rounded-lg border bg-white p-4">
-          <p className="text-sm text-gray-500">Active</p>
-          <p className="mt-1 text-2xl font-semibold text-green-600">
+        <div className="surface-panel p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+            Active
+          </p>
+          <p className="mt-1 text-2xl font-black text-[color:var(--accent-success)]">
             {activeSummary.total}
           </p>
         </div>
-        <div className="rounded-lg border bg-white p-4">
-          <p className="text-sm text-gray-500">Inactive</p>
-          <p className="mt-1 text-2xl font-semibold text-gray-700">
+        <div className="surface-panel p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+            Inactive
+          </p>
+          <p className="mt-1 text-2xl font-black text-secondary">
             {inactiveSummary.total}
           </p>
         </div>
@@ -124,14 +133,16 @@ export default async function ContractorsPage({
       <form
         action="/admin/contractors"
         method="get"
-        className="rounded-lg border bg-white p-4 mb-6"
+        className="table-toolbar"
       >
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="table-toolbar-heading">
+          <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-secondary">
+            Filter Contractors
+          </h2>
+        </div>
+        <div className="table-toolbar-grid">
           <div>
-            <label
-              htmlFor="search"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="search" className="label">
               Search contractor
             </label>
             <input
@@ -141,14 +152,11 @@ export default async function ContractorsPage({
               defaultValue={search}
               placeholder="Name"
               maxLength={120}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="input mt-1"
             />
           </div>
           <div>
-            <label
-              htmlFor="trade"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="trade" className="label">
               Trade
             </label>
             <input
@@ -158,37 +166,34 @@ export default async function ContractorsPage({
               defaultValue={trade}
               placeholder="Electrician"
               maxLength={120}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="input mt-1"
             />
           </div>
           <div>
-            <label
-              htmlFor="status"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label htmlFor="status" className="label">
               Status
             </label>
             <select
               id="status"
               name="status"
               defaultValue={status}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="input mt-1"
             >
               <option value="all">All</option>
               <option value="active">Active</option>
               <option value="inactive">Inactive</option>
             </select>
           </div>
-          <div className="flex items-end gap-2">
+          <div className="table-toolbar-actions">
             <button
               type="submit"
-              className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="btn-primary"
             >
               Apply
             </button>
             <Link
               href="/admin/contractors"
-              className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="btn-secondary"
             >
               Reset
             </Link>
@@ -197,78 +202,79 @@ export default async function ContractorsPage({
       </form>
 
       {result.items.length === 0 ? (
-        <div className="rounded-lg border bg-white p-8 text-center">
-          <h2 className="text-lg font-medium text-gray-900">
-            No contractors found
-          </h2>
-          <p className="mt-1 text-sm text-gray-500">
-            Try adjusting your filters.
-          </p>
-        </div>
+        <PageEmptyState
+          title="No contractors found"
+          description="Try adjusting your filters or add a new contractor."
+          actionHref="/admin/contractors/new"
+          actionLabel="Add Contractor"
+        />
       ) : (
-        <div className="overflow-x-auto rounded-lg border bg-white">
-          <table className="min-w-[920px] divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="surface-panel overflow-x-auto">
+          <table className="min-w-[920px] divide-y divide-[color:var(--border-soft)]">
+            <thead className="bg-[color:var(--bg-surface-strong)]">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                   Contractor
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                   Contact
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                   Trade
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                   Status
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                   Added
                 </th>
-                <th className="px-4 py-3 text-right text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
+            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
               {result.items.map((contractor) => (
-                <tr key={contractor.id} className="hover:bg-gray-50">
+                <tr
+                  key={contractor.id}
+                  className="hover:bg-[color:var(--bg-surface-strong)]"
+                >
                   <td className="px-4 py-3">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-semibold text-[color:var(--text-primary)]">
                       {contractor.name}
                     </p>
-                    <p className="break-all text-sm text-gray-600">
+                    <p className="break-all text-xs text-muted">
                       {contractor.id}
                     </p>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
+                  <td className="px-4 py-3 text-sm text-secondary">
                     <p>{contractor.contact_name || "Not set"}</p>
-                    <p className="break-all text-sm text-gray-600">
+                    <p className="break-all text-xs text-muted">
                       {contractor.contact_email || contractor.contact_phone || "-"}
                     </p>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-700">
+                  <td className="px-4 py-3 text-sm text-secondary">
                     {contractor.trade || "-"}
                   </td>
                   <td className="px-4 py-3">
                     <span
-                      className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                      className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${
                         contractor.is_active
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-700"
+                          ? "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100"
+                          : "border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] text-secondary"
                       }`}
                     >
                       {contractor.is_active ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-gray-500">
+                  <td className="px-4 py-3 text-sm text-muted">
                     {contractor.created_at.toLocaleDateString("en-NZ")}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
                       <Link
                         href={`/admin/contractors/${contractor.id}`}
-                        className="inline-flex items-center rounded-md border border-gray-300 px-2.5 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        className="btn-secondary min-h-[38px] px-3 py-1.5 text-xs"
                       >
                         Edit
                       </Link>
@@ -287,7 +293,7 @@ export default async function ContractorsPage({
       )}
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-secondary">
           Showing {result.items.length} of {result.total} contractor
           {result.total === 1 ? "" : "s"}
         </p>
@@ -300,15 +306,15 @@ export default async function ContractorsPage({
                 status,
               })}
               aria-disabled={currentPage === 1}
-              className={`rounded-md border px-3 py-1.5 text-sm ${
+              className={`btn-secondary min-h-[38px] px-3 py-1.5 text-sm ${
                 currentPage === 1
-                  ? "pointer-events-none cursor-not-allowed text-gray-400"
-                  : "text-gray-700 hover:bg-gray-50"
+                  ? "pointer-events-none cursor-not-allowed opacity-50"
+                  : ""
               }`}
             >
               Previous
             </Link>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-secondary">
               Page {currentPage} of {result.totalPages}
             </span>
             <Link
@@ -317,10 +323,10 @@ export default async function ContractorsPage({
                 { search, trade, status },
               )}
               aria-disabled={currentPage === result.totalPages}
-              className={`rounded-md border px-3 py-1.5 text-sm ${
+              className={`btn-secondary min-h-[38px] px-3 py-1.5 text-sm ${
                 currentPage === result.totalPages
-                  ? "pointer-events-none cursor-not-allowed text-gray-400"
-                  : "text-gray-700 hover:bg-gray-50"
+                  ? "pointer-events-none cursor-not-allowed opacity-50"
+                  : ""
               }`}
             >
               Next
@@ -331,3 +337,4 @@ export default async function ContractorsPage({
     </div>
   );
 }
+

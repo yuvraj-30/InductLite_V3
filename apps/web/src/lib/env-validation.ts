@@ -308,6 +308,36 @@ const ENV_CONFIG: EnvConfig[] = [
     description: "Enable/disable visual regression",
   },
   {
+    name: "UIX_S1_VISUAL",
+    required: false,
+    production: false,
+    description: "UI/UX sprint S1 rollout flag (visual system hardening)",
+  },
+  {
+    name: "UIX_S2_FLOW",
+    required: false,
+    production: false,
+    description: "UI/UX sprint S2 rollout flag (core flow friction reduction)",
+  },
+  {
+    name: "UIX_S3_MOBILE",
+    required: false,
+    production: false,
+    description: "UI/UX sprint S3 rollout flag (mobile admin redesign)",
+  },
+  {
+    name: "UIX_S4_AI",
+    required: false,
+    production: false,
+    description: "UI/UX sprint S4 rollout flag (AI-native workflow integration)",
+  },
+  {
+    name: "UIX_S5_A11Y",
+    required: false,
+    production: false,
+    description: "UI/UX sprint S5 rollout flag (a11y and performance hardening)",
+  },
+  {
     name: "FF_PERMITS_V1",
     required: false,
     production: false,

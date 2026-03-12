@@ -5,10 +5,35 @@ import { findAllSites } from "@/lib/repository/site.repository";
 import { listHazards } from "@/lib/repository/hazard.repository";
 import { closeHazardAction, createHazardAction } from "./actions";
 import { redirect } from "next/navigation";
+import { PageEmptyState } from "@/components/ui/page-state";
+import { InlineCopilotPanel } from "../components/inline-copilot-panel";
 
 export const metadata = {
   title: "Hazard Register | InductLite",
 };
+
+function riskChipClass(riskLevel: string): string {
+  if (riskLevel === "CRITICAL") {
+    return "border-red-500/45 bg-red-500/20 text-red-950 dark:text-red-100";
+  }
+  if (riskLevel === "HIGH") {
+    return "border-amber-400/45 bg-amber-500/20 text-amber-900 dark:text-amber-100";
+  }
+  if (riskLevel === "MEDIUM") {
+    return "border-cyan-400/35 bg-cyan-500/15 text-cyan-950 dark:text-cyan-100";
+  }
+  return "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100";
+}
+
+function hazardStatusChipClass(status: string): string {
+  if (status === "CLOSED") {
+    return "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100";
+  }
+  if (status === "ACTIVE") {
+    return "border-amber-400/35 bg-amber-500/15 text-amber-900 dark:text-amber-100";
+  }
+  return "border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] text-secondary";
+}
 
 export default async function HazardsPage() {
   const auth = await checkAuthReadOnly();
@@ -28,24 +53,32 @@ export default async function HazardsPage() {
   ]);
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="space-y-6 p-3 sm:p-4">
+      <div className="surface-panel-strong flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Hazard Register</h1>
-          <p className="mt-1 text-gray-600">
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+            Hazard Register
+          </h1>
+          <p className="mt-1 text-sm text-secondary">
             Track active hazards, controls, and close-out state across sites.
           </p>
         </div>
         <Link
           href="/admin/dashboard"
-          className="text-sm text-blue-600 hover:text-blue-800"
+          className="text-sm font-semibold text-accent hover:underline"
         >
           Back to Dashboard
         </Link>
       </div>
 
-      <section className="mb-8 rounded-lg border bg-white p-4">
-        <h2 className="text-lg font-semibold text-gray-900">Add Hazard</h2>
+      <InlineCopilotPanel
+        companyId={context.companyId}
+        prompt="Which hazard controls should we prioritize this week to reduce active site risk?"
+        title="Hazard Triage Copilot"
+      />
+
+      <section className="surface-panel p-4">
+        <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">Add Hazard</h2>
         <form
           action={async (formData) => {
             "use server";
@@ -53,7 +86,7 @@ export default async function HazardsPage() {
           }}
           className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2"
         >
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Site
             <select
               name="siteId"
@@ -69,7 +102,7 @@ export default async function HazardsPage() {
             </select>
           </label>
 
-          <label className="text-sm text-gray-700">
+          <label className="text-sm text-secondary">
             Risk Level
             <select
               name="riskLevel"
@@ -83,7 +116,7 @@ export default async function HazardsPage() {
             </select>
           </label>
 
-          <label className="text-sm text-gray-700 md:col-span-2">
+          <label className="text-sm text-secondary md:col-span-2">
             Hazard Title
             <input
               name="title"
@@ -94,7 +127,7 @@ export default async function HazardsPage() {
             />
           </label>
 
-          <label className="text-sm text-gray-700 md:col-span-2">
+          <label className="text-sm text-secondary md:col-span-2">
             Description
             <textarea
               name="description"
@@ -106,7 +139,7 @@ export default async function HazardsPage() {
           <div className="md:col-span-2">
             <button
               type="submit"
-              className="min-h-[44px] rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="btn-primary"
             >
               Add Hazard
             </button>
@@ -114,48 +147,67 @@ export default async function HazardsPage() {
         </form>
       </section>
 
-      <section className="rounded-lg border bg-white">
-        <div className="border-b border-gray-200 px-4 py-3">
-          <h2 className="text-lg font-semibold text-gray-900">Current Hazards</h2>
+      <section className="surface-panel overflow-hidden">
+        <div className="border-b border-[color:var(--border-soft)] px-4 py-3">
+          <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">
+            Current Hazards
+          </h2>
         </div>
         {hazardResult.items.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-gray-500">
-            No hazards recorded yet.
-          </p>
+          <div className="p-4">
+            <PageEmptyState
+              title="No hazards recorded yet"
+              description="Add a hazard above to start tracking controls and close-out actions."
+            />
+          </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
+              <thead className="bg-[color:var(--bg-surface-strong)]">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                     Hazard
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                     Risk
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                     Identified
                   </th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold uppercase tracking-[0.08em] text-gray-600">
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
                     Action
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
+              <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
                 {hazardResult.items.map((hazard) => (
-                  <tr key={hazard.id}>
+                  <tr key={hazard.id} className="hover:bg-[color:var(--bg-surface-strong)]">
                     <td className="px-4 py-3">
-                      <p className="text-sm font-medium text-gray-900">{hazard.title}</p>
+                      <p className="text-sm font-semibold text-[color:var(--text-primary)]">
+                        {hazard.title}
+                      </p>
                       {hazard.description && (
-                        <p className="mt-1 text-xs text-gray-500">{hazard.description}</p>
+                        <p className="mt-1 text-xs text-muted">{hazard.description}</p>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{hazard.risk_level}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{hazard.status}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">
+                    <td className="px-4 py-3 text-sm">
+                      <span
+                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${riskChipClass(hazard.risk_level)}`}
+                      >
+                        {hazard.risk_level}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      <span
+                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${hazardStatusChipClass(hazard.status)}`}
+                      >
+                        {hazard.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-secondary">
                       {hazard.identified_at.toLocaleString("en-NZ")}
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -168,7 +220,7 @@ export default async function HazardsPage() {
                         >
                           <button
                             type="submit"
-                            className="min-h-[36px] rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                            className="btn-secondary min-h-[36px] px-3 py-1.5 text-xs"
                           >
                             Close
                           </button>
@@ -185,3 +237,4 @@ export default async function HazardsPage() {
     </div>
   );
 }
+

@@ -203,7 +203,7 @@ export function CreateVersionButton({ templateId, templateName }: ButtonProps) {
       <button
         onClick={handleCreateVersion}
         disabled={isLoading}
-        className="text-blue-600 hover:text-blue-900 disabled:opacity-50"
+        className="text-accent hover:underline disabled:opacity-50"
       >
         {isLoading ? "Creating..." : "New Version"}
       </button>

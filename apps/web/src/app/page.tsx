@@ -1,4 +1,10 @@
 import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import type { TierPresentation } from "@/lib/plans/tier-presentation";
+import { TIER_PRESENTATION } from "@/lib/plans/tier-presentation";
+import { cn } from "@/lib/utils";
 
 // Nonce-based CSP requires runtime rendering so Next can attach per-request nonce
 // attributes to inline hydration scripts.
@@ -74,46 +80,12 @@ const INTEGRATION_FEATURES = [
   "Email and SMS workflow support (plan/add-on controlled)",
 ];
 
-const PLAN_CARDS = [
-  {
-    name: "Standard",
-    price: "NZ$89",
-    subtitle: "Per site / month",
-    highlights: [
-      "QR sign-in + digital inductions",
-      "Emergency roll-call",
-      "Pre-registration invites",
-      "Export + reminder foundations",
-    ],
-    cta: "Start Standard",
-  },
-  {
-    name: "Plus",
-    price: "NZ$119",
-    subtitle: "Per site / month",
-    highlights: [
-      "Everything in Standard",
-      "Quiz scoring and retry controls",
-      "Media-first induction blocks",
-      "Higher workflow depth for field teams",
-    ],
-    cta: "Start Plus",
-  },
-  {
-    name: "Pro",
-    price: "NZ$149",
-    subtitle: "Per site / month",
-    highlights: [
-      "Everything in Plus",
-      "LMS connector",
-      "Advanced analytics surfaces",
-      "Policy simulator and risk passport",
-      "Plan configurator with scheduled entitlement changes",
-      "Best fit for multi-site scale",
-    ],
-    cta: "Start Pro",
-  },
-];
+const PLAN_TIERS = TIER_PRESENTATION.filter(
+  (item): item is TierPresentation & { key: "STANDARD" | "PLUS" | "PRO"; priceCents: number } =>
+    item.key !== "ADD_ONS" && Number.isFinite(item.priceCents),
+);
+
+const ADD_ONS_TIER = TIER_PRESENTATION.find((item) => item.key === "ADD_ONS");
 
 const LATEST_RELEASES = [
   "Permit-to-Work / Control-of-Work workflows",
@@ -126,6 +98,14 @@ const LATEST_RELEASES = [
   "Tamper-evident compliance evidence verification APIs",
   "Self-serve plan configurator with scheduled plan changes",
 ];
+
+function formatPlanPrice(cents: number): string {
+  return new Intl.NumberFormat("en-NZ", {
+    style: "currency",
+    currency: "NZD",
+    maximumFractionDigits: 0,
+  }).format(cents / 100);
+}
 
 export default function HomePage() {
   return (
@@ -196,16 +176,16 @@ export default function HomePage() {
                 Typical Workflow
               </p>
               <ol className="mt-3 space-y-2 text-sm text-secondary">
-                <li className="rounded-lg border border-white/25 bg-white/35 px-3 py-2">
+                <li className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2">
                   1. Contractor scans QR at site entry.
                 </li>
-                <li className="rounded-lg border border-white/25 bg-white/35 px-3 py-2">
+                <li className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2">
                   2. Completes media-first induction + signature.
                 </li>
-                <li className="rounded-lg border border-white/25 bg-white/35 px-3 py-2">
+                <li className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2">
                   3. Supervisor gets alerts for escalations when required.
                 </li>
-                <li className="rounded-lg border border-white/25 bg-white/35 px-3 py-2">
+                <li className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2">
                   4. Admin exports audit evidence on demand.
                 </li>
               </ol>
@@ -216,7 +196,7 @@ export default function HomePage() {
             {TRUST_BADGES.map((badge) => (
               <p
                 key={badge}
-                className="rounded-lg border border-white/25 bg-white/35 px-3 py-2 text-xs font-semibold text-secondary"
+                className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2 text-xs font-semibold text-secondary"
               >
                 {badge}
               </p>
@@ -231,7 +211,7 @@ export default function HomePage() {
           </p>
           <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {STANDARD_FEATURES.map((feature) => (
-              <article key={feature.title} className="rounded-xl border border-white/25 bg-white/35 p-4">
+              <article key={feature.title} className="rounded-xl border border-surface-soft bg-surface-soft p-4">
                 <p className="text-sm font-semibold text-[color:var(--text-primary)]">
                   {feature.title}
                 </p>
@@ -250,7 +230,7 @@ export default function HomePage() {
             {INTEGRATION_FEATURES.map((item) => (
               <p
                 key={item}
-                className="rounded-xl border border-white/25 bg-white/35 px-4 py-3 text-sm text-secondary"
+                className="rounded-xl border border-surface-soft bg-surface-soft px-4 py-3 text-sm text-secondary"
               >
                 {item}
               </p>
@@ -259,36 +239,58 @@ export default function HomePage() {
         </section>
 
         <section id="pricing" className="surface-panel-strong px-5 py-6 sm:px-6">
-          <h2 className="text-2xl font-bold">Simple Plan Bands</h2>
+          <h2 className="text-2xl font-bold">Simple Tier Coverage</h2>
           <p className="mt-2 text-sm text-secondary">
-            Pricing is designed for Standard, Plus, and Pro rollout with add-ons kept optional.
+            Standard, Plus, Pro, and Add-ons are modeled as one consistent tier system across the app.
           </p>
           <div className="mt-4 grid gap-3 lg:grid-cols-3">
-            {PLAN_CARDS.map((plan) => (
-              <article key={plan.name} className="rounded-xl border border-white/25 bg-white/40 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-                  {plan.name}
-                </p>
-                <p className="mt-2 text-3xl font-black">{plan.price}</p>
-                <p className="text-xs text-secondary">{plan.subtitle}</p>
-                <ul className="mt-3 space-y-2 text-xs text-secondary">
-                  {plan.highlights.map((item) => (
-                    <li key={item} className="rounded-lg bg-white/35 px-2 py-1.5">
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/register" className="btn-primary mt-4 w-full">
-                  {plan.cta}
-                </Link>
-              </article>
+            {PLAN_TIERS.map((plan) => (
+              <Card key={plan.key} tone={plan.key === "PRO" ? "elevated" : "default"} interactive>
+                <CardHeader>
+                  <Badge variant={plan.badgeTone} className="w-fit">
+                    {plan.label}
+                  </Badge>
+                  <CardTitle className="mt-2 text-3xl font-black">{formatPlanPrice(plan.priceCents)}</CardTitle>
+                  <CardDescription>Per site / month</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <p className="text-sm text-secondary">{plan.subtitle}</p>
+                  <ul className="space-y-2 text-xs text-secondary">
+                    {plan.highlights.map((item) => (
+                      <li key={item} className="rounded-lg border border-surface-soft bg-surface-soft px-2 py-1.5">
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                  <Link href="/register" className={cn(buttonVariants(), "w-full")}>
+                    Start {plan.label}
+                  </Link>
+                </CardFooter>
+              </Card>
             ))}
           </div>
-          <p className="mt-3 text-xs text-muted">
-            Standard supports removable feature credits to reduce per-site cost where needed.
-          </p>
+          {ADD_ONS_TIER ? (
+            <div className="mt-4 rounded-xl border border-surface-soft bg-surface-soft p-4">
+              <div className="flex items-center gap-2">
+                <Badge variant={ADD_ONS_TIER.badgeTone}>{ADD_ONS_TIER.label}</Badge>
+                <p className="text-sm text-secondary">{ADD_ONS_TIER.subtitle}</p>
+              </div>
+              <ul className="mt-3 grid gap-2 text-xs text-secondary md:grid-cols-2">
+                {ADD_ONS_TIER.highlights.map((item) => (
+                  <li key={item} className="rounded-lg bg-surface-soft px-2 py-1.5">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
           <div className="mt-3">
-            <Link href="/pricing" className="text-sm font-semibold text-[color:var(--text-primary)] hover:text-accent hover:underline">
+            <Link
+              href="/pricing"
+              className="text-sm font-semibold text-[color:var(--text-primary)] hover:text-accent hover:underline"
+            >
               View full pricing and add-on details
             </Link>
           </div>
@@ -303,7 +305,7 @@ export default function HomePage() {
             {LATEST_RELEASES.map((item) => (
               <p
                 key={item}
-                className="rounded-lg border border-white/25 bg-white/35 px-3 py-2 text-sm text-secondary"
+                className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2 text-sm text-secondary"
               >
                 {item}
               </p>
@@ -339,15 +341,15 @@ export default function HomePage() {
               templates, and operator training.
             </p>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-white/25 bg-white/35 p-3 text-sm text-secondary">
+              <div className="rounded-xl border border-surface-soft bg-surface-soft p-3 text-sm text-secondary">
                 <p className="font-semibold text-[color:var(--text-primary)]">Admin Setup</p>
                 <p className="mt-1">Company, users, and role configuration.</p>
               </div>
-              <div className="rounded-xl border border-white/25 bg-white/35 p-3 text-sm text-secondary">
+              <div className="rounded-xl border border-surface-soft bg-surface-soft p-3 text-sm text-secondary">
                 <p className="font-semibold text-[color:var(--text-primary)]">Template Build</p>
                 <p className="mt-1">Induction question and media structure.</p>
               </div>
-              <div className="rounded-xl border border-white/25 bg-white/35 p-3 text-sm text-secondary">
+              <div className="rounded-xl border border-surface-soft bg-surface-soft p-3 text-sm text-secondary">
                 <p className="font-semibold text-[color:var(--text-primary)]">Go-Live Checks</p>
                 <p className="mt-1">Public flow validation and export verification.</p>
               </div>

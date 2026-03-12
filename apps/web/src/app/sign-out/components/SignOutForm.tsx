@@ -55,20 +55,20 @@ export function SignOutForm({ initialToken }: SignOutFormProps) {
   // Success state
   if (success) {
     return (
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div className="bg-green-500 text-white px-6 py-8 text-center">
-          <div className="text-5xl mb-4">✓</div>
+      <div className="surface-panel-strong overflow-hidden">
+        <div className="bg-emerald-600 px-6 py-8 text-center text-white">
+          <div className="mb-4 text-5xl">OK</div>
           <h1 className="text-2xl font-bold">Signed Out Successfully</h1>
-          <p className="text-green-100 mt-2">
+          <p className="mt-2 text-emerald-100">
             Thank you for your visit, {success.visitorName}
           </p>
         </div>
 
         <div className="px-6 py-6 text-center">
-          <p className="text-gray-600 mb-4">
+          <p className="mb-4 text-secondary">
             You have been signed out. Have a safe journey!
           </p>
-          <p className="text-sm text-gray-500">You may close this page now.</p>
+          <p className="text-sm text-muted">You may close this page now.</p>
         </div>
       </div>
     );
@@ -77,17 +77,17 @@ export function SignOutForm({ initialToken }: SignOutFormProps) {
   // No token provided
   if (!token) {
     return (
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-        <div className="bg-red-500 text-white px-6 py-8 text-center">
-          <div className="text-5xl mb-4">⚠️</div>
+      <div className="surface-panel-strong overflow-hidden">
+        <div className="bg-red-600 px-6 py-8 text-center text-white">
+          <div className="mb-4 text-5xl">!</div>
           <h1 className="text-2xl font-bold">Invalid Link</h1>
         </div>
 
         <div className="px-6 py-6 text-center">
-          <p className="text-gray-600 mb-4">
+          <p className="mb-4 text-secondary">
             This sign-out link is invalid or has expired.
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted">
             Please use the sign-out link you received when signing in, or
             contact site reception for assistance.
           </p>
@@ -98,26 +98,23 @@ export function SignOutForm({ initialToken }: SignOutFormProps) {
 
   // Sign-out form
   return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-      <div className="bg-blue-600 text-white px-6 py-6 text-center">
+    <div className="surface-panel-strong overflow-hidden">
+      <div className="bg-gradient-to-r from-indigo-700 to-cyan-700 px-6 py-6 text-center text-white">
         <h1 className="text-xl font-bold">Sign Out</h1>
-        <p className="text-blue-100 text-sm mt-1">
+        <p className="mt-1 text-sm text-cyan-100">
           Confirm your phone number to sign out
         </p>
       </div>
 
       {error && (
-        <div className="bg-red-50 border-b border-red-200 px-4 py-3">
-          <p className="text-red-700 text-sm">{error}</p>
+        <div className="border-b border-red-400/45 bg-red-100/70 px-4 py-3 dark:bg-red-950/45">
+          <p className="text-sm text-red-950 dark:text-red-100">{error}</p>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="p-6 space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4 p-6">
         <div>
-          <label
-            htmlFor="signOutPhone"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <label htmlFor="signOutPhone" className="label mb-1">
             Phone Number <span className="text-red-500">*</span>
           </label>
           <input
@@ -126,10 +123,10 @@ export function SignOutForm({ initialToken }: SignOutFormProps) {
             required
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="input"
             placeholder="Enter the phone number used to sign in"
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-secondary">
             Enter the same phone number you used when signing in
           </p>
         </div>
@@ -137,14 +134,14 @@ export function SignOutForm({ initialToken }: SignOutFormProps) {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-primary w-full disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? "Signing out..." : "Confirm Sign Out"}
         </button>
       </form>
 
-      <div className="px-6 py-4 bg-gray-50 border-t">
-        <p className="text-sm text-gray-500 text-center">
+      <div className="border-t border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] px-6 py-4">
+        <p className="text-center text-sm text-secondary">
           Having trouble? Contact site reception for assistance.
         </p>
       </div>

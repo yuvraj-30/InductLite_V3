@@ -40,7 +40,7 @@ export function DeactivateInviteButton({
           type="button"
           onClick={() => setShowConfirm(false)}
           disabled={isPending}
-          className="rounded border border-gray-300 bg-white px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+          className="rounded border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] px-2 py-1 text-xs text-secondary hover:bg-[color:var(--bg-surface-strong)]"
         >
           Cancel
         </button>
@@ -52,9 +52,10 @@ export function DeactivateInviteButton({
     <button
       type="button"
       onClick={() => setShowConfirm(true)}
-      className="rounded border border-red-300 bg-white px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
+      className="rounded border border-red-300 bg-[color:var(--bg-surface)] px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50"
     >
       Deactivate
     </button>
   );
 }
+

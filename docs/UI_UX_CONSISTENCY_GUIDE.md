@@ -36,6 +36,13 @@ This repo now uses a 2026 tokenized visual system across admin, auth, contractor
   - route target,
   - optional context keywords.
 
+## AI Trust Pattern
+
+- In-context copilot guidance remains draft-only by default.
+- Every accepted/rejected/edited AI recommendation requires explicit human action.
+- AI decisions are written to communication events and audit logs without free-text payload content.
+- Confidence band and source signals must be visible where AI suggestions are rendered.
+
 ## Typography & Motion
 
 - Body font uses variable `Manrope`; display uses variable `Space Grotesk`.
@@ -56,3 +63,7 @@ This repo now uses a 2026 tokenized visual system across admin, auth, contractor
   - `npm run -w apps/web lint`
   - `npm run -w apps/web typecheck`
 - For UI-heavy changes, also run relevant Playwright specs for touched flows when environment supports E2E fixture server mode.
+- For accessibility/performance gates, run:
+  - `npm run -w apps/web test:e2e -- e2e/a11y.spec.ts`
+  - `npm run -w apps/web test:e2e:perf-budget`
+  - `npm run report:ux-perf-budget`

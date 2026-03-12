@@ -164,11 +164,11 @@ export default async function AdminDashboardPage({
 
   return (
     <div className="space-y-6 p-2 sm:p-3">
-      <section className="surface-panel-strong kinetic-hover overflow-hidden bg-gradient-to-br from-indigo-500/18 via-cyan-400/12 to-transparent p-5 sm:p-6">
+      <section className="surface-panel-strong overflow-hidden p-5 sm:p-6">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-          Mission Control
+          Overview
         </p>
-        <h1 className="kinetic-title mt-1 text-3xl font-black sm:text-4xl">Dashboard</h1>
+        <h1 className="mt-1 text-3xl font-bold sm:text-4xl">Dashboard</h1>
         <p className="mt-2 max-w-3xl text-sm text-secondary sm:text-base">
           Live overview of sites, on-site workforce, and compliance risk.
         </p>
@@ -308,7 +308,7 @@ export default async function AdminDashboardPage({
               </div>
             </div>
             <div
-              className={`rounded-2xl border p-3 ${documentsExpiringSoon > 0 ? "border-amber-400/45 bg-amber-500/18" : "border-white/35 bg-white/45"}`}
+              className={`rounded-2xl border p-3 ${documentsExpiringSoon > 0 ? "border-amber-400/45 bg-amber-500/18" : "border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)]"}`}
             >
               <div
                 className={`${documentsExpiringSoon > 0 ? "text-amber-900 dark:text-amber-100" : "text-secondary"}`}
@@ -495,7 +495,7 @@ export default async function AdminDashboardPage({
       </section>
 
       <section className="surface-panel overflow-hidden">
-        <div className="flex items-center justify-between border-b border-white/25 px-5 py-4">
+        <div className="flex items-center justify-between border-b border-surface-soft px-5 py-4">
           <div>
             <h2 className="kinetic-title text-xl font-black text-[color:var(--text-primary)]">
               Quiz Performance Signals (30 Days)
@@ -507,14 +507,14 @@ export default async function AdminDashboardPage({
           </div>
           <Link
             href="/admin/templates"
-            className="inline-flex min-h-[38px] items-center rounded-lg border border-white/35 bg-white/45 px-3 py-2 text-xs font-semibold text-[color:var(--text-primary)] hover:bg-white/60"
+            className="inline-flex min-h-[38px] items-center rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] px-3 py-2 text-xs font-semibold text-[color:var(--text-primary)] hover:bg-[color:var(--bg-surface)]"
           >
             Manage Templates
           </Link>
         </div>
 
         <div className="grid grid-cols-1 gap-4 p-5 lg:grid-cols-4">
-          <div className="rounded-lg border border-white/25 bg-white/45 p-4">
+          <div className="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
               Scored Responses
             </p>
@@ -553,8 +553,8 @@ export default async function AdminDashboardPage({
         </div>
 
         <div className="overflow-x-auto px-5 pb-5">
-          <table className="min-w-full divide-y divide-white/25 rounded-xl border border-white/20">
-            <thead className="bg-white/45">
+          <table className="min-w-full divide-y divide-[color:var(--border-soft)] rounded-xl border border-surface-soft">
+            <thead className="bg-[color:var(--bg-surface)]">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
                   Template
@@ -573,7 +573,7 @@ export default async function AdminDashboardPage({
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/20 bg-white/20">
+            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
               {quizSummary.topRiskTemplateSites.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-4 py-6 text-center text-sm text-secondary">
@@ -648,7 +648,7 @@ export default async function AdminDashboardPage({
 
       <section className="bento-grid grid-cols-1 lg:grid-cols-3">
         <div className="surface-panel overflow-hidden">
-          <div className="border-b border-white/25 px-5 py-4">
+          <div className="border-b border-surface-soft px-5 py-4">
             <h2 className="kinetic-title text-xl font-black text-[color:var(--text-primary)]">
               Recent Sign-Ins
             </h2>
@@ -657,7 +657,7 @@ export default async function AdminDashboardPage({
             {recentSignIns.length === 0 ? (
               <p className="text-sm text-secondary">No recent sign-ins.</p>
             ) : (
-              <ul className="divide-y divide-white/20">
+              <ul className="divide-y divide-[color:var(--border-soft)]">
                 {recentSignIns.map((record) => (
                   <li key={record.id} className="py-3">
                     <div className="flex items-center justify-between">
@@ -688,13 +688,13 @@ export default async function AdminDashboardPage({
         </div>
 
         <div className="surface-panel overflow-hidden">
-          <div className="flex items-center justify-between border-b border-white/25 px-5 py-4">
+          <div className="flex items-center justify-between border-b border-surface-soft px-5 py-4">
             <h2 className="kinetic-title text-xl font-black text-[color:var(--text-primary)]">
               Recent Activity
             </h2>
             <Link
               href="/admin/audit-log"
-              className="rounded-lg border border-white/35 bg-white/45 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-secondary hover:bg-white/70"
+              className="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-secondary hover:bg-[color:var(--bg-surface-strong)]"
             >
               View all
             </Link>
@@ -703,7 +703,7 @@ export default async function AdminDashboardPage({
             {recentAuditLogs.length === 0 ? (
               <p className="text-sm text-secondary">No recent activity.</p>
             ) : (
-              <ul className="divide-y divide-white/20">
+              <ul className="divide-y divide-[color:var(--border-soft)]">
                 {recentAuditLogs.map((log) => (
                   <li key={log.id} className="py-3">
                     <div className="flex items-center justify-between">
@@ -727,7 +727,7 @@ export default async function AdminDashboardPage({
         </div>
 
         <div className="surface-panel overflow-hidden">
-          <div className="flex items-center justify-between border-b border-white/25 px-5 py-4">
+          <div className="flex items-center justify-between border-b border-surface-soft px-5 py-4">
             <h2 className="kinetic-title text-xl font-black text-[color:var(--text-primary)]">
               Arrival Alerts
             </h2>
@@ -739,7 +739,7 @@ export default async function AdminDashboardPage({
             {hostArrivalNotifications.length === 0 ? (
               <p className="text-sm text-secondary">No host arrival alerts yet.</p>
             ) : (
-              <ul className="divide-y divide-white/20">
+              <ul className="divide-y divide-[color:var(--border-soft)]">
                 {hostArrivalNotifications.map((notification) => (
                   <li key={notification.id} className="py-3">
                     <div className="flex items-center justify-between gap-3">
@@ -791,4 +791,5 @@ function formatAuditAction(action: string): string {
 
   return actionMap[action] || action.replace(".", " ").replace(/_/g, " ");
 }
+
 
