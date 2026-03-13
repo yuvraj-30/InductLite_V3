@@ -8,8 +8,10 @@ Status legend: [ ] todo [x] done [!] blocked
 
 - [ ] Rotate production secrets (session, admin seed, storage, Upstash).
   - Pass: Secrets set in Render/Neon/R2/Upstash; none in repo.
-- [ ] Resolve or accept CodeQL alert (seed logging).
-  - Pass: CodeQL clean or documented risk acceptance.
+- [ ] Rotate external directory sync and partner API keys created before March 13, 2026.
+  - Pass: Legacy weak token hashes are no longer relied on in production.
+- [ ] Resolve or accept CodeQL alerts in first-party code.
+  - Pass: CodeQL clean for shipped code, with archived competitor snapshots excluded from scanning noise.
 - [ ] CSP rollout (report-only -> enforce).
   - Pass: No new violations after 24-48h; enforcement enabled.
 

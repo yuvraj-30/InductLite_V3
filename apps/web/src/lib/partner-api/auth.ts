@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createHash } from "crypto";
+import { createHmac } from "crypto";
 import {
   parseCompanySsoConfig,
   verifyPartnerApiKey,
@@ -25,8 +25,30 @@ function parseBearerToken(header: string | null): string | null {
   return token.trim() || null;
 }
 
+function getPartnerTokenFingerprintSecret(): string {
+  try {
+    const env = eval("process").env ?? {};
+    return (
+      env.PARTNER_API_FINGERPRINT_SECRET?.trim() ||
+      env.SESSION_SECRET?.trim() ||
+      env.JWT_SECRET?.trim() ||
+      "inductlite-partner-token-fingerprint-dev"
+    );
+  } catch {
+    return (
+      process.env.PARTNER_API_FINGERPRINT_SECRET?.trim() ||
+      process.env.SESSION_SECRET?.trim() ||
+      process.env.JWT_SECRET?.trim() ||
+      "inductlite-partner-token-fingerprint-dev"
+    );
+  }
+}
+
 function tokenFingerprint(token: string): string {
-  return createHash("sha256").update(token).digest("hex").slice(0, 16);
+  return createHmac("sha256", getPartnerTokenFingerprintSecret())
+    .update(token)
+    .digest("hex")
+    .slice(0, 16);
 }
 
 export async function authenticatePartnerApiRequest(

@@ -1,17 +1,17 @@
 {
   "summary": {
-    "generatedAt": "2026-03-08T12:12:19.322Z",
-    "totalAppRoutes": 117,
-    "totalPlaywrightSpecs": 19,
+    "generatedAt": "2026-03-13T03:07:52.616Z",
+    "totalAppRoutes": 119,
+    "totalPlaywrightSpecs": 20,
     "totalReferencedPaths": 120,
     "staticReferencedPaths": 120,
     "dynamicReferencedPaths": 0,
     "dynamicLinksMode": false,
     "jsFlowsMode": false,
     "coveredRoutes": 117,
-    "gaps": 0,
-    "uiRoutes": 72,
-    "apiRoutes": 45,
+    "gaps": 2,
+    "uiRoutes": 73,
+    "apiRoutes": 46,
     "coveredUiRoutes": 72,
     "coveredApiRoutes": 45
   },
@@ -111,6 +111,7 @@
         "/admin/audit-log"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/link-integrity.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -175,6 +176,7 @@
         "/admin/contractors"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/admin-management.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -219,6 +221,7 @@
         "/admin/dashboard"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/link-integrity.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -283,6 +286,7 @@
         "/admin/exports"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/export.spec.ts",
         "apps/web/e2e/link-integrity.spec.ts"
       ],
@@ -300,6 +304,7 @@
         "/admin/hazards"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/admin-hazards.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -316,6 +321,7 @@
         "/admin/history"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/link-integrity.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -332,6 +338,7 @@
         "/admin/incidents"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -380,8 +387,10 @@
         "/admin/live-register"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/admin-auth.spec.ts",
         "apps/web/e2e/link-integrity.spec.ts",
+        "apps/web/e2e/performance-budget.spec.ts",
         "apps/web/e2e/visual-regression.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -462,6 +471,7 @@
         "/admin/plan-configurator"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -478,6 +488,7 @@
         "/admin/policy-simulator"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -494,6 +505,7 @@
         "/admin/pre-registrations"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -542,6 +554,7 @@
         "/admin/risk-passport"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -590,6 +603,7 @@
         "/admin/settings"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/admin-settings.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -606,9 +620,11 @@
         "/admin/sites"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/admin-emergency-contacts.spec.ts",
         "apps/web/e2e/admin-hazards.spec.ts",
         "apps/web/e2e/link-integrity.spec.ts",
+        "apps/web/e2e/performance-budget.spec.ts",
         "apps/web/e2e/visual-regression.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -626,6 +642,7 @@
         "/admin/sites/new"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/admin-emergency-contacts.spec.ts",
         "apps/web/e2e/admin-hazards.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
@@ -708,6 +725,7 @@
         "/admin/sites/new"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/admin-emergency-contacts.spec.ts",
         "apps/web/e2e/admin-hazards.spec.ts"
       ],
@@ -725,6 +743,7 @@
         "/admin/templates"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/link-integrity.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -743,6 +762,7 @@
         "/admin/templates/new"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -775,6 +795,7 @@
         "/admin/templates/new"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -807,6 +828,7 @@
         "/admin/users"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/admin-management.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -824,6 +846,7 @@
         "/admin/users/new"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -840,6 +863,7 @@
         "/admin/users/new"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -1385,6 +1409,7 @@
       ],
       "evidenceSpecs": [
         "apps/web/e2e/escalation-approval.spec.ts",
+        "apps/web/e2e/logic-flow.spec.ts",
         "apps/web/e2e/public-signin.spec.ts",
         "apps/web/e2e/visual-regression.spec.ts"
       ],
@@ -1552,6 +1577,18 @@
       "dynamicEvidencePaths": []
     },
     {
+      "sourceFile": "apps/web/src/app/api/ux-events/route.ts",
+      "routePath": "/api/ux-events",
+      "routeType": "route-handler",
+      "surface": "api",
+      "priority": "P0",
+      "risk": "API contract / integration behavior",
+      "status": "Gap",
+      "evidencePaths": [],
+      "evidenceSpecs": [],
+      "dynamicEvidencePaths": []
+    },
+    {
       "sourceFile": "apps/web/src/app/api/v1/partner/sign-ins/route.ts",
       "routePath": "/api/v1/partner/sign-ins",
       "routeType": "route-handler",
@@ -1707,8 +1744,10 @@
         "/login"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/admin-auth.spec.ts",
         "apps/web/e2e/link-integrity.spec.ts",
+        "apps/web/e2e/performance-budget.spec.ts",
         "apps/web/e2e/visual-regression.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -1813,6 +1852,7 @@
         "apps/web/e2e/kiosk-mode.spec.ts",
         "apps/web/e2e/link-integrity.spec.ts",
         "apps/web/e2e/logic-flow.spec.ts",
+        "apps/web/e2e/performance-budget.spec.ts",
         "apps/web/e2e/public-signin.spec.ts",
         "apps/web/e2e/visual-regression.spec.ts"
       ],
@@ -1852,6 +1892,18 @@
         "apps/web/e2e/link-integrity.spec.ts",
         "apps/web/e2e/public-signin.spec.ts"
       ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/signout/page.tsx",
+      "routePath": "/signout",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P2",
+      "risk": "Public site UX / SEO",
+      "status": "Gap",
+      "evidencePaths": [],
+      "evidenceSpecs": [],
       "dynamicEvidencePaths": []
     },
     {
@@ -2056,6 +2108,7 @@
     "apps/web/e2e/kiosk-mode.spec.ts",
     "apps/web/e2e/link-integrity.spec.ts",
     "apps/web/e2e/logic-flow.spec.ts",
+    "apps/web/e2e/performance-budget.spec.ts",
     "apps/web/e2e/public-signin.spec.ts",
     "apps/web/e2e/security-gate.spec.ts",
     "apps/web/e2e/seo.spec.ts",

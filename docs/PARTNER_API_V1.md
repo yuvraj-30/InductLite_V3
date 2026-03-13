@@ -8,6 +8,7 @@ Versioned external API endpoints for tenant-approved partner integrations.
 - Auth: `Authorization: Bearer <partner_api_key>`
 - Company scope: `?company=<company-slug>` query parameter is required.
 - Key lifecycle: configure and rotate from `/admin/settings` under SSO and Directory Sync.
+- Security hardening note: partner API keys created before March 13, 2026 must be rotated once after deploy because legacy weak hashes are no longer accepted.
 
 ## Endpoints
 

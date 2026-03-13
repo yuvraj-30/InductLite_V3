@@ -64,6 +64,9 @@
     "undici": ">=6.23.0",
     "basic-ftp": "5.2.0",
     "fast-xml-parser": "5.3.8",
+    "lodash": "4.17.23",
+    "hono": "4.12.7",
+    "@hono/node-server": "1.19.11",
     "serialize-javascript": "7.0.3",
     "@aws-sdk/xml-builder": {
       "fast-xml-parser": "5.3.8"

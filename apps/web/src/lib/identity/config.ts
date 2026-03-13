@@ -1,4 +1,4 @@
-import { createHash, randomBytes, timingSafeEqual } from "crypto";
+import { randomBytes, scryptSync, timingSafeEqual } from "crypto";
 import type { UserRole } from "@prisma/client";
 import { decryptString, encryptString } from "@/lib/security/data-protection";
 
@@ -48,6 +48,9 @@ const DEFAULT_ROLE_MAPPING: RoleMapping = {
   SITE_MANAGER: ["site_manager", "site-managers", "manager"],
   VIEWER: ["viewer", "users", "read_only"],
 };
+const API_KEY_HASH_PREFIX = "scrypt";
+const API_KEY_SALT_BYTES = 16;
+const API_KEY_DERIVED_KEY_BYTES = 32;
 
 function normalizeString(value: unknown, maxLength = 2000): string | null {
   if (typeof value !== "string") return null;
@@ -240,7 +243,32 @@ export function generatePartnerApiKey(): string {
 }
 
 function hashToken(value: string): string {
-  return createHash("sha256").update(value).digest("hex");
+  const salt = randomBytes(API_KEY_SALT_BYTES);
+  const derivedKey = scryptSync(value, salt, API_KEY_DERIVED_KEY_BYTES);
+  return `${API_KEY_HASH_PREFIX}$${salt.toString("base64url")}$${derivedKey.toString("base64url")}`;
+}
+
+function verifyToken(value: string, expectedHash: string | null): boolean {
+  if (!expectedHash) return false;
+
+  if (expectedHash.startsWith(`${API_KEY_HASH_PREFIX}$`)) {
+    const [, saltRaw, derivedKeyRaw] = expectedHash.split("$", 3);
+    if (!saltRaw || !derivedKeyRaw) return false;
+
+    try {
+      const salt = Buffer.from(saltRaw, "base64url");
+      const expected = Buffer.from(derivedKeyRaw, "base64url");
+      if (salt.length === 0 || expected.length === 0) return false;
+
+      const provided = scryptSync(value, salt, expected.length);
+      if (expected.length !== provided.length) return false;
+      return timingSafeEqual(expected, provided);
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
 }
 
 export function hashDirectorySyncApiKey(apiKey: string): string {
@@ -255,26 +283,14 @@ export function verifyDirectorySyncApiKey(
   apiKey: string,
   expectedHash: string | null,
 ): boolean {
-  if (!expectedHash) return false;
-  const providedHash = hashToken(apiKey);
-  const expected = Buffer.from(expectedHash, "hex");
-  const provided = Buffer.from(providedHash, "hex");
-  if (expected.length === 0 || provided.length === 0) return false;
-  if (expected.length !== provided.length) return false;
-  return timingSafeEqual(expected, provided);
+  return verifyToken(apiKey, expectedHash);
 }
 
 export function verifyPartnerApiKey(
   apiKey: string,
   expectedHash: string | null,
 ): boolean {
-  if (!expectedHash) return false;
-  const providedHash = hashToken(apiKey);
-  const expected = Buffer.from(expectedHash, "hex");
-  const provided = Buffer.from(providedHash, "hex");
-  if (expected.length === 0 || provided.length === 0) return false;
-  if (expected.length !== provided.length) return false;
-  return timingSafeEqual(expected, provided);
+  return verifyToken(apiKey, expectedHash);
 }
 
 function normalizeClaimValue(value: unknown): string[] {

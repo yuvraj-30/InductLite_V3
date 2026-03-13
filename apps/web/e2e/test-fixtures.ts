@@ -98,6 +98,7 @@ export const test = base.extend<MyFixtures>({
           ? workerUser.password
           : (process.env.E2E_ADMIN_PASSWORD ?? "Admin123!");
       let usedUiFallback = false;
+      let verificationPage: Page | null = null;
 
       if (!forceUiLogin) {
         try {
@@ -114,9 +115,9 @@ export const test = base.extend<MyFixtures>({
             throw err;
           }
 
-          const page = await openClientPage();
+          verificationPage = await openClientPage();
           try {
-            await uiLogin(page, email, password);
+            await uiLogin(verificationPage, email, password);
             usedUiFallback = true;
           } catch (uiErr) {
             const uiMessage =
@@ -124,18 +125,12 @@ export const test = base.extend<MyFixtures>({
             throw new Error(
               `programmaticLogin failed (${message}); UI login fallback failed (${uiMessage})`,
             );
-          } finally {
-            await page.close();
           }
         }
       } else {
-        const page = await openClientPage();
-        try {
-          await uiLogin(page, email, password);
-          usedUiFallback = true;
-        } finally {
-          await page.close();
-        }
+        verificationPage = await openClientPage();
+        await uiLogin(verificationPage, email, password);
+        usedUiFallback = true;
       }
 
       // Optionally skip verification to speed runs (set E2E_SKIP_LOGIN_VERIFY=1 or true)
@@ -188,7 +183,7 @@ export const test = base.extend<MyFixtures>({
 
       // Even when E2E_SKIP_LOGIN_VERIFY=1, we still perform a minimal verification
       // and fallback to UI login when the session cookie is not applied (common on WebKit/mobile Safari).
-      const page = await openClientPage();
+      const page = verificationPage ?? (await openClientPage());
       try {
         let verifyErr: Error | null = null;
         if (!(skipVerify && !usedUiFallback)) {

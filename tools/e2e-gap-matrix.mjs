@@ -155,27 +155,59 @@ function extractPathLiterals(specContent) {
 
 function extractRegexRouteMatchers(specContent) {
   const matchers = [];
-  const regexLiteralRe = /\/((?:\\.|[^\/\r\n])+?)\/([dgimsuy]*)/g;
-  let regexMatch = regexLiteralRe.exec(specContent);
-  while (regexMatch) {
-    const body = regexMatch[1];
-    const flags = regexMatch[2] ?? "";
-    if (body && body.includes("\\/")) {
-      const slashTokenCount = (body.match(/\\\//g) ?? []).length;
-      const hasBoundaryHint =
-        body.startsWith("^") ||
-        body.includes("$") ||
-        body.includes("\\?") ||
-        body.includes("\\b");
-      if (slashTokenCount >= 2 || hasBoundaryHint) {
-        try {
-          matchers.push(new RegExp(body, flags));
-        } catch {
-          // Ignore invalid regex literals in static extraction.
-        }
+  for (let index = 0; index < specContent.length; index += 1) {
+    if (specContent[index] !== "/") continue;
+
+    let body = "";
+    let cursor = index + 1;
+    let escaped = false;
+    let closed = false;
+
+    while (cursor < specContent.length) {
+      const ch = specContent[cursor];
+      if (ch === "\r" || ch === "\n") break;
+      if (!escaped && ch === "/") {
+        closed = true;
+        break;
       }
+
+      body += ch;
+      if (escaped) {
+        escaped = false;
+      } else if (ch === "\\") {
+        escaped = true;
+      }
+      cursor += 1;
     }
-    regexMatch = regexLiteralRe.exec(specContent);
+
+    if (!closed || !body.includes("\\/")) continue;
+
+    let flags = "";
+    let flagCursor = cursor + 1;
+    while (flagCursor < specContent.length) {
+      const flag = specContent[flagCursor];
+      if (!/[dgimsuy]/.test(flag)) break;
+      flags += flag;
+      flagCursor += 1;
+    }
+
+    const slashTokenCount = (body.match(/\\\//g) ?? []).length;
+    const hasBoundaryHint =
+      body.startsWith("^") ||
+      body.includes("$") ||
+      body.includes("\\?") ||
+      body.includes("\\b");
+    if (slashTokenCount < 2 && !hasBoundaryHint) {
+      index = flagCursor - 1;
+      continue;
+    }
+
+    try {
+      matchers.push(new RegExp(body, flags));
+    } catch {
+      // Ignore invalid regex literals in static extraction.
+    }
+    index = flagCursor - 1;
   }
   return matchers;
 }

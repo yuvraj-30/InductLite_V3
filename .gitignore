@@ -8,6 +8,12 @@ node_modules/
 out/
 dist/
 build/
+!tools/vendor/prisma/dist/
+!tools/vendor/prisma/dist/**
+!tools/vendor/prisma-dev/dist/
+!tools/vendor/prisma-dev/dist/**
+!tools/vendor/prisma/build/
+!tools/vendor/prisma/build/**
 
 # Testing
 coverage/
