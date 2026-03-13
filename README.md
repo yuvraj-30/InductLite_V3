@@ -83,7 +83,7 @@ See [apps/mobile/README.md](apps/mobile/README.md) for placeholder and credentia
 # Competitor parity release gate (required rows must stay implemented)
 npm run parity-gate
 
-# Full confidence gate (guardrails + lint/typecheck + unit/integration + chromium e2e)
+# Fast branch confidence gate (guardrails + lint/typecheck + unit/integration + lean e2e)
 npm run test:confidence
 
 # Full confidence gate with all Playwright projects
@@ -93,13 +93,18 @@ npm run test:confidence:full
 npm run test:confidence -- --with-visual
 ```
 
+GitHub branch CI now runs the lean E2E gate with desktop coverage plus the
+mobile stable matrix, both with Playwright retries disabled. The heavier route
+coverage, visual-regression, and performance-budget evidence runs in
+`Nightly Full Validation` or via its `workflow_dispatch` trigger.
+
 For local or CI Playwright runs that use `http://localhost:3000`, keep
 `SESSION_COOKIE_SECURE=0`. Production deployments should continue to rely on the
 default secure-cookie behavior over HTTPS.
 
 Detailed test-coverage explanation (plain language): [docs/FULL_TEST_COVERAGE_AND_PURPOSE_2026-03-09.md](docs/FULL_TEST_COVERAGE_AND_PURPOSE_2026-03-09.md)
 Manual browser validation checklist: [docs/MANUAL_FEATURE_VALIDATION_CHECKLIST_2026-03-09.md](docs/MANUAL_FEATURE_VALIDATION_CHECKLIST_2026-03-09.md)
-Release confidence contract (CI-enforced, tier-complete): [docs/SAME_OR_BETTER_RELEASE_GATE_2026-03-11.md](docs/SAME_OR_BETTER_RELEASE_GATE_2026-03-11.md)
+Release confidence contract (branch CI + nightly/manual full validation): [docs/SAME_OR_BETTER_RELEASE_GATE_2026-03-11.md](docs/SAME_OR_BETTER_RELEASE_GATE_2026-03-11.md)
 
 ### Docker Compose (Full Stack)
 

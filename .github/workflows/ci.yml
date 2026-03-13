@@ -268,6 +268,7 @@ jobs:
       DATABASE_DIRECT_URL: postgresql://postgres:postgres@localhost:5432/inductlite_e2e?schema=public
       BASE_URL: http://localhost:3000
       SESSION_COOKIE_SECURE: "0"
+      E2E_RETRIES: "0"
       PLAYWRIGHT_BROWSERS_PATH: "0"
       DATA_ENCRYPTION_KEY: ci-test-data-encryption-key-at-least-32-characters
       # Test-only stubs for services not required in CI e2e runs
@@ -373,16 +374,6 @@ jobs:
           echo "App did not become ready in time"
           exit 1
 
-      - name: Generate test gap matrix
-        run: npm run test:gap-matrix
-
-      - name: Generate Playwright route coverage matrix (dynamic + js flows)
-        run: npm run test:e2e:gap-matrix -- --dynamic-links --js-flows --base-url http://localhost:3000
-        env:
-          BASE_URL: http://localhost:3000
-          E2E_USE_SHARED_SERVER: "1"
-          ALLOW_TEST_RUNNER: "1"
-
       - name: Run E2E full (desktop, non-visual)
         run: |
           set -euo pipefail
@@ -400,11 +391,11 @@ jobs:
           DATABASE_URL: ${{ env.DATABASE_URL }}
           TRUST_PROXY: "1"
 
-      - name: Run E2E stable matrix (all configured projects, non-visual)
+      - name: Run E2E stable mobile matrix (non-visual)
         run: |
           set -euo pipefail
           cd apps/web
-          npm run test:e2e:stable 2>&1 | tee playwright-stable-output.txt
+          npm run test:e2e:stable:mobile 2>&1 | tee playwright-stable-output.txt
           test_exit=${PIPESTATUS[0]}
           if [ $test_exit -ne 0 ]; then
             echo "Playwright stable tests failed with exit code $test_exit"
@@ -416,35 +407,6 @@ jobs:
           BASE_URL: http://localhost:3000
           DATABASE_URL: ${{ env.DATABASE_URL }}
           TRUST_PROXY: "1"
-
-      - name: Assert Linux visual baselines exist
-        run: |
-          set -euo pipefail
-          if ! ls apps/web/e2e/visual-regression.spec.ts-snapshots/*-linux.png >/dev/null 2>&1; then
-            echo "Missing Linux visual baselines in apps/web/e2e/visual-regression.spec.ts-snapshots"
-            exit 1
-          fi
-
-      - name: Run visual regression snapshots
-        run: npm run -w apps/web test:visual
-        env:
-          E2E_USE_SHARED_SERVER: "1"
-          ALLOW_TEST_RUNNER: "1"
-          BASE_URL: http://localhost:3000
-          DATABASE_URL: ${{ env.DATABASE_URL }}
-          TRUST_PROXY: "1"
-
-      - name: Run performance budget suite
-        run: npm run -w apps/web test:e2e:perf-budget
-        env:
-          E2E_USE_SHARED_SERVER: "1"
-          ALLOW_TEST_RUNNER: "1"
-          BASE_URL: http://localhost:3000
-          DATABASE_URL: ${{ env.DATABASE_URL }}
-          TRUST_PROXY: "1"
-
-      - name: Build performance budget report
-        run: npm run report:ux-perf-budget
 
       - name: Stop server
         if: always()
@@ -489,10 +451,5 @@ jobs:
             apps/web/test-results/**
             apps/web/playwright-output.txt
             apps/web/playwright-stable-output.txt
-            docs/TEST_GAP_MATRIX.md
-            docs/TEST_GAP_MATRIX.json
-            docs/E2E_TEST_GAP_MATRIX.md
-            docs/E2E_TEST_GAP_MATRIX.json
-            docs/UI_UX_PERFORMANCE_WEEKLY_REPORT.md
           retention-days: 7
 

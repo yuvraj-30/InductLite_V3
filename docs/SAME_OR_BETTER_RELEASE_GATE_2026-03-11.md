@@ -9,7 +9,10 @@ Define a strict pass/fail gate so UI/UX modernization can only ship when output 
 3. Pro
 4. Add-ons
 
-This gate is enforced by CI in [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) under job `e2e` (`Release Confidence (E2E + Visual + Perf)`).
+This gate now has two lanes:
+
+1. Branch CI merge gate in [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) under job `e2e`.
+2. Full evidence validation in [`.github/workflows/nightly.yml`](../.github/workflows/nightly.yml), which also supports `workflow_dispatch` for an on-demand full run.
 
 ## Pass/Fail Gates
 
@@ -21,40 +24,55 @@ This gate is enforced by CI in [`.github/workflows/ci.yml`](../.github/workflows
 2. Gate G2: Coverage evidence generation
 - `npm run test:gap-matrix` must run successfully.
 - `npm run test:e2e:gap-matrix -- --dynamic-links --js-flows --base-url http://localhost:3000` must run successfully.
+- Enforcement lane: nightly/manual full validation.
 
 3. Gate G3: Functional journey confidence
 - `npm run -w apps/web test:e2e:full` must pass.
-- `npm run -w apps/web test:e2e:stable` must pass.
+- `npm run -w apps/web test:e2e:stable:mobile` must pass.
+- Branch CI and nightly/manual both run with Playwright retries disabled (`E2E_RETRIES=0`).
 
 4. Gate G4: Visual non-regression confidence
 - Linux visual baselines must exist in `apps/web/e2e/visual-regression.spec.ts-snapshots/*-linux.png`.
 - `npm run -w apps/web test:visual` must pass.
+- Enforcement lane: nightly/manual full validation.
 
 5. Gate G5: Performance budget confidence
 - `npm run -w apps/web test:e2e:perf-budget` must pass.
 - `npm run report:ux-perf-budget` must pass and produce `docs/UI_UX_PERFORMANCE_WEEKLY_REPORT.md`.
+- Enforcement lane: nightly/manual full validation.
 
 ## CI Enforcement Contract
 
 1. Job dependency chain
 - `guardrails-lint`, `policy-check`, `guardrails-tests`, `parity-gate`, `quality`, and `integration` must pass before `e2e` runs.
 
-2. Release confidence block
-- If any command in `e2e` fails, CI fails and merge is blocked.
+2. Branch merge gate
+- If the lean E2E commands in `e2e` fail, CI fails and merge is blocked.
 
-3. Evidence artifacts
-- CI uploads Playwright reports/logs, test gap matrices, and the performance weekly report as build artifacts.
+3. Full validation block
+- If any nightly/manual full-validation command fails, the release evidence lane fails and must be remediated before release promotion.
+
+4. Evidence artifacts
+- Branch CI uploads Playwright logs and reports for the lean E2E lane.
+- Nightly/manual uploads Playwright reports plus gap matrices and the performance weekly report.
 
 ## Local Reproduction (Exact Sequence)
 
-Run from repository root after DB is up and migrated:
+Branch CI-equivalent lane, from repository root after DB is up and migrated:
 
 ```bash
 npm run parity-gate
+npm run -w apps/web test:e2e:full
+npm run -w apps/web test:e2e:stable:mobile
+```
+
+Nightly/manual full-validation lane:
+
+```bash
 npm run test:gap-matrix
 npm run test:e2e:gap-matrix -- --dynamic-links --js-flows --base-url http://localhost:3000
 npm run -w apps/web test:e2e:full
-npm run -w apps/web test:e2e:stable
+npm run -w apps/web test:e2e:stable:mobile
 npm run -w apps/web test:visual
 npm run -w apps/web test:e2e:perf-budget
 npm run report:ux-perf-budget

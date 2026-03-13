@@ -50,6 +50,7 @@ jobs:
       DATABASE_DIRECT_URL: postgresql://postgres:postgres@localhost:5432/inductlite_nightly?schema=public
       BASE_URL: http://localhost:3000
       SESSION_COOKIE_SECURE: "0"
+      E2E_RETRIES: "0"
       PLAYWRIGHT_BROWSERS_PATH: "0"
 
     steps:
@@ -166,6 +167,16 @@ jobs:
           echo "$runtime_payload" | grep -q '"allowTestRunner":true'
           curl -fsS -X POST -H "x-test-secret: ${TEST_RUNNER_SECRET_KEY}" http://localhost:3000/api/test/clear-rate-limit >/dev/null
 
+      - name: Generate test gap matrix
+        run: npm run test:gap-matrix
+
+      - name: Generate Playwright route coverage matrix (dynamic + js flows)
+        env:
+          BASE_URL: http://localhost:3000
+          E2E_USE_SHARED_SERVER: "1"
+          ALLOW_TEST_RUNNER: "1"
+        run: npm run test:e2e:gap-matrix -- --dynamic-links --js-flows --base-url http://localhost:3000
+
       - name: E2E full (desktop browsers)
         env:
           BASE_URL: http://localhost:3000
@@ -180,6 +191,16 @@ jobs:
           --project=chromium --project=firefox --project=webkit
           --workers=1 --reporter=line,html
           --grep-invert "Visual Regression|Kiosk Mode|Accessibility Checks|Admin Export UI & Processing|VRT -"
+
+      - name: E2E stable mobile matrix
+        env:
+          BASE_URL: http://localhost:3000
+          TRUST_PROXY: "1"
+          ALLOW_TEST_RUNNER: "1"
+          TEST_RUNNER_SECRET_KEY: ci-nightly-test-runner-secret
+          E2E_USE_SHARED_SERVER: "1"
+          E2E_TEST_TIMEOUT_MS: "60000"
+        run: cd apps/web && npm run test:e2e:stable:mobile
 
       - name: Detect Linux visual baselines
         id: visual_baselines
@@ -197,6 +218,18 @@ jobs:
           E2E_USE_SHARED_SERVER: "1"
         run: npm run -w apps/web test:visual
 
+      - name: Performance budget suite
+        env:
+          E2E_USE_SHARED_SERVER: "1"
+          ALLOW_TEST_RUNNER: "1"
+          BASE_URL: http://localhost:3000
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          TRUST_PROXY: "1"
+        run: npm run -w apps/web test:e2e:perf-budget
+
+      - name: Build performance budget report
+        run: npm run report:ux-perf-budget
+
       - name: Stop server
         if: always()
         run: |
@@ -212,5 +245,10 @@ jobs:
           path: |
             apps/web/playwright-report/
             apps/web/test-results/
+            docs/TEST_GAP_MATRIX.md
+            docs/TEST_GAP_MATRIX.json
+            docs/E2E_TEST_GAP_MATRIX.md
+            docs/E2E_TEST_GAP_MATRIX.json
+            docs/UI_UX_PERFORMANCE_WEEKLY_REPORT.md
           if-no-files-found: ignore
           retention-days: 14
