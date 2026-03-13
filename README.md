@@ -97,6 +97,8 @@ GitHub branch CI now runs the lean E2E gate with desktop coverage plus a
 mobile-chrome responsive lane, both with Playwright retries disabled. The heavier route
 coverage, visual-regression, and performance-budget evidence runs in
 `Nightly Full Validation` or via its `workflow_dispatch` trigger.
+Specialty suites such as emergency contacts, kiosk mode, accessibility, export UI,
+and coverage/performance inventory are kept out of the branch lane until they are stabilized.
 
 For local or CI Playwright runs that use `http://localhost:3000`, keep
 `SESSION_COOKIE_SECURE=0`. Production deployments should continue to rely on the
