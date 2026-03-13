@@ -18,6 +18,7 @@
     "test:e2e": "playwright test",
     "test:e2e:stable": "playwright test --workers=1 --reporter=line --grep-invert \"Visual Regression|VRT -\"",
     "test:e2e:stable:mobile": "playwright test --project=mobile-chrome --project=mobile-safari --workers=1 --reporter=line --grep-invert \"Visual Regression|VRT -|Accessibility Checks|Admin Export UI & Processing|Gap Matrix Coverage Inventory|Kiosk Mode|UI/UX performance budget\"",
+    "test:e2e:stable:mobile-lean": "playwright test --project=mobile-chrome --workers=1 --reporter=line --grep-invert \"Visual Regression|VRT -|Accessibility Checks|Admin Export UI & Processing|Gap Matrix Coverage Inventory|Kiosk Mode|UI/UX performance budget\"",
     "test:e2e:stable:chromium": "playwright test --project=chromium --workers=1 --reporter=line --grep-invert \"Visual Regression|VRT -\"",
     "test:e2e:stable:firefox": "playwright test --project=firefox --workers=1 --reporter=line --grep-invert \"Visual Regression|VRT -\"",
     "test:e2e:stable:webkit": "playwright test --project=webkit --workers=1 --reporter=line --grep-invert \"Visual Regression|VRT -\"",

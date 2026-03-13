@@ -391,11 +391,11 @@ jobs:
           DATABASE_URL: ${{ env.DATABASE_URL }}
           TRUST_PROXY: "1"
 
-      - name: Run E2E stable mobile matrix (non-visual)
+      - name: Run E2E lean mobile-chrome lane (non-visual)
         run: |
           set -euo pipefail
           cd apps/web
-          npm run test:e2e:stable:mobile 2>&1 | tee playwright-stable-output.txt
+          npm run test:e2e:stable:mobile-lean 2>&1 | tee playwright-stable-output.txt
           test_exit=${PIPESTATUS[0]}
           if [ $test_exit -ne 0 ]; then
             echo "Playwright stable tests failed with exit code $test_exit"

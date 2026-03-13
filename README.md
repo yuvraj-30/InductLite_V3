@@ -93,8 +93,8 @@ npm run test:confidence:full
 npm run test:confidence -- --with-visual
 ```
 
-GitHub branch CI now runs the lean E2E gate with desktop coverage plus the
-mobile stable matrix, both with Playwright retries disabled. The heavier route
+GitHub branch CI now runs the lean E2E gate with desktop coverage plus a
+mobile-chrome responsive lane, both with Playwright retries disabled. The heavier route
 coverage, visual-regression, and performance-budget evidence runs in
 `Nightly Full Validation` or via its `workflow_dispatch` trigger.
 

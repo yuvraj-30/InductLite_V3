@@ -8,7 +8,7 @@
 - Integration tests
 - Lean E2E merge gate in branch CI:
   - Desktop non-visual Playwright coverage
-  - Mobile stable matrix
+  - Mobile-chrome responsive lane
   - Playwright retries disabled
 - Competitor parity gate (`npm run parity-gate`) using [COMPETITOR_PARITY_CONTROL_MATRIX.md](COMPETITOR_PARITY_CONTROL_MATRIX.md)
 
@@ -16,7 +16,7 @@
 
 - Route coverage evidence generation
 - Desktop non-visual Playwright coverage
-- Mobile stable matrix
+- Mobile-chrome responsive lane
 - Visual regression snapshots
 - Performance budget suite and report
 

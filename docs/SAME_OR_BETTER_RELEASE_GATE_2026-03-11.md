@@ -28,7 +28,7 @@ This gate now has two lanes:
 
 3. Gate G3: Functional journey confidence
 - `npm run -w apps/web test:e2e:full` must pass.
-- `npm run -w apps/web test:e2e:stable:mobile` must pass as the lean mobile functional matrix.
+- `npm run -w apps/web test:e2e:stable:mobile-lean` must pass as the lean mobile-chrome functional lane.
 - Branch CI and nightly/manual both run with Playwright retries disabled (`E2E_RETRIES=0`).
 
 4. Gate G4: Visual non-regression confidence
@@ -63,7 +63,7 @@ Branch CI-equivalent lane, from repository root after DB is up and migrated:
 ```bash
 npm run parity-gate
 npm run -w apps/web test:e2e:full
-npm run -w apps/web test:e2e:stable:mobile
+npm run -w apps/web test:e2e:stable:mobile-lean
 ```
 
 Nightly/manual full-validation lane:
@@ -72,7 +72,7 @@ Nightly/manual full-validation lane:
 npm run test:gap-matrix
 npm run test:e2e:gap-matrix -- --dynamic-links --js-flows --base-url http://localhost:3000
 npm run -w apps/web test:e2e:full
-npm run -w apps/web test:e2e:stable:mobile
+npm run -w apps/web test:e2e:stable:mobile-lean
 npm run -w apps/web test:visual
 npm run -w apps/web test:e2e:perf-budget
 npm run report:ux-perf-budget

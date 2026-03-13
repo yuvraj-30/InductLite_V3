@@ -192,7 +192,7 @@ jobs:
           --workers=1 --reporter=line,html
           --grep-invert "Visual Regression|Kiosk Mode|Accessibility Checks|Admin Export UI & Processing|VRT -"
 
-      - name: E2E stable mobile matrix
+      - name: E2E lean mobile-chrome lane
         env:
           BASE_URL: http://localhost:3000
           TRUST_PROXY: "1"
@@ -200,7 +200,7 @@ jobs:
           TEST_RUNNER_SECRET_KEY: ci-nightly-test-runner-secret
           E2E_USE_SHARED_SERVER: "1"
           E2E_TEST_TIMEOUT_MS: "60000"
-        run: cd apps/web && npm run test:e2e:stable:mobile
+        run: cd apps/web && npm run test:e2e:stable:mobile-lean
 
       - name: Detect Linux visual baselines
         id: visual_baselines
