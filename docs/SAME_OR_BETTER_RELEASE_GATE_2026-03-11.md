@@ -28,7 +28,7 @@ This gate now has two lanes:
 
 3. Gate G3: Functional journey confidence
 - `npm run -w apps/web test:e2e:full` must pass.
-- `npm run -w apps/web test:e2e:stable:mobile` must pass.
+- `npm run -w apps/web test:e2e:stable:mobile` must pass as the lean mobile functional matrix.
 - Branch CI and nightly/manual both run with Playwright retries disabled (`E2E_RETRIES=0`).
 
 4. Gate G4: Visual non-regression confidence
