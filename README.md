@@ -93,6 +93,10 @@ npm run test:confidence:full
 npm run test:confidence -- --with-visual
 ```
 
+For local or CI Playwright runs that use `http://localhost:3000`, keep
+`SESSION_COOKIE_SECURE=0`. Production deployments should continue to rely on the
+default secure-cookie behavior over HTTPS.
+
 Detailed test-coverage explanation (plain language): [docs/FULL_TEST_COVERAGE_AND_PURPOSE_2026-03-09.md](docs/FULL_TEST_COVERAGE_AND_PURPOSE_2026-03-09.md)
 Manual browser validation checklist: [docs/MANUAL_FEATURE_VALIDATION_CHECKLIST_2026-03-09.md](docs/MANUAL_FEATURE_VALIDATION_CHECKLIST_2026-03-09.md)
 Release confidence contract (CI-enforced, tier-complete): [docs/SAME_OR_BETTER_RELEASE_GATE_2026-03-11.md](docs/SAME_OR_BETTER_RELEASE_GATE_2026-03-11.md)

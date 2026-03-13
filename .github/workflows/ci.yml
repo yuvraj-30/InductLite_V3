@@ -267,6 +267,7 @@ jobs:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/inductlite_e2e?schema=public
       DATABASE_DIRECT_URL: postgresql://postgres:postgres@localhost:5432/inductlite_e2e?schema=public
       BASE_URL: http://localhost:3000
+      SESSION_COOKIE_SECURE: "0"
       PLAYWRIGHT_BROWSERS_PATH: "0"
       DATA_ENCRYPTION_KEY: ci-test-data-encryption-key-at-least-32-characters
       # Test-only stubs for services not required in CI e2e runs

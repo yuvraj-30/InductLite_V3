@@ -57,12 +57,34 @@ function getRuntimeEnv(): Record<string, string | undefined> {
   }
 }
 
+function isLocalHttpOrigin(origin: string | undefined): boolean {
+  if (!origin) return false;
+
+  try {
+    const parsed = new URL(origin);
+    return (
+      parsed.protocol === "http:" &&
+      (parsed.hostname === "localhost" ||
+        parsed.hostname === "127.0.0.1" ||
+        parsed.hostname === "::1")
+    );
+  } catch {
+    return false;
+  }
+}
+
 // Helper to determine if we should use secure cookies at runtime
-function shouldUseSecureCookies(): boolean {
+export function shouldUseSecureCookies(): boolean {
   const env = getRuntimeEnv();
   const override = env.SESSION_COOKIE_SECURE?.trim().toLowerCase();
   if (override === "1" || override === "true") return true;
   if (override === "0" || override === "false") return false;
+  if (
+    isLocalHttpOrigin(env.BASE_URL) ||
+    isLocalHttpOrigin(env.NEXT_PUBLIC_APP_URL)
+  ) {
+    return false;
+  }
   return env.NODE_ENV === "production";
 }
 

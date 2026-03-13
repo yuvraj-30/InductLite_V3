@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { cookies } from "next/headers";
 import { scopedDb } from "@/lib/db/scoped-db";
+import { shouldUseSecureCookies } from "./session-config";
 
 const COOKIE_NAME = "contractor_magic";
 const SESSION_TTL_HOURS = 12;
@@ -82,7 +83,7 @@ export async function setContractorSession(input: {
   cookieStore.set(COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    secure: shouldUseSecureCookies(),
     path: "/",
     maxAge: SESSION_TTL_HOURS * 60 * 60,
   });

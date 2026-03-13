@@ -12,7 +12,7 @@ import { cache } from "react";
 import {
   SessionData,
   SessionUser,
-  sessionOptions,
+  getSessionOptions,
   SESSION_DURATION,
 } from "./session-config";
 import { publicDb } from "@/lib/db/public-db";
@@ -27,7 +27,7 @@ import { generateRequestId, generateCsrfToken } from "./csrf";
  */
 export const getSession = cache(async (): Promise<IronSession<SessionData>> => {
   const cookieStore = await cookies();
-  return getIronSession<SessionData>(cookieStore, sessionOptions);
+  return getIronSession<SessionData>(cookieStore, getSessionOptions());
 });
 
 const getCachedSessionUserState = unstable_cache(
