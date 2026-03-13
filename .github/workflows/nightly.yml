@@ -177,7 +177,7 @@ jobs:
           ALLOW_TEST_RUNNER: "1"
         run: npm run test:e2e:gap-matrix -- --dynamic-links --js-flows --base-url http://localhost:3000
 
-      - name: E2E full (desktop browsers)
+      - name: E2E smoke (desktop chromium)
         env:
           BASE_URL: http://localhost:3000
           TRUST_PROXY: "1"
@@ -185,9 +185,9 @@ jobs:
           TEST_RUNNER_SECRET_KEY: ci-nightly-test-runner-secret
           E2E_USE_SHARED_SERVER: "1"
           E2E_TEST_TIMEOUT_MS: "60000"
-        run: cd apps/web && npm run test:e2e:full:lean
+        run: cd apps/web && npm run test:e2e:smoke
 
-      - name: E2E lean mobile-chrome lane
+      - name: E2E smoke (mobile-chrome)
         env:
           BASE_URL: http://localhost:3000
           TRUST_PROXY: "1"
@@ -195,7 +195,7 @@ jobs:
           TEST_RUNNER_SECRET_KEY: ci-nightly-test-runner-secret
           E2E_USE_SHARED_SERVER: "1"
           E2E_TEST_TIMEOUT_MS: "60000"
-        run: cd apps/web && npm run test:e2e:stable:mobile-lean
+        run: cd apps/web && npm run test:e2e:smoke:mobile
 
       - name: Detect Linux visual baselines
         id: visual_baselines
