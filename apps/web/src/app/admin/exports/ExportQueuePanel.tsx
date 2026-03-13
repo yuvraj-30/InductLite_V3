@@ -11,9 +11,19 @@ function isoHoursAgo(hours: number): string {
 
 export function ExportQueuePanel() {
   const [isPending, startTransition] = useTransition();
+  const [isQueueing, setIsQueueing] = useState(false);
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [customDateFrom, setCustomDateFrom] = useState("");
   const [customDateTo, setCustomDateTo] = useState("");
+  const controlsDisabled = isPending || isQueueing;
+
+  const syncCustomDateFrom = (value: string) => {
+    setCustomDateFrom(value);
+  };
+
+  const syncCustomDateTo = (value: string) => {
+    setCustomDateTo(value);
+  };
 
   const queueExport = (input: {
     exportType:
@@ -25,19 +35,24 @@ export function ExportQueuePanel() {
     dateTo?: string;
   }) => {
     setFeedback(null);
+    setIsQueueing(true);
     startTransition(async () => {
-      const result = await createExportAction(input);
-      if (!result.success) {
+      try {
+        const result = await createExportAction(input);
+        if (!result.success) {
+          setFeedback({
+            kind: "error",
+            text: result.error.message || "Could not queue export",
+          });
+          return;
+        }
         setFeedback({
-          kind: "error",
-          text: result.error.message || "Could not queue export",
+          kind: "success",
+          text: "Export queued. It will appear in the list below shortly.",
         });
-        return;
+      } finally {
+        setIsQueueing(false);
       }
-      setFeedback({
-        kind: "success",
-        text: "Export queued. It will appear in the list below shortly.",
-      });
     });
   };
 
@@ -64,16 +79,16 @@ export function ExportQueuePanel() {
       <div className="mt-4 flex flex-wrap gap-2">
         <button
           type="button"
-          disabled={isPending}
+          disabled={controlsDisabled}
           onClick={() => queueExport({ exportType: "SIGN_IN_CSV" })}
           className="btn-primary"
         >
-          {isPending ? "Queueing..." : "Queue Sign-In CSV"}
+          {controlsDisabled ? "Queueing..." : "Queue Sign-In CSV"}
         </button>
 
         <button
           type="button"
-          disabled={isPending}
+          disabled={controlsDisabled}
           onClick={() => queueExport({ exportType: "INDUCTION_CSV" })}
           className="btn-secondary disabled:opacity-50"
         >
@@ -82,7 +97,7 @@ export function ExportQueuePanel() {
 
         <button
           type="button"
-          disabled={isPending}
+          disabled={controlsDisabled}
           onClick={() =>
             queueExport({
               exportType: "SITE_PACK_PDF",
@@ -97,7 +112,7 @@ export function ExportQueuePanel() {
 
         <button
           type="button"
-          disabled={isPending}
+          disabled={controlsDisabled}
           onClick={() =>
             queueExport({
               exportType: "COMPLIANCE_ZIP",
@@ -112,7 +127,7 @@ export function ExportQueuePanel() {
 
         <button
           type="button"
-          disabled={isPending}
+          disabled={controlsDisabled}
           onClick={() =>
             queueExport({
               exportType: "COMPLIANCE_ZIP",
@@ -136,7 +151,8 @@ export function ExportQueuePanel() {
             <input
               type="datetime-local"
               value={customDateFrom}
-              onChange={(event) => setCustomDateFrom(event.target.value)}
+              onChange={(event) => syncCustomDateFrom(event.currentTarget.value)}
+              onInput={(event) => syncCustomDateFrom(event.currentTarget.value)}
               className="mt-1 block rounded-md border border-[color:var(--border-soft)] px-2 py-1 text-sm"
             />
           </label>
@@ -145,13 +161,14 @@ export function ExportQueuePanel() {
             <input
               type="datetime-local"
               value={customDateTo}
-              onChange={(event) => setCustomDateTo(event.target.value)}
+              onChange={(event) => syncCustomDateTo(event.currentTarget.value)}
+              onInput={(event) => syncCustomDateTo(event.currentTarget.value)}
               className="mt-1 block rounded-md border border-[color:var(--border-soft)] px-2 py-1 text-sm"
             />
           </label>
           <button
             type="button"
-            disabled={isPending || !customDateFrom || !customDateTo}
+            disabled={controlsDisabled || !customDateFrom || !customDateTo}
             onClick={() => {
               const fromIso = new Date(customDateFrom).toISOString();
               const toIso = new Date(customDateTo).toISOString();
