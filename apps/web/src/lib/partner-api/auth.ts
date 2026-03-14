@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import { createHash } from "crypto";
 import {
+  fingerprintApiKey,
   parseCompanySsoConfig,
   verifyPartnerApiKey,
 } from "@/lib/identity";
+import { parseBearerToken } from "@/lib/http/auth-header";
 import { findCompanySsoSettingsBySlug } from "@/lib/repository/company.repository";
 
 export type PartnerApiScope = "sites.read" | "signins.read";
@@ -16,17 +17,8 @@ export interface PartnerApiAuthContext {
   tokenFingerprint: string;
 }
 
-function parseBearerToken(header: string | null): string | null {
-  const raw = (header ?? "").trim();
-  if (!raw) return null;
-  const [scheme, token] = raw.split(/\s+/, 2);
-  if (!scheme || !token) return null;
-  if (scheme.toLowerCase() !== "bearer") return null;
-  return token.trim() || null;
-}
-
 function tokenFingerprint(token: string): string {
-  return createHash("sha256").update(token).digest("hex").slice(0, 16);
+  return fingerprintApiKey(token);
 }
 
 export async function authenticatePartnerApiRequest(

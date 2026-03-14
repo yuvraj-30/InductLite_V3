@@ -66,16 +66,18 @@ await uiLogin(page, "admin@buildright.co.nz", "Admin123!");
   - `npm run test:e2e:gap-matrix -- --dynamic-links --js-flows`
   - Optional flags: `--max-buttons-per-page 16`
 
-### Running tests locally on Windows (WSL) ⚠️
+### Running tests locally on Windows
 
-Schema-per-worker spawns a per-worker app server and runs `prisma db push` per worker. On Windows this currently requires a Linux shell environment (WSL) because spawning the Prisma CLI from Playwright worker processes can fail on native Windows shells.
+Prefer the repo-root CI mirror on native Windows shells:
 
-Quick steps (WSL):
+```powershell
+npm run test:e2e:ci-local
+```
 
-1. Open WSL (Ubuntu) and mount the repo directory (e.g., `/mnt/c/InductLite_V2`).
-2. Install Node.js & pnpm/npm in WSL if not present, then run `npm ci` in the `apps/web` directory.
+That path mirrors the GitHub Actions PR smoke lane with a shared standalone server, starts local Postgres from `docker-compose.dev.yml` when needed, installs Chromium only, sets `E2E_RETRIES=0`, and fails fast unless `/api/test/runtime` plus `/api/test/clear-rate-limit` are reachable with the CI test-runner secret.
+
+Use WSL when you specifically want the per-worker schema/server model that Playwright uses outside shared-server mode:
+
+1. Open WSL (Ubuntu) and mount the repo directory (for example, `/mnt/c/InductLite_V2`).
+2. Install Node.js and npm inside WSL, then run `npm ci` in `apps/web`.
 3. Run the full E2E locally with 2 workers: `npx playwright test e2e --reporter=list --workers=2`.
-
-If you cannot use WSL, run sequential tests locally (single worker) or use Docker to provide a Linux environment.
-
-If you want, I can add a Windows fallback that uses a namespaced shared DB instead of per‑worker schemas (we currently prefer verifying full isolation on CI).

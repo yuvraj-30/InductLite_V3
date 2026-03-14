@@ -18,6 +18,7 @@
     "test:e2e:smoke": "turbo run test:e2e:smoke",
     "test:e2e:full": "turbo run test:e2e:full",
     "test:e2e:full:all": "turbo run test:e2e:full:all",
+    "test:e2e:ci-local": "powershell -ExecutionPolicy Bypass -File .\\tools\\run-ci-e2e-local.ps1",
     "test:e2e:perf-budget": "npm run -w apps/web test:e2e:perf-budget",
     "test:visual": "turbo run test:visual",
     "report:ux-perf-budget": "node tools/uiux-performance-budget-report.mjs",
@@ -61,9 +62,10 @@
     "node": "24.x"
   },
   "overrides": {
-    "undici": ">=6.23.0",
+    "undici": "7.24.1",
     "basic-ftp": "5.2.0",
     "fast-xml-parser": "5.3.8",
+    "lodash": "4.17.23",
     "serialize-javascript": "7.0.3",
     "@aws-sdk/xml-builder": {
       "fast-xml-parser": "5.3.8"

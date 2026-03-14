@@ -5,6 +5,7 @@ import {
   parseCompanySsoConfig,
   verifyDirectorySyncApiKey,
 } from "@/lib/identity";
+import { parseBearerToken } from "@/lib/http/auth-header";
 import { createRequestLogger } from "@/lib/logger";
 import { createSystemAuditLog } from "@/lib/repository/audit.repository";
 import { findCompanySsoSettingsBySlug } from "@/lib/repository/company.repository";
@@ -23,15 +24,6 @@ const userRecordSchema = z.object({
 const directorySyncPayloadSchema = z.object({
   users: z.array(userRecordSchema).min(1).max(500),
 });
-
-function parseBearerToken(header: string | null): string | null {
-  const raw = (header ?? "").trim();
-  if (!raw) return null;
-  const [scheme, token] = raw.split(/\s+/, 2);
-  if (!scheme || !token) return null;
-  if (scheme.toLowerCase() !== "bearer") return null;
-  return token.trim() || null;
-}
 
 export async function POST(request: Request) {
   const requestId = generateRequestId();

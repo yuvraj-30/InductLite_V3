@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   findCompanySsoSettingsBySlug: vi.fn(),
+  fingerprintApiKey: vi.fn(),
   parseCompanySsoConfig: vi.fn(),
   verifyPartnerApiKey: vi.fn(),
 }));
@@ -11,6 +12,7 @@ vi.mock("@/lib/repository/company.repository", () => ({
 }));
 
 vi.mock("@/lib/identity", () => ({
+  fingerprintApiKey: mocks.fingerprintApiKey,
   parseCompanySsoConfig: mocks.parseCompanySsoConfig,
   verifyPartnerApiKey: mocks.verifyPartnerApiKey,
 }));
@@ -33,6 +35,7 @@ describe("authenticatePartnerApiRequest", () => {
         monthlyQuota: 10000,
       },
     });
+    mocks.fingerprintApiKey.mockReturnValue("fingerprint-1234");
     mocks.verifyPartnerApiKey.mockReturnValue(true);
   });
 
@@ -88,7 +91,7 @@ describe("authenticatePartnerApiRequest", () => {
       expect(result.context.companyId).toBe("company-1");
       expect(result.context.scope).toBe("sites.read");
       expect(result.context.monthlyQuota).toBe(10000);
-      expect(result.context.tokenFingerprint.length).toBe(16);
+      expect(result.context.tokenFingerprint).toBe("fingerprint-1234");
     }
   });
 });

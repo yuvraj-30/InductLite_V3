@@ -155,11 +155,15 @@ function extractPathLiterals(specContent) {
 
 function extractRegexRouteMatchers(specContent) {
   const matchers = [];
-  const regexLiteralRe = /\/((?:\\.|[^\/\r\n])+?)\/([dgimsuy]*)/g;
-  let regexMatch = regexLiteralRe.exec(specContent);
-  while (regexMatch) {
-    const body = regexMatch[1];
-    const flags = regexMatch[2] ?? "";
+  let index = 0;
+  while (index < specContent.length) {
+    const literal = readRegexLiteral(specContent, index);
+    if (!literal) {
+      index += 1;
+      continue;
+    }
+
+    const { body, flags, endIndex } = literal;
     if (body && body.includes("\\/")) {
       const slashTokenCount = (body.match(/\\\//g) ?? []).length;
       const hasBoundaryHint =
@@ -175,9 +179,99 @@ function extractRegexRouteMatchers(specContent) {
         }
       }
     }
-    regexMatch = regexLiteralRe.exec(specContent);
+    index = endIndex;
   }
   return matchers;
+}
+
+function readRegexLiteral(specContent, startIndex) {
+  if (specContent[startIndex] !== "/") {
+    return null;
+  }
+
+  const nextChar = specContent[startIndex + 1] ?? "";
+  if (nextChar === "/" || nextChar === "*") {
+    return null;
+  }
+
+  if (!looksLikeRegexStart(specContent, startIndex)) {
+    return null;
+  }
+
+  let cursor = startIndex + 1;
+  let escaped = false;
+  let inCharacterClass = false;
+
+  while (cursor < specContent.length) {
+    const char = specContent[cursor];
+    if (char === "\r" || char === "\n") {
+      return null;
+    }
+
+    if (escaped) {
+      escaped = false;
+      cursor += 1;
+      continue;
+    }
+
+    if (char === "\\") {
+      escaped = true;
+      cursor += 1;
+      continue;
+    }
+
+    if (char === "[" && !inCharacterClass) {
+      inCharacterClass = true;
+      cursor += 1;
+      continue;
+    }
+
+    if (char === "]" && inCharacterClass) {
+      inCharacterClass = false;
+      cursor += 1;
+      continue;
+    }
+
+    if (char === "/" && !inCharacterClass) {
+      const body = specContent.slice(startIndex + 1, cursor);
+      let flagCursor = cursor + 1;
+      while (flagCursor < specContent.length) {
+        const flag = specContent[flagCursor];
+        if (!/[a-z]/i.test(flag)) {
+          break;
+        }
+        flagCursor += 1;
+      }
+      return {
+        body,
+        flags: specContent.slice(cursor + 1, flagCursor),
+        endIndex: flagCursor,
+      };
+    }
+
+    cursor += 1;
+  }
+
+  return null;
+}
+
+function looksLikeRegexStart(specContent, startIndex) {
+  let cursor = startIndex - 1;
+  while (cursor >= 0) {
+    const char = specContent[cursor];
+    if (/\s/.test(char)) {
+      cursor -= 1;
+      continue;
+    }
+
+    if (/[A-Za-z0-9_$)\]]/.test(char)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  return true;
 }
 
 function routePriority(row) {
