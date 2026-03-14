@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { geofenceEventPayloadSchema } from "@inductlite/shared";
 import {
   type GeofenceEventPayload,
   replayGeofenceEvents,
@@ -16,14 +17,9 @@ export async function loadGeofenceQueue(): Promise<GeofenceEventPayload[]> {
   try {
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter((row): row is GeofenceEventPayload => {
-      return (
-        typeof row === "object" &&
-        row !== null &&
-        typeof (row as { eventId?: unknown }).eventId === "string" &&
-        typeof (row as { eventType?: unknown }).eventType === "string" &&
-        typeof (row as { occurredAt?: unknown }).occurredAt === "string"
-      );
+    return parsed.flatMap((row) => {
+      const normalized = geofenceEventPayloadSchema.safeParse(row);
+      return normalized.success ? [normalized.data] : [];
     });
   } catch {
     return [];

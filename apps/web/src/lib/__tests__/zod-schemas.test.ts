@@ -10,6 +10,7 @@ import { describe, it, expect } from "vitest";
 import {
   signInSchema,
   signOutSchema,
+  createExportSchema,
   historyFiltersSchema,
   visitorTypeSchema,
   MAX_PAGE_SIZE,
@@ -496,5 +497,28 @@ describe("History Filters Schema Validation", () => {
         expect(result.error.issues[0]?.message).toBe("Invalid site ID");
       }
     });
+  });
+});
+
+describe("Export Schema Validation", () => {
+  it("accepts a valid export request", () => {
+    const result = createExportSchema.safeParse({
+      exportType: "SIGN_IN_CSV",
+      siteId: "c123456789012345678901234",
+      dateFrom: "2026-03-01T00:00:00.000Z",
+      dateTo: "2026-03-13T00:00:00.000Z",
+      contractorIds: ["c123456789012345678901235"],
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects invalid export payloads", () => {
+    const result = createExportSchema.safeParse({
+      exportType: "UNKNOWN",
+      siteId: "not-a-cuid",
+    });
+
+    expect(result.success).toBe(false);
   });
 });

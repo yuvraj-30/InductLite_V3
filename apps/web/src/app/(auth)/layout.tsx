@@ -5,6 +5,7 @@
  * No navigation or sidebar - just a centered auth form.
  */
 
+import * as React from "react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -20,20 +21,20 @@ export default function AuthLayout({
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-12 sm:px-6 lg:px-8">
       <div className="relative z-10 w-full max-w-md space-y-8">
-        <div className="text-center">
+        <header className="text-center">
           <h1 className="text-4xl font-bold">InductLite</h1>
           <p className="mt-2 text-sm text-secondary">
             Site Induction & Contractor Management
           </p>
-        </div>
+        </header>
 
-        <div className="surface-panel-strong px-4 py-8 sm:px-10">
+        <main className="surface-panel-strong px-4 py-8 sm:px-10">
           {children}
-        </div>
+        </main>
 
-        <p className="text-center text-xs text-muted">
+        <footer className="text-center text-xs text-muted">
           &copy; {new Date().getFullYear()} InductLite. All rights reserved.
-        </p>
+        </footer>
       </div>
     </div>
   );

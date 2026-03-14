@@ -1,5 +1,5 @@
+import * as React from "react";
 import Link from "next/link";
-import type { ReactNode } from "react";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 
 interface PageEmptyStateProps {
@@ -7,8 +7,9 @@ interface PageEmptyStateProps {
   description: string;
   actionHref?: string;
   actionLabel?: string;
-  icon?: ReactNode;
-  children?: ReactNode;
+  icon?: React.ReactNode;
+  children?: React.ReactNode;
+  titleAs?: "h1" | "h2" | "h3";
 }
 
 interface PageWarningStateProps {
@@ -43,13 +44,17 @@ export function PageEmptyState({
   actionLabel,
   icon,
   children,
+  titleAs = "h2",
 }: PageEmptyStateProps) {
   const flowEnabled = isFeatureEnabled("UIX_S2_FLOW");
+  const TitleTag = titleAs;
 
   if (!flowEnabled) {
     return (
       <div className="surface-panel p-8 text-center">
-        <h3 className="text-lg font-semibold text-[color:var(--text-primary)]">{title}</h3>
+        <TitleTag className="text-lg font-semibold text-[color:var(--text-primary)]">
+          {title}
+        </TitleTag>
         <p className="mt-2 text-sm text-secondary">{description}</p>
         {actionHref && actionLabel ? (
           <div className="mt-4">
@@ -66,7 +71,9 @@ export function PageEmptyState({
   return (
     <div className="surface-panel p-8 text-center">
       <div className="mb-4">{icon ?? <DefaultEmptyIcon />}</div>
-      <h3 className="text-lg font-semibold text-[color:var(--text-primary)]">{title}</h3>
+      <TitleTag className="text-lg font-semibold text-[color:var(--text-primary)]">
+        {title}
+      </TitleTag>
       <p className="mt-2 text-sm text-secondary">{description}</p>
       {actionHref && actionLabel ? (
         <div className="mt-6">

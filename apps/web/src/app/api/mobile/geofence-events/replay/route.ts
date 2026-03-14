@@ -1,23 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { geofenceEventPayloadSchema } from "@inductlite/shared";
 import { POST as handleSingleGeofenceEvent } from "../route";
 
 const replaySchema = z.object({
-  events: z
-    .array(
-      z.object({
-        eventId: z.string().trim().min(8).max(120),
-        eventType: z.enum(["ENTRY", "EXIT"]),
-        occurredAt: z.string().datetime({ offset: true }).optional().or(z.literal("")),
-        latitude: z.number().min(-90).max(90).optional(),
-        longitude: z.number().min(-180).max(180).optional(),
-        accuracyM: z.number().min(0).max(10000).optional(),
-        signInRecordId: z.string().cuid().optional().or(z.literal("")),
-        endpoint: z.string().url().max(2000).optional().or(z.literal("")),
-      }),
-    )
-    .min(1)
-    .max(50),
+  events: z.array(geofenceEventPayloadSchema).min(1).max(50),
 });
 
 export async function POST(request: NextRequest) {

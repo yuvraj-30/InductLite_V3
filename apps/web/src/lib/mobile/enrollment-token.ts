@@ -1,6 +1,11 @@
 import { createHmac, timingSafeEqual } from "crypto";
-import { formatToE164 } from "@inductlite/shared";
+import {
+  formatToE164,
+  mobileEnrollmentTokenPayloadSchema,
+  type MobileEnrollmentTokenPayload,
+} from "@inductlite/shared";
 import type { VisitorType } from "@prisma/client";
+export { parseBearerToken } from "@/lib/http/auth-header";
 
 export interface GenerateMobileEnrollmentTokenInput {
   companyId: string;
@@ -15,24 +20,6 @@ export interface GenerateMobileEnrollmentTokenInput {
   employerName?: string | null;
   visitorType: VisitorType;
   expiresInMinutes?: number;
-}
-
-export interface MobileEnrollmentTokenPayload {
-  version: 1;
-  companyId: string;
-  siteId: string;
-  endpoint: string;
-  deviceId: string;
-  runtime: string;
-  tokenVersion: number;
-  nonce: string;
-  visitorName: string;
-  visitorPhone: string;
-  visitorEmail: string | null;
-  employerName: string | null;
-  visitorType: VisitorType;
-  issuedAt: number;
-  expiresAt: number;
 }
 
 export type VerifyMobileEnrollmentTokenResult =
@@ -75,57 +62,23 @@ function parsePayload(value: unknown): MobileEnrollmentTokenPayload | null {
   }
 
   const record = value as Record<string, unknown>;
-  if (
-    record.version !== 1 ||
-    typeof record.companyId !== "string" ||
-    typeof record.siteId !== "string" ||
-    typeof record.endpoint !== "string" ||
-    typeof record.deviceId !== "string" ||
-    typeof record.runtime !== "string" ||
-    typeof record.tokenVersion !== "number" ||
-    typeof record.nonce !== "string" ||
-    typeof record.visitorName !== "string" ||
-    typeof record.visitorPhone !== "string" ||
-    typeof record.visitorType !== "string" ||
-    typeof record.issuedAt !== "number" ||
-    typeof record.expiresAt !== "number"
-  ) {
-    return null;
-  }
+  const parsed = mobileEnrollmentTokenPayloadSchema.safeParse({
+    ...record,
+    tokenVersion:
+      typeof record.tokenVersion === "number"
+        ? Math.max(1, Math.trunc(record.tokenVersion))
+        : record.tokenVersion,
+    issuedAt:
+      typeof record.issuedAt === "number"
+        ? Math.trunc(record.issuedAt)
+        : record.issuedAt,
+    expiresAt:
+      typeof record.expiresAt === "number"
+        ? Math.trunc(record.expiresAt)
+        : record.expiresAt,
+  });
 
-  const visitorType = record.visitorType.trim().toUpperCase();
-  if (
-    visitorType !== "CONTRACTOR" &&
-    visitorType !== "VISITOR" &&
-    visitorType !== "EMPLOYEE" &&
-    visitorType !== "DELIVERY"
-  ) {
-    return null;
-  }
-
-  return {
-    version: 1,
-    companyId: record.companyId.trim(),
-    siteId: record.siteId.trim(),
-    endpoint: record.endpoint.trim(),
-    deviceId: record.deviceId.trim(),
-    runtime: record.runtime.trim(),
-    tokenVersion: Math.max(1, Math.trunc(record.tokenVersion)),
-    nonce: record.nonce.trim(),
-    visitorName: record.visitorName.trim(),
-    visitorPhone: record.visitorPhone.trim(),
-    visitorEmail:
-      typeof record.visitorEmail === "string" && record.visitorEmail.trim()
-        ? record.visitorEmail.trim().toLowerCase()
-        : null,
-    employerName:
-      typeof record.employerName === "string" && record.employerName.trim()
-        ? record.employerName.trim()
-        : null,
-    visitorType: visitorType as VisitorType,
-    issuedAt: Math.trunc(record.issuedAt),
-    expiresAt: Math.trunc(record.expiresAt),
-  };
+  return parsed.success ? parsed.data : null;
 }
 
 export function generateMobileEnrollmentToken(
@@ -212,13 +165,4 @@ export function verifyMobileEnrollmentToken(
   }
 
   return { valid: true, payload };
-}
-
-export function parseBearerToken(header: string | null): string | null {
-  const raw = (header ?? "").trim();
-  if (!raw) return null;
-  const [scheme, token] = raw.split(/\s+/, 2);
-  if (!scheme || !token) return null;
-  if (scheme.toLowerCase() !== "bearer") return null;
-  return token.trim() || null;
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import { geofenceEventPayloadSchema } from "@inductlite/shared";
 import type { AccessDecisionStatus } from "@prisma/client";
 import { guardrailDeniedResponse } from "@/lib/api";
 import { isFeatureEnabled } from "@/lib/feature-flags";
@@ -33,17 +33,6 @@ import {
 } from "@/lib/mobile/enrollment-token";
 
 export const runtime = "nodejs";
-
-const requestSchema = z.object({
-  eventId: z.string().trim().min(8).max(120),
-  eventType: z.enum(["ENTRY", "EXIT"]),
-  occurredAt: z.string().datetime({ offset: true }).optional().or(z.literal("")),
-  latitude: z.number().min(-90).max(90).optional(),
-  longitude: z.number().min(-180).max(180).optional(),
-  accuracyM: z.number().min(0).max(10000).optional(),
-  signInRecordId: z.string().cuid().optional().or(z.literal("")),
-  endpoint: z.string().url().max(2000).optional().or(z.literal("")),
-});
 
 function toLast4(phone: string): string {
   const digits = phone.replace(/[^\d]/g, "");
@@ -135,7 +124,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => null);
-  const parsed = requestSchema.safeParse(body);
+  const parsed = geofenceEventPayloadSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       {

@@ -83,19 +83,22 @@ See [apps/mobile/README.md](apps/mobile/README.md) for placeholder and credentia
 # Competitor parity release gate (required rows must stay implemented)
 npm run parity-gate
 
-# Full confidence gate (guardrails + lint/typecheck + unit/integration + chromium e2e)
+# Full confidence gate for local/manual release validation
 npm run test:confidence
 
-# Full confidence gate with all Playwright projects
+# Broader local/manual confidence gate with all Playwright projects
 npm run test:confidence:full
 
-# Include visual regression lane in confidence gate
+# Include visual regression lane in local/manual confidence gate
 npm run test:confidence -- --with-visual
+
+# Mirror the GitHub Actions PR smoke lane locally on Windows/shared-server mode
+npm run test:e2e:ci-local
 ```
 
 Detailed test-coverage explanation (plain language): [docs/FULL_TEST_COVERAGE_AND_PURPOSE_2026-03-09.md](docs/FULL_TEST_COVERAGE_AND_PURPOSE_2026-03-09.md)
 Manual browser validation checklist: [docs/MANUAL_FEATURE_VALIDATION_CHECKLIST_2026-03-09.md](docs/MANUAL_FEATURE_VALIDATION_CHECKLIST_2026-03-09.md)
-Release confidence contract (CI-enforced, tier-complete): [docs/SAME_OR_BETTER_RELEASE_GATE_2026-03-11.md](docs/SAME_OR_BETTER_RELEASE_GATE_2026-03-11.md)
+Release confidence contract (PR smoke lane + broader manual confidence): [docs/SAME_OR_BETTER_RELEASE_GATE_2026-03-11.md](docs/SAME_OR_BETTER_RELEASE_GATE_2026-03-11.md)
 
 ### Docker Compose (Full Stack)
 
@@ -174,7 +177,7 @@ inductlite/
 |       |   |-- lib/         # Shared utilities
 |       |   `-- components/
 |       `-- prisma/          # Schema, migrations, seed
-|-- packages/                # Shared packages
+|-- packages/                # Shared packages and cross-app contracts
 `-- docker-compose.yml
 ```
 ## License
