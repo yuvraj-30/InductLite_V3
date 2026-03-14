@@ -1,4 +1,3 @@
-import { createHash, createHmac } from "crypto";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   fingerprintApiKey,
@@ -43,30 +42,17 @@ describe("identity API key hashing", () => {
     expect(verifyPartnerApiKey("partner_other_key", storedHash)).toBe(false);
   });
 
-  it("continues to verify v2 keyed token hashes", () => {
-    const apiKey = "partner_v2_key";
-    const v2Hash = `v2:${createHmac("sha256", process.env.DATA_ENCRYPTION_KEY!)
-      .update(apiKey)
-      .digest("hex")}`;
+  it("rejects pre-v3 token hashes", () => {
+    const apiKey = "partner_legacy_key";
+    const legacyHash =
+      "2b93b4c3744f4acaf83d6766afaa52493c398bb9d0f5f5f1f1503c7f621c0a9d";
+    const v2Hash =
+      "v2:58b43b2df36747de450773eb6e77c7a58c83c25ad96f676fc27ea4b2264e6ff5";
 
-    expect(verifyPartnerApiKey(apiKey, v2Hash)).toBe(true);
-    expect(verifyDirectorySyncApiKey(apiKey, v2Hash)).toBe(true);
-  });
-
-  it("continues to verify legacy sha256 token hashes", () => {
-    const partnerApiKey = "partner_legacy_key";
-    const directoryApiKey = "idsync_legacy_key";
-    const partnerLegacyHash = createHash("sha256")
-      .update(partnerApiKey)
-      .digest("hex");
-    const directoryLegacyHash = createHash("sha256")
-      .update(directoryApiKey)
-      .digest("hex");
-
-    expect(verifyPartnerApiKey(partnerApiKey, partnerLegacyHash)).toBe(true);
-    expect(verifyDirectorySyncApiKey(directoryApiKey, directoryLegacyHash)).toBe(
-      true,
-    );
+    expect(verifyPartnerApiKey(apiKey, legacyHash)).toBe(false);
+    expect(verifyPartnerApiKey(apiKey, v2Hash)).toBe(false);
+    expect(verifyDirectorySyncApiKey(apiKey, legacyHash)).toBe(false);
+    expect(verifyDirectorySyncApiKey(apiKey, v2Hash)).toBe(false);
   });
 
   it("creates deterministic keyed fingerprints for audit-safe token correlation", () => {

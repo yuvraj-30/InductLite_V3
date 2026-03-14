@@ -1,5 +1,4 @@
 import {
-  createHash,
   createHmac,
   randomBytes,
   scryptSync,
@@ -49,7 +48,6 @@ const DEFAULT_SCOPES = ["openid", "profile", "email"];
 const DEFAULT_PARTNER_API_SCOPES = ["sites.read", "signins.read"];
 const MIN_PARTNER_API_MONTHLY_QUOTA = 100;
 const MAX_PARTNER_API_MONTHLY_QUOTA = 1_000_000;
-const TOKEN_HASH_V2_PREFIX = "v2:";
 const TOKEN_HASH_V3_PREFIX = "v3:";
 const DEFAULT_ROLE_MAPPING: RoleMapping = {
   ADMIN: ["admin", "admins"],
@@ -260,45 +258,21 @@ function getApiKeyHashSecret(): string {
   return secret;
 }
 
-function hashLegacyToken(value: string): string {
-  return createHash("sha256").update(value).digest("hex");
-}
-
-function hashTokenV2(value: string): string {
-  return createHmac("sha256", getApiKeyHashSecret()).update(value).digest("hex");
-}
-
-function hashTokenV3(value: string): string {
+function hashTokenDigest(value: string): string {
   return scryptSync(value, getApiKeyHashSecret(), 32).toString("hex");
 }
 
-function extractStoredTokenDigest(expectedHash: string): {
-  digest: string;
-  version: "legacy" | "v2" | "v3";
-} | null {
+function extractStoredTokenDigest(expectedHash: string): string | null {
   const trimmed = expectedHash.trim();
   if (!trimmed) {
     return null;
   }
 
-  if (trimmed.startsWith(TOKEN_HASH_V3_PREFIX)) {
-    return {
-      digest: trimmed.slice(TOKEN_HASH_V3_PREFIX.length),
-      version: "v3",
-    };
+  if (!trimmed.startsWith(TOKEN_HASH_V3_PREFIX)) {
+    return null;
   }
 
-  if (trimmed.startsWith(TOKEN_HASH_V2_PREFIX)) {
-    return {
-      digest: trimmed.slice(TOKEN_HASH_V2_PREFIX.length),
-      version: "v2",
-    };
-  }
-
-  return {
-    digest: trimmed,
-    version: "legacy",
-  };
+  return trimmed.slice(TOKEN_HASH_V3_PREFIX.length);
 }
 
 function isHexDigest(value: string): boolean {
@@ -306,11 +280,14 @@ function isHexDigest(value: string): boolean {
 }
 
 function hashToken(value: string): string {
-  return `${TOKEN_HASH_V3_PREFIX}${hashTokenV3(value)}`;
+  return `${TOKEN_HASH_V3_PREFIX}${hashTokenDigest(value)}`;
 }
 
 export function fingerprintApiKey(value: string): string {
-  return hashTokenV2(value).slice(0, 16);
+  return createHmac("sha256", `${getApiKeyHashSecret()}:fingerprint`)
+    .update(value)
+    .digest("hex")
+    .slice(0, 16);
 }
 
 export function hashDirectorySyncApiKey(apiKey: string): string {
@@ -326,15 +303,10 @@ export function verifyDirectorySyncApiKey(
   expectedHash: string | null,
 ): boolean {
   if (!expectedHash) return false;
-  const parsed = extractStoredTokenDigest(expectedHash);
-  if (!parsed || !isHexDigest(parsed.digest)) return false;
-  const providedHash =
-    parsed.version === "v3"
-      ? hashTokenV3(apiKey)
-      : parsed.version === "v2"
-        ? hashTokenV2(apiKey)
-        : hashLegacyToken(apiKey);
-  const expected = Buffer.from(parsed.digest, "hex");
+  const parsedDigest = extractStoredTokenDigest(expectedHash);
+  if (!parsedDigest || !isHexDigest(parsedDigest)) return false;
+  const providedHash = hashTokenDigest(apiKey);
+  const expected = Buffer.from(parsedDigest, "hex");
   const provided = Buffer.from(providedHash, "hex");
   if (expected.length === 0 || provided.length === 0) return false;
   if (expected.length !== provided.length) return false;
@@ -346,15 +318,10 @@ export function verifyPartnerApiKey(
   expectedHash: string | null,
 ): boolean {
   if (!expectedHash) return false;
-  const parsed = extractStoredTokenDigest(expectedHash);
-  if (!parsed || !isHexDigest(parsed.digest)) return false;
-  const providedHash =
-    parsed.version === "v3"
-      ? hashTokenV3(apiKey)
-      : parsed.version === "v2"
-        ? hashTokenV2(apiKey)
-        : hashLegacyToken(apiKey);
-  const expected = Buffer.from(parsed.digest, "hex");
+  const parsedDigest = extractStoredTokenDigest(expectedHash);
+  if (!parsedDigest || !isHexDigest(parsedDigest)) return false;
+  const providedHash = hashTokenDigest(apiKey);
+  const expected = Buffer.from(parsedDigest, "hex");
   const provided = Buffer.from(providedHash, "hex");
   if (expected.length === 0 || provided.length === 0) return false;
   if (expected.length !== provided.length) return false;
