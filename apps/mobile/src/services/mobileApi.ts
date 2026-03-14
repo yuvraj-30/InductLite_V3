@@ -1,15 +1,7 @@
-export type GeofenceEventType = "ENTRY" | "EXIT";
-
-export interface GeofenceEventPayload {
-  eventId: string;
-  eventType: GeofenceEventType;
-  occurredAt: string;
-  latitude?: number;
-  longitude?: number;
-  accuracyM?: number;
-  signInRecordId?: string;
-  endpoint?: string;
-}
+import type {
+  GeofenceEventPayload,
+  HeartbeatPayload,
+} from "@inductlite/shared";
 
 export interface MobileApiResult<T> {
   ok: boolean;
@@ -18,13 +10,11 @@ export interface MobileApiResult<T> {
   error: string | null;
 }
 
-export interface HeartbeatPayload {
-  endpoint?: string;
-  platform?: string;
-  appVersion?: string;
-  osVersion?: string;
-  wrapperChannel?: string;
-}
+export type {
+  GeofenceEventPayload,
+  GeofenceEventType,
+  HeartbeatPayload,
+} from "@inductlite/shared";
 
 function normalizeBaseUrl(input: string): string {
   const trimmed = input.trim();

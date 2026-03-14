@@ -1,3 +1,4 @@
+import * as React from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -171,7 +172,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            <aside className="surface-panel p-4 lg:col-span-2">
+            <div className="surface-panel p-4 lg:col-span-2">
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
                 Typical Workflow
               </p>
@@ -189,7 +190,7 @@ export default function HomePage() {
                   4. Admin exports audit evidence on demand.
                 </li>
               </ol>
-            </aside>
+            </div>
           </div>
 
           <div className="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">

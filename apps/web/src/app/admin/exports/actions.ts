@@ -9,7 +9,6 @@ import {
   ExportLimitReachedError,
   ExportGlobalBytesLimitReachedError,
 } from "@/lib/repository/export.repository";
-import { createExportSchema } from "@inductlite/shared";
 import {
   type ApiResponse,
   successResponse,
@@ -20,6 +19,7 @@ import {
 } from "@/lib/api";
 import { generateRequestId } from "@/lib/auth/csrf";
 import { createRequestLogger } from "@/lib/logger";
+import { createExportSchema } from "@/lib/validation/schemas";
 import { revalidatePath } from "next/cache";
 import { GUARDRAILS, isOffPeakNow } from "@/lib/guardrails";
 import { isFeatureEnabled } from "@/lib/feature-flags";

@@ -193,6 +193,27 @@ export const signOutSchema = z.object({
 export type SignOutInput = z.infer<typeof signOutSchema>;
 
 // ============================================================================
+// EXPORT SCHEMAS
+// ============================================================================
+
+export const exportTypeSchema = z.enum([
+  "SIGN_IN_CSV",
+  "INDUCTION_CSV",
+  "SITE_PACK_PDF",
+  "COMPLIANCE_ZIP",
+]);
+
+export const createExportSchema = z.object({
+  exportType: exportTypeSchema,
+  siteId: z.string().cuid("Invalid site ID").optional(),
+  dateFrom: z.string().datetime({ offset: true }).optional(),
+  dateTo: z.string().datetime({ offset: true }).optional(),
+  contractorIds: z.array(z.string().cuid("Invalid contractor ID")).optional(),
+});
+
+export type CreateExportInput = z.infer<typeof createExportSchema>;
+
+// ============================================================================
 // HISTORY FILTER SCHEMAS
 // ============================================================================
 

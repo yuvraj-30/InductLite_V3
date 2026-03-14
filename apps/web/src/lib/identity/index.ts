@@ -4,6 +4,7 @@ export {
   setClientSecret,
   decryptClientSecret,
   generateDirectorySyncApiKey,
+  fingerprintApiKey,
   hashDirectorySyncApiKey,
   verifyDirectorySyncApiKey,
   generatePartnerApiKey,

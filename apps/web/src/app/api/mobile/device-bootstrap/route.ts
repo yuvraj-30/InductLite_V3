@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import { heartbeatPayloadSchema } from "@inductlite/shared";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import {
   EntitlementDeniedError,
@@ -14,13 +14,6 @@ import {
   parseBearerToken,
   verifyMobileEnrollmentToken,
 } from "@/lib/mobile/enrollment-token";
-
-const requestSchema = z.object({
-  platform: z.string().max(40).optional().or(z.literal("")),
-  appVersion: z.string().max(30).optional().or(z.literal("")),
-  osVersion: z.string().max(30).optional().or(z.literal("")),
-  wrapperChannel: z.string().max(40).optional().or(z.literal("")),
-});
 
 export async function POST(request: NextRequest) {
   const token = parseBearerToken(request.headers.get("authorization"));
@@ -71,7 +64,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => null);
-  const parsed = requestSchema.safeParse(body);
+  const parsed = heartbeatPayloadSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
       {

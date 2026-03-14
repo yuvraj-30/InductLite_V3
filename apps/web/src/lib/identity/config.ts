@@ -1,4 +1,10 @@
-import { createHash, randomBytes, timingSafeEqual } from "crypto";
+import {
+  createHash,
+  createHmac,
+  randomBytes,
+  scryptSync,
+  timingSafeEqual,
+} from "crypto";
 import type { UserRole } from "@prisma/client";
 import { decryptString, encryptString } from "@/lib/security/data-protection";
 
@@ -43,6 +49,8 @@ const DEFAULT_SCOPES = ["openid", "profile", "email"];
 const DEFAULT_PARTNER_API_SCOPES = ["sites.read", "signins.read"];
 const MIN_PARTNER_API_MONTHLY_QUOTA = 100;
 const MAX_PARTNER_API_MONTHLY_QUOTA = 1_000_000;
+const TOKEN_HASH_V2_PREFIX = "v2:";
+const TOKEN_HASH_V3_PREFIX = "v3:";
 const DEFAULT_ROLE_MAPPING: RoleMapping = {
   ADMIN: ["admin", "admins"],
   SITE_MANAGER: ["site_manager", "site-managers", "manager"],
@@ -239,8 +247,70 @@ export function generatePartnerApiKey(): string {
   return `partner_${randomBytes(24).toString("base64url")}`;
 }
 
-function hashToken(value: string): string {
+function getApiKeyHashSecret(): string {
+  const secret =
+    process.env.DATA_ENCRYPTION_KEY?.trim() ||
+    process.env.SESSION_SECRET?.trim() ||
+    "";
+
+  if (!secret) {
+    throw new Error("DATA_ENCRYPTION_KEY or SESSION_SECRET must be configured");
+  }
+
+  return secret;
+}
+
+function hashLegacyToken(value: string): string {
   return createHash("sha256").update(value).digest("hex");
+}
+
+function hashTokenV2(value: string): string {
+  return createHmac("sha256", getApiKeyHashSecret()).update(value).digest("hex");
+}
+
+function hashTokenV3(value: string): string {
+  return scryptSync(value, getApiKeyHashSecret(), 32).toString("hex");
+}
+
+function extractStoredTokenDigest(expectedHash: string): {
+  digest: string;
+  version: "legacy" | "v2" | "v3";
+} | null {
+  const trimmed = expectedHash.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  if (trimmed.startsWith(TOKEN_HASH_V3_PREFIX)) {
+    return {
+      digest: trimmed.slice(TOKEN_HASH_V3_PREFIX.length),
+      version: "v3",
+    };
+  }
+
+  if (trimmed.startsWith(TOKEN_HASH_V2_PREFIX)) {
+    return {
+      digest: trimmed.slice(TOKEN_HASH_V2_PREFIX.length),
+      version: "v2",
+    };
+  }
+
+  return {
+    digest: trimmed,
+    version: "legacy",
+  };
+}
+
+function isHexDigest(value: string): boolean {
+  return /^[a-f0-9]+$/i.test(value) && value.length % 2 === 0;
+}
+
+function hashToken(value: string): string {
+  return `${TOKEN_HASH_V3_PREFIX}${hashTokenV3(value)}`;
+}
+
+export function fingerprintApiKey(value: string): string {
+  return hashTokenV2(value).slice(0, 16);
 }
 
 export function hashDirectorySyncApiKey(apiKey: string): string {
@@ -256,8 +326,15 @@ export function verifyDirectorySyncApiKey(
   expectedHash: string | null,
 ): boolean {
   if (!expectedHash) return false;
-  const providedHash = hashToken(apiKey);
-  const expected = Buffer.from(expectedHash, "hex");
+  const parsed = extractStoredTokenDigest(expectedHash);
+  if (!parsed || !isHexDigest(parsed.digest)) return false;
+  const providedHash =
+    parsed.version === "v3"
+      ? hashTokenV3(apiKey)
+      : parsed.version === "v2"
+        ? hashTokenV2(apiKey)
+        : hashLegacyToken(apiKey);
+  const expected = Buffer.from(parsed.digest, "hex");
   const provided = Buffer.from(providedHash, "hex");
   if (expected.length === 0 || provided.length === 0) return false;
   if (expected.length !== provided.length) return false;
@@ -269,8 +346,15 @@ export function verifyPartnerApiKey(
   expectedHash: string | null,
 ): boolean {
   if (!expectedHash) return false;
-  const providedHash = hashToken(apiKey);
-  const expected = Buffer.from(expectedHash, "hex");
+  const parsed = extractStoredTokenDigest(expectedHash);
+  if (!parsed || !isHexDigest(parsed.digest)) return false;
+  const providedHash =
+    parsed.version === "v3"
+      ? hashTokenV3(apiKey)
+      : parsed.version === "v2"
+        ? hashTokenV2(apiKey)
+        : hashLegacyToken(apiKey);
+  const expected = Buffer.from(parsed.digest, "hex");
   const provided = Buffer.from(providedHash, "hex");
   if (expected.length === 0 || provided.length === 0) return false;
   if (expected.length !== provided.length) return false;

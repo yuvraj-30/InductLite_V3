@@ -1,18 +1,10 @@
 import { Buffer } from "buffer";
+import {
+  mobileEnrollmentTokenPayloadSchema,
+  type MobileEnrollmentTokenPayload,
+} from "@inductlite/shared";
 
-export interface EnrollmentTokenPayload {
-  version: 1;
-  companyId: string;
-  siteId: string;
-  endpoint: string;
-  visitorName: string;
-  visitorPhone: string;
-  visitorEmail: string | null;
-  employerName: string | null;
-  visitorType: "CONTRACTOR" | "VISITOR" | "EMPLOYEE" | "DELIVERY";
-  issuedAt: number;
-  expiresAt: number;
-}
+export type EnrollmentTokenPayload = MobileEnrollmentTokenPayload;
 
 function decodeBase64Url(input: string): string {
   const base64 = input.replace(/-/g, "+").replace(/_/g, "/");
@@ -31,44 +23,11 @@ export function parseEnrollmentTokenPayload(
 
   try {
     const raw = decodeBase64Url(payloadEncoded);
-    const parsed = JSON.parse(raw) as Partial<EnrollmentTokenPayload>;
+    const parsed = mobileEnrollmentTokenPayloadSchema.safeParse(
+      JSON.parse(raw) as unknown,
+    );
 
-    if (
-      parsed.version !== 1 ||
-      typeof parsed.companyId !== "string" ||
-      typeof parsed.siteId !== "string" ||
-      typeof parsed.endpoint !== "string" ||
-      typeof parsed.visitorName !== "string" ||
-      typeof parsed.visitorPhone !== "string" ||
-      typeof parsed.visitorType !== "string" ||
-      typeof parsed.issuedAt !== "number" ||
-      typeof parsed.expiresAt !== "number"
-    ) {
-      return null;
-    }
-
-    if (
-      parsed.visitorType !== "CONTRACTOR" &&
-      parsed.visitorType !== "VISITOR" &&
-      parsed.visitorType !== "EMPLOYEE" &&
-      parsed.visitorType !== "DELIVERY"
-    ) {
-      return null;
-    }
-
-    return {
-      version: 1,
-      companyId: parsed.companyId,
-      siteId: parsed.siteId,
-      endpoint: parsed.endpoint,
-      visitorName: parsed.visitorName,
-      visitorPhone: parsed.visitorPhone,
-      visitorEmail: parsed.visitorEmail ?? null,
-      employerName: parsed.employerName ?? null,
-      visitorType: parsed.visitorType,
-      issuedAt: parsed.issuedAt,
-      expiresAt: parsed.expiresAt,
-    };
+    return parsed.success ? parsed.data : null;
   } catch {
     return null;
   }

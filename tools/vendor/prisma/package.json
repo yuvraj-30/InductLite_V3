@@ -1,0 +1,142 @@
+{
+  "version": "7.4.2",
+  "name": "prisma",
+  "description": "Prisma is an open-source database toolkit. It includes a JavaScript/TypeScript ORM for Node.js, migrations and a modern GUI to view and edit the data in your database. You can use Prisma in new projects or add it to an existing one.",
+  "keywords": [
+    "CLI",
+    "ORM",
+    "Prisma",
+    "Prisma CLI",
+    "prisma2",
+    "database",
+    "db",
+    "JavaScript",
+    "JS",
+    "TypeScript",
+    "TS",
+    "SQL",
+    "SQLite",
+    "pg",
+    "Postgres",
+    "PostgreSQL",
+    "CockroachDB",
+    "MySQL",
+    "MariaDB",
+    "MSSQL",
+    "SQL Server",
+    "SQLServer",
+    "MongoDB",
+    "MCP"
+  ],
+  "main": "build/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prisma/prisma.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://www.prisma.io",
+  "author": "Tim Suchanek <suchanek@prisma.io>",
+  "bugs": "https://github.com/prisma/prisma/issues",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": "^20.19 || ^22.12 || >=24.0"
+  },
+  "prisma": {
+    "prismaCommit": "ac2bed13bdda11b63205fe3eb31ea62363f03f03"
+  },
+  "files": [
+    "README.md",
+    "build",
+    "config.js",
+    "config.d.ts",
+    "dist/cli/src/types.d.ts",
+    "install",
+    "runtime/*.js",
+    "runtime/*.d.ts",
+    "runtime/utils",
+    "runtime/dist",
+    "runtime/llhttp",
+    "prisma-client",
+    "preinstall",
+    "scripts/preinstall-entry.js"
+  ],
+  "pkg": {
+    "assets": [
+      "build/**/*",
+      "runtime/**/*",
+      "prisma-client/**/*",
+      "node_modules/@prisma/engines/**/*",
+      "node_modules/@prisma/engines/*"
+    ]
+  },
+  "bin": {
+    "prisma": "build/index.js"
+  },
+  "types": "./dist/cli/src/types.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "require": {
+        "types": "./dist/cli/src/types.d.ts",
+        "default": "./build/types.js"
+      },
+      "import": {
+        "types": "./dist/cli/src/types.d.ts",
+        "default": "./build/types.js"
+      },
+      "default": "./build/types.js"
+    },
+    "./config": {
+      "require": {
+        "types": "./config.d.ts",
+        "default": "./config.js"
+      },
+      "import": {
+        "types": "./config.d.ts",
+        "default": "./config.js"
+      },
+      "default": "./config.js"
+    },
+    "./build/index.js": {
+      "require": {
+        "types": "./dist/cli/src/types.d.ts",
+        "default": "./build/index.js"
+      },
+      "default": "./build/index.js"
+    }
+  },
+  "devDependencies": {},
+  "dependencies": {
+    "@prisma/dev": "file:../prisma-dev",
+    "@prisma/studio-core": "0.13.1",
+    "mysql2": "3.15.3",
+    "postgres": "3.4.7",
+    "@prisma/config": "7.4.2",
+    "@prisma/engines": "7.4.2"
+  },
+  "peerDependencies": {
+    "better-sqlite3": ">=9.0.0",
+    "typescript": ">=5.4.0"
+  },
+  "peerDependenciesMeta": {
+    "better-sqlite3": {
+      "optional": true
+    },
+    "typescript": {
+      "optional": true
+    }
+  },
+  "sideEffects": false,
+  "scripts": {
+    "prisma": "tsx src/bin.ts",
+    "platform": "tsx src/bin.ts platform --early-access",
+    "pm": "tsx src/bin.ts platform --early-access",
+    "dev": "DEV=true tsx helpers/build.ts",
+    "build": "tsx helpers/build.ts",
+    "generate-api-client": "openapi-typescript https://api.prisma.io/v1/doc --output ./src/management-api/openapi.d.ts && prettier --write ./src/management-api/openapi.d.ts",
+    "test": "dotenv -e ../../.db.env -- tsx helpers/run-tests.ts",
+    "test:platform": "dotenv -e ../../.db.env -- tsx helpers/run-tests.ts src/platform",
+    "tsc": "tsc -d -p tsconfig.build.json",
+    "preinstall": "node scripts/preinstall-entry.js"
+  }
+}

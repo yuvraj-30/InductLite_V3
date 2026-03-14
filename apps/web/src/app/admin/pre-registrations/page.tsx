@@ -74,9 +74,17 @@ export default async function PreRegistrationsPage({
 
   if (sites.length === 0) {
     return (
-      <div className="p-6">
+      <div className="space-y-6 p-6">
+        <div>
+          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+            Pre-Registrations
+          </h1>
+          <p className="mt-1 text-secondary">
+            Create invite links so visitors can arrive with prefilled details.
+          </p>
+        </div>
         <PageEmptyState
-          title="Pre-Registrations"
+          title="No accessible sites"
           description="No accessible sites available for pre-registration."
           actionHref="/admin/sites"
           actionLabel="Back to Sites"
