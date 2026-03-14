@@ -1,5 +1,4 @@
 import {
-  createHmac,
   randomBytes,
   scryptSync,
   timingSafeEqual,
@@ -284,10 +283,7 @@ function hashToken(value: string): string {
 }
 
 export function fingerprintApiKey(value: string): string {
-  return createHmac("sha256", `${getApiKeyHashSecret()}:fingerprint`)
-    .update(value)
-    .digest("hex")
-    .slice(0, 16);
+  return hashTokenDigest(value).slice(0, 16);
 }
 
 export function hashDirectorySyncApiKey(apiKey: string): string {
