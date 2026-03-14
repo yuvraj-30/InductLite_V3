@@ -4,14 +4,17 @@ This directory contains local copies of third-party packages that are pinned her
 
 Current vendored packages:
 
+- `extract-zip`
 - `prisma`
 - `@prisma/dev`
 
 Why these are vendored:
 
 - Upstream Prisma `7.4.2` pulled `@prisma/dev` transitives that triggered GitHub/npm security alerts.
+- Upstream `extract-zip@2.0.1` still depends on `yauzl@^2.10.0`, which leaves the Puppeteer browser-download chain on a vulnerable `yauzl` release.
 - npm `overrides` did not reliably replace Prisma's exact-pinned toolchain dependencies in this workspace.
-- The local copies keep the Prisma CLI interface unchanged while forcing patched versions of:
+- The local copies keep the Prisma CLI/browser-download interfaces unchanged while forcing patched versions of:
+  - `yauzl`
   - `@hono/node-server`
   - `hono`
   - `@mrleebo/prisma-ast`

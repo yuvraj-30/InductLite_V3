@@ -67,6 +67,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "extract-zip": "file:../../tools/vendor/extract-zip",
     "iron-session": "^8.0.4",
     "jose": "^6.2.0",
     "libphonenumber-js": "^1.12.38",

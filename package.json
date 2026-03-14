@@ -67,6 +67,7 @@
     "fast-xml-parser": "5.3.8",
     "lodash": "4.17.23",
     "serialize-javascript": "7.0.3",
+    "extract-zip": "file:tools/vendor/extract-zip",
     "@aws-sdk/xml-builder": {
       "fast-xml-parser": "5.3.8"
     },
