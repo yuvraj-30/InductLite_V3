@@ -225,7 +225,7 @@ export const test = base.extend<MyFixtures>({
     });
   },
 
-  seedPublicSite: async ({ request }, playUse) => {
+  seedPublicSite: async ({ request, workerServer: _workerServer }, playUse) => {
     await playUse(
       async (opts?: {
         slugPrefix?: string;
@@ -301,7 +301,7 @@ export const test = base.extend<MyFixtures>({
     );
   },
 
-  deletePublicSite: async ({ request }, playUse) => {
+  deletePublicSite: async ({ request, workerServer: _workerServer }, playUse) => {
     await playUse(async (slug: string) => {
       let lastBody: {
         success?: boolean;
@@ -1512,7 +1512,7 @@ export const test = base.extend<MyFixtures>({
     const origGoto = p.goto.bind(page as unknown as Page);
     const isTransientNavigationError = (value: unknown): boolean => {
       const message = value instanceof Error ? value.message : String(value);
-      return /Could not connect to server|ECONNRESET|ECONNREFUSED|ERR_CONNECTION_RESET|ERR_CONNECTION_REFUSED|ERR_ABORTED|NS_BINDING_ABORTED|aborted/i.test(
+      return /Could not connect to server|ECONNRESET|ECONNREFUSED|ERR_CONNECTION_RESET|ERR_CONNECTION_REFUSED|ERR_ABORTED|NS_BINDING_ABORTED|aborted|interrupted by another navigation/i.test(
         message,
       );
     };

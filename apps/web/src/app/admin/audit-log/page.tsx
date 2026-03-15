@@ -149,7 +149,12 @@ export default async function AuditLogPage({
           />
         ) : (
           <>
-            <div className="overflow-x-auto">
+            <div
+              className="overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring-focus)]"
+              tabIndex={0}
+              role="region"
+              aria-label="Audit log records table"
+            >
               <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
                 <thead className="bg-[color:var(--bg-surface-strong)]">
                   <tr>

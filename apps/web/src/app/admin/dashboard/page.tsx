@@ -497,7 +497,10 @@ export default async function AdminDashboardPage({
       <section className="surface-panel overflow-hidden">
         <div className="flex items-center justify-between border-b border-surface-soft px-5 py-4">
           <div>
-            <h2 className="kinetic-title text-xl font-black text-[color:var(--text-primary)]">
+            <h2
+              id="quiz-performance-signals-heading"
+              className="kinetic-title text-xl font-black text-[color:var(--text-primary)]"
+            >
               Quiz Performance Signals (30 Days)
             </h2>
             <p className="mt-1 text-sm text-secondary">
@@ -552,7 +555,12 @@ export default async function AdminDashboardPage({
           </div>
         </div>
 
-        <div className="overflow-x-auto px-5 pb-5">
+        <div
+          className="overflow-x-auto px-5 pb-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring-focus)]"
+          tabIndex={0}
+          role="region"
+          aria-labelledby="quiz-performance-signals-heading"
+        >
           <table className="min-w-full divide-y divide-[color:var(--border-soft)] rounded-xl border border-surface-soft">
             <thead className="bg-[color:var(--bg-surface)]">
               <tr>

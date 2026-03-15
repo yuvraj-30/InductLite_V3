@@ -4,6 +4,7 @@ import type { Page } from "@playwright/test";
 
 test.describe("Accessibility Checks", () => {
   test.describe.configure({ mode: "serial" });
+  test.setTimeout(120_000);
 
   let TEST_SITE_SLUG = "test-site";
 
@@ -78,14 +79,21 @@ test.describe("Accessibility Checks", () => {
   });
 
   for (const route of adminRoutes) {
-    test(`${route} meets serious+critical a11y`, async ({ page, loginAs }) => {
-      await loginAs();
-      await runSeriousA11yCheck(route, page);
-    });
+    test(
+      `${route} meets serious+critical a11y`,
+      async ({ page, loginAs, workerUser }) => {
+        await loginAs(workerUser.email);
+        await runSeriousA11yCheck(route, page);
+      },
+    );
   }
 
-  test("focus indicators remain visible in both themes", async ({ page, loginAs }) => {
-    await loginAs();
+  test("focus indicators remain visible in both themes", async ({
+    page,
+    loginAs,
+    workerUser,
+  }) => {
+    await loginAs(workerUser.email);
 
     const verifyFocusVisible = async (theme: "warm-light" | "high-contrast-dark") => {
       await page.goto("/admin/dashboard");

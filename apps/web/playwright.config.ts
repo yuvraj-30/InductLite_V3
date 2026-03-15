@@ -136,7 +136,7 @@ export default defineConfig({
     ? undefined
     : {
         command: useDevServer
-          ? "npm run dev"
+          ? "npm run dev -- --webpack"
           : "npm run build && npm run start",
         url: defaultBaseUrl,
         // Default to false so we don't accidentally reuse a stale local server
