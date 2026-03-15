@@ -86,6 +86,35 @@ const FEATURE_SWITCH_POINTS = [
 
 const FEATURE_WORKFORCES = ["Contractors", "Visitors", "Delivery drivers", "Supervisors"];
 
+const WORKFLOW_STEPS = [
+  {
+    title: "Arrive and identify",
+    detail:
+      "Workers and visitors scan the site QR or open a public link tied to the correct location and policy set.",
+  },
+  {
+    title: "Complete the right induction",
+    detail:
+      "The flow serves the right induction, media, questions, signatures, and retry rules before access is granted.",
+  },
+  {
+    title: "Handle exceptions live",
+    detail:
+      "If someone fails or needs approval, the supervisor path stays attached to the same record instead of moving into email and paper.",
+  },
+  {
+    title: "Keep the evidence ready",
+    detail:
+      "Live register status, emergency readiness, exports, and audit history update from the same sign-in trail.",
+  },
+];
+
+const WORKFLOW_EVIDENCE_POINTS = [
+  "Live register visibility without rebuilding the record later.",
+  "Emergency, escalation, and permit context linked to the visit.",
+  "Export-ready evidence when clients, auditors, or site managers ask for it.",
+];
+
 const INTEGRATION_FEATURES = [
   "Teams/Slack channel notifications with actionable approval callbacks",
   "Outbound webhooks for external systems",
@@ -113,6 +142,21 @@ const LATEST_RELEASES = [
   "Cross-site contractor risk passport with trend views",
   "Tamper-evident compliance evidence verification APIs",
   "Self-serve plan configurator with scheduled plan changes",
+];
+
+const ROLLOUT_SUPPORT_BLOCKS = [
+  {
+    title: "Site setup",
+    detail: "Stand up the first site, QR entry point, operator roles, and approval rules without custom implementation work.",
+  },
+  {
+    title: "Template build",
+    detail: "Map induction media, question scoring, signatures, and pass or exception rules into one repeatable template.",
+  },
+  {
+    title: "Go-live support",
+    detail: "Validate the public flow, live register behavior, and evidence exports before teams rely on it at the gate.",
+  },
 ];
 
 function formatPlanPrice(cents: number): string {
@@ -330,20 +374,50 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="integrations" className="surface-panel px-5 py-6 sm:px-6">
-          <h2 className="text-2xl font-bold">Integrations and Operations</h2>
-          <p className="mt-2 text-sm text-secondary">
-            Keep your workflow connected without adding enterprise-only complexity.
-          </p>
-          <div className="mt-4 grid gap-3 md:grid-cols-2">
-            {INTEGRATION_FEATURES.map((item) => (
-              <p
-                key={item}
-                className="rounded-xl border border-surface-soft bg-surface-soft px-4 py-3 text-sm text-secondary"
-              >
-                {item}
+        <section className="surface-panel px-5 py-6 sm:px-6">
+          <div className="max-w-2xl">
+            <h2 className="text-2xl font-bold">From arrival to evidence in four steps</h2>
+            <p className="mt-2 text-sm text-secondary">
+              The product should read like a live site workflow, not a disconnected capability list.
+            </p>
+          </div>
+          <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]">
+            <article className="bento-card">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                Live workflow
               </p>
-            ))}
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {WORKFLOW_STEPS.map((step, index) => (
+                  <article
+                    key={step.title}
+                    className="rounded-xl border border-surface-soft bg-surface-soft p-4"
+                  >
+                    <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+                      Step {index + 1}
+                    </p>
+                    <h3 className="mt-2 text-lg font-semibold">{step.title}</h3>
+                    <p className="mt-2 text-sm text-secondary">{step.detail}</p>
+                  </article>
+                ))}
+              </div>
+            </article>
+
+            <article className="bento-card">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                Evidence and control
+              </p>
+              <h3 className="mt-2 text-xl font-bold">Operational proof stays attached to the visit.</h3>
+              <p className="mt-2 text-sm text-secondary">
+                Site teams should not need a second admin workflow to prove what happened at the gate.
+              </p>
+              <ul className="mt-4 space-y-2 text-sm text-secondary">
+                {WORKFLOW_EVIDENCE_POINTS.map((item) => (
+                  <li key={item} className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </article>
           </div>
         </section>
 
@@ -405,32 +479,93 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="surface-panel px-5 py-6 sm:px-6">
-          <h2 className="text-2xl font-bold">Latest Releases</h2>
-          <p className="mt-2 text-sm text-secondary">
-            Recently delivered features aligned to current NZ buyer demand.
-          </p>
-          <div className="mt-4 grid gap-2 sm:grid-cols-2">
-            {LATEST_RELEASES.map((item) => (
-              <p
-                key={item}
-                className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2 text-sm text-secondary"
-              >
-                {item}
-              </p>
-            ))}
+        <section id="integrations" className="surface-panel px-5 py-6 sm:px-6">
+          <div className="max-w-2xl">
+            <h2 className="text-2xl font-bold">Integrations and rollout support</h2>
+            <p className="mt-2 text-sm text-secondary">
+              Connect the workflow, train the first operators, and add enterprise touchpoints only
+              when they help the site move faster.
+            </p>
           </div>
-          <div className="mt-4">
-            <Link href="/compare" className="text-sm font-semibold text-[color:var(--text-primary)] hover:text-accent hover:underline">
-              Compare InductLite with NZ competitors
-            </Link>
+          <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
+            <article className="bento-card">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                Connected operations
+              </p>
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                {INTEGRATION_FEATURES.map((item) => (
+                  <p
+                    key={item}
+                    className="rounded-xl border border-surface-soft bg-surface-soft px-4 py-3 text-sm text-secondary"
+                  >
+                    {item}
+                  </p>
+                ))}
+              </div>
+            </article>
+
+            <article className="bento-card">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                Guided rollout
+              </p>
+              <div className="mt-4 space-y-3">
+                {ROLLOUT_SUPPORT_BLOCKS.map((item) => (
+                  <div key={item.title} className="rounded-xl border border-surface-soft bg-surface-soft p-4">
+                    <h3 className="text-lg font-semibold">{item.title}</h3>
+                    <p className="mt-2 text-sm text-secondary">{item.detail}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="cyber-divider mt-4" />
+              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+                Sales and support
+              </p>
+              <a
+                href="mailto:sales@inductlite.nz"
+                className="mt-2 inline-flex text-sm font-semibold text-[color:var(--text-primary)] hover:text-accent hover:underline"
+              >
+                sales@inductlite.nz
+              </a>
+              <a
+                href="mailto:support@inductlite.nz"
+                className="mt-1 inline-flex text-xs text-secondary hover:text-accent hover:underline"
+              >
+                support@inductlite.nz
+              </a>
+            </article>
+          </div>
+          <div className="mt-4 rounded-xl border border-surface-soft bg-surface-soft p-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-xl">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                  Recent operating additions
+                </p>
+                <p className="mt-2 text-sm text-secondary">
+                  New capabilities continue to land lower on the page as confidence builders, not as
+                  hero-stage distractions.
+                </p>
+              </div>
+              <Link
+                href="/compare"
+                className="text-sm font-semibold text-[color:var(--text-primary)] hover:text-accent hover:underline"
+              >
+                Compare InductLite with NZ competitors
+              </Link>
+            </div>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              {LATEST_RELEASES.map((item) => (
+                <p key={item} className="rounded-lg bg-surface-soft px-3 py-2 text-sm text-secondary">
+                  {item}
+                </p>
+              ))}
+            </div>
           </div>
         </section>
 
         <section className="surface-panel-strong p-6 text-center">
-          <h2 className="text-2xl font-bold">Ready to replace paper inductions?</h2>
+          <h2 className="text-2xl font-bold">Launch your first live site flow with one clear next step.</h2>
           <p className="mt-2 text-sm text-secondary">
-            Start free when you want to self-serve, or book a demo for a guided rollout.
+            Start free for a self-serve rollout or book a demo for a guided implementation.
           </p>
           <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row">
             <Link href="/register" className="btn-primary sm:min-w-[220px]">
@@ -440,54 +575,6 @@ export default function HomePage() {
               Book demo
             </Link>
           </div>
-        </section>
-
-        <section className="bento-grid grid-cols-1 lg:grid-cols-3">
-          <article className="bento-card lg:col-span-2">
-            <h2 className="text-2xl font-bold">Support and Onboarding</h2>
-            <p className="mt-2 text-sm text-secondary">
-              Need rollout help for your first site/company? We can assist with setup,
-              templates, and operator training.
-            </p>
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-surface-soft bg-surface-soft p-3 text-sm text-secondary">
-                <p className="font-semibold text-[color:var(--text-primary)]">Admin Setup</p>
-                <p className="mt-1">Company, users, and role configuration.</p>
-              </div>
-              <div className="rounded-xl border border-surface-soft bg-surface-soft p-3 text-sm text-secondary">
-                <p className="font-semibold text-[color:var(--text-primary)]">Template Build</p>
-                <p className="mt-1">Induction question and media structure.</p>
-              </div>
-              <div className="rounded-xl border border-surface-soft bg-surface-soft p-3 text-sm text-secondary">
-                <p className="font-semibold text-[color:var(--text-primary)]">Go-Live Checks</p>
-                <p className="mt-1">Public flow validation and export verification.</p>
-              </div>
-            </div>
-          </article>
-
-          <article className="bento-card">
-            <h2 className="text-xl font-bold">Contact</h2>
-            <p className="mt-2 text-sm text-secondary">
-              Book a walkthrough for your current process and we will map it to
-              Standard, Plus, and Pro scope.
-            </p>
-            <div className="cyber-divider mt-4" />
-            <p className="mt-4 text-xs uppercase tracking-[0.12em] text-muted">
-              Sales and support
-            </p>
-            <a
-              href="mailto:sales@inductlite.nz"
-              className="mt-2 inline-flex text-sm font-semibold text-[color:var(--text-primary)] hover:text-accent hover:underline"
-            >
-              sales@inductlite.nz
-            </a>
-            <a
-              href="mailto:support@inductlite.nz"
-              className="mt-1 inline-flex text-xs text-secondary hover:text-accent hover:underline"
-            >
-              support@inductlite.nz
-            </a>
-          </article>
         </section>
 
         <footer className="surface-panel px-4 py-3 text-center text-xs text-secondary sm:text-sm">
