@@ -181,7 +181,7 @@ jobs:
 
       - name: Upload coverage artifact
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: apps/web/coverage/
@@ -269,6 +269,7 @@ jobs:
       BASE_URL: http://localhost:3000
       PLAYWRIGHT_BROWSERS_PATH: "0"
       E2E_RETRIES: "0"
+      SESSION_COOKIE_SECURE: "0"
       DATA_ENCRYPTION_KEY: ci-test-data-encryption-key-at-least-32-characters
       # Test-only stubs for services not required in CI e2e runs
       MAGIC_LINK_SECRET: ci-magic-link-secret
@@ -418,7 +419,7 @@ jobs:
           fi
 
       - name: Upload Playwright artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-artifacts
