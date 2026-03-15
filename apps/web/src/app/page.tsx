@@ -12,10 +12,15 @@ import { cn } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 const TRUST_BADGES = [
-  "NZ-focused compliance workflows",
+  "QR sign-in and induction in one flow",
+  "Live register, muster, and audit records",
   "Tenant-scoped security by default",
-  "Audit-ready records and exports",
-  "Mobile-ready public sign-in flow",
+];
+
+const GUIDED_ROLLOUT_POINTS = [
+  "Map your current paper, spreadsheet, or legacy sign-in process.",
+  "Launch the first site flow for workers, visitors, and supervisors.",
+  "Go live with export-ready records from day one.",
 ];
 
 const STANDARD_FEATURES = [
@@ -135,7 +140,7 @@ export default function HomePage() {
               Pricing
             </Link>
             <Link href="/demo" className="rounded-lg px-2 py-1 text-secondary hover:text-accent">
-              Demo
+              Book demo
             </Link>
             <Link href="/compare" className="rounded-lg px-2 py-1 text-secondary hover:text-accent">
               Compare
@@ -146,62 +151,95 @@ export default function HomePage() {
           </nav>
         </header>
 
-        <section className="surface-panel-strong kinetic-hover overflow-hidden p-6 sm:p-8">
-          <div className="grid gap-5 lg:grid-cols-5">
-            <div className="lg:col-span-3">
+        <section className="surface-panel-strong overflow-hidden p-6 sm:p-8">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-start">
+            <div className="max-w-3xl">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-secondary">
-                Competitor-grade, field-ready workflows
+                Live site induction for NZ construction teams
               </p>
-              <h1 className="kinetic-title mt-2 text-4xl font-black sm:text-5xl">
-                Replace paper inductions with a live compliance system.
+              <h1 className="kinetic-title mt-3 max-w-[11ch] text-4xl font-bold leading-[0.98] tracking-tight sm:text-5xl">
+                Start every site induction with one clear, compliant flow.
               </h1>
-              <p className="mt-3 max-w-2xl text-sm text-secondary sm:text-base">
-                InductLite gives NZ construction teams a full sign-in, induction,
-                compliance, and emergency operations stack in one platform.
+              <p className="mt-4 max-w-2xl text-sm text-secondary sm:text-base">
+                From QR sign-in to induction records, live registers, and emergency roll-call,
+                InductLite keeps people moving and evidence ready.
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <Link href="/register" className="btn-primary w-full sm:w-auto sm:min-w-[220px]">
-                  Start Free Workspace
+                  Start free
                 </Link>
                 <Link href="/demo" className="btn-secondary w-full sm:w-auto sm:min-w-[180px]">
-                  Book Demo
+                  Book demo
                 </Link>
               </div>
               <p className="mt-3 text-xs text-muted">
-                Prefer to self-serve? Start now and configure your first site in minutes.
+                Self-serve first, then bring us in when you want rollout support.
               </p>
             </div>
 
-            <div className="surface-panel p-4 lg:col-span-2">
+            <div className="surface-panel p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-                Typical Workflow
+                Guided rollout
               </p>
-              <ol className="mt-3 space-y-2 text-sm text-secondary">
-                <li className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2">
-                  1. Contractor scans QR at site entry.
-                </li>
-                <li className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2">
-                  2. Completes media-first induction + signature.
-                </li>
-                <li className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2">
-                  3. Supervisor gets alerts for escalations when required.
-                </li>
-                <li className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2">
-                  4. Admin exports audit evidence on demand.
-                </li>
-              </ol>
+              <h2 className="mt-2 text-xl font-bold text-[color:var(--text-primary)]">
+                Book a tailored walkthrough
+              </h2>
+              <p className="mt-2 text-sm text-secondary">
+                We will map your current sign-in, induction, and compliance process to a cleaner
+                live workflow.
+              </p>
+              <ul className="mt-4 space-y-2 text-sm text-secondary">
+                {GUIDED_ROLLOUT_POINTS.map((item, index) => (
+                  <li
+                    key={item}
+                    className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2"
+                  >
+                    <span className="mr-2 font-semibold text-[color:var(--text-primary)]">
+                      {index + 1}.
+                    </span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-4 rounded-xl border border-surface-soft bg-surface-soft p-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted">
+                  Most teams start with
+                </p>
+                <p className="mt-1 text-sm text-secondary">
+                  one site, one QR entry point, and one induction template.
+                </p>
+              </div>
+              <Link
+                href="/demo"
+                className="mt-4 inline-flex text-sm font-semibold text-[color:var(--text-primary)] hover:text-accent hover:underline"
+              >
+                Book demo
+              </Link>
             </div>
           </div>
+        </section>
 
-          <div className="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            {TRUST_BADGES.map((badge) => (
-              <p
-                key={badge}
-                className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2 text-xs font-semibold text-secondary"
-              >
-                {badge}
+        <section className="surface-panel px-5 py-4 sm:px-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-secondary">
+                Field-ready proof
               </p>
-            ))}
+              <p className="mt-1 max-w-2xl text-sm text-secondary">
+                Built for NZ site teams that need sign-in, induction, live registers, and records
+                to stay in sync.
+              </p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3 lg:max-w-[46rem] lg:flex-1">
+              {TRUST_BADGES.map((badge) => (
+                <p
+                  key={badge}
+                  className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2 text-xs font-semibold text-secondary"
+                >
+                  {badge}
+                </p>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -320,16 +358,16 @@ export default function HomePage() {
         </section>
 
         <section className="surface-panel-strong p-6 text-center">
-          <h2 className="text-2xl font-bold">Want the same sales-ready flow as top competitors?</h2>
+          <h2 className="text-2xl font-bold">Ready to replace paper inductions?</h2>
           <p className="mt-2 text-sm text-secondary">
-            Launch your workspace, configure your first site, and start collecting compliant records immediately.
+            Start free when you want to self-serve, or book a demo for a guided rollout.
           </p>
           <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row">
             <Link href="/register" className="btn-primary sm:min-w-[220px]">
-              Start New Workspace
+              Start free
             </Link>
             <Link href="/demo" className="btn-secondary sm:min-w-[220px]">
-              Talk to Sales
+              Book demo
             </Link>
           </div>
         </section>

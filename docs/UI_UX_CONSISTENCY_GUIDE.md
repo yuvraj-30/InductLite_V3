@@ -14,6 +14,7 @@ This repo now uses a 2026 tokenized visual system across admin, auth, contractor
 - Token source of truth: `apps/web/src/design/modern-theme.json`.
 - Runtime token application: `apps/web/src/app/globals.css`.
 - Adaptive mode runtime (`warm-light` and `high-contrast-dark`): `apps/web/src/components/ui/theme-runtime.tsx`.
+- Latest visual audit and normalization plan: [UI_UX_VISUAL_CONSISTENCY_AUDIT_2026-03-15.md](./UI_UX_VISUAL_CONSISTENCY_AUDIT_2026-03-15.md).
 
 ## Shared Patterns
 
