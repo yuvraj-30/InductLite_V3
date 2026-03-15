@@ -22,6 +22,9 @@ npm run db:migrate:dev
 # Apply migrations
 npm run db:migrate
 
+# Check migration status
+npm run db:status
+
 # Seed database
 npm run db:seed
 

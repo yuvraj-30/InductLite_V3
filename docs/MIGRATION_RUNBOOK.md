@@ -36,7 +36,7 @@ Run from repo root:
 
 ```bash
 npm run -w apps/web db:generate
-npx prisma migrate status --config apps/web/prisma.config.ts
+npm run db:status
 ```
 
 Expected:
@@ -63,7 +63,7 @@ export DATABASE_DIRECT_URL='postgresql://...-direct...:5432/...?...'
 
 ```bash
 npm run -w apps/web db:migrate
-npx prisma migrate status --config apps/web/prisma.config.ts
+npm run db:status
 ```
 
 Expected:
@@ -154,7 +154,7 @@ Before migration:
 - [ ] Confirm PITR available
 
 After migration:
-- [ ] `prisma migrate status --config apps/web/prisma.config.ts` is clean
+- [ ] `npm run db:status` is clean
 - [ ] Render deploy complete
 - [ ] Smoke tests pass
 

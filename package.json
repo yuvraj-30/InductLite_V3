@@ -29,6 +29,7 @@
     "parity-gate": "node tools/parity-gate.mjs",
     "db:generate": "turbo run db:generate",
     "db:migrate": "turbo run db:migrate",
+    "db:status": "npm run -w apps/web db:status",
     "db:push": "turbo run db:push",
     "db:seed": "turbo run db:seed",
     "db:studio": "turbo run db:studio",

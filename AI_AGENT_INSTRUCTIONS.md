@@ -43,7 +43,7 @@ Repo root uses Turborepo:
 - E2E tests (Playwright): `cd apps/web && npm run test:e2e`
 - E2E stable lane (single-worker, deterministic): `cd apps/web && npm run test:e2e:stable`
 - Visual regression (Playwright snapshot suite): `cd apps/web && npm run test:visual`
-- DB: `npm run db:migrate` / `npm run db:seed` (root forwards to `apps/web`)
+- DB: `npm run db:migrate` / `npm run db:status` / `npm run db:seed` (root forwards to `apps/web`)
 - Prisma generate: `npm run db:generate`
 - Sensitive data backfill (post-encryption rollout): `npm run -w apps/web db:backfill-encryption`
 

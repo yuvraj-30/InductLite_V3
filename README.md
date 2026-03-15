@@ -35,6 +35,9 @@ npm run db:generate
 # Run migrations
 npm run db:migrate
 
+# Check migration status
+npm run db:status
+
 # Seed database
 npm run db:seed
 
