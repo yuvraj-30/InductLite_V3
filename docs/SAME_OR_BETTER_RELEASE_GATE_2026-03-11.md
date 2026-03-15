@@ -25,6 +25,7 @@ PR CI now enforces the fast branch gate in [`.github/workflows/ci.yml`](../.gith
 3. Gate G3: Broader release evidence
 - `npm run test:gap-matrix` and `npm run test:e2e:gap-matrix -- --dynamic-links --js-flows --base-url http://localhost:3000` remain required for local/manual release confidence.
 - `npm run -w apps/web test:e2e:full`, `npm run -w apps/web test:e2e:stable`, `npm run -w apps/web test:visual`, `npm run -w apps/web test:e2e:perf-budget`, and `npm run report:ux-perf-budget` remain the broader confidence set for manual or scheduled validation.
+- Scheduled GitHub validation in [`.github/workflows/nightly.yml`](../.github/workflows/nightly.yml) runs the standalone localhost build with `SESSION_COOKIE_SECURE=0` so HTTP-only WebKit coverage reflects the intended test environment instead of dropping secure cookies.
 
 ## CI Enforcement Contract
 

@@ -99,6 +99,7 @@ npm run test:e2e:ci-local
 Detailed test-coverage explanation (plain language): [docs/FULL_TEST_COVERAGE_AND_PURPOSE_2026-03-09.md](docs/FULL_TEST_COVERAGE_AND_PURPOSE_2026-03-09.md)
 Manual browser validation checklist: [docs/MANUAL_FEATURE_VALIDATION_CHECKLIST_2026-03-09.md](docs/MANUAL_FEATURE_VALIDATION_CHECKLIST_2026-03-09.md)
 Release confidence contract (PR smoke lane + broader manual confidence): [docs/SAME_OR_BETTER_RELEASE_GATE_2026-03-11.md](docs/SAME_OR_BETTER_RELEASE_GATE_2026-03-11.md)
+Scheduled broad browser validation: [.github/workflows/nightly.yml](.github/workflows/nightly.yml)
 
 ### Docker Compose (Full Stack)
 
