@@ -1,5 +1,8 @@
 import Link from "next/link";
 import type { OnboardingProgress } from "@/lib/repository/dashboard.repository";
+import { buttonVariants } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { cn } from "@/lib/utils";
 
 interface OnboardingChecklistProps {
   progress: OnboardingProgress;
@@ -21,25 +24,22 @@ interface StepCardProps {
 
 function StepCard({ done, title, href, actionLabel, canAct = true }: StepCardProps) {
   return (
-    <div className="kinetic-hover rounded-xl border border-surface-soft bg-[color:var(--bg-surface-strong)] p-4 shadow-soft backdrop-blur-xl">
+    <div className="kinetic-hover rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4 shadow-trust">
       <div className="flex items-center justify-between">
         <p className="kinetic-title text-sm font-semibold text-[color:var(--text-primary)]">
           {title}
         </p>
-        <span
-          className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${
-            done
-              ? "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100"
-              : "border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] text-secondary"
-          }`}
-        >
+        <StatusBadge tone={done ? "success" : "neutral"}>
           {done ? "Done" : "Pending"}
-        </span>
+        </StatusBadge>
       </div>
       {!done && canAct && (
         <Link
           href={href}
-          className="mt-3 inline-flex items-center rounded-lg border border-indigo-400/30 bg-indigo-500/15 px-3 py-1.5 text-sm font-semibold text-indigo-900 shadow-soft hover:bg-indigo-500/25 dark:text-indigo-100"
+          className={cn(
+            buttonVariants({ variant: "secondary", size: "sm" }),
+            "mt-3 w-fit",
+          )}
         >
           {actionLabel} -&gt;
         </Link>
@@ -68,7 +68,7 @@ export function OnboardingChecklist({
 
   return (
     <div
-      className={`surface-panel-strong kinetic-hover border-indigo-400/25 bg-gradient-to-br from-indigo-500/12 via-cyan-400/10 to-transparent p-5 ${className}`.trim()}
+      className={`surface-panel-strong kinetic-hover border-[color:var(--border-strong)] p-5 ${className}`.trim()}
     >
       <h2 className="kinetic-title text-lg font-black text-[color:var(--text-primary)]">{title}</h2>
       <p className="mt-1 text-sm text-secondary">{description}</p>

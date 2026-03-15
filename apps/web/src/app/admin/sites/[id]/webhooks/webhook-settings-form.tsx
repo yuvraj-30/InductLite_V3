@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useMemo } from "react";
+import { Alert } from "@/components/ui/alert";
 import {
   rotateSiteWebhookSecretAction,
   updateSiteWebhooksAction,
@@ -81,14 +82,14 @@ export function WebhookSettingsForm({
         </p>
 
         {updateState && !updateState.success && (
-          <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <Alert variant="error" className="mt-4">
             {updateState.error}
-          </div>
+          </Alert>
         )}
         {updateState?.success && (
-          <div className="mt-4 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+          <Alert variant="success" className="mt-4">
             {updateState.message}
-          </div>
+          </Alert>
         )}
 
         <form action={updateFormAction} className="mt-4 space-y-4">
@@ -104,7 +105,7 @@ export function WebhookSettingsForm({
               name="endpointUrls"
               rows={8}
               defaultValue={initialUrls.join("\n")}
-              className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)]"
+              className="input mt-1"
               placeholder="https://example.com/webhooks/inductlite"
             />
             {updateState &&
@@ -144,7 +145,7 @@ export function WebhookSettingsForm({
                 type="password"
                 name="signingSecret"
                 minLength={16}
-                className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)]"
+                className="input mt-1"
                 placeholder="Leave blank to keep current secret"
                 autoComplete="new-password"
               />
@@ -161,7 +162,7 @@ export function WebhookSettingsForm({
               <input
                 type="checkbox"
                 name="clearSigningSecret"
-                className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)]"
+                className="check-control"
               />
               Disable signatures for this site (clears stored site secret)
             </label>
@@ -185,14 +186,14 @@ export function WebhookSettingsForm({
         </p>
 
         {rotateState && !rotateState.success && (
-          <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <Alert variant="error" className="mt-4">
             {rotateState.error}
-          </div>
+          </Alert>
         )}
         {rotateState?.success && (
-          <div className="mt-4 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+          <Alert variant="success" className="mt-4">
             <p>{rotateState.message}</p>
-            {rotateState.generatedSecret && (
+            {rotateState.generatedSecret ? (
               <>
                 <p className="mt-2 text-xs text-green-900">
                   Copy this value now and update your receiver immediately.
@@ -201,14 +202,14 @@ export function WebhookSettingsForm({
                   {rotateState.generatedSecret}
                 </div>
               </>
-            )}
-          </div>
+            ) : null}
+          </Alert>
         )}
 
         <form action={rotateFormAction} className="mt-4">
           <button
             type="submit"
-            className="min-h-[42px] rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] px-4 py-2 text-sm font-medium text-[color:var(--text-primary)] hover:bg-[color:var(--bg-surface-strong)]"
+            className="btn-secondary"
           >
             Rotate Secret
           </button>

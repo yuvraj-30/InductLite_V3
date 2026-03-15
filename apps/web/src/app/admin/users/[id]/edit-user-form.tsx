@@ -3,6 +3,8 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { type UserRole } from "@prisma/client";
+import { Alert } from "@/components/ui/alert";
+import { Field } from "@/components/ui/field";
 import { updateUserAction, type UserActionResult } from "../actions";
 import { UserActionButtons } from "../user-action-buttons";
 
@@ -25,22 +27,18 @@ const initialState: UserActionResult | null = null;
 function FormFields({
   user,
   isCurrentUser,
+  getFieldError,
 }: {
   user: UserFormModel;
   isCurrentUser: boolean;
+  getFieldError: (field: string) => string | undefined;
 }) {
   const { pending } = useFormStatus();
 
   return (
     <>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-secondary"
-          >
-            Full Name
-          </label>
+        <Field label="Full Name" htmlFor="name" error={getFieldError("name")}>
           <input
             id="name"
             name="name"
@@ -50,17 +48,11 @@ function FormFields({
             minLength={2}
             maxLength={120}
             disabled={pending}
-            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
+            className="input disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
           />
-        </div>
+        </Field>
 
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-secondary"
-          >
-            Email
-          </label>
+        <Field label="Email" htmlFor="email" error={getFieldError("email")}>
           <input
             id="email"
             name="email"
@@ -70,44 +62,36 @@ function FormFields({
             required
             maxLength={160}
             disabled={pending}
-            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
+            className="input disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
           />
-        </div>
+        </Field>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <label
-            htmlFor="role"
-            className="block text-sm font-medium text-secondary"
-          >
-            Role
-          </label>
+        <Field
+          label="Role"
+          htmlFor="role"
+          hint={isCurrentUser ? "You cannot change your own role." : undefined}
+          error={getFieldError("role")}
+        >
           <select
             id="role"
             name="role"
             defaultValue={user.role}
             disabled={pending || isCurrentUser}
-            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
+            className="input disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
           >
             <option value="ADMIN">ADMIN</option>
             <option value="SITE_MANAGER">SITE_MANAGER</option>
             <option value="VIEWER">VIEWER</option>
           </select>
-          {isCurrentUser && (
-            <p className="mt-1 text-xs text-muted">
-              You cannot change your own role.
-            </p>
-          )}
-        </div>
+        </Field>
 
-        <div>
-          <label
-            htmlFor="newPassword"
-            className="block text-sm font-medium text-secondary"
-          >
-            New Password (optional)
-          </label>
+        <Field
+          label="New Password (optional)"
+          htmlFor="newPassword"
+          error={getFieldError("newPassword")}
+        >
           <input
             id="newPassword"
             name="newPassword"
@@ -116,12 +100,12 @@ function FormFields({
             minLength={8}
             maxLength={128}
             disabled={pending}
-            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
+            className="input disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
           />
-        </div>
+        </Field>
       </div>
 
-      <div className="rounded-md border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-3 text-sm text-secondary">
+      <div className="field-note">
         <p>
           Status:{" "}
           <span className="font-medium">
@@ -173,27 +157,18 @@ export function EditUserForm({ user, isCurrentUser }: EditUserFormProps) {
   return (
     <form action={formAction} className="space-y-4">
       {state && !state.success && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-3">
-          <p className="text-sm text-red-700">{state.error}</p>
-        </div>
+        <Alert variant="error">{state.error}</Alert>
       )}
 
       {state?.success && (
-        <div className="rounded-md border border-green-200 bg-green-50 p-3">
-          <p className="text-sm text-green-700">{state.message}</p>
-        </div>
+        <Alert variant="success">{state.message}</Alert>
       )}
 
-      <FormFields user={user} isCurrentUser={isCurrentUser} />
-
-      {!state?.success && (
-        <div className="grid grid-cols-1 gap-1 text-xs text-red-600">
-          {getFieldError("name") && <p>{getFieldError("name")}</p>}
-          {getFieldError("email") && <p>{getFieldError("email")}</p>}
-          {getFieldError("role") && <p>{getFieldError("role")}</p>}
-          {getFieldError("newPassword") && <p>{getFieldError("newPassword")}</p>}
-        </div>
-      )}
+      <FormFields
+        user={user}
+        isCurrentUser={isCurrentUser}
+        getFieldError={getFieldError}
+      />
     </form>
   );
 }

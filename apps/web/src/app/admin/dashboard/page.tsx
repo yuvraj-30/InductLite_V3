@@ -12,6 +12,18 @@ import Link from "next/link";
 import { checkAuthReadOnly } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import { redirect } from "next/navigation";
+import { Alert } from "@/components/ui/alert";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableEmptyRow,
+  DataTableHeadCell,
+  DataTableHeader,
+  DataTableRow,
+  DataTableScroll,
+} from "@/components/ui/data-table";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   getDashboardMetrics,
   getOnboardingProgress,
@@ -175,9 +187,9 @@ export default async function AdminDashboardPage({
       </section>
 
       {metricsLoadFailed && (
-        <div className="rounded-xl border border-amber-400/45 bg-amber-100/70 px-4 py-3 text-sm text-amber-950 dark:bg-amber-950/45 dark:text-amber-100">
+        <Alert variant="warning">
           Dashboard data could not be loaded. Please refresh and try again.
-        </div>
+        </Alert>
       )}
 
       {(showWelcome || !onboardingProgress.onboardingComplete) && (
@@ -555,61 +567,59 @@ export default async function AdminDashboardPage({
           </div>
         </div>
 
-        <div
-          className="overflow-x-auto px-5 pb-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring-focus)]"
+        <DataTableScroll
+          className="px-5 pb-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring-focus)]"
           tabIndex={0}
           role="region"
           aria-labelledby="quiz-performance-signals-heading"
         >
-          <table className="min-w-full divide-y divide-[color:var(--border-soft)] rounded-xl border border-surface-soft">
-            <thead className="bg-[color:var(--bg-surface)]">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+          <DataTable>
+            <DataTableHeader className="bg-[color:var(--bg-surface)]">
+              <DataTableRow>
+                <DataTableHeadCell>
                   Template
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+                </DataTableHeadCell>
+                <DataTableHeadCell>
                   Site
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+                </DataTableHeadCell>
+                <DataTableHeadCell className="text-right">
                   Attempt Profiles
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+                </DataTableHeadCell>
+                <DataTableHeadCell className="text-right">
                   Fail Profiles
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+                </DataTableHeadCell>
+                <DataTableHeadCell className="text-right">
                   Active Cooldowns
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
+                </DataTableHeadCell>
+              </DataTableRow>
+            </DataTableHeader>
+            <DataTableBody>
               {quizSummary.topRiskTemplateSites.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-4 py-6 text-center text-sm text-secondary">
-                    No recent quiz attempt pressure detected.
-                  </td>
-                </tr>
+                <DataTableEmptyRow colSpan={5}>
+                  No recent quiz attempt pressure detected.
+                </DataTableEmptyRow>
               ) : (
                 quizSummary.topRiskTemplateSites.map((row) => (
-                  <tr key={`${row.template_id}:${row.site_id}`}>
-                    <td className="px-4 py-3 text-sm font-medium text-[color:var(--text-primary)]">
+                  <DataTableRow key={`${row.template_id}:${row.site_id}`}>
+                    <DataTableCell className="font-medium text-[color:var(--text-primary)]">
                       {row.template_name}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-secondary">{row.site_name}</td>
-                    <td className="px-4 py-3 text-right text-sm text-[color:var(--text-primary)]">
+                    </DataTableCell>
+                    <DataTableCell>{row.site_name}</DataTableCell>
+                    <DataTableCell className="text-right text-[color:var(--text-primary)]">
                       {row.recent_attempt_profiles}
-                    </td>
-                    <td className="px-4 py-3 text-right text-sm text-rose-900 dark:text-rose-100">
+                    </DataTableCell>
+                    <DataTableCell className="text-right text-rose-900 dark:text-rose-100">
                       {row.recent_fail_profiles}
-                    </td>
-                    <td className="px-4 py-3 text-right text-sm text-amber-900 dark:text-amber-100">
+                    </DataTableCell>
+                    <DataTableCell className="text-right text-amber-900 dark:text-amber-100">
                       {row.active_cooldowns}
-                    </td>
-                  </tr>
+                    </DataTableCell>
+                  </DataTableRow>
                 ))
               )}
-            </tbody>
-          </table>
-        </div>
+            </DataTableBody>
+          </DataTable>
+        </DataTableScroll>
       </section>
 
       {(canManageContractors || canManageUsers) && (
@@ -682,9 +692,9 @@ export default async function AdminDashboardPage({
                           {new Date(record.sign_in_ts).toLocaleString()}
                         </p>
                         {!record.sign_out_ts && (
-                          <span className="mt-1 inline-flex items-center rounded-full border border-emerald-400/35 bg-emerald-500/16 px-2 py-0.5 text-xs font-semibold text-emerald-900 dark:text-emerald-100">
+                          <StatusBadge tone="success" className="mt-1">
                             On site
-                          </span>
+                          </StatusBadge>
                         )}
                       </div>
                     </div>

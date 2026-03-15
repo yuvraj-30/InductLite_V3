@@ -3,6 +3,17 @@ import { checkPermissionReadOnly } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import { listContractors } from "@/lib/repository";
 import { redirect } from "next/navigation";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHeadCell,
+  DataTableHeader,
+  DataTableRow,
+  DataTableScroll,
+  DataTableShell,
+} from "@/components/ui/data-table";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { ContractorActionButtons } from "./contractor-action-buttons";
 import { PageEmptyState } from "@/components/ui/page-state";
 
@@ -209,68 +220,60 @@ export default async function ContractorsPage({
           actionLabel="Add Contractor"
         />
       ) : (
-        <div className="surface-panel overflow-x-auto">
-          <table className="min-w-[920px] divide-y divide-[color:var(--border-soft)]">
-            <thead className="bg-[color:var(--bg-surface-strong)]">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+        <DataTableShell>
+          <DataTableScroll>
+            <DataTable className="min-w-[920px]">
+              <DataTableHeader>
+                <DataTableRow>
+                  <DataTableHeadCell>
                   Contractor
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                  </DataTableHeadCell>
+                  <DataTableHeadCell>
                   Contact
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                  </DataTableHeadCell>
+                  <DataTableHeadCell>
                   Trade
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                  </DataTableHeadCell>
+                  <DataTableHeadCell>
                   Status
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                  </DataTableHeadCell>
+                  <DataTableHeadCell>
                   Added
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                  </DataTableHeadCell>
+                  <DataTableHeadCell className="text-right">
                   Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
+                  </DataTableHeadCell>
+                </DataTableRow>
+              </DataTableHeader>
+              <DataTableBody>
               {result.items.map((contractor) => (
-                <tr
-                  key={contractor.id}
-                  className="hover:bg-[color:var(--bg-surface-strong)]"
-                >
-                  <td className="px-4 py-3">
+                <DataTableRow key={contractor.id}>
+                  <DataTableCell>
                     <p className="text-sm font-semibold text-[color:var(--text-primary)]">
                       {contractor.name}
                     </p>
                     <p className="break-all text-xs text-muted">
                       {contractor.id}
                     </p>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-secondary">
+                  </DataTableCell>
+                  <DataTableCell>
                     <p>{contractor.contact_name || "Not set"}</p>
                     <p className="break-all text-xs text-muted">
                       {contractor.contact_email || contractor.contact_phone || "-"}
                     </p>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-secondary">
+                  </DataTableCell>
+                  <DataTableCell>
                     {contractor.trade || "-"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${
-                        contractor.is_active
-                          ? "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100"
-                          : "border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] text-secondary"
-                      }`}
-                    >
+                  </DataTableCell>
+                  <DataTableCell>
+                    <StatusBadge tone={contractor.is_active ? "success" : "neutral"}>
                       {contractor.is_active ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted">
+                    </StatusBadge>
+                  </DataTableCell>
+                  <DataTableCell className="text-muted">
                     {contractor.created_at.toLocaleDateString("en-NZ")}
-                  </td>
-                  <td className="px-4 py-3 text-right">
+                  </DataTableCell>
+                  <DataTableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Link
                         href={`/admin/contractors/${contractor.id}`}
@@ -284,12 +287,13 @@ export default async function ContractorsPage({
                         isActive={contractor.is_active}
                       />
                     </div>
-                  </td>
-                </tr>
+                  </DataTableCell>
+                </DataTableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+              </DataTableBody>
+            </DataTable>
+          </DataTableScroll>
+        </DataTableShell>
       )}
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">

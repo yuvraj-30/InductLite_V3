@@ -1,6 +1,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import { Alert } from "@/components/ui/alert";
 
 interface PageEmptyStateProps {
   title: string;
@@ -97,31 +98,29 @@ export function PageWarningState({
 
   if (!flowEnabled) {
     return (
-      <div className="rounded-xl border border-amber-400/45 bg-amber-100/70 p-4 dark:bg-amber-950/45">
-        <p className="text-sm font-semibold text-amber-950 dark:text-amber-100">
-          {title}
-        </p>
-        <p className="mt-1 text-sm text-amber-900 dark:text-amber-200">{description}</p>
-      </div>
+      <Alert variant="warning" title={title}>
+        {description}
+      </Alert>
     );
   }
 
   return (
-    <div className="rounded-xl border border-amber-400/45 bg-amber-100/70 p-4 dark:bg-amber-950/45">
-      <h2 className="text-sm font-semibold text-amber-950 dark:text-amber-100">
-        {title}
-      </h2>
-      <p className="mt-1 text-sm text-amber-900 dark:text-amber-200">
-        {description}
-      </p>
-      {actionHref && actionLabel ? (
-        <div className="mt-3">
-          <Link href={actionHref} className="text-sm font-semibold text-accent hover:underline">
+    <Alert
+      variant="warning"
+      title={title}
+      action={
+        actionHref && actionLabel ? (
+          <Link
+            href={actionHref}
+            className="text-sm font-semibold text-accent hover:underline"
+          >
             {actionLabel}
           </Link>
-        </div>
-      ) : null}
-    </div>
+        ) : null
+      }
+    >
+      {description}
+    </Alert>
   );
 }
 

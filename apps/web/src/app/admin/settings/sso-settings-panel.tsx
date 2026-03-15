@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
+import { Alert } from "@/components/ui/alert";
 import {
   rotatePartnerApiKeyAction,
   type RotatePartnerApiKeyActionResult,
@@ -79,14 +80,14 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
       </p>
 
       {state && !state.success && (
-        <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <Alert variant="error" className="mt-4">
           {state.error}
-        </div>
+        </Alert>
       )}
       {state?.success && (
-        <div className="mt-4 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <Alert variant="success" className="mt-4">
           {state.message}
-        </div>
+        </Alert>
       )}
 
       <form action={formAction} className="mt-4 space-y-4">
@@ -96,7 +97,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
             name="enabled"
             value="true"
             defaultChecked={initialConfig.enabled}
-            className="h-4 w-4 rounded border-[color:var(--border-soft)]"
+            className="check-control"
           />
           Enable SSO login
         </label>
@@ -255,7 +256,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
             name="autoProvisionUsers"
             value="true"
             defaultChecked={initialConfig.autoProvisionUsers}
-            className="h-4 w-4 rounded border-[color:var(--border-soft)]"
+            className="check-control"
           />
           Auto-provision users on first successful SSO login
         </label>
@@ -266,7 +267,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
             name="directorySyncEnabled"
             value="true"
             defaultChecked={initialConfig.directorySyncEnabled}
-            className="h-4 w-4 rounded border-[color:var(--border-soft)]"
+            className="check-control"
           />
           Enable directory sync API
         </label>
@@ -283,7 +284,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
               name="partnerApiEnabled"
               value="true"
               defaultChecked={initialConfig.partnerApiEnabled}
-              className="h-4 w-4 rounded border-[color:var(--border-soft)]"
+              className="check-control"
             />
             Enable partner API
           </label>
@@ -327,7 +328,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
         <div className="flex items-center justify-end border-t pt-4">
           <button
             type="submit"
-            className="inline-flex items-center rounded-md bg-[color:var(--accent-primary)] px-4 py-2 text-sm font-medium text-white hover:brightness-95"
+            className="btn-primary"
           >
             Save SSO Settings
           </button>
@@ -352,12 +353,12 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
         </p>
 
         {rotateResult && !rotateResult.success && (
-          <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <Alert variant="error" className="mt-3">
             {rotateResult.error}
-          </div>
+          </Alert>
         )}
         {rotateResult?.success && (
-          <div className="mt-3 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+          <Alert variant="success" className="mt-3">
             <p>{rotateResult.message}</p>
             <p className="mt-1 text-xs">
               Copy this key now. It is only shown once.
@@ -365,7 +366,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
             <div className="mt-2 rounded border border-green-200 bg-[color:var(--bg-surface)] p-2 font-mono text-xs text-[color:var(--text-primary)]">
               {rotateResult.apiKey}
             </div>
-          </div>
+          </Alert>
         )}
 
         <div className="mt-3 flex justify-end">
@@ -400,12 +401,12 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
         </p>
 
         {partnerRotateResult && !partnerRotateResult.success && (
-          <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <Alert variant="error" className="mt-3">
             {partnerRotateResult.error}
-          </div>
+          </Alert>
         )}
         {partnerRotateResult?.success && (
-          <div className="mt-3 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-800">
+          <Alert variant="success" className="mt-3">
             <p>{partnerRotateResult.message}</p>
             <p className="mt-1 text-xs">
               Copy this key now. It is only shown once.
@@ -413,7 +414,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
             <div className="mt-2 rounded border border-green-200 bg-[color:var(--bg-surface)] p-2 font-mono text-xs text-[color:var(--text-primary)]">
               {partnerRotateResult.apiKey}
             </div>
-          </div>
+          </Alert>
         )}
 
         <div className="mt-3 flex justify-end">

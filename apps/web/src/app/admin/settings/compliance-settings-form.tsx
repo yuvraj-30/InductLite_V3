@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { Alert } from "@/components/ui/alert";
 import {
   updateComplianceSettingsAction,
   type ComplianceSettingsActionResult,
@@ -57,14 +58,10 @@ export default function ComplianceSettingsForm({
   return (
     <form action={formAction} className="space-y-6">
       {state && !state.success && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-4">
-          <p className="text-sm text-red-700">{state.error}</p>
-        </div>
+        <Alert variant="error">{state.error}</Alert>
       )}
       {state && state.success && (
-        <div className="rounded-md border border-green-200 bg-green-50 p-4">
-          <p className="text-sm text-green-700">{state.message}</p>
-        </div>
+        <Alert variant="success">{state.message}</Alert>
       )}
 
       <section className="surface-panel p-4">
@@ -182,7 +179,7 @@ export default function ComplianceSettingsForm({
               type="checkbox"
               value="true"
               defaultChecked={initialSettings.compliance_legal_hold}
-              className="h-4 w-4 rounded border-[color:var(--border-soft)]"
+              className="check-control"
             />
             Compliance legal hold enabled
           </label>

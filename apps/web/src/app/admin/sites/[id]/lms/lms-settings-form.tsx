@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useMemo } from "react";
+import { Alert } from "@/components/ui/alert";
 import {
   type SiteLmsConnectorActionResult,
   updateSiteLmsConnectorAction,
@@ -59,14 +60,14 @@ export function LmsSettingsForm({
       </p>
 
       {state && !state.success && (
-        <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <Alert variant="error" className="mt-4">
           {state.error}
-        </div>
+        </Alert>
       )}
       {state?.success && (
-        <div className="mt-4 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <Alert variant="success" className="mt-4">
           {state.message}
-        </div>
+        </Alert>
       )}
 
       <form action={formAction} className="mt-4 space-y-4">
@@ -75,7 +76,7 @@ export function LmsSettingsForm({
             type="checkbox"
             name="enabled"
             defaultChecked={initialEnabled}
-            className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)]"
+            className="check-control"
           />
           Enable LMS completion sync for this site
         </label>
@@ -93,7 +94,7 @@ export function LmsSettingsForm({
             type="url"
             defaultValue={initialEndpointUrl}
             placeholder="https://lms.example.com/inductlite/completions"
-            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)]"
+            className="input mt-1"
           />
           {state &&
             !state.success &&
@@ -111,7 +112,7 @@ export function LmsSettingsForm({
               name="provider"
               defaultValue={initialProvider}
               placeholder="Moodle"
-              className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)]"
+              className="input mt-1"
             />
           </label>
           <label className="text-sm text-secondary">
@@ -120,7 +121,7 @@ export function LmsSettingsForm({
               name="courseCode"
               defaultValue={initialCourseCode}
               placeholder="SITE-INDUCT-101"
-              className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)]"
+              className="input mt-1"
             />
           </label>
         </div>
@@ -136,7 +137,7 @@ export function LmsSettingsForm({
               placeholder={
                 hasAuthToken ? "Leave blank to keep current token" : "Paste token"
               }
-              className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)]"
+              className="input mt-1"
             />
           </label>
           {state &&
@@ -151,7 +152,7 @@ export function LmsSettingsForm({
             <input
               type="checkbox"
               name="clearAuthToken"
-              className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)]"
+              className="check-control"
             />
             Clear stored auth token
           </label>

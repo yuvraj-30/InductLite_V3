@@ -21,6 +21,8 @@ import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Alert } from "@/components/ui/alert";
+import { Field, FieldSection } from "@/components/ui/field";
 import { createSiteAction, SiteActionResult } from "../actions";
 
 export default function CreateSiteForm() {
@@ -52,18 +54,10 @@ export default function CreateSiteForm() {
   return (
     <form action={formAction} className="space-y-6">
       {state && !state.success && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-700 text-sm">{state.error}</p>
-        </div>
+        <Alert variant="error">{state.error}</Alert>
       )}
 
-      <div>
-        <label
-          htmlFor="name"
-          className="block text-sm font-medium text-secondary"
-        >
-          Site Name <span className="text-red-700 dark:text-red-300">*</span>
-        </label>
+      <Field label="Site Name" htmlFor="name" required error={getFieldError("name")}>
         <input
           type="text"
           id="name"
@@ -71,13 +65,10 @@ export default function CreateSiteForm() {
           required
           minLength={2}
           maxLength={100}
-          className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm"
+          className="input"
           placeholder="e.g., 123 Main Street Renovation"
         />
-        {getFieldError("name") && (
-          <p className="mt-1 text-sm text-red-600">{getFieldError("name")}</p>
-        )}
-      </div>
+      </Field>
 
       <div>
         <button
@@ -91,51 +82,33 @@ export default function CreateSiteForm() {
 
       {showOptionalFields && (
         <>
-          <div>
-            <label
-              htmlFor="address"
-              className="block text-sm font-medium text-secondary"
-            >
-              Address
-            </label>
+          <Field label="Address" htmlFor="address" error={getFieldError("address")}>
             <input
               type="text"
               id="address"
               name="address"
               maxLength={200}
-              className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm"
+              className="input"
               placeholder="e.g., 123 Main Street, Auckland 1010"
             />
-            {getFieldError("address") && (
-              <p className="mt-1 text-sm text-red-600">
-                {getFieldError("address")}
-              </p>
-            )}
-          </div>
+          </Field>
 
-          <div>
-            <label
-              htmlFor="description"
-              className="block text-sm font-medium text-secondary"
-            >
-              Description
-            </label>
+          <Field
+            label="Description"
+            htmlFor="description"
+            error={getFieldError("description")}
+          >
             <textarea
               id="description"
               name="description"
               rows={3}
               maxLength={500}
-              className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm"
+              className="input"
               placeholder="Optional description of the site or project"
             />
-            {getFieldError("description") && (
-              <p className="mt-1 text-sm text-red-600">
-                {getFieldError("description")}
-              </p>
-            )}
-          </div>
+          </Field>
 
-          <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-4">
+          <FieldSection>
             <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">
               Location Audit (Optional)
             </h3>
@@ -143,13 +116,11 @@ export default function CreateSiteForm() {
               Configure site coordinates to show in-radius/out-of-radius status during sign-in.
             </p>
             <div className="mt-3 grid gap-3 md:grid-cols-3">
-              <div>
-                <label
-                  htmlFor="locationLatitude"
-                  className="block text-sm font-medium text-secondary"
-                >
-                  Latitude
-                </label>
+              <Field
+                label="Latitude"
+                htmlFor="locationLatitude"
+                error={getFieldError("locationLatitude")}
+              >
                 <input
                   type="number"
                   id="locationLatitude"
@@ -157,23 +128,16 @@ export default function CreateSiteForm() {
                   step="0.000001"
                   min="-90"
                   max="90"
-                  className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm"
+                  className="input"
                   placeholder="-36.8485"
                 />
-                {getFieldError("locationLatitude") && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {getFieldError("locationLatitude")}
-                  </p>
-                )}
-              </div>
+              </Field>
 
-              <div>
-                <label
-                  htmlFor="locationLongitude"
-                  className="block text-sm font-medium text-secondary"
-                >
-                  Longitude
-                </label>
+              <Field
+                label="Longitude"
+                htmlFor="locationLongitude"
+                error={getFieldError("locationLongitude")}
+              >
                 <input
                   type="number"
                   id="locationLongitude"
@@ -181,23 +145,16 @@ export default function CreateSiteForm() {
                   step="0.000001"
                   min="-180"
                   max="180"
-                  className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm"
+                  className="input"
                   placeholder="174.7633"
                 />
-                {getFieldError("locationLongitude") && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {getFieldError("locationLongitude")}
-                  </p>
-                )}
-              </div>
+              </Field>
 
-              <div>
-                <label
-                  htmlFor="locationRadiusM"
-                  className="block text-sm font-medium text-secondary"
-                >
-                  Radius (m)
-                </label>
+              <Field
+                label="Radius (m)"
+                htmlFor="locationRadiusM"
+                error={getFieldError("locationRadiusM")}
+              >
                 <input
                   type="number"
                   id="locationRadiusM"
@@ -205,17 +162,12 @@ export default function CreateSiteForm() {
                   step="1"
                   min="25"
                   max="2000"
-                  className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm"
+                  className="input"
                   placeholder="150"
                 />
-                {getFieldError("locationRadiusM") && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {getFieldError("locationRadiusM")}
-                  </p>
-                )}
-              </div>
+              </Field>
             </div>
-          </div>
+          </FieldSection>
         </>
       )}
 
@@ -223,7 +175,7 @@ export default function CreateSiteForm() {
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-4 py-2 border border-[color:var(--border-soft)] rounded-md shadow-sm text-sm font-medium text-secondary bg-[color:var(--bg-surface)] hover:bg-[color:var(--bg-surface-strong)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[color:var(--accent-primary)]"
+          className="btn-secondary"
         >
           Cancel
         </button>

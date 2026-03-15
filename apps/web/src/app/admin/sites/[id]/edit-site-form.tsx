@@ -6,6 +6,8 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { Alert } from "@/components/ui/alert";
+import { Field, FieldSection } from "@/components/ui/field";
 import { updateSiteAction, SiteActionResult } from "../actions";
 
 interface Site {
@@ -29,13 +31,7 @@ function FormFields({ site }: { site: Site }) {
 
   return (
     <>
-      <div>
-        <label
-          htmlFor="name"
-          className="block text-sm font-medium text-secondary"
-        >
-          Site Name <span className="text-red-500">*</span>
-        </label>
+      <Field label="Site Name" htmlFor="name" required>
         <input
           type="text"
           id="name"
@@ -45,17 +41,11 @@ function FormFields({ site }: { site: Site }) {
           minLength={2}
           maxLength={100}
           disabled={pending}
-          className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm disabled:bg-[color:var(--bg-surface-strong)] disabled:cursor-not-allowed"
+          className="input disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
         />
-      </div>
+      </Field>
 
-      <div>
-        <label
-          htmlFor="address"
-          className="block text-sm font-medium text-secondary"
-        >
-          Address
-        </label>
+      <Field label="Address" htmlFor="address">
         <input
           type="text"
           id="address"
@@ -63,17 +53,11 @@ function FormFields({ site }: { site: Site }) {
           defaultValue={site.address || ""}
           maxLength={200}
           disabled={pending}
-          className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm disabled:bg-[color:var(--bg-surface-strong)] disabled:cursor-not-allowed"
+          className="input disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
         />
-      </div>
+      </Field>
 
-      <div>
-        <label
-          htmlFor="description"
-          className="block text-sm font-medium text-secondary"
-        >
-          Description
-        </label>
+      <Field label="Description" htmlFor="description">
         <textarea
           id="description"
           name="description"
@@ -81,11 +65,11 @@ function FormFields({ site }: { site: Site }) {
           defaultValue={site.description || ""}
           maxLength={500}
           disabled={pending}
-          className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm disabled:bg-[color:var(--bg-surface-strong)] disabled:cursor-not-allowed"
+          className="input disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
         />
-      </div>
+      </Field>
 
-      <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-4">
+      <FieldSection>
         <h3 className="text-sm font-semibold text-[color:var(--text-primary)]">
           Location Audit
         </h3>
@@ -93,13 +77,7 @@ function FormFields({ site }: { site: Site }) {
           Leave all location fields blank to disable location verification for this site.
         </p>
         <div className="mt-3 grid gap-3 md:grid-cols-3">
-          <div>
-            <label
-              htmlFor="locationLatitude"
-              className="block text-sm font-medium text-secondary"
-            >
-              Latitude
-            </label>
+          <Field label="Latitude" htmlFor="locationLatitude">
             <input
               type="number"
               id="locationLatitude"
@@ -109,17 +87,11 @@ function FormFields({ site }: { site: Site }) {
               min="-90"
               max="90"
               disabled={pending}
-              className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm disabled:bg-[color:var(--bg-surface-strong)] disabled:cursor-not-allowed"
+              className="input disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
             />
-          </div>
+          </Field>
 
-          <div>
-            <label
-              htmlFor="locationLongitude"
-              className="block text-sm font-medium text-secondary"
-            >
-              Longitude
-            </label>
+          <Field label="Longitude" htmlFor="locationLongitude">
             <input
               type="number"
               id="locationLongitude"
@@ -129,17 +101,11 @@ function FormFields({ site }: { site: Site }) {
               min="-180"
               max="180"
               disabled={pending}
-              className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm disabled:bg-[color:var(--bg-surface-strong)] disabled:cursor-not-allowed"
+              className="input disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
             />
-          </div>
+          </Field>
 
-          <div>
-            <label
-              htmlFor="locationRadiusM"
-              className="block text-sm font-medium text-secondary"
-            >
-              Radius (m)
-            </label>
+          <Field label="Radius (m)" htmlFor="locationRadiusM">
             <input
               type="number"
               id="locationRadiusM"
@@ -149,17 +115,17 @@ function FormFields({ site }: { site: Site }) {
               min="25"
               max="2000"
               disabled={pending}
-              className="mt-1 block w-full rounded-md border-[color:var(--border-soft)] shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)] sm:text-sm disabled:bg-[color:var(--bg-surface-strong)] disabled:cursor-not-allowed"
+              className="input disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
             />
-          </div>
+          </Field>
         </div>
-      </div>
+      </FieldSection>
 
       <div className="flex justify-end pt-4">
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[color:var(--accent-primary)] hover:brightness-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[color:var(--accent-primary)] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-primary disabled:cursor-not-allowed"
         >
           {pending ? "Saving..." : "Save Changes"}
         </button>
@@ -176,15 +142,11 @@ export function EditSiteForm({ site }: EditSiteFormProps) {
   return (
     <form action={formAction} className="space-y-4">
       {state && !state.success && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-3">
-          <p className="text-red-700 text-sm">{state.error}</p>
-        </div>
+        <Alert variant="error">{state.error}</Alert>
       )}
 
       {state?.success && (
-        <div className="bg-green-50 border border-green-200 rounded-md p-3">
-          <p className="text-green-700 text-sm">{state.message}</p>
-        </div>
+        <Alert variant="success">{state.message}</Alert>
       )}
 
       <FormFields site={site} />

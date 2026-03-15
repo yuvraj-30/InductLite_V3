@@ -9,7 +9,18 @@ import {
 } from "@/lib/repository";
 import type { WebhookDeliveryStatus } from "@prisma/client";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
-import { statusChipClass } from "../components/status-chip";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableEmptyRow,
+  DataTableHeadCell,
+  DataTableHeader,
+  DataTableRow,
+  DataTableScroll,
+  DataTableShell,
+} from "@/components/ui/data-table";
+import { StatusBadge, type StatusBadgeTone } from "@/components/ui/status-badge";
 import { PageWarningState } from "@/components/ui/page-state";
 
 export const metadata = {
@@ -50,19 +61,19 @@ function formatDateTime(value: Date | null): string {
   });
 }
 
-function statusChipClasses(status: WebhookDeliveryStatus): string {
+function statusBadgeTone(status: WebhookDeliveryStatus): StatusBadgeTone {
   switch (status) {
     case "SENT":
-      return statusChipClass("success");
+      return "success";
     case "DEAD":
-      return statusChipClass("danger");
+      return "danger";
     case "RETRYING":
-      return statusChipClass("warning");
+      return "warning";
     case "PROCESSING":
-      return statusChipClass("accent");
+      return "accent";
     case "PENDING":
     default:
-      return statusChipClass("neutral");
+      return "neutral";
   }
 }
 
@@ -224,95 +235,95 @@ export default async function AdminWebhookDeliveriesPage({
         </form>
       </section>
 
-      <section className="surface-panel overflow-x-auto">
-        <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
-          <thead className="bg-[color:var(--bg-surface-strong)]">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+      <DataTableShell>
+        <DataTableScroll>
+          <DataTable>
+            <DataTableHeader>
+              <DataTableRow>
+                <DataTableHeadCell>
                 Created
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                </DataTableHeadCell>
+                <DataTableHeadCell>
                 Site
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                </DataTableHeadCell>
+                <DataTableHeadCell>
                 Event
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                </DataTableHeadCell>
+                <DataTableHeadCell>
                 Target
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                </DataTableHeadCell>
+                <DataTableHeadCell>
                 Status
-              </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                </DataTableHeadCell>
+                <DataTableHeadCell className="text-right">
                 Attempts
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                </DataTableHeadCell>
+                <DataTableHeadCell>
                 Last Attempt
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                </DataTableHeadCell>
+                <DataTableHeadCell>
                 Next Attempt
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                </DataTableHeadCell>
+                <DataTableHeadCell>
                 Last Error
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
+                </DataTableHeadCell>
+              </DataTableRow>
+            </DataTableHeader>
+            <DataTableBody>
             {deliveries.length === 0 ? (
-              <tr>
-                <td colSpan={9} className="px-4 py-6 text-center text-sm text-secondary">
-                  No webhook deliveries found for the selected filters.
-                </td>
-              </tr>
+              <DataTableEmptyRow colSpan={9}>
+                No webhook deliveries found for the selected filters.
+              </DataTableEmptyRow>
             ) : (
               deliveries.map((delivery) => (
-                <tr key={delivery.id} className="hover:bg-[color:var(--bg-surface-strong)]">
-                  <td className="px-4 py-3 text-sm text-secondary">
+                <DataTableRow key={delivery.id}>
+                  <DataTableCell>
                     {formatDateTime(delivery.created_at)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-secondary">
+                  </DataTableCell>
+                  <DataTableCell>
                     <Link
                       href={`/admin/sites/${delivery.site.id}/webhooks`}
                       className="font-semibold text-accent hover:underline"
                     >
                       {delivery.site.name}
                     </Link>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-[color:var(--text-primary)]">
+                  </DataTableCell>
+                  <DataTableCell className="text-[color:var(--text-primary)]">
                     {delivery.event_type}
-                  </td>
-                  <td className="max-w-[16rem] px-4 py-3 text-sm text-secondary">
+                  </DataTableCell>
+                  <DataTableCell className="max-w-[16rem]">
                     <span className="block truncate" title={delivery.target_url}>
                       {delivery.target_url}
                     </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <span className={statusChipClasses(delivery.status)}>
+                  </DataTableCell>
+                  <DataTableCell>
+                    <StatusBadge tone={statusBadgeTone(delivery.status)}>
                       {delivery.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right text-sm text-secondary">
+                    </StatusBadge>
+                  </DataTableCell>
+                  <DataTableCell className="text-right">
                     {delivery.attempts}/{delivery.max_attempts}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-secondary">
+                  </DataTableCell>
+                  <DataTableCell>
                     {formatDateTime(delivery.last_attempt_at)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-secondary">
+                  </DataTableCell>
+                  <DataTableCell>
                     {delivery.status === "SENT" || delivery.status === "DEAD"
                       ? "-"
                       : formatDateTime(delivery.next_attempt_at)}
-                  </td>
-                  <td className="max-w-[18rem] px-4 py-3 text-sm text-red-900 dark:text-red-100">
+                  </DataTableCell>
+                  <DataTableCell className="max-w-[18rem] text-red-900 dark:text-red-100">
                     <span className="block truncate" title={delivery.last_error ?? ""}>
                       {delivery.last_error || "-"}
                     </span>
-                  </td>
-                </tr>
+                  </DataTableCell>
+                </DataTableRow>
               ))
             )}
-          </tbody>
-        </table>
-      </section>
+            </DataTableBody>
+          </DataTable>
+        </DataTableScroll>
+      </DataTableShell>
     </div>
   );
 }

@@ -4,26 +4,23 @@ import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
 import { listExportJobs } from "@/lib/repository/export.repository";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHeadCell,
+  DataTableHeader,
+  DataTableRow,
+  DataTableScroll,
+  DataTableShell,
+} from "@/components/ui/data-table";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { ExportQueuePanel } from "./ExportQueuePanel";
-import { statusChipClass } from "../components/status-chip";
 import { PageEmptyState, PageWarningState } from "@/components/ui/page-state";
 
 export const metadata = {
   title: "Exports | InductLite",
 };
-
-function statusBadgeClass(status: string): string {
-  if (status === "SUCCEEDED") {
-    return statusChipClass("success");
-  }
-  if (status === "RUNNING") {
-    return statusChipClass("info");
-  }
-  if (status === "FAILED") {
-    return statusChipClass("danger");
-  }
-  return statusChipClass("neutral");
-}
 
 export default async function AdminExportsPage() {
   const guard = await checkPermissionReadOnly("export:create");
@@ -70,50 +67,48 @@ export default async function AdminExportsPage() {
           description="Queue an export to generate downloadable files."
         />
       ) : (
-        <div className="surface-panel overflow-x-auto">
-          <table className="min-w-[760px] divide-y divide-[color:var(--border-soft)]">
-            <thead className="bg-[color:var(--bg-surface-strong)]">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+        <DataTableShell>
+          <DataTableScroll>
+            <DataTable className="min-w-[760px]">
+              <DataTableHeader>
+                <DataTableRow>
+                  <DataTableHeadCell>
                   ID
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                  </DataTableHeadCell>
+                  <DataTableHeadCell>
                   Type
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                  </DataTableHeadCell>
+                  <DataTableHeadCell>
                   Status
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                  </DataTableHeadCell>
+                  <DataTableHeadCell>
                   Requested By
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                  </DataTableHeadCell>
+                  <DataTableHeadCell>
                   File
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
+                  </DataTableHeadCell>
+                </DataTableRow>
+              </DataTableHeader>
+              <DataTableBody>
               {jobs.items.map((job) => (
-                <tr
-                  key={job.id}
-                  className="hover:bg-[color:var(--bg-surface-strong)]"
-                >
-                  <td className="break-all px-4 py-3 text-sm text-secondary">
+                <DataTableRow key={job.id}>
+                  <DataTableCell className="break-all">
                     {job.id}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-[color:var(--text-primary)]">
+                  </DataTableCell>
+                  <DataTableCell className="text-[color:var(--text-primary)]">
                     {job.export_type}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={statusBadgeClass(job.status)}
+                  </DataTableCell>
+                  <DataTableCell>
+                    <StatusBadge
+                      tone={job.status === "SUCCEEDED" ? "success" : job.status === "RUNNING" ? "info" : job.status === "FAILED" ? "danger" : "neutral"}
                     >
                       {job.status}
-                    </span>
-                  </td>
-                  <td className="break-all px-4 py-3 text-sm text-secondary">
+                    </StatusBadge>
+                  </DataTableCell>
+                  <DataTableCell className="break-all">
                     {job.requested_by}
-                  </td>
-                  <td className="px-4 py-3 text-sm">
+                  </DataTableCell>
+                  <DataTableCell>
                     {job.status === "SUCCEEDED" && job.file_path ? (
                       <a
                         href={`/api/exports/${job.id}/download`}
@@ -126,12 +121,13 @@ export default async function AdminExportsPage() {
                     ) : (
                       <span className="text-muted">-</span>
                     )}
-                  </td>
-                </tr>
+                  </DataTableCell>
+                </DataTableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+              </DataTableBody>
+            </DataTable>
+          </DataTableScroll>
+        </DataTableShell>
       )}
     </div>
   );

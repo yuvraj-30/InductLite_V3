@@ -194,10 +194,10 @@ export function AdminCommandPalette({ commands }: AdminCommandPaletteProps) {
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-[100]">
+        <div className="modal-overlay items-start pt-10">
           <button
             type="button"
-            className="absolute inset-0 h-full w-full bg-[color:var(--bg-surface-strong)] backdrop-blur-sm"
+            className="modal-backdrop"
             aria-label="Close command palette"
             onClick={() => setOpen(false)}
           />
@@ -206,7 +206,7 @@ export function AdminCommandPalette({ commands }: AdminCommandPaletteProps) {
             role="dialog"
             aria-modal="true"
             aria-label="Command palette"
-            className="relative mx-auto mt-10 w-[min(92vw,46rem)] overflow-hidden rounded-2xl border border-surface-soft bg-[color:var(--bg-surface-strong)] shadow-float"
+            className="modal-panel relative w-[min(92vw,46rem)] max-w-[46rem]"
           >
             <div className="border-b border-surface-soft p-4">
               <label htmlFor="command-search" className="sr-only">

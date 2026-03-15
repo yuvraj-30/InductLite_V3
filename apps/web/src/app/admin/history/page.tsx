@@ -26,7 +26,18 @@ import { Pagination } from "./pagination";
 import { SignOutButton } from "../live-register/sign-out-button";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHeadCell,
+  DataTableHeader,
+  DataTableRow,
+  DataTableScroll,
+  DataTableShell,
+} from "@/components/ui/data-table";
 import { PageEmptyState, PageLoadingState, PageWarningState } from "@/components/ui/page-state";
+import { StatusBadge, type StatusBadgeTone } from "@/components/ui/status-badge";
 
 export const metadata = {
   title: "Sign-In History | InductLite",
@@ -52,6 +63,13 @@ interface Site {
 }
 
 const DEFAULT_COMPANY_TIMEZONE = "Pacific/Auckland";
+
+function getVisitorTypeTone(visitorType: VisitorType): StatusBadgeTone {
+  if (visitorType === "CONTRACTOR") return "info";
+  if (visitorType === "VISITOR") return "accent";
+  if (visitorType === "EMPLOYEE") return "success";
+  return "warning";
+}
 
 function getLocationStatus(record: {
   location_captured_at: Date | null;
@@ -218,41 +236,41 @@ async function HistoryContent({
         />
       ) : (
         <>
-          <div className="surface-panel mb-4 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
-                <thead className="bg-[color:var(--bg-surface-strong)]">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+          <DataTableShell className="mb-4">
+            <DataTableScroll>
+              <DataTable>
+                <DataTableHeader>
+                  <DataTableRow>
+                    <DataTableHeadCell className="px-6">
                       Visitor
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                    </DataTableHeadCell>
+                    <DataTableHeadCell className="px-6">
                       Site
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                    </DataTableHeadCell>
+                    <DataTableHeadCell className="px-6">
                       Type
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                    </DataTableHeadCell>
+                    <DataTableHeadCell className="px-6">
                       Employer
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                    </DataTableHeadCell>
+                    <DataTableHeadCell className="px-6">
                       Sign In
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                    </DataTableHeadCell>
+                    <DataTableHeadCell className="px-6">
                       Sign Out
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                    </DataTableHeadCell>
+                    <DataTableHeadCell className="px-6">
                       Duration
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                    </DataTableHeadCell>
+                    <DataTableHeadCell className="px-6">
                       Location
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                    </DataTableHeadCell>
+                    <DataTableHeadCell className="px-6 text-right">
                       Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
+                    </DataTableHeadCell>
+                  </DataTableRow>
+                </DataTableHeader>
+                <DataTableBody>
                   {historyResult.items.map((record) => {
                     const isOnSite = !record.sign_out_ts;
                     const locationStatus = getLocationStatus(record);
@@ -275,11 +293,8 @@ async function HistoryContent({
                     }
 
                     return (
-                      <tr
-                        key={record.id}
-                        className="hover:bg-[color:var(--bg-surface-strong)]"
-                      >
-                        <td className="px-6 py-4 whitespace-nowrap">
+                      <DataTableRow key={record.id}>
+                        <DataTableCell className="px-6 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-surface-soft bg-[color:var(--bg-surface)]">
                               <span className="text-sm font-semibold text-secondary">
@@ -300,29 +315,19 @@ async function HistoryContent({
                               </div>
                             </div>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-[color:var(--text-primary)]">
+                        </DataTableCell>
+                        <DataTableCell className="px-6 whitespace-nowrap text-[color:var(--text-primary)]">
                           {record.site.name}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${
-                              record.visitor_type === "CONTRACTOR"
-                                ? "border-cyan-400/35 bg-cyan-500/15 text-cyan-950 dark:text-cyan-100"
-                                : record.visitor_type === "VISITOR"
-                                  ? "border-violet-400/35 bg-violet-500/15 text-violet-950 dark:text-violet-100"
-                                  : record.visitor_type === "EMPLOYEE"
-                                    ? "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100"
-                                    : "border-amber-400/35 bg-amber-500/15 text-amber-900 dark:text-amber-100"
-                            }`}
-                          >
+                        </DataTableCell>
+                        <DataTableCell className="px-6 whitespace-nowrap">
+                          <StatusBadge tone={getVisitorTypeTone(record.visitor_type)}>
                             {record.visitor_type.toLowerCase()}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary">
+                          </StatusBadge>
+                        </DataTableCell>
+                        <DataTableCell className="px-6 whitespace-nowrap">
                           {record.employer_name || "-"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary">
+                        </DataTableCell>
+                        <DataTableCell className="px-6 whitespace-nowrap">
                           <div>
                             {record.sign_in_ts.toLocaleDateString("en-NZ")}
                           </div>
@@ -332,12 +337,12 @@ async function HistoryContent({
                               minute: "2-digit",
                             })}
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        </DataTableCell>
+                        <DataTableCell className="px-6 whitespace-nowrap">
                           {isOnSite ? (
-                            <span className="inline-flex items-center rounded-full border border-emerald-400/35 bg-emerald-500/15 px-2 py-0.5 text-xs font-semibold text-emerald-900 dark:text-emerald-100">
+                            <StatusBadge tone="success">
                               On Site
-                            </span>
+                            </StatusBadge>
                           ) : (
                             <div className="text-secondary">
                               <div>
@@ -356,30 +361,30 @@ async function HistoryContent({
                               </div>
                             </div>
                           )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary">
+                        </DataTableCell>
+                        <DataTableCell className="px-6 whitespace-nowrap">
                           {durationStr}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        </DataTableCell>
+                        <DataTableCell className="px-6 whitespace-nowrap">
                           <span className={locationStatus.tone}>
                             {locationStatus.label}
                           </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                        </DataTableCell>
+                        <DataTableCell className="px-6 whitespace-nowrap text-right">
                           {isOnSite && (
                             <SignOutButton
                               signInId={record.id}
                               visitorName={record.visitor_name}
                             />
                           )}
-                        </td>
-                      </tr>
+                        </DataTableCell>
+                      </DataTableRow>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                </DataTableBody>
+              </DataTable>
+            </DataTableScroll>
+          </DataTableShell>
 
           {/* Pagination */}
           <Pagination

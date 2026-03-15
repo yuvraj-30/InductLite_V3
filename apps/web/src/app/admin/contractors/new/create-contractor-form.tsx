@@ -5,6 +5,8 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { Alert } from "@/components/ui/alert";
+import { Field } from "@/components/ui/field";
 import {
   createContractorAction,
   type ContractorActionResult,
@@ -48,19 +50,11 @@ export default function CreateContractorForm() {
   return (
     <form action={formAction} className="space-y-6">
       {state && !state.success && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-4">
-          <p className="text-sm text-red-700">{state.error}</p>
-        </div>
+        <Alert variant="error">{state.error}</Alert>
       )}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-secondary"
-          >
-            Contractor Name
-          </label>
+        <Field label="Contractor Name" htmlFor="name" error={getFieldError("name")}>
           <input
             id="name"
             name="name"
@@ -68,118 +62,76 @@ export default function CreateContractorForm() {
             required
             minLength={2}
             maxLength={120}
-            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
+            className="input"
           />
-          {getFieldError("name") && (
-            <p className="mt-1 text-xs text-red-600">{getFieldError("name")}</p>
-          )}
-        </div>
+        </Field>
 
-        <div>
-          <label
-            htmlFor="trade"
-            className="block text-sm font-medium text-secondary"
-          >
-            Trade
-          </label>
+        <Field label="Trade" htmlFor="trade" error={getFieldError("trade")}>
           <input
             id="trade"
             name="trade"
             type="text"
             maxLength={120}
             placeholder="Electrician"
-            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
+            className="input"
           />
-          {getFieldError("trade") && (
-            <p className="mt-1 text-xs text-red-600">{getFieldError("trade")}</p>
-          )}
-        </div>
+        </Field>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div>
-          <label
-            htmlFor="contactName"
-            className="block text-sm font-medium text-secondary"
-          >
-            Contact Name
-          </label>
+        <Field
+          label="Contact Name"
+          htmlFor="contactName"
+          error={getFieldError("contactName")}
+        >
           <input
             id="contactName"
             name="contactName"
             type="text"
             maxLength={120}
-            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
+            className="input"
           />
-          {getFieldError("contactName") && (
-            <p className="mt-1 text-xs text-red-600">
-              {getFieldError("contactName")}
-            </p>
-          )}
-        </div>
+        </Field>
 
-        <div>
-          <label
-            htmlFor="contactEmail"
-            className="block text-sm font-medium text-secondary"
-          >
-            Contact Email
-          </label>
+        <Field
+          label="Contact Email"
+          htmlFor="contactEmail"
+          error={getFieldError("contactEmail")}
+        >
           <input
             id="contactEmail"
             name="contactEmail"
             type="email"
             maxLength={160}
-            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
+            className="input"
           />
-          {getFieldError("contactEmail") && (
-            <p className="mt-1 text-xs text-red-600">
-              {getFieldError("contactEmail")}
-            </p>
-          )}
-        </div>
+        </Field>
 
-        <div>
-          <label
-            htmlFor="contactPhone"
-            className="block text-sm font-medium text-secondary"
-          >
-            Contact Phone
-          </label>
+        <Field
+          label="Contact Phone"
+          htmlFor="contactPhone"
+          error={getFieldError("contactPhone")}
+        >
           <input
             id="contactPhone"
             name="contactPhone"
             type="text"
             maxLength={30}
             placeholder="+64..."
-            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
+            className="input"
           />
-          {getFieldError("contactPhone") && (
-            <p className="mt-1 text-xs text-red-600">
-              {getFieldError("contactPhone")}
-            </p>
-          )}
-        </div>
+        </Field>
       </div>
 
-      <div>
-        <label
-          htmlFor="notes"
-          className="block text-sm font-medium text-secondary"
-        >
-          Notes
-        </label>
+      <Field label="Notes" htmlFor="notes" error={getFieldError("notes")}>
         <textarea
           id="notes"
           name="notes"
           rows={4}
           maxLength={500}
-          className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
+          className="input"
         />
-        {getFieldError("notes") && (
-          <p className="mt-1 text-xs text-red-600">{getFieldError("notes")}</p>
-        )}
-      </div>
+      </Field>
 
       <div className="flex items-center justify-end gap-3 border-t pt-4">
         <Link

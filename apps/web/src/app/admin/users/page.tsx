@@ -4,8 +4,18 @@ import { listUsers } from "@/lib/repository";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import type { UserRole } from "@prisma/client";
 import { redirect } from "next/navigation";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableHeadCell,
+  DataTableHeader,
+  DataTableRow,
+  DataTableScroll,
+  DataTableShell,
+} from "@/components/ui/data-table";
+import { StatusBadge, type StatusBadgeTone } from "@/components/ui/status-badge";
 import { UserActionButtons } from "./user-action-buttons";
-import { statusChipClass } from "../components/status-chip";
 import { PageEmptyState } from "@/components/ui/page-state";
 
 export const metadata = {
@@ -64,14 +74,14 @@ function buildPageHref(
   return `/admin/users?${params.toString()}`;
 }
 
-function roleBadgeClass(role: UserRole): string {
+function roleBadgeTone(role: UserRole): StatusBadgeTone {
   if (role === "ADMIN") {
-    return statusChipClass("danger");
+    return "danger";
   }
   if (role === "SITE_MANAGER") {
-    return statusChipClass("info");
+    return "info";
   }
-  return statusChipClass("neutral");
+  return "neutral";
 }
 
 export default async function UsersPage({ searchParams }: UsersPageProps) {
@@ -242,72 +252,64 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
           actionLabel="Add User"
         />
       ) : (
-        <div className="surface-panel overflow-x-auto">
-          <table className="min-w-[920px] divide-y divide-[color:var(--border-soft)]">
-            <thead className="bg-[color:var(--bg-surface-strong)]">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+        <DataTableShell>
+          <DataTableScroll>
+            <DataTable className="min-w-[920px]">
+              <DataTableHeader>
+                <DataTableRow>
+                  <DataTableHeadCell>
                   User
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                  </DataTableHeadCell>
+                  <DataTableHeadCell>
                   Role
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                  </DataTableHeadCell>
+                  <DataTableHeadCell>
                   Status
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                  </DataTableHeadCell>
+                  <DataTableHeadCell>
                   Last Login
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                  </DataTableHeadCell>
+                  <DataTableHeadCell>
                   Created
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                  </DataTableHeadCell>
+                  <DataTableHeadCell className="text-right">
                   Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
+                  </DataTableHeadCell>
+                </DataTableRow>
+              </DataTableHeader>
+              <DataTableBody>
               {result.items.map((user) => (
-                <tr
-                  key={user.id}
-                  className="hover:bg-[color:var(--bg-surface-strong)]"
-                >
-                  <td className="px-4 py-3">
+                <DataTableRow key={user.id}>
+                  <DataTableCell>
                     <p className="text-sm font-semibold text-[color:var(--text-primary)]">
                       {user.name}
                       {user.id === context.userId ? (
-                        <span
-                          className={`ml-2 ${statusChipClass("info")}`}
-                        >
+                        <StatusBadge tone="info" className="ml-2">
                           You
-                        </span>
+                        </StatusBadge>
                       ) : null}
                     </p>
                     <p className="break-all text-xs text-muted">{user.email}</p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={roleBadgeClass(user.role)}>
+                  </DataTableCell>
+                  <DataTableCell>
+                    <StatusBadge tone={roleBadgeTone(user.role)}>
                       {user.role}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={statusChipClass(
-                        user.is_active ? "success" : "neutral",
-                      )}
-                    >
+                    </StatusBadge>
+                  </DataTableCell>
+                  <DataTableCell>
+                    <StatusBadge tone={user.is_active ? "success" : "neutral"}>
                       {user.is_active ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-secondary">
+                    </StatusBadge>
+                  </DataTableCell>
+                  <DataTableCell>
                     {user.last_login_at
                       ? user.last_login_at.toLocaleString("en-NZ")
                       : "Never"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-secondary">
+                  </DataTableCell>
+                  <DataTableCell>
                     {user.created_at.toLocaleDateString("en-NZ")}
-                  </td>
-                  <td className="px-4 py-3 text-right">
+                  </DataTableCell>
+                  <DataTableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <Link
                         href={`/admin/users/${user.id}`}
@@ -322,12 +324,13 @@ export default async function UsersPage({ searchParams }: UsersPageProps) {
                         isCurrentUser={user.id === context.userId}
                       />
                     </div>
-                  </td>
-                </tr>
+                  </DataTableCell>
+                </DataTableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
+              </DataTableBody>
+            </DataTable>
+          </DataTableScroll>
+        </DataTableShell>
       )}
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">

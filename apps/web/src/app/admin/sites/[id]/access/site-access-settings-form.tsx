@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useMemo } from "react";
+import { Alert } from "@/components/ui/alert";
 import {
   type SiteAccessControlActionResult,
   updateSiteAccessControlAction,
@@ -92,14 +93,14 @@ export function SiteAccessSettingsForm({
       </p>
 
       {state && !state.success && (
-        <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+        <Alert variant="error" className="mt-4">
           {state.error}
-        </div>
+        </Alert>
       )}
       {state?.success && (
-        <div className="mt-4 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+        <Alert variant="success" className="mt-4">
           {state.message}
-        </div>
+        </Alert>
       )}
 
       <form action={formAction} className="mt-4 space-y-5">
@@ -118,7 +119,7 @@ export function SiteAccessSettingsForm({
               name="geofenceMode"
               defaultValue={initialGeofenceMode}
               disabled={!canEnableGeofence}
-              className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
+              className="input mt-1 disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
             >
               <option value="AUDIT">Audit only (Standard-safe)</option>
               <option value="DENY">Deny outside radius</option>
@@ -131,7 +132,7 @@ export function SiteAccessSettingsForm({
               type="checkbox"
               name="geofenceAllowMissingLocation"
               defaultChecked={initialGeofenceAllowMissingLocation}
-              className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)]"
+              className="check-control"
             />
             Allow sign-ins when location capture is missing
           </label>
@@ -147,19 +148,19 @@ export function SiteAccessSettingsForm({
                   ? "Leave blank to keep current code"
                   : "Create override code"
               }
-              className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)]"
+              className="input mt-1"
             />
           </label>
           <label className="mt-2 inline-flex items-center gap-2 text-sm text-secondary">
             <input
               type="checkbox"
               name="clearGeofenceOverrideCode"
-              className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)]"
+              className="check-control"
             />
             Clear existing geofence override code
           </label>
 
-          <div className="mt-4 rounded-md border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-3">
+          <div className="field-note mt-4">
             <h4 className="text-sm font-semibold text-accent">
               Mobile Geofence Automation
             </h4>
@@ -174,7 +175,7 @@ export function SiteAccessSettingsForm({
                 name="geofenceAutomationMode"
                 defaultValue={initialGeofenceAutomationMode}
                 disabled={!canEnableMobileAssist}
-                className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
+                className="input mt-1 disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
               >
                 <option value="OFF">OFF</option>
                 <option value="ASSIST">ASSIST</option>
@@ -191,7 +192,7 @@ export function SiteAccessSettingsForm({
                 max={720}
                 defaultValue={initialGeofenceAutoCheckoutGraceMinutes}
                 disabled={!canEnableMobileAssist}
-                className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
+                className="input mt-1 disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
               />
             </label>
           </div>
@@ -212,7 +213,7 @@ export function SiteAccessSettingsForm({
               name="hardwareEnabled"
               defaultChecked={initialHardwareEnabled}
               disabled={!canEnableHardware}
-              className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)] disabled:cursor-not-allowed"
+              className="check-control disabled:cursor-not-allowed"
             />
             Enable hardware access integration
           </label>
@@ -225,7 +226,7 @@ export function SiteAccessSettingsForm({
                 list="hardwareProviderOptions"
                 defaultValue={initialHardwareProvider}
                 placeholder="GENERIC or named connector"
-                className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)]"
+                className="input mt-1"
               />
               <datalist id="hardwareProviderOptions">
                 <option value="GENERIC" />
@@ -243,7 +244,7 @@ export function SiteAccessSettingsForm({
                 type="url"
                 defaultValue={initialHardwareEndpointUrl}
                 placeholder="https://hardware.example.com/access-events"
-                className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)]"
+                className="input mt-1"
               />
             </label>
           </div>
@@ -260,14 +261,14 @@ export function SiteAccessSettingsForm({
                   ? "Leave blank to keep current token"
                   : "Paste auth token"
               }
-              className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm focus:border-[color:var(--accent-primary)] focus:ring-[color:var(--accent-primary)]"
+              className="input mt-1"
             />
           </label>
           <label className="mt-2 inline-flex items-center gap-2 text-sm text-secondary">
             <input
               type="checkbox"
               name="clearHardwareAuthToken"
-              className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)]"
+              className="check-control"
             />
             Clear stored hardware auth token
           </label>
@@ -287,7 +288,7 @@ export function SiteAccessSettingsForm({
               name="identityEnabled"
               defaultChecked={initialIdentityEnabled}
               disabled={!canEnableIdentityHardening}
-              className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)] disabled:cursor-not-allowed"
+              className="check-control disabled:cursor-not-allowed"
             />
             Enable visitor identity evidence workflow
           </label>
@@ -299,7 +300,7 @@ export function SiteAccessSettingsForm({
                 name="identityRequirePhoto"
                 defaultChecked={initialIdentityRequirePhoto}
                 disabled={!canEnableIdentityHardening}
-                className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)] disabled:cursor-not-allowed"
+                className="check-control disabled:cursor-not-allowed"
               />
               Require visitor photo capture
             </label>
@@ -309,7 +310,7 @@ export function SiteAccessSettingsForm({
                 name="identityRequireIdScan"
                 defaultChecked={initialIdentityRequireIdScan}
                 disabled={!canEnableIdentityHardening}
-                className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)] disabled:cursor-not-allowed"
+                className="check-control disabled:cursor-not-allowed"
               />
               Require visitor ID image upload
             </label>
@@ -319,7 +320,7 @@ export function SiteAccessSettingsForm({
                 name="identityRequireConsent"
                 defaultChecked={initialIdentityRequireConsent}
                 disabled={!canEnableIdentityHardening}
-                className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)] disabled:cursor-not-allowed"
+                className="check-control disabled:cursor-not-allowed"
               />
               Require explicit identity evidence consent
             </label>
@@ -330,7 +331,7 @@ export function SiteAccessSettingsForm({
                 name="identityRequireOcrVerification"
                 defaultChecked={initialIdentityRequireOcrVerification}
                 disabled={!canEnableIdentityHardening || !canEnableIdentityOcr}
-                className="h-4 w-4 rounded border-[color:var(--border-soft)] text-accent focus:ring-[color:var(--accent-primary)] disabled:cursor-not-allowed"
+                className="check-control disabled:cursor-not-allowed"
               />
               Require OCR verification against uploaded ID image
             </label>
@@ -341,7 +342,7 @@ export function SiteAccessSettingsForm({
                 name="identityOcrDecisionMode"
                 defaultValue={initialIdentityOcrDecisionMode}
                 disabled={!canEnableIdentityHardening || !canEnableIdentityOcr}
-                className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
+                className="input mt-1 disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
               >
                 <option value="assist">
                   Assist (records OCR evidence, does not block sign-in)
@@ -359,7 +360,7 @@ export function SiteAccessSettingsForm({
                 defaultValue={initialIdentityAllowedDocumentTypes.join(", ")}
                 disabled={!canEnableIdentityHardening || !canEnableIdentityOcr}
                 placeholder="DRIVER_LICENCE, PASSPORT"
-                className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
+                className="input mt-1 disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
               />
             </label>
           </div>

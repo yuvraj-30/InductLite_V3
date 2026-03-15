@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
-type AlertVariant = "error" | "success" | "info" | "warning";
+export type AlertVariant = "error" | "success" | "info" | "warning";
 
-const variantClass: Record<AlertVariant, string> = {
+export const alertVariantClass: Record<AlertVariant, string> = {
   error:
     "border-red-400/50 bg-red-100/70 text-red-950 dark:border-red-500/60 dark:bg-red-950/45 dark:text-red-100",
   success:
@@ -12,7 +13,7 @@ const variantClass: Record<AlertVariant, string> = {
     "border-amber-400/55 bg-amber-100/75 text-amber-950 dark:border-amber-500/55 dark:bg-amber-950/45 dark:text-amber-100",
 };
 
-const variantLabel: Record<AlertVariant, string> = {
+export const alertVariantLabel: Record<AlertVariant, string> = {
   error: "Error",
   success: "Success",
   info: "Info",
@@ -20,21 +21,34 @@ const variantLabel: Record<AlertVariant, string> = {
 };
 
 interface AlertProps {
-  children: ReactNode;
+  children?: ReactNode;
   variant?: AlertVariant;
+  title?: ReactNode;
+  action?: ReactNode;
   className?: string;
 }
 
-export function Alert({ children, variant = "info", className = "" }: AlertProps) {
+export function Alert({
+  children,
+  variant = "info",
+  title,
+  action,
+  className = "",
+}: AlertProps) {
   return (
     <div
       role="alert"
-      className={`surface-panel rounded-xl border px-4 py-3 ${variantClass[variant]} ${className}`.trim()}
+      className={cn(
+        "surface-panel rounded-xl border px-4 py-3",
+        alertVariantClass[variant],
+        className,
+      )}
     >
       <p className="text-[11px] font-semibold uppercase tracking-[0.12em] opacity-80">
-        {variantLabel[variant]}
+        {title ?? alertVariantLabel[variant]}
       </p>
-      <div className="mt-1 text-sm leading-6">{children}</div>
+      {children ? <div className="mt-1 text-sm leading-6">{children}</div> : null}
+      {action ? <div className="mt-3">{action}</div> : null}
     </div>
   );
 }

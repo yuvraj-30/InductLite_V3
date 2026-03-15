@@ -5,6 +5,8 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { Alert } from "@/components/ui/alert";
+import { Field } from "@/components/ui/field";
 import { createUserAction, type UserActionResult } from "../actions";
 
 function SubmitButton() {
@@ -42,19 +44,11 @@ export default function CreateUserForm() {
   return (
     <form action={formAction} className="space-y-6">
       {state && !state.success && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-4">
-          <p className="text-sm text-red-700">{state.error}</p>
-        </div>
+        <Alert variant="error">{state.error}</Alert>
       )}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-secondary"
-          >
-            Full Name
-          </label>
+        <Field label="Full Name" htmlFor="name" error={getFieldError("name")}>
           <input
             id="name"
             name="name"
@@ -62,20 +56,11 @@ export default function CreateUserForm() {
             required
             minLength={2}
             maxLength={120}
-            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
+            className="input"
           />
-          {getFieldError("name") && (
-            <p className="mt-1 text-xs text-red-600">{getFieldError("name")}</p>
-          )}
-        </div>
+        </Field>
 
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium text-secondary"
-          >
-            Email
-          </label>
+        <Field label="Email" htmlFor="email" error={getFieldError("email")}>
           <input
             id="email"
             name="email"
@@ -83,44 +68,31 @@ export default function CreateUserForm() {
             autoComplete="username"
             required
             maxLength={160}
-            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
+            className="input"
           />
-          {getFieldError("email") && (
-            <p className="mt-1 text-xs text-red-600">{getFieldError("email")}</p>
-          )}
-        </div>
+        </Field>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <label
-            htmlFor="role"
-            className="block text-sm font-medium text-secondary"
-          >
-            Role
-          </label>
+        <Field label="Role" htmlFor="role" error={getFieldError("role")}>
           <select
             id="role"
             name="role"
             defaultValue="VIEWER"
-            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
+            className="input"
           >
             <option value="ADMIN">ADMIN</option>
             <option value="SITE_MANAGER">SITE_MANAGER</option>
             <option value="VIEWER">VIEWER</option>
           </select>
-          {getFieldError("role") && (
-            <p className="mt-1 text-xs text-red-600">{getFieldError("role")}</p>
-          )}
-        </div>
+        </Field>
 
-        <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium text-secondary"
-          >
-            Temporary Password
-          </label>
+        <Field
+          label="Temporary Password"
+          htmlFor="password"
+          hint="Must include uppercase, lowercase, and number."
+          error={getFieldError("password")}
+        >
           <input
             id="password"
             name="password"
@@ -129,17 +101,9 @@ export default function CreateUserForm() {
             required
             minLength={8}
             maxLength={128}
-            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm focus:border-[color:var(--accent-primary)] focus:outline-none focus:ring-1 focus:ring-[color:var(--accent-primary)]"
+            className="input"
           />
-          <p className="mt-1 text-xs text-muted">
-            Must include uppercase, lowercase, and number.
-          </p>
-          {getFieldError("password") && (
-            <p className="mt-1 text-xs text-red-600">
-              {getFieldError("password")}
-            </p>
-          )}
-        </div>
+        </Field>
       </div>
 
       <div className="flex items-center justify-end gap-3 border-t pt-4">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Alert } from "@/components/ui/alert";
 import { createExportAction } from "./actions";
 
 type Feedback = { kind: "success" | "error"; text: string } | null;
@@ -48,18 +49,14 @@ export function ExportQueuePanel() {
         Use one click for common auditor requests, including full compliance packs.
       </p>
 
-      {feedback && (
-        <div
-          className={`mt-3 rounded-md border px-3 py-2 text-sm ${
-            feedback.kind === "success"
-              ? "border-green-200 bg-green-50 text-green-700"
-              : "border-red-200 bg-red-50 text-red-700"
-          }`}
-          role="alert"
+      {feedback ? (
+        <Alert
+          variant={feedback.kind === "success" ? "success" : "error"}
+          className="mt-3"
         >
           {feedback.text}
-        </div>
-      )}
+        </Alert>
+      ) : null}
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button
@@ -90,7 +87,7 @@ export function ExportQueuePanel() {
               dateTo: new Date().toISOString(),
             })
           }
-          className="inline-flex items-center rounded-md border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
+          className="btn-secondary disabled:opacity-50"
         >
           One-Click Audit Pack PDF (24h)
         </button>
@@ -105,7 +102,7 @@ export function ExportQueuePanel() {
               dateTo: new Date().toISOString(),
             })
           }
-          className="inline-flex items-center rounded-md border border-indigo-300 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-800 hover:bg-indigo-100 disabled:opacity-50"
+          className="btn-secondary disabled:opacity-50"
         >
           Compliance Pack ZIP (24h)
         </button>
@@ -120,13 +117,13 @@ export function ExportQueuePanel() {
               dateTo: new Date().toISOString(),
             })
           }
-          className="inline-flex items-center rounded-md border border-indigo-300 bg-indigo-50 px-4 py-2 text-sm font-medium text-indigo-800 hover:bg-indigo-100 disabled:opacity-50"
+          className="btn-secondary disabled:opacity-50"
         >
           Compliance Pack ZIP (7d)
         </button>
       </div>
 
-      <div className="mt-4 rounded-md border border-[color:var(--border-soft)] p-3">
+      <div className="field-section mt-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-muted">
           Custom Date Range
         </p>
@@ -137,7 +134,7 @@ export function ExportQueuePanel() {
               type="datetime-local"
               value={customDateFrom}
               onChange={(event) => setCustomDateFrom(event.target.value)}
-              className="mt-1 block rounded-md border border-[color:var(--border-soft)] px-2 py-1 text-sm"
+              className="input mt-1"
             />
           </label>
           <label className="text-xs text-secondary">
@@ -146,7 +143,7 @@ export function ExportQueuePanel() {
               type="datetime-local"
               value={customDateTo}
               onChange={(event) => setCustomDateTo(event.target.value)}
-              className="mt-1 block rounded-md border border-[color:var(--border-soft)] px-2 py-1 text-sm"
+              className="input mt-1"
             />
           </label>
           <button
@@ -169,7 +166,7 @@ export function ExportQueuePanel() {
                 dateTo: toIso,
               });
             }}
-            className="inline-flex items-center rounded-md border border-indigo-300 bg-[color:var(--bg-surface)] px-4 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50 disabled:opacity-50"
+            className="btn-secondary disabled:opacity-50"
           >
             Queue Compliance Pack (Range)
           </button>

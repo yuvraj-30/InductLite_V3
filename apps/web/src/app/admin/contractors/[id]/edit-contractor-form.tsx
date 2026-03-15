@@ -2,6 +2,8 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { Alert } from "@/components/ui/alert";
+import { Field } from "@/components/ui/field";
 import {
   updateContractorAction,
   type ContractorActionResult,
@@ -25,19 +27,23 @@ interface EditContractorFormProps {
 
 const initialState: ContractorActionResult | null = null;
 
-function FormFields({ contractor }: { contractor: ContractorFormModel }) {
+function FormFields({
+  contractor,
+  getFieldError,
+}: {
+  contractor: ContractorFormModel;
+  getFieldError: (field: string) => string | undefined;
+}) {
   const { pending } = useFormStatus();
 
   return (
     <>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium text-secondary"
-          >
-            Contractor Name
-          </label>
+        <Field
+          label="Contractor Name"
+          htmlFor="name"
+          error={getFieldError("name")}
+        >
           <input
             id="name"
             name="name"
@@ -47,17 +53,11 @@ function FormFields({ contractor }: { contractor: ContractorFormModel }) {
             minLength={2}
             maxLength={120}
             disabled={pending}
-            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
+            className="input disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
           />
-        </div>
+        </Field>
 
-        <div>
-          <label
-            htmlFor="trade"
-            className="block text-sm font-medium text-secondary"
-          >
-            Trade
-          </label>
+        <Field label="Trade" htmlFor="trade" error={getFieldError("trade")}>
           <input
             id="trade"
             name="trade"
@@ -65,19 +65,17 @@ function FormFields({ contractor }: { contractor: ContractorFormModel }) {
             defaultValue={contractor.trade || ""}
             maxLength={120}
             disabled={pending}
-            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
+            className="input disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
           />
-        </div>
+        </Field>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div>
-          <label
-            htmlFor="contactName"
-            className="block text-sm font-medium text-secondary"
-          >
-            Contact Name
-          </label>
+        <Field
+          label="Contact Name"
+          htmlFor="contactName"
+          error={getFieldError("contactName")}
+        >
           <input
             id="contactName"
             name="contactName"
@@ -85,17 +83,15 @@ function FormFields({ contractor }: { contractor: ContractorFormModel }) {
             defaultValue={contractor.contact_name || ""}
             maxLength={120}
             disabled={pending}
-            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
+            className="input disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
           />
-        </div>
+        </Field>
 
-        <div>
-          <label
-            htmlFor="contactEmail"
-            className="block text-sm font-medium text-secondary"
-          >
-            Contact Email
-          </label>
+        <Field
+          label="Contact Email"
+          htmlFor="contactEmail"
+          error={getFieldError("contactEmail")}
+        >
           <input
             id="contactEmail"
             name="contactEmail"
@@ -103,17 +99,15 @@ function FormFields({ contractor }: { contractor: ContractorFormModel }) {
             defaultValue={contractor.contact_email || ""}
             maxLength={160}
             disabled={pending}
-            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
+            className="input disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
           />
-        </div>
+        </Field>
 
-        <div>
-          <label
-            htmlFor="contactPhone"
-            className="block text-sm font-medium text-secondary"
-          >
-            Contact Phone
-          </label>
+        <Field
+          label="Contact Phone"
+          htmlFor="contactPhone"
+          error={getFieldError("contactPhone")}
+        >
           <input
             id="contactPhone"
             name="contactPhone"
@@ -121,18 +115,12 @@ function FormFields({ contractor }: { contractor: ContractorFormModel }) {
             defaultValue={contractor.contact_phone || ""}
             maxLength={30}
             disabled={pending}
-            className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
+            className="input disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
           />
-        </div>
+        </Field>
       </div>
 
-      <div>
-        <label
-          htmlFor="notes"
-          className="block text-sm font-medium text-secondary"
-        >
-          Notes
-        </label>
+      <Field label="Notes" htmlFor="notes" error={getFieldError("notes")}>
         <textarea
           id="notes"
           name="notes"
@@ -140,11 +128,11 @@ function FormFields({ contractor }: { contractor: ContractorFormModel }) {
           defaultValue={contractor.notes || ""}
           maxLength={500}
           disabled={pending}
-          className="mt-1 block w-full rounded-md border border-[color:var(--border-soft)] px-3 py-2 text-sm disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
+          className="input disabled:cursor-not-allowed disabled:bg-[color:var(--bg-surface-strong)]"
         />
-      </div>
+      </Field>
 
-      <div className="rounded-md border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-3 text-sm text-secondary">
+      <div className="field-note">
         Status:{" "}
         <span className="font-medium">
           {contractor.is_active ? "Active" : "Inactive"}
@@ -182,34 +170,11 @@ export function EditContractorForm({ contractor }: EditContractorFormProps) {
 
   return (
     <form action={formAction} className="space-y-4">
-      {state && !state.success && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-3">
-          <p className="text-sm text-red-700">{state.error}</p>
-        </div>
-      )}
+      {state && !state.success && <Alert variant="error">{state.error}</Alert>}
 
-      {state?.success && (
-        <div className="rounded-md border border-green-200 bg-green-50 p-3">
-          <p className="text-sm text-green-700">{state.message}</p>
-        </div>
-      )}
+      {state?.success && <Alert variant="success">{state.message}</Alert>}
 
-      <FormFields contractor={contractor} />
-
-      {!state?.success && (
-        <div className="grid grid-cols-1 gap-1 text-xs text-red-600">
-          {getFieldError("name") && <p>{getFieldError("name")}</p>}
-          {getFieldError("contactName") && <p>{getFieldError("contactName")}</p>}
-          {getFieldError("contactEmail") && (
-            <p>{getFieldError("contactEmail")}</p>
-          )}
-          {getFieldError("contactPhone") && (
-            <p>{getFieldError("contactPhone")}</p>
-          )}
-          {getFieldError("trade") && <p>{getFieldError("trade")}</p>}
-          {getFieldError("notes") && <p>{getFieldError("notes")}</p>}
-        </div>
-      )}
+      <FormFields contractor={contractor} getFieldError={getFieldError} />
     </form>
   );
 }

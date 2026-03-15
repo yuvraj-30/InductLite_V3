@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, type ComponentType, type SVGAttributes } from "react";
+import { Button } from "@/components/ui/button";
+import { Modal } from "@/components/ui/modal";
 
 type QRCodeSvgProps = {
   value: string | string[];
@@ -76,10 +78,7 @@ export function QRCodeButton({ url, siteName }: QRCodeButtonProps) {
 
   return (
     <>
-      <button
-        onClick={() => setShowQR(true)}
-        className="inline-flex items-center justify-center px-3 py-2 border border-[color:var(--border-soft)] shadow-sm text-sm font-medium rounded-md text-white bg-[color:var(--accent-primary)] hover:brightness-95"
-      >
+      <Button onClick={() => setShowQR(true)}>
         <svg
           className="-ml-0.5 mr-1.5 h-4 w-4"
           fill="none"
@@ -94,42 +93,37 @@ export function QRCodeButton({ url, siteName }: QRCodeButtonProps) {
           />
         </svg>
         Print Gate Poster
-      </button>
+      </Button>
 
-      {showQR && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="max-w-sm rounded-lg bg-[color:var(--bg-surface)] p-8 text-center">
-            <h3 className="text-xl font-bold mb-4">{siteName}</h3>
-            <div className="flex justify-center mb-6">
-              {QRCodeSVGComponent ? (
-                <QRCodeSVGComponent
-                  id="site-qr-code"
-                  value={url}
-                  size={256}
-                  level="H"
-                  includeMargin={true}
-                />
-              ) : (
-                <div className="h-[256px] w-[256px] rounded bg-[color:var(--bg-surface-strong)] animate-pulse" />
-              )}
-            </div>
-            <div className="space-y-3">
-              <button
-                onClick={downloadQR}
-                className="w-full inline-flex justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
-              >
-                Download PNG
-              </button>
-              <button
-                onClick={() => setShowQR(false)}
-                className="w-full inline-flex justify-center px-4 py-2 border border-[color:var(--border-soft)] text-sm font-medium rounded-md text-secondary bg-[color:var(--bg-surface)] hover:bg-[color:var(--bg-surface-strong)]"
-              >
-                Close
-              </button>
-            </div>
-          </div>
+      <Modal
+        open={showQR}
+        onClose={() => setShowQR(false)}
+        title={siteName}
+        description="Print or download this QR poster for on-site sign-in."
+        width="sm"
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setShowQR(false)}>
+              Close
+            </Button>
+            <Button onClick={downloadQR}>Download PNG</Button>
+          </>
+        }
+      >
+        <div className="flex justify-center">
+          {QRCodeSVGComponent ? (
+            <QRCodeSVGComponent
+              id="site-qr-code"
+              value={url}
+              size={256}
+              level="H"
+              includeMargin={true}
+            />
+          ) : (
+            <div className="h-[256px] w-[256px] animate-pulse rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)]" />
+          )}
         </div>
-      )}
+      </Modal>
     </>
   );
 }
