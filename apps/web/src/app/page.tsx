@@ -23,58 +23,68 @@ const GUIDED_ROLLOUT_POINTS = [
   "Go live with export-ready records from day one.",
 ];
 
-const STANDARD_FEATURES = [
+const PRIMARY_FEATURE_GROUP = {
+  title: "Sign-in and induction",
+  detail:
+    "Move arrival, induction content, signatures, and exception handling into one worker-friendly flow.",
+  highlights: [
+    "QR + geolocation sign-in for workers and visitors.",
+    "Media-first induction builder with scoring, retries, and signatures.",
+    "Supervisor escalation paths for failed or incomplete inductions.",
+    "Site entry flows that stay mobile-ready without extra admin friction.",
+  ],
+};
+
+const SUPPORTING_FEATURE_GROUPS = [
   {
-    title: "QR + geolocation sign-in",
+    title: "Compliance and permits",
     detail:
-      "Visitors and contractors sign in from a QR/public link with location capture for site policy checks.",
+      "Control permits, access rules, and contractor readiness before people step onto site.",
+    highlights: [
+      "Permit-to-work lifecycle",
+      "Contractor compliance tracking",
+      "Construction safety form suite",
+    ],
   },
   {
-    title: "Digital induction builder",
+    title: "Emergency and live operations",
     detail:
-      "Build question flows with scoring, retries, media blocks (PDF/video/image/text), and signatures.",
+      "Know who is on-site in real time, run muster fast, and keep the follow-up trail intact.",
+    highlights: [
+      "Live register operations",
+      "Emergency roll-call",
+      "Broadcasts with acknowledgement",
+    ],
   },
   {
-    title: "Live register operations",
+    title: "Identity and visitor controls",
     detail:
-      "Track who is on-site in real time, with duration visibility and fast sign-out controls.",
+      "Reduce unknown access with policy-driven approvals and verification records tied to each visit.",
+    highlights: [
+      "Visitor approvals",
+      "Watchlist screening",
+      "Random checks and identity hardening",
+    ],
   },
   {
-    title: "Emergency roll-call",
+    title: "Evidence and exports",
     detail:
-      "Run muster events, mark attendance, and export roll-call evidence for incident follow-up.",
-  },
-  {
-    title: "Permit-to-work controls",
-    detail:
-      "Issue permit templates, run approval/activation lifecycle, and enforce permit-gated sign-in rules.",
-  },
-  {
-    title: "Construction safety form suite",
-    detail:
-      "Run SWMS, JSA, RAMS, toolbox talk, and fatigue declaration workflows from one admin workspace.",
-  },
-  {
-    title: "Visitor approvals + ID hardening",
-    detail:
-      "Use policy-based approvals, watchlist screening, random checks, and identity verification records.",
-  },
-  {
-    title: "Emergency broadcasts with ACK",
-    detail:
-      "Send emergency broadcasts, track recipient acknowledgements, and monitor pending-response SLA timers.",
-  },
-  {
-    title: "Contractor compliance tracking",
-    detail:
-      "Store contractor documents, expiry dates, and reminders to reduce expired access risk.",
-  },
-  {
-    title: "Compliance export packs",
-    detail:
-      "Queue controlled CSV/PDF/ZIP exports with retention and audit logging to stay evidence-ready.",
+      "Keep decisions, attendance, and compliance records ready for clients, audits, and incident follow-up.",
+    highlights: [
+      "Compliance export packs",
+      "Retention-aware record handling",
+      "Audit-ready evidence trails",
+    ],
   },
 ];
+
+const FEATURE_SWITCH_POINTS = [
+  "Replace paper sign-in books and scattered induction packs.",
+  "Give supervisors live visibility without slowing the front gate.",
+  "Keep records ready when clients or auditors ask for the evidence.",
+];
+
+const FEATURE_WORKFORCES = ["Contractors", "Visitors", "Delivery drivers", "Supervisors"];
 
 const INTEGRATION_FEATURES = [
   "Teams/Slack channel notifications with actionable approval callbacks",
@@ -244,17 +254,77 @@ export default function HomePage() {
         </section>
 
         <section id="features" className="surface-panel px-5 py-6 sm:px-6">
-          <h2 className="text-2xl font-bold">What Clients Expect in 2026</h2>
-          <p className="mt-2 text-sm text-secondary">
-            These are the baseline capabilities buyers compare across NZ market options.
-          </p>
-          <div className="mt-4 grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {STANDARD_FEATURES.map((feature) => (
-              <article key={feature.title} className="rounded-xl border border-surface-soft bg-surface-soft p-4">
-                <p className="text-sm font-semibold text-[color:var(--text-primary)]">
-                  {feature.title}
+          <div className="max-w-2xl">
+            <h2 className="text-2xl font-bold">One platform from arrival to audit trail</h2>
+            <p className="mt-2 text-sm text-secondary">
+              Buyers do not compare isolated features. They compare whether sign-in, induction,
+              compliance, emergency response, and records work as one operating flow.
+            </p>
+          </div>
+          <div className="mt-5 grid gap-4 lg:grid-cols-3">
+            <article className="bento-card lg:col-span-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                Primary workflow
+              </p>
+              <h3 className="mt-2 text-2xl font-bold">{PRIMARY_FEATURE_GROUP.title}</h3>
+              <p className="mt-2 max-w-2xl text-sm text-secondary">{PRIMARY_FEATURE_GROUP.detail}</p>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {PRIMARY_FEATURE_GROUP.highlights.map((item) => (
+                  <p
+                    key={item}
+                    className="rounded-xl border border-surface-soft bg-surface-soft px-4 py-3 text-sm text-secondary"
+                  >
+                    {item}
+                  </p>
+                ))}
+              </div>
+            </article>
+
+            <article className="bento-card">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                Where teams feel it first
+              </p>
+              <h3 className="mt-2 text-xl font-bold">Less admin between arrival and approval.</h3>
+              <p className="mt-2 text-sm text-secondary">
+                InductLite is strongest when someone shows up, completes the right induction flow,
+                and is visible in the live register without the site team rebuilding the record later.
+              </p>
+              <ul className="mt-4 space-y-2 text-sm text-secondary">
+                {FEATURE_SWITCH_POINTS.map((item) => (
+                  <li key={item} className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {FEATURE_WORKFORCES.map((item) => (
+                  <span
+                    key={item}
+                    className="rounded-full border border-surface-soft bg-surface-soft px-3 py-1 text-xs font-semibold text-secondary"
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </article>
+
+            {SUPPORTING_FEATURE_GROUPS.map((group) => (
+              <article key={group.title} className="bento-card">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                  Grouped capability
                 </p>
-                <p className="mt-2 text-xs text-secondary">{feature.detail}</p>
+                <h3 className="mt-2 text-xl font-bold">{group.title}</h3>
+                <p className="mt-2 text-sm text-secondary">{group.detail}</p>
+                <ul className="mt-4 space-y-2 text-sm text-secondary">
+                  {group.highlights.map((item) => (
+                    <li
+                      key={item}
+                      className="rounded-lg border border-surface-soft bg-surface-soft px-3 py-2"
+                    >
+                      {item}
+                    </li>
+                  ))}
+                </ul>
               </article>
             ))}
           </div>
