@@ -7,6 +7,18 @@ import { findAllSites } from "@/lib/repository/site.repository";
 import { listTemplates } from "@/lib/repository/template.repository";
 import { PageWarningState } from "@/components/ui/page-state";
 import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableEmptyRow,
+  DataTableHeadCell,
+  DataTableHeader,
+  DataTableRow,
+  DataTableScroll,
+  DataTableShell,
+} from "@/components/ui/data-table";
+import { StatusBadge, type StatusBadgeTone } from "@/components/ui/status-badge";
+import {
   listIdentityVerificationRecords,
   listVisitorApprovalPolicies,
   listVisitorApprovalRequests,
@@ -24,24 +36,22 @@ export const metadata = {
   title: "Approvals | InductLite",
 };
 
-function approvalStatusChipClass(status: string): string {
-  if (status === "APPROVED") {
-    return "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100";
-  }
-  if (status === "DENIED") {
-    return "border-red-500/45 bg-red-500/15 text-red-950 dark:text-red-100";
-  }
-  return "border-amber-400/45 bg-amber-500/15 text-amber-900 dark:text-amber-100";
+function approvalStatusTone(status: string): StatusBadgeTone {
+  if (status === "APPROVED") return "success";
+  if (status === "DENIED") return "danger";
+  return "warning";
 }
 
-function identityResultChipClass(result: string): string {
-  if (result === "PASS") {
-    return "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100";
-  }
-  if (result === "FAIL") {
-    return "border-red-500/45 bg-red-500/15 text-red-950 dark:text-red-100";
-  }
-  return "border-amber-400/45 bg-amber-500/15 text-amber-900 dark:text-amber-100";
+function identityResultTone(result: string): StatusBadgeTone {
+  if (result === "PASS") return "success";
+  if (result === "FAIL") return "danger";
+  return "warning";
+}
+
+function queueAgeTone(minutes: number): StatusBadgeTone {
+  if (minutes > 30) return "danger";
+  if (minutes > 15) return "warning";
+  return "success";
 }
 
 export default async function ApprovalsPage() {
@@ -109,16 +119,98 @@ export default async function ApprovalsPage() {
 
   const templates = templatesPage.items;
   const nowTs = Date.now();
+  const pendingRequests = requests.filter((request) => request.status === "PENDING");
+  const watchlistPendingCount = pendingRequests.filter(
+    (request) => request.watchlist_match,
+  ).length;
+  const randomCheckPendingCount = pendingRequests.filter(
+    (request) => request.random_check_triggered,
+  ).length;
+  const averageQueueMinutes =
+    pendingRequests.length > 0
+      ? Math.round(
+          pendingRequests.reduce((acc, request) => {
+            return (
+              acc +
+              Math.max(
+                0,
+                Math.floor((nowTs - request.requested_at.getTime()) / 60000),
+              )
+            );
+          }, 0) / pendingRequests.length,
+        )
+      : 0;
+  const needsReviewIdentityCount = identityRecords.filter(
+    (record) => record.result === "NEEDS_REVIEW",
+  ).length;
 
   return (
     <div className="space-y-6 p-3 sm:p-4">
       <div className="surface-panel-strong p-5">
-        <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
-          Approval Queue & Identity Hardening
-        </h1>
-        <p className="mt-1 text-sm text-secondary">
-          Configure policy-based approvals, manage watchlists, and record identity verification.
-        </p>
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_320px]">
+          <div>
+            <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+              Approval Queue & Identity Hardening
+            </h1>
+            <p className="mt-1 text-sm text-secondary">
+              Review blocked visitors quickly, document the decision, and keep identity
+              evidence tied to the same operational record.
+            </p>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl border border-amber-400/35 bg-amber-500/12 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-amber-900 dark:text-amber-100">
+                  Pending queue
+                </p>
+                <p className="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100">
+                  {pendingRequests.length}
+                </p>
+                <p className="mt-1 text-xs text-secondary">
+                  Average wait {averageQueueMinutes}m.
+                </p>
+              </div>
+              <div className="rounded-xl border border-red-400/35 bg-red-500/12 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-red-950 dark:text-red-100">
+                  Watchlist / review
+                </p>
+                <p className="mt-2 text-3xl font-black text-red-950 dark:text-red-100">
+                  {watchlistPendingCount + needsReviewIdentityCount}
+                </p>
+                <p className="mt-1 text-xs text-secondary">
+                  {watchlistPendingCount} watchlist hits and {needsReviewIdentityCount} ID reviews.
+                </p>
+              </div>
+              <div className="rounded-xl border border-indigo-400/35 bg-indigo-500/12 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-indigo-950 dark:text-indigo-100">
+                  Random checks
+                </p>
+                <p className="mt-2 text-3xl font-black text-indigo-950 dark:text-indigo-100">
+                  {randomCheckPendingCount}
+                </p>
+                <p className="mt-1 text-xs text-secondary">
+                  Visitors routed into manual verification by policy.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[1.25rem] border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+              Decision cadence
+            </p>
+            <ul className="mt-3 space-y-3 text-sm text-secondary">
+              <li className="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] px-3 py-3">
+                Approve when the visitor, site, and evidence line up and there is no open watchlist concern.
+              </li>
+              <li className="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] px-3 py-3">
+                Deny when the risk is confirmed or the evidence is incomplete for site policy.
+              </li>
+              <li className="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] px-3 py-3">
+                Leave clear decision notes so later audits explain why entry was blocked or cleared.
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
 
       <section className="surface-panel p-4">
@@ -197,123 +289,133 @@ export default async function ApprovalsPage() {
       </section>
 
       <section className="surface-panel p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
-          Pending Approval Queue
-        </h2>
-        <div className="mt-3 overflow-x-auto">
-          <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
-            <thead className="bg-[color:var(--bg-surface-strong)]">
-              <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
-                  Visitor
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
-                  Site
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
-                  Status
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
-                  Reason
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
-                  SLA
-                </th>
-                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
-                  Decision
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
-              {requests.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-3 py-3 text-sm text-muted">
-                    No approval requests yet.
-                  </td>
-                </tr>
-              ) : (
-                requests.map((request) => (
-                  <tr key={request.id} className="hover:bg-[color:var(--bg-surface-strong)]">
-                    <td className="px-3 py-3 text-sm text-secondary">
-                      <div className="font-medium">{request.visitor_name}</div>
-                      <div className="text-xs text-muted">
-                        {request.visitor_phone || request.visitor_email || "No contact"}
-                      </div>
-                    </td>
-                    <td className="px-3 py-3 text-sm text-secondary">
-                      {sites.find((site) => site.id === request.site_id)?.name ?? "Site"}
-                    </td>
-                    <td className="px-3 py-3 text-sm">
-                      <span
-                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${approvalStatusChipClass(request.status)}`}
-                      >
-                        {request.status}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3 text-sm text-secondary">{request.reason}</td>
-                    <td className="px-3 py-3 text-sm text-secondary">
-                      {(() => {
-                        const queuedMinutes = Math.max(
-                          0,
-                          Math.floor((nowTs - request.requested_at.getTime()) / 60000),
-                        );
-                        const badgeClass =
-                          queuedMinutes > 30
-                            ? "border-red-500/45 bg-red-500/15 text-red-950 dark:text-red-100"
-                            : queuedMinutes > 15
-                              ? "border-amber-400/45 bg-amber-500/15 text-amber-900 dark:text-amber-100"
-                              : "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100";
-                        return (
-                          <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${badgeClass}`}>
-                            {queuedMinutes}m
-                          </span>
-                        );
-                      })()}
-                    </td>
-                    <td className="px-3 py-3 text-right">
-                      {request.status === "PENDING" ? (
-                        <div className="flex flex-wrap justify-end gap-2">
-                          <form
-                            action={async (formData) => {
-                              "use server";
-                              await decideVisitorApprovalRequestAction(null, formData);
-                            }}
-                          >
-                            <input type="hidden" name="approvalRequestId" value={request.id} />
-                            <input type="hidden" name="status" value="APPROVED" />
-                            <button
-                              type="submit"
-                              className="rounded-lg border border-emerald-400/40 bg-emerald-500/12 px-2 py-1 text-xs font-semibold text-emerald-900 hover:bg-emerald-500/20 dark:text-emerald-100"
-                            >
-                              Approve
-                            </button>
-                          </form>
-                          <form
-                            action={async (formData) => {
-                              "use server";
-                              await decideVisitorApprovalRequestAction(null, formData);
-                            }}
-                          >
-                            <input type="hidden" name="approvalRequestId" value={request.id} />
-                            <input type="hidden" name="status" value="DENIED" />
-                            <button
-                              type="submit"
-                              className="rounded-lg border border-red-500/45 bg-red-500/12 px-2 py-1 text-xs font-semibold text-red-950 hover:bg-red-500/20 dark:text-red-100"
-                            >
-                              Deny
-                            </button>
-                          </form>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-muted">Finalized</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
+              Pending Approval Queue
+            </h2>
+            <p className="mt-1 text-sm text-secondary">
+              Each decision stays on the same record so the later audit trail explains who cleared or blocked entry.
+            </p>
+          </div>
+          <StatusBadge tone={pendingRequests.length > 0 ? "warning" : "success"}>
+            {pendingRequests.length > 0 ? `${pendingRequests.length} open decisions` : "Queue clear"}
+          </StatusBadge>
         </div>
+
+        <DataTableShell className="mt-4">
+          <DataTableScroll>
+            <DataTable>
+              <DataTableHeader>
+                <DataTableRow>
+                  <DataTableHeadCell>Visitor</DataTableHeadCell>
+                  <DataTableHeadCell>Trigger</DataTableHeadCell>
+                  <DataTableHeadCell>Status</DataTableHeadCell>
+                  <DataTableHeadCell>Queue Age</DataTableHeadCell>
+                  <DataTableHeadCell>Decision Context</DataTableHeadCell>
+                  <DataTableHeadCell className="text-right">Decision</DataTableHeadCell>
+                </DataTableRow>
+              </DataTableHeader>
+              <DataTableBody>
+                {requests.length === 0 ? (
+                  <DataTableEmptyRow colSpan={6}>
+                    No approval requests yet.
+                  </DataTableEmptyRow>
+                ) : (
+                  requests.map((request) => {
+                    const queuedMinutes = Math.max(
+                      0,
+                      Math.floor((nowTs - request.requested_at.getTime()) / 60000),
+                    );
+
+                    return (
+                      <DataTableRow key={request.id}>
+                        <DataTableCell>
+                          <div className="font-medium text-[color:var(--text-primary)]">
+                            {request.visitor_name}
+                          </div>
+                          <div className="text-xs text-muted">
+                            {sites.find((site) => site.id === request.site_id)?.name ?? "Site"} |{" "}
+                            {request.visitor_phone || request.visitor_email || "No contact"}
+                          </div>
+                        </DataTableCell>
+                        <DataTableCell>
+                          <div className="flex flex-wrap gap-2">
+                            {request.watchlist_match ? (
+                              <StatusBadge tone="danger">Watchlist</StatusBadge>
+                            ) : null}
+                            {request.random_check_triggered ? (
+                              <StatusBadge tone="accent">Random check</StatusBadge>
+                            ) : null}
+                            {!request.watchlist_match && !request.random_check_triggered ? (
+                              <StatusBadge tone="neutral">Policy review</StatusBadge>
+                            ) : null}
+                          </div>
+                        </DataTableCell>
+                        <DataTableCell>
+                          <StatusBadge tone={approvalStatusTone(request.status)}>
+                            {request.status}
+                          </StatusBadge>
+                        </DataTableCell>
+                        <DataTableCell>
+                          <StatusBadge tone={queueAgeTone(queuedMinutes)}>
+                            {queuedMinutes}m
+                          </StatusBadge>
+                        </DataTableCell>
+                        <DataTableCell>
+                          <p className="text-sm text-secondary">{request.reason}</p>
+                          {request.decision_notes ? (
+                            <p className="mt-1 text-xs text-muted">
+                              Last note: {request.decision_notes}
+                            </p>
+                          ) : null}
+                        </DataTableCell>
+                        <DataTableCell className="text-right">
+                          {request.status === "PENDING" ? (
+                            <form
+                              action={async (formData) => {
+                                "use server";
+                                await decideVisitorApprovalRequestAction(null, formData);
+                              }}
+                              className="ml-auto grid max-w-md gap-2"
+                            >
+                              <input type="hidden" name="approvalRequestId" value={request.id} />
+                              <input
+                                name="decisionNotes"
+                                className="input min-w-[14rem]"
+                                placeholder="Decision notes for the audit trail"
+                              />
+                              <div className="flex flex-wrap justify-end gap-2">
+                                <button
+                                  type="submit"
+                                  name="status"
+                                  value="APPROVED"
+                                  className="rounded-lg border border-emerald-400/40 bg-emerald-500/12 px-3 py-2 text-xs font-semibold text-emerald-900 hover:bg-emerald-500/20 dark:text-emerald-100"
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  type="submit"
+                                  name="status"
+                                  value="DENIED"
+                                  className="rounded-lg border border-red-500/45 bg-red-500/12 px-3 py-2 text-xs font-semibold text-red-950 hover:bg-red-500/20 dark:text-red-100"
+                                >
+                                  Deny
+                                </button>
+                              </div>
+                            </form>
+                          ) : (
+                            <span className="text-xs text-muted">Finalized</span>
+                          )}
+                        </DataTableCell>
+                      </DataTableRow>
+                    );
+                  })
+                )}
+              </DataTableBody>
+            </DataTable>
+          </DataTableScroll>
+        </DataTableShell>
       </section>
 
       <section className="surface-panel p-4">
@@ -365,60 +467,52 @@ export default async function ApprovalsPage() {
           </div>
         </form>
 
-        <div className="mt-4 overflow-x-auto">
-          <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
-            <thead className="bg-[color:var(--bg-surface-strong)]">
-              <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
-                  Person
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
-                  Contact
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
-                  Reason
-                </th>
-                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
-              {watchlist.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-3 py-3 text-sm text-muted">
+        <DataTableShell className="mt-4">
+          <DataTableScroll>
+            <DataTable>
+              <DataTableHeader>
+                <DataTableRow>
+                  <DataTableHeadCell>Person</DataTableHeadCell>
+                  <DataTableHeadCell>Contact</DataTableHeadCell>
+                  <DataTableHeadCell>Reason</DataTableHeadCell>
+                  <DataTableHeadCell className="text-right">Action</DataTableHeadCell>
+                </DataTableRow>
+              </DataTableHeader>
+              <DataTableBody>
+                {watchlist.length === 0 ? (
+                  <DataTableEmptyRow colSpan={4}>
                     No watchlist entries configured.
-                  </td>
-                </tr>
-              ) : (
-                watchlist.map((entry) => (
-                  <tr key={entry.id} className="hover:bg-[color:var(--bg-surface-strong)]">
-                    <td className="px-3 py-3 text-sm text-secondary">{entry.full_name}</td>
-                    <td className="px-3 py-3 text-sm text-secondary">
-                      {entry.phone || entry.email || "N/A"}
-                    </td>
-                    <td className="px-3 py-3 text-sm text-secondary">{entry.reason || "N/A"}</td>
-                    <td className="px-3 py-3 text-right">
-                      <form
-                        action={async () => {
-                          "use server";
-                          await deactivateWatchlistEntryAction(entry.id);
-                        }}
-                      >
-                        <button
-                          type="submit"
-                          className="btn-secondary min-h-[30px] px-2 py-1 text-xs"
+                  </DataTableEmptyRow>
+                ) : (
+                  watchlist.map((entry) => (
+                    <DataTableRow key={entry.id}>
+                      <DataTableCell className="font-medium text-[color:var(--text-primary)]">
+                        {entry.full_name}
+                      </DataTableCell>
+                      <DataTableCell>{entry.phone || entry.email || "N/A"}</DataTableCell>
+                      <DataTableCell>{entry.reason || "N/A"}</DataTableCell>
+                      <DataTableCell className="text-right">
+                        <form
+                          action={async () => {
+                            "use server";
+                            await deactivateWatchlistEntryAction(entry.id);
+                          }}
                         >
-                          Deactivate
-                        </button>
-                      </form>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                          <button
+                            type="submit"
+                            className="btn-secondary min-h-[30px] px-2 py-1 text-xs"
+                          >
+                            Deactivate
+                          </button>
+                        </form>
+                      </DataTableCell>
+                    </DataTableRow>
+                  ))
+                )}
+              </DataTableBody>
+            </DataTable>
+          </DataTableScroll>
+        </DataTableShell>
       </section>
 
       <section className="surface-panel p-4">
@@ -486,54 +580,42 @@ export default async function ApprovalsPage() {
           </div>
         </form>
 
-        <div className="mt-4 overflow-x-auto">
-          <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
-            <thead className="bg-[color:var(--bg-surface-strong)]">
-              <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
-                  Timestamp
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
-                  Site
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
-                  Method
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
-                  Result
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
-              {identityRecords.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-3 py-3 text-sm text-muted">
+        <DataTableShell className="mt-4">
+          <DataTableScroll>
+            <DataTable>
+              <DataTableHeader>
+                <DataTableRow>
+                  <DataTableHeadCell>Timestamp</DataTableHeadCell>
+                  <DataTableHeadCell>Site</DataTableHeadCell>
+                  <DataTableHeadCell>Method</DataTableHeadCell>
+                  <DataTableHeadCell>Result</DataTableHeadCell>
+                </DataTableRow>
+              </DataTableHeader>
+              <DataTableBody>
+                {identityRecords.length === 0 ? (
+                  <DataTableEmptyRow colSpan={4}>
                     No identity verification records yet.
-                  </td>
-                </tr>
-              ) : (
-                identityRecords.map((record) => (
-                  <tr key={record.id} className="hover:bg-[color:var(--bg-surface-strong)]">
-                    <td className="px-3 py-3 text-sm text-secondary">
-                      {record.created_at.toLocaleString("en-NZ")}
-                    </td>
-                    <td className="px-3 py-3 text-sm text-secondary">
-                      {sites.find((site) => site.id === record.site_id)?.name ?? "Site"}
-                    </td>
-                    <td className="px-3 py-3 text-sm text-secondary">{record.method}</td>
-                    <td className="px-3 py-3 text-sm">
-                      <span
-                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${identityResultChipClass(record.result)}`}
-                      >
-                        {record.result}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                  </DataTableEmptyRow>
+                ) : (
+                  identityRecords.map((record) => (
+                    <DataTableRow key={record.id}>
+                      <DataTableCell>{record.created_at.toLocaleString("en-NZ")}</DataTableCell>
+                      <DataTableCell>
+                        {sites.find((site) => site.id === record.site_id)?.name ?? "Site"}
+                      </DataTableCell>
+                      <DataTableCell>{record.method}</DataTableCell>
+                      <DataTableCell>
+                        <StatusBadge tone={identityResultTone(record.result)}>
+                          {record.result}
+                        </StatusBadge>
+                      </DataTableCell>
+                    </DataTableRow>
+                  ))
+                )}
+              </DataTableBody>
+            </DataTable>
+          </DataTableScroll>
+        </DataTableShell>
       </section>
 
       <section className="surface-panel p-4">

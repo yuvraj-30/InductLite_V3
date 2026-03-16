@@ -8,14 +8,17 @@
  */
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { submitSignOut } from "@/app/s/[slug]/actions";
 
 interface SignOutFormProps {
   initialToken: string;
+  initialSlug?: string;
 }
 
-export function SignOutForm({ initialToken }: SignOutFormProps) {
+export function SignOutForm({ initialToken, initialSlug = "" }: SignOutFormProps) {
   const [token] = useState(initialToken);
+  const [slug] = useState(initialSlug);
   const [phone, setPhone] = useState("");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -57,18 +60,24 @@ export function SignOutForm({ initialToken }: SignOutFormProps) {
     return (
       <div className="surface-panel-strong overflow-hidden">
         <div className="bg-emerald-600 px-6 py-8 text-center text-white">
-          <div className="mb-4 text-5xl">OK</div>
+          <div className="mb-4 text-sm font-semibold uppercase tracking-[0.12em]">Visit closed</div>
           <h1 className="text-2xl font-bold">Signed Out Successfully</h1>
           <p className="mt-2 text-emerald-100">
-            Thank you for your visit, {success.visitorName}
+            {success.visitorName} is now recorded as off site.
           </p>
         </div>
 
         <div className="px-6 py-6 text-center">
           <p className="mb-4 text-secondary">
-            You have been signed out. Have a safe journey!
+            Your exit is now captured in the site audit trail. Have a safe journey.
           </p>
-          <p className="text-sm text-muted">You may close this page now.</p>
+          {slug ? (
+            <Link href={`/s/${slug}`} className="btn-secondary">
+              Return to Sign-In
+            </Link>
+          ) : (
+            <p className="text-sm text-muted">You may close this page now.</p>
+          )}
         </div>
       </div>
     );
@@ -98,13 +107,13 @@ export function SignOutForm({ initialToken }: SignOutFormProps) {
 
   // Sign-out form
   return (
-    <div className="surface-panel-strong overflow-hidden">
-      <div className="bg-gradient-to-r from-indigo-700 to-cyan-700 px-6 py-6 text-center text-white">
-        <h1 className="text-xl font-bold">Sign Out</h1>
-        <p className="mt-1 text-sm text-cyan-100">
-          Confirm your phone number to sign out
-        </p>
-      </div>
+      <div className="surface-panel-strong overflow-hidden">
+        <div className="bg-gradient-to-r from-indigo-700 to-cyan-700 px-6 py-6 text-center text-white">
+          <h1 className="text-xl font-bold">Sign Out</h1>
+          <p className="mt-1 text-sm text-cyan-100">
+          Confirm your phone number to close this site visit
+          </p>
+        </div>
 
       {error && (
         <div className="border-b border-red-400/45 bg-red-100/70 px-4 py-3 dark:bg-red-950/45">
@@ -113,6 +122,17 @@ export function SignOutForm({ initialToken }: SignOutFormProps) {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4 p-6">
+        <div className="rounded-xl border border-indigo-400/30 bg-indigo-500/10 p-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-indigo-950 dark:text-indigo-100">
+            Exit check
+          </p>
+          <ol className="mt-2 space-y-1 text-sm text-secondary">
+            <li>1. Confirm the same phone number used at sign-in.</li>
+            <li>2. Submit once to mark the visit as ended.</li>
+            <li>3. Close the page or return to sign-in for a new visit.</li>
+          </ol>
+        </div>
+
         <div>
           <label htmlFor="signOutPhone" className="label mb-1">
             Phone Number <span className="text-red-500">*</span>

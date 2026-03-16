@@ -11,6 +11,18 @@ import { findAllSites } from "@/lib/repository/site.repository";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 import { PageWarningState } from "@/components/ui/page-state";
 import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableEmptyRow,
+  DataTableHeadCell,
+  DataTableHeader,
+  DataTableRow,
+  DataTableScroll,
+  DataTableShell,
+} from "@/components/ui/data-table";
+import { StatusBadge, type StatusBadgeTone } from "@/components/ui/status-badge";
+import {
   refreshAllRiskScoresAction,
   refreshSingleRiskScoreAction,
 } from "./actions";
@@ -47,6 +59,13 @@ function formatTrend(delta: number | null): string {
   if (delta === null) return "-";
   if (delta > 0) return `+${delta}`;
   return `${delta}`;
+}
+
+function thresholdTone(threshold: string | null): StatusBadgeTone {
+  if (!threshold) return "neutral";
+  if (threshold === "HIGH") return "danger";
+  if (threshold === "MEDIUM") return "warning";
+  return "success";
 }
 
 export default async function RiskPassportPage({ searchParams }: RiskPassportPageProps) {
@@ -168,14 +187,69 @@ export default async function RiskPassportPage({ searchParams }: RiskPassportPag
     else current.low += 1;
     siteSummary.set(key, current);
   }
+  const highRiskCount = riskScores.filter((score) => score.threshold_state === "HIGH").length;
+  const mediumRiskCount = riskScores.filter(
+    (score) => score.threshold_state === "MEDIUM",
+  ).length;
+  const lowRiskCount = riskScores.filter((score) => score.threshold_state === "LOW").length;
 
   return (
     <div className="space-y-6 p-3 sm:p-4">
-      <div>
-        <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">Contractor Risk Passport</h1>
-        <p className="mt-1 text-sm text-secondary">
-          Score contractor risk across incidents, document expiry, permits, and prequalification outcomes.
-        </p>
+      <div className="surface-panel-strong p-5">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_320px]">
+          <div>
+            <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+              Contractor Risk Passport
+            </h1>
+            <p className="mt-1 text-sm text-secondary">
+              Score contractor risk across incidents, expiring documents, permits, and prequalification outcomes.
+            </p>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-4">
+              <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+                  Profiles
+                </p>
+                <p className="mt-2 text-3xl font-black text-[color:var(--text-primary)]">
+                  {riskScores.length}
+                </p>
+              </div>
+              <div className="rounded-xl border border-red-400/35 bg-red-500/12 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-red-950 dark:text-red-100">
+                  High risk
+                </p>
+                <p className="mt-2 text-3xl font-black text-red-950 dark:text-red-100">
+                  {highRiskCount}
+                </p>
+              </div>
+              <div className="rounded-xl border border-amber-400/35 bg-amber-500/12 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-amber-900 dark:text-amber-100">
+                  Medium risk
+                </p>
+                <p className="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100">
+                  {mediumRiskCount}
+                </p>
+              </div>
+              <div className="rounded-xl border border-emerald-400/35 bg-emerald-500/12 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-emerald-950 dark:text-emerald-100">
+                  Low risk
+                </p>
+                <p className="mt-2 text-3xl font-black text-emerald-900 dark:text-emerald-100">
+                  {lowRiskCount}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[1.25rem] border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+              Priority
+            </p>
+            <p className="mt-3 text-sm text-secondary">
+              Focus on contractors with high thresholds or upward 30-day trends, then clear the document and permit components driving that score.
+            </p>
+          </div>
+        </div>
       </div>
 
       {params.message ? (
@@ -213,129 +287,137 @@ export default async function RiskPassportPage({ searchParams }: RiskPassportPag
         <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Site Risk Trend (30 Days)
         </h2>
-        <div className="mt-3 overflow-x-auto">
-          <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
-            <thead className="bg-[color:var(--bg-surface-strong)]">
-              <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Site</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Profiles</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Avg Score</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">High</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Medium</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Low</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
-              {siteSummary.size === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-3 py-3 text-sm text-muted">No site risk data yet.</td>
-                </tr>
-              ) : (
-                Array.from(siteSummary.values())
-                  .sort((a, b) => a.siteName.localeCompare(b.siteName))
-                  .map((row) => (
-                    <tr key={row.siteName}>
-                      <td className="px-3 py-3 text-sm text-secondary">{row.siteName}</td>
-                      <td className="px-3 py-3 text-sm text-secondary">{row.count}</td>
-                      <td className="px-3 py-3 text-sm text-secondary">
-                        {Math.round(row.totalScore / Math.max(1, row.count))}
-                      </td>
-                      <td className="px-3 py-3 text-sm text-secondary">{row.high}</td>
-                      <td className="px-3 py-3 text-sm text-secondary">{row.medium}</td>
-                      <td className="px-3 py-3 text-sm text-secondary">{row.low}</td>
-                    </tr>
-                  ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <DataTableShell className="mt-3">
+          <DataTableScroll>
+            <DataTable>
+              <DataTableHeader>
+                <DataTableRow>
+                  <DataTableHeadCell>Site</DataTableHeadCell>
+                  <DataTableHeadCell>Profiles</DataTableHeadCell>
+                  <DataTableHeadCell>Avg Score</DataTableHeadCell>
+                  <DataTableHeadCell>High</DataTableHeadCell>
+                  <DataTableHeadCell>Medium</DataTableHeadCell>
+                  <DataTableHeadCell>Low</DataTableHeadCell>
+                </DataTableRow>
+              </DataTableHeader>
+              <DataTableBody>
+                {siteSummary.size === 0 ? (
+                  <DataTableEmptyRow colSpan={6}>
+                    No site risk data yet.
+                  </DataTableEmptyRow>
+                ) : (
+                  Array.from(siteSummary.values())
+                    .sort((a, b) => a.siteName.localeCompare(b.siteName))
+                    .map((row) => (
+                      <DataTableRow key={row.siteName}>
+                        <DataTableCell>{row.siteName}</DataTableCell>
+                        <DataTableCell>{row.count}</DataTableCell>
+                        <DataTableCell>
+                          {Math.round(row.totalScore / Math.max(1, row.count))}
+                        </DataTableCell>
+                        <DataTableCell>{row.high}</DataTableCell>
+                        <DataTableCell>{row.medium}</DataTableCell>
+                        <DataTableCell>{row.low}</DataTableCell>
+                      </DataTableRow>
+                    ))
+                )}
+              </DataTableBody>
+            </DataTable>
+          </DataTableScroll>
+        </DataTableShell>
       </section>
 
       <section className="surface-panel p-4">
         <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Current Risk Scores
         </h2>
-        <div className="mt-3 overflow-x-auto">
-          <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
-            <thead className="bg-[color:var(--bg-surface-strong)]">
-              <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Contractor</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Site</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Score</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Threshold</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Trend (30d)</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Last Calculated</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Components</th>
-                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-[0.08em] text-secondary">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
-              {riskScores.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-3 py-3 text-sm text-muted">No risk scores calculated yet.</td>
-                </tr>
-              ) : (
-                riskScores.map((score) => {
-                  const components = parseComponents(score.components);
-                  const contractorName =
-                    contractors.find((contractor) => contractor.id === score.contractor_id)?.name ??
-                    score.contractor_id;
-                  const siteName =
-                    sites.find((site) => site.id === score.site_id)?.name ??
-                    (score.site_id ? score.site_id : "All sites");
+        <DataTableShell className="mt-3">
+          <DataTableScroll>
+            <DataTable>
+              <DataTableHeader>
+                <DataTableRow>
+                  <DataTableHeadCell>Contractor</DataTableHeadCell>
+                  <DataTableHeadCell>Site</DataTableHeadCell>
+                  <DataTableHeadCell>Score</DataTableHeadCell>
+                  <DataTableHeadCell>Threshold</DataTableHeadCell>
+                  <DataTableHeadCell>Trend (30d)</DataTableHeadCell>
+                  <DataTableHeadCell>Last Calculated</DataTableHeadCell>
+                  <DataTableHeadCell>Components</DataTableHeadCell>
+                  <DataTableHeadCell className="text-right">Action</DataTableHeadCell>
+                </DataTableRow>
+              </DataTableHeader>
+              <DataTableBody>
+                {riskScores.length === 0 ? (
+                  <DataTableEmptyRow colSpan={8}>
+                    No risk scores calculated yet.
+                  </DataTableEmptyRow>
+                ) : (
+                  riskScores.map((score) => {
+                    const components = parseComponents(score.components);
+                    const contractorName =
+                      contractors.find((contractor) => contractor.id === score.contractor_id)?.name ??
+                      score.contractor_id;
+                    const siteName =
+                      sites.find((site) => site.id === score.site_id)?.name ??
+                      (score.site_id ? score.site_id : "All sites");
 
-                  return (
-                    <tr key={score.id}>
-                      <td className="px-3 py-3 text-sm text-secondary">{contractorName}</td>
-                      <td className="px-3 py-3 text-sm text-secondary">{siteName}</td>
-                      <td className="px-3 py-3 text-sm font-semibold text-[color:var(--text-primary)]">{score.current_score}</td>
-                      <td className="px-3 py-3 text-sm text-secondary">{score.threshold_state}</td>
-                      <td className="px-3 py-3 text-sm text-secondary">
-                        {formatTrend(trendByScoreId.get(score.id) ?? null)}
-                      </td>
-                      <td className="px-3 py-3 text-sm text-secondary">
-                        {score.last_calculated_at
-                          ? score.last_calculated_at.toLocaleString("en-NZ")
-                          : "-"}
-                      </td>
-                      <td className="px-3 py-3 text-xs text-secondary">
-                        <div className="space-y-1">
-                          <div>
-                            docs expired: {parseComponentNumber(components, "expired_documents")} |
-                            docs expiring(30d):{" "}
-                            {parseComponentNumber(components, "expiring_documents_30d")}
+                    return (
+                      <DataTableRow key={score.id}>
+                        <DataTableCell>{contractorName}</DataTableCell>
+                        <DataTableCell>{siteName}</DataTableCell>
+                        <DataTableCell className="font-semibold text-[color:var(--text-primary)]">
+                          {score.current_score}
+                        </DataTableCell>
+                        <DataTableCell>
+                          <StatusBadge tone={thresholdTone(score.threshold_state)}>
+                            {score.threshold_state}
+                          </StatusBadge>
+                        </DataTableCell>
+                        <DataTableCell>{formatTrend(trendByScoreId.get(score.id) ?? null)}</DataTableCell>
+                        <DataTableCell>
+                          {score.last_calculated_at
+                            ? score.last_calculated_at.toLocaleString("en-NZ")
+                            : "-"}
+                        </DataTableCell>
+                        <DataTableCell className="text-xs">
+                          <div className="space-y-1">
+                            <div>
+                              docs expired: {parseComponentNumber(components, "expired_documents")} |
+                              docs expiring(30d):{" "}
+                              {parseComponentNumber(components, "expiring_documents_30d")}
+                            </div>
+                            <div>
+                              permit breaches: {parseComponentNumber(components, "permit_breaches")} |
+                              prequal penalty:{" "}
+                              {parseComponentNumber(components, "prequalification_penalty")}
+                            </div>
+                            <div>
+                              incidents(180d): {parseComponentNumber(components, "incident_reports_180d")} |
+                              quiz failures(180d):{" "}
+                              {parseComponentNumber(components, "quiz_failures_180d")}
+                            </div>
                           </div>
-                          <div>
-                            permit breaches: {parseComponentNumber(components, "permit_breaches")} |
-                            prequal penalty:{" "}
-                            {parseComponentNumber(components, "prequalification_penalty")}
-                          </div>
-                          <div>
-                            incidents(180d): {parseComponentNumber(components, "incident_reports_180d")} |
-                            quiz failures(180d):{" "}
-                            {parseComponentNumber(components, "quiz_failures_180d")}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-3 py-3 text-right">
-                        <form action={refreshSingleRiskScoreAction}>
-                          <input type="hidden" name="contractorId" value={score.contractor_id} />
-                          <input type="hidden" name="siteId" value={score.site_id ?? ""} />
-                          <button
-                            type="submit"
-                            className="rounded border border-indigo-300 px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50"
-                          >
-                            Refresh
-                          </button>
-                        </form>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                        </DataTableCell>
+                        <DataTableCell className="text-right">
+                          <form action={refreshSingleRiskScoreAction}>
+                            <input type="hidden" name="contractorId" value={score.contractor_id} />
+                            <input type="hidden" name="siteId" value={score.site_id ?? ""} />
+                            <button
+                              type="submit"
+                              className="rounded border border-indigo-300 px-2 py-1 text-xs font-medium text-indigo-700 hover:bg-indigo-50"
+                            >
+                              Refresh
+                            </button>
+                          </form>
+                        </DataTableCell>
+                      </DataTableRow>
+                    );
+                  })
+                )}
+              </DataTableBody>
+            </DataTable>
+          </DataTableScroll>
+        </DataTableShell>
       </section>
     </div>
   );

@@ -6,6 +6,18 @@ import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 import { findAllSites } from "@/lib/repository/site.repository";
 import { PageWarningState } from "@/components/ui/page-state";
+import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableEmptyRow,
+  DataTableHeadCell,
+  DataTableHeader,
+  DataTableRow,
+  DataTableScroll,
+  DataTableShell,
+} from "@/components/ui/data-table";
+import { StatusBadge, type StatusBadgeTone } from "@/components/ui/status-badge";
 import { InlineCopilotPanel } from "../components/inline-copilot-panel";
 import { listContractors } from "@/lib/repository/contractor.repository";
 import { listUsers } from "@/lib/repository/user.repository";
@@ -27,24 +39,18 @@ export const metadata = {
   title: "Permits | InductLite",
 };
 
-function permitRequestStatusChipClass(status: string): string {
-  if (status === "APPROVED" || status === "ACTIVE") {
-    return "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100";
-  }
-  if (status === "CLOSED") {
-    return "border-[color:var(--border-soft)] bg-[color:var(--bg-surface)]0/12 text-secondary";
-  }
-  return "border-amber-400/45 bg-amber-500/15 text-amber-900 dark:text-amber-100";
+function permitRequestTone(status: string): StatusBadgeTone {
+  if (status === "APPROVED" || status === "ACTIVE") return "success";
+  if (status === "DENIED") return "danger";
+  if (status === "SUSPENDED") return "warning";
+  if (status === "CLOSED") return "neutral";
+  return "accent";
 }
 
-function prequalificationStatusChipClass(status: string): string {
-  if (status === "APPROVED") {
-    return "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100";
-  }
-  if (status === "DENIED" || status === "EXPIRED") {
-    return "border-red-500/45 bg-red-500/15 text-red-950 dark:text-red-100";
-  }
-  return "border-amber-400/45 bg-amber-500/15 text-amber-900 dark:text-amber-100";
+function prequalificationTone(status: string): StatusBadgeTone {
+  if (status === "APPROVED") return "success";
+  if (status === "DENIED" || status === "EXPIRED") return "danger";
+  return "warning";
 }
 
 export default async function PermitsPage() {
@@ -125,24 +131,94 @@ export default async function PermitsPage() {
   const conditionsByTemplate = new Map(
     templateConditions.map((entry) => [entry.templateId, entry.conditions]),
   );
+  const now = new Date();
+  const requestedPermitCount = requests.filter((request) => request.status === "REQUESTED").length;
+  const activePermitCount = requests.filter(
+    (request) => request.status === "APPROVED" || request.status === "ACTIVE",
+  ).length;
+  const suspendedPermitCount = requests.filter(
+    (request) => request.status === "SUSPENDED",
+  ).length;
+  const overduePermitCount = requests.filter(
+    (request) =>
+      request.status !== "CLOSED" &&
+      request.status !== "DENIED" &&
+      request.validity_end &&
+      request.validity_end.getTime() < now.getTime(),
+  ).length;
+  const prequalAtRiskCount = prequals.filter(
+    (prequal) =>
+      prequal.status !== "APPROVED" ||
+      (prequal.expires_at ? prequal.expires_at.getTime() < now.getTime() : false),
+  ).length;
 
   return (
     <div className="space-y-6 p-3 sm:p-4">
       <div className="surface-panel-strong flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
-            Permit-to-Work
-          </h1>
-          <p className="mt-1 text-sm text-secondary">
-            Manage permit templates, issuance lifecycle, and contractor prequalification.
-          </p>
+        <div className="grid w-full gap-4 lg:grid-cols-[minmax(0,1.2fr)_320px]">
+          <div>
+            <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+              Permit-to-Work
+            </h1>
+            <p className="mt-1 text-sm text-secondary">
+              Keep permit decisions, validity windows, and contractor readiness in one operational queue.
+            </p>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-4">
+              <div className="rounded-xl border border-indigo-400/35 bg-indigo-500/12 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-indigo-950 dark:text-indigo-100">
+                  Requested
+                </p>
+                <p className="mt-2 text-3xl font-black text-indigo-950 dark:text-indigo-100">
+                  {requestedPermitCount}
+                </p>
+              </div>
+              <div className="rounded-xl border border-emerald-400/35 bg-emerald-500/12 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-emerald-950 dark:text-emerald-100">
+                  Active
+                </p>
+                <p className="mt-2 text-3xl font-black text-emerald-900 dark:text-emerald-100">
+                  {activePermitCount}
+                </p>
+              </div>
+              <div className="rounded-xl border border-red-400/35 bg-red-500/12 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-red-950 dark:text-red-100">
+                  Overdue
+                </p>
+                <p className="mt-2 text-3xl font-black text-red-950 dark:text-red-100">
+                  {overduePermitCount}
+                </p>
+              </div>
+              <div className="rounded-xl border border-amber-400/35 bg-amber-500/12 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-amber-900 dark:text-amber-100">
+                  Prequal risk
+                </p>
+                <p className="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100">
+                  {prequalAtRiskCount}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <Link
+              href="/admin/permits/templates"
+              className="btn-secondary"
+            >
+              Template Builder
+            </Link>
+            <div className="rounded-[1.25rem] border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                Next actions
+              </p>
+              <ul className="mt-3 space-y-2 text-sm text-secondary">
+                <li>{requestedPermitCount} permits are waiting for an approval decision.</li>
+                <li>{suspendedPermitCount} permits are suspended and need a recovery or closure action.</li>
+                <li>{overduePermitCount} permits have expired validity windows and should be closed or renewed.</li>
+              </ul>
+            </div>
+          </div>
         </div>
-        <Link
-          href="/admin/permits/templates"
-          className="btn-secondary"
-        >
-          Template Builder
-        </Link>
       </div>
 
       <InlineCopilotPanel
@@ -333,15 +409,9 @@ export default async function PermitsPage() {
                     <td className="px-3 py-3 text-sm text-secondary">{template.name}</td>
                     <td className="px-3 py-3 text-sm text-secondary">{template.permit_type}</td>
                     <td className="px-3 py-3 text-sm">
-                      <span
-                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${
-                          template.is_required_for_signin
-                            ? "border-amber-400/45 bg-amber-500/15 text-amber-900 dark:text-amber-100"
-                            : "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100"
-                        }`}
-                      >
+                      <StatusBadge tone={template.is_required_for_signin ? "warning" : "success"}>
                         {template.is_required_for_signin ? "Required" : "Optional"}
-                      </span>
+                      </StatusBadge>
                     </td>
                     <td className="px-3 py-3 text-sm text-secondary">
                       {(conditionsByTemplate.get(template.id) ?? []).length}
@@ -358,102 +428,159 @@ export default async function PermitsPage() {
         <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Permit Lifecycle
         </h2>
-        <div className="mt-3 overflow-x-auto">
-          <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
-            <thead className="bg-[color:var(--bg-surface-strong)]">
-              <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
-                  Request
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
-                  Site
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
-                  Status
-                </th>
-                <th className="px-3 py-2 text-right text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
-              {requests.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-3 py-3 text-sm text-muted">
+        <DataTableShell className="mt-3">
+          <DataTableScroll>
+            <DataTable>
+              <DataTableHeader>
+                <DataTableRow>
+                  <DataTableHeadCell>Request</DataTableHeadCell>
+                  <DataTableHeadCell>Site</DataTableHeadCell>
+                  <DataTableHeadCell>Status</DataTableHeadCell>
+                  <DataTableHeadCell>Validity</DataTableHeadCell>
+                  <DataTableHeadCell>Next action</DataTableHeadCell>
+                  <DataTableHeadCell className="text-right">Actions</DataTableHeadCell>
+                </DataTableRow>
+              </DataTableHeader>
+              <DataTableBody>
+                {requests.length === 0 ? (
+                  <DataTableEmptyRow colSpan={6}>
                     No permit requests yet.
-                  </td>
-                </tr>
-              ) : (
-                requests.map((request) => (
-                  <tr key={request.id} className="hover:bg-[color:var(--bg-surface-strong)]">
-                    <td className="px-3 py-3 text-sm text-secondary">
-                      {request.visitor_name || request.visitor_phone || request.id.slice(0, 8)}
-                    </td>
-                    <td className="px-3 py-3 text-sm text-secondary">
-                      {sites.find((site) => site.id === request.site_id)?.name ?? "Site"}
-                    </td>
-                    <td className="px-3 py-3 text-sm">
-                      <span
-                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${permitRequestStatusChipClass(request.status)}`}
-                      >
-                        {request.status}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3 text-right">
-                      <div className="flex flex-wrap justify-end gap-2">
-                        {request.status !== "APPROVED" && request.status !== "ACTIVE" && (
+                  </DataTableEmptyRow>
+                ) : (
+                  requests.map((request) => {
+                    const siteName =
+                      sites.find((site) => site.id === request.site_id)?.name ?? "Site";
+                    const isOverdue =
+                      request.status !== "CLOSED" &&
+                      request.status !== "DENIED" &&
+                      request.validity_end &&
+                      request.validity_end.getTime() < now.getTime();
+                    const nextAction = isOverdue
+                      ? "Renew or close expired permit"
+                      : request.status === "REQUESTED"
+                        ? "Supervisor approval required"
+                        : request.status === "APPROVED"
+                          ? "Activate when work starts"
+                          : request.status === "SUSPENDED"
+                            ? "Resolve hold point or close"
+                            : request.status === "ACTIVE"
+                              ? "Monitor and close at completion"
+                              : "No further action";
+
+                    return (
+                      <DataTableRow key={request.id}>
+                        <DataTableCell>
+                          <div className="font-medium text-[color:var(--text-primary)]">
+                            {request.visitor_name || request.visitor_phone || request.id.slice(0, 8)}
+                          </div>
+                          <div className="text-xs text-muted">
+                            {request.employer_name || "No employer"} |{" "}
+                            {request.notes || "No permit notes"}
+                          </div>
+                        </DataTableCell>
+                        <DataTableCell>{siteName}</DataTableCell>
+                        <DataTableCell>
+                          <StatusBadge tone={isOverdue ? "danger" : permitRequestTone(request.status)}>
+                            {request.status}
+                          </StatusBadge>
+                        </DataTableCell>
+                        <DataTableCell>
+                          {request.validity_end ? (
+                            <div>
+                              <div>{request.validity_end.toLocaleDateString("en-NZ")}</div>
+                              <div className="text-xs text-muted">
+                                {request.validity_end.toLocaleTimeString("en-NZ", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-muted">Open-ended</span>
+                          )}
+                        </DataTableCell>
+                        <DataTableCell>
+                          <p className="text-sm text-secondary">{nextAction}</p>
+                        </DataTableCell>
+                        <DataTableCell className="text-right">
                           <form
-                            action={async () => {
+                            action={async (formData) => {
                               "use server";
-                              await transitionPermitRequestAction(request.id, "APPROVED");
+                              const status = formData.get("status");
+                              const notes = formData.get("notes");
+                              if (typeof status !== "string") return;
+                              await transitionPermitRequestAction(
+                                request.id,
+                                status as
+                                  | "DRAFT"
+                                  | "REQUESTED"
+                                  | "APPROVED"
+                                  | "ACTIVE"
+                                  | "SUSPENDED"
+                                  | "CLOSED"
+                                  | "DENIED",
+                                typeof notes === "string" ? notes : undefined,
+                              );
                             }}
+                            className="ml-auto grid max-w-md gap-2"
                           >
-                            <button
-                              type="submit"
-                              className="rounded-lg border border-indigo-400/45 bg-indigo-500/12 px-2 py-1 text-xs font-semibold text-indigo-950 hover:bg-indigo-500/20 dark:text-indigo-100"
-                            >
-                              Approve
-                            </button>
+                            <input
+                              name="notes"
+                              className="input min-w-[14rem]"
+                              placeholder="Decision note (optional)"
+                            />
+                            <div className="flex flex-wrap justify-end gap-2">
+                              {request.status !== "APPROVED" && request.status !== "ACTIVE" ? (
+                                <button
+                                  type="submit"
+                                  name="status"
+                                  value="APPROVED"
+                                  className="rounded-lg border border-indigo-400/45 bg-indigo-500/12 px-3 py-2 text-xs font-semibold text-indigo-950 hover:bg-indigo-500/20 dark:text-indigo-100"
+                                >
+                                  Approve
+                                </button>
+                              ) : null}
+                              {request.status !== "ACTIVE" && request.status !== "CLOSED" ? (
+                                <button
+                                  type="submit"
+                                  name="status"
+                                  value="ACTIVE"
+                                  className="rounded-lg border border-emerald-400/40 bg-emerald-500/12 px-3 py-2 text-xs font-semibold text-emerald-900 hover:bg-emerald-500/20 dark:text-emerald-100"
+                                >
+                                  Activate
+                                </button>
+                              ) : null}
+                              {request.status !== "SUSPENDED" && request.status !== "CLOSED" ? (
+                                <button
+                                  type="submit"
+                                  name="status"
+                                  value="SUSPENDED"
+                                  className="rounded-lg border border-amber-400/45 bg-amber-500/12 px-3 py-2 text-xs font-semibold text-amber-900 hover:bg-amber-500/20 dark:text-amber-100"
+                                >
+                                  Suspend
+                                </button>
+                              ) : null}
+                              {request.status !== "CLOSED" ? (
+                                <button
+                                  type="submit"
+                                  name="status"
+                                  value="CLOSED"
+                                  className="btn-secondary min-h-[30px] px-3 py-2 text-xs"
+                                >
+                                  Close
+                                </button>
+                              ) : null}
+                            </div>
                           </form>
-                        )}
-                        {request.status !== "ACTIVE" && request.status !== "CLOSED" && (
-                          <form
-                            action={async () => {
-                              "use server";
-                              await transitionPermitRequestAction(request.id, "ACTIVE");
-                            }}
-                          >
-                            <button
-                              type="submit"
-                              className="rounded-lg border border-emerald-400/40 bg-emerald-500/12 px-2 py-1 text-xs font-semibold text-emerald-900 hover:bg-emerald-500/20 dark:text-emerald-100"
-                            >
-                              Activate
-                            </button>
-                          </form>
-                        )}
-                        {request.status !== "CLOSED" && (
-                          <form
-                            action={async () => {
-                              "use server";
-                              await transitionPermitRequestAction(request.id, "CLOSED");
-                            }}
-                          >
-                            <button
-                              type="submit"
-                              className="btn-secondary min-h-[30px] px-2 py-1 text-xs"
-                            >
-                              Close
-                            </button>
-                          </form>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                        </DataTableCell>
+                      </DataTableRow>
+                    );
+                  })
+                )}
+              </DataTableBody>
+            </DataTable>
+          </DataTableScroll>
+        </DataTableShell>
       </section>
 
       <section className="surface-panel p-4">
@@ -568,11 +695,9 @@ export default async function PermitsPage() {
                       {sites.find((site) => site.id === prequal.site_id)?.name ?? "All sites"}
                     </td>
                     <td className="px-3 py-3 text-sm">
-                      <span
-                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${prequalificationStatusChipClass(prequal.status)}`}
-                      >
+                      <StatusBadge tone={prequalificationTone(prequal.status)}>
                         {prequal.status}
-                      </span>
+                      </StatusBadge>
                     </td>
                     <td className="px-3 py-3 text-sm text-secondary">{prequal.score}</td>
                   </tr>

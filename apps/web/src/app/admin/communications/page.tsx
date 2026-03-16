@@ -7,6 +7,18 @@ import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans
 import { findAllSites } from "@/lib/repository/site.repository";
 import { PageWarningState } from "@/components/ui/page-state";
 import {
+  DataTable,
+  DataTableBody,
+  DataTableCell,
+  DataTableEmptyRow,
+  DataTableHeadCell,
+  DataTableHeader,
+  DataTableRow,
+  DataTableScroll,
+  DataTableShell,
+} from "@/components/ui/data-table";
+import { StatusBadge, type StatusBadgeTone } from "@/components/ui/status-badge";
+import {
   listBroadcastRecipients,
   listCommunicationEvents,
   listEmergencyBroadcasts,
@@ -17,37 +29,17 @@ export const metadata = {
   title: "Communications | InductLite",
 };
 
-function broadcastSeverityChipClass(severity: string): string {
-  if (severity === "CRITICAL") {
-    return "border-red-500/45 bg-red-500/15 text-red-950 dark:text-red-100";
-  }
-  if (severity === "WARNING") {
-    return "border-amber-400/45 bg-amber-500/15 text-amber-900 dark:text-amber-100";
-  }
-  return "border-cyan-400/35 bg-cyan-500/15 text-cyan-950 dark:text-cyan-100";
+function broadcastSeverityTone(severity: string): StatusBadgeTone {
+  if (severity === "CRITICAL") return "danger";
+  if (severity === "WARNING") return "warning";
+  return "info";
 }
 
-function slaChipClass(pendingCount: number, elapsedMinutes: number): string {
-  if (pendingCount > 0 && elapsedMinutes > 30) {
-    return "border-red-500/45 bg-red-500/15 text-red-950 dark:text-red-100";
-  }
-  if (pendingCount > 0) {
-    return "border-amber-400/45 bg-amber-500/15 text-amber-900 dark:text-amber-100";
-  }
-  return "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100";
-}
-
-function communicationEventStatusChipClass(status: string | null): string {
-  if (status === "FAILED") {
-    return "border-red-500/45 bg-red-500/15 text-red-950 dark:text-red-100";
-  }
-  if (status === "DELIVERED" || status === "ACKNOWLEDGED") {
-    return "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100";
-  }
-  if (status === "QUEUED" || status === "PENDING") {
-    return "border-amber-400/45 bg-amber-500/15 text-amber-900 dark:text-amber-100";
-  }
-  return "border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] text-secondary";
+function eventStatusTone(status: string | null): StatusBadgeTone {
+  if (status === "FAILED") return "danger";
+  if (status === "DELIVERED" || status === "ACKNOWLEDGED") return "success";
+  if (status === "QUEUED" || status === "PENDING") return "warning";
+  return "neutral";
 }
 
 export default async function CommunicationsPage() {
@@ -118,24 +110,91 @@ export default async function CommunicationsPage() {
     );
   }
   const nowTs = Date.now();
+  const timelineSummary = broadcasts.reduce(
+    (acc, broadcast) => {
+      const recipients = recipientsByBroadcast.get(broadcast.id) ?? [];
+      const acknowledgedCount = recipients.filter(
+        (recipient) => recipient.status === "ACKNOWLEDGED",
+      ).length;
+      const pendingCount = recipients.length - acknowledgedCount;
+      acc.totalRecipients += recipients.length;
+      acc.totalAcknowledged += acknowledgedCount;
+      acc.totalPending += pendingCount;
+      return acc;
+    },
+    {
+      totalRecipients: 0,
+      totalAcknowledged: 0,
+      totalPending: 0,
+    },
+  );
+  const failedEventCount = events.filter((event) => event.status === "FAILED").length;
 
   return (
     <div className="space-y-6 p-3 sm:p-4">
       <div className="surface-panel-strong flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
-            Unified Communications Hub
-          </h1>
-          <p className="mt-1 text-sm text-secondary">
-            Launch emergency broadcasts and track multi-channel delivery + acknowledgements.
-          </p>
+        <div className="grid w-full gap-4 lg:grid-cols-[minmax(0,1.2fr)_320px]">
+          <div>
+            <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">
+              Unified Communications Hub
+            </h1>
+            <p className="mt-1 text-sm text-secondary">
+              Launch emergency broadcasts, see who still needs acknowledgement, and keep delivery failures visible.
+            </p>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-4">
+              <div className="rounded-xl border border-indigo-400/35 bg-indigo-500/12 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-indigo-950 dark:text-indigo-100">
+                  Broadcasts
+                </p>
+                <p className="mt-2 text-3xl font-black text-indigo-950 dark:text-indigo-100">
+                  {broadcasts.length}
+                </p>
+              </div>
+              <div className="rounded-xl border border-amber-400/35 bg-amber-500/12 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-amber-900 dark:text-amber-100">
+                  Pending ack
+                </p>
+                <p className="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100">
+                  {timelineSummary.totalPending}
+                </p>
+              </div>
+              <div className="rounded-xl border border-emerald-400/35 bg-emerald-500/12 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-emerald-950 dark:text-emerald-100">
+                  Acknowledged
+                </p>
+                <p className="mt-2 text-3xl font-black text-emerald-900 dark:text-emerald-100">
+                  {timelineSummary.totalAcknowledged}
+                </p>
+              </div>
+              <div className="rounded-xl border border-red-400/35 bg-red-500/12 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-red-950 dark:text-red-100">
+                  Failures
+                </p>
+                <p className="mt-2 text-3xl font-black text-red-950 dark:text-red-100">
+                  {failedEventCount}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <Link
+              href="/admin/command-mode"
+              className="btn-secondary"
+            >
+              Command Mode
+            </Link>
+            <div className="rounded-[1.25rem] border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                Priority
+              </p>
+              <p className="mt-3 text-sm text-secondary">
+                Focus first on broadcasts with pending acknowledgements older than 30 minutes or any failed channel events.
+              </p>
+            </div>
+          </div>
         </div>
-        <Link
-          href="/admin/command-mode"
-          className="btn-secondary"
-        >
-          Command Mode
-        </Link>
       </div>
 
       <section className="surface-panel p-4">
@@ -177,11 +236,12 @@ export default async function CommunicationsPage() {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <p className="text-sm font-semibold text-[color:var(--text-primary)]">
-                        <span
-                          className={`mr-2 inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${broadcastSeverityChipClass(broadcast.severity)}`}
+                        <StatusBadge
+                          tone={broadcastSeverityTone(broadcast.severity)}
+                          className="mr-2"
                         >
                           {broadcast.severity}
-                        </span>
+                        </StatusBadge>
                         {sites.find((site) => site.id === broadcast.site_id)?.name ?? "All sites"}
                       </p>
                       <p className="text-xs text-muted">
@@ -193,11 +253,17 @@ export default async function CommunicationsPage() {
                         Recipients: {recipients.length} | Ack: {acknowledgedCount} | Pending:{" "}
                         {pendingCount}
                       </span>
-                      <span
-                        className={`rounded-full border px-2 py-0.5 text-xs font-semibold ${slaChipClass(pendingCount, elapsedMinutes)}`}
+                      <StatusBadge
+                        tone={
+                          pendingCount > 0 && elapsedMinutes > 30
+                            ? "danger"
+                            : pendingCount > 0
+                              ? "warning"
+                              : "success"
+                        }
                       >
                         SLA {elapsedMinutes}m
-                      </span>
+                      </StatusBadge>
                     </div>
                   </div>
                   <p className="mt-2 text-sm text-secondary">{broadcast.message}</p>
@@ -214,58 +280,44 @@ export default async function CommunicationsPage() {
           Communication Events
           </h2>
         </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-[color:var(--border-soft)]">
-            <thead className="bg-[color:var(--bg-surface-strong)]">
-              <tr>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
-                  Timestamp
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
-                  Direction
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
-                  Channel
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
-                  Event
-                </th>
-                <th className="px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[color:var(--border-soft)] bg-[color:var(--bg-surface)]">
-              {events.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="px-3 py-3 text-sm text-secondary">
+        <DataTableShell className="m-4 mt-0">
+          <DataTableScroll>
+            <DataTable>
+              <DataTableHeader>
+                <DataTableRow>
+                  <DataTableHeadCell>Timestamp</DataTableHeadCell>
+                  <DataTableHeadCell>Direction</DataTableHeadCell>
+                  <DataTableHeadCell>Channel</DataTableHeadCell>
+                  <DataTableHeadCell>Event</DataTableHeadCell>
+                  <DataTableHeadCell>Status</DataTableHeadCell>
+                </DataTableRow>
+              </DataTableHeader>
+              <DataTableBody>
+                {events.length === 0 ? (
+                  <DataTableEmptyRow colSpan={5}>
                     No communication events logged.
-                  </td>
-                </tr>
-              ) : (
-                events.map((event) => (
-                  <tr key={event.id} className="hover:bg-[color:var(--bg-surface-strong)]">
-                    <td className="px-3 py-3 text-sm text-secondary">
-                      {event.created_at.toLocaleString("en-NZ")}
-                    </td>
-                    <td className="px-3 py-3 text-sm text-secondary">{event.direction}</td>
-                    <td className="px-3 py-3 text-sm text-secondary">{event.channel ?? "-"}</td>
-                    <td className="px-3 py-3 text-sm font-semibold text-[color:var(--text-primary)]">
-                      {event.event_type}
-                    </td>
-                    <td className="px-3 py-3 text-sm">
-                      <span
-                        className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-semibold ${communicationEventStatusChipClass(event.status)}`}
-                      >
-                        {event.status ?? "UNKNOWN"}
-                      </span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                  </DataTableEmptyRow>
+                ) : (
+                  events.map((event) => (
+                    <DataTableRow key={event.id}>
+                      <DataTableCell>{event.created_at.toLocaleString("en-NZ")}</DataTableCell>
+                      <DataTableCell>{event.direction}</DataTableCell>
+                      <DataTableCell>{event.channel ?? "-"}</DataTableCell>
+                      <DataTableCell className="font-semibold text-[color:var(--text-primary)]">
+                        {event.event_type}
+                      </DataTableCell>
+                      <DataTableCell>
+                        <StatusBadge tone={eventStatusTone(event.status)}>
+                          {event.status ?? "UNKNOWN"}
+                        </StatusBadge>
+                      </DataTableCell>
+                    </DataTableRow>
+                  ))
+                )}
+              </DataTableBody>
+            </DataTable>
+          </DataTableScroll>
+        </DataTableShell>
       </section>
     </div>
   );

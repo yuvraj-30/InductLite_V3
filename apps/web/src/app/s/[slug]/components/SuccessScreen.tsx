@@ -7,6 +7,7 @@ import {
   type ComponentType,
 } from "react";
 import { submitBadgePrintAudit } from "../actions";
+import { CopyButton } from "@/components/ui/copy-button";
 
 interface SignInResult {
   signInRecordId: string;
@@ -54,7 +55,7 @@ export function SuccessScreen({ slug, result }: SuccessScreenProps) {
     };
   }, [BadgeQrComponent]);
 
-  const signOutPath = `/sign-out?token=${encodeURIComponent(result.signOutToken)}`;
+  const signOutPath = `/sign-out?token=${encodeURIComponent(result.signOutToken)}&slug=${encodeURIComponent(slug)}`;
   const signOutUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}${signOutPath}`
@@ -84,21 +85,6 @@ export function SuccessScreen({ slug, result }: SuccessScreenProps) {
   });
   const badgeQrSize = badgePrintProfile === "THERMAL" ? 92 : 108;
 
-  const copySignOutLink = async () => {
-    try {
-      await navigator.clipboard.writeText(signOutUrl);
-      alert("Sign-out link copied to clipboard.");
-    } catch {
-      const textArea = document.createElement("textarea");
-      textArea.value = signOutUrl;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textArea);
-      alert("Sign-out link copied.");
-    }
-  };
-
   const printBadge = async () => {
     window.print();
     if (isRecordingBadgePrint) {
@@ -119,16 +105,18 @@ export function SuccessScreen({ slug, result }: SuccessScreenProps) {
   return (
     <div className="surface-panel-strong overflow-hidden">
       <div className="bg-gradient-to-br from-emerald-600 via-emerald-500 to-cyan-500 px-6 py-8 text-center text-white">
-        <div className="mb-4 text-5xl" aria-hidden="true">
-          OK
+        <div className="mb-4 inline-flex rounded-full border border-white/30 bg-white/12 px-4 py-1 text-sm font-semibold uppercase tracking-[0.12em]">
+          Active on site
         </div>
-        <h2 className="kinetic-title text-3xl font-black">Signed In Successfully</h2>
-        <p className="mt-2 text-emerald-50">Welcome to {result.siteName}</p>
+        <h2 className="kinetic-title text-3xl font-black">Cleared for Site</h2>
+        <p className="mt-2 text-emerald-50">
+          Your sign-in is complete and site management can now see you as on site at {result.siteName}.
+        </p>
       </div>
 
       <div className="space-y-4 px-6 py-6">
         <div className="rounded-xl border border-surface-soft bg-surface-soft p-4">
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid gap-4 text-sm sm:grid-cols-3">
             <div>
               <p className="text-muted">Name</p>
               <p className="font-semibold text-[color:var(--text-primary)]">
@@ -139,25 +127,29 @@ export function SuccessScreen({ slug, result }: SuccessScreenProps) {
               <p className="text-muted">Signed in at</p>
               <p className="font-semibold text-[color:var(--text-primary)]">{formattedTime}</p>
             </div>
+            <div>
+              <p className="text-muted">Status</p>
+              <p className="font-semibold text-[color:var(--accent-success)]">Active on site</p>
+            </div>
           </div>
         </div>
 
         <div className="rounded-xl border border-indigo-400/35 bg-indigo-500/12 p-4">
           <h3 className="mb-2 font-semibold text-indigo-950 dark:text-indigo-100">
-            Sign Out When Leaving
+            Keep your sign-out link ready
           </h3>
           <p className="mb-3 text-sm text-indigo-900 dark:text-indigo-200">
-            Use the link below to sign out when you leave site. This link expires at{" "}
-            <strong>{expiryTime}</strong>.
+            You will need this link when leaving the site. It expires at <strong>{expiryTime}</strong>.
           </p>
 
           <div className="flex flex-col gap-2">
-            <button
-              onClick={copySignOutLink}
+            <CopyButton
+              value={signOutUrl}
+              label="Copy Sign-Out Link"
+              copiedLabel="Sign-Out Link Copied"
+              errorLabel="Copy failed"
               className="btn-primary w-full"
-            >
-              Copy Sign-Out Link
-            </button>
+            />
 
             <a
               href={signOutUrl}
@@ -242,6 +234,10 @@ export function SuccessScreen({ slug, result }: SuccessScreenProps) {
             <li>Follow all site safety procedures</li>
             <li>Sign out when leaving the site</li>
           </ul>
+        </div>
+
+        <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4 text-sm text-secondary">
+          Keep the sign-out link with you. Using it when you leave closes this visit cleanly in the site audit log.
         </div>
       </div>
 

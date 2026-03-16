@@ -35,6 +35,19 @@ export interface DashboardMetrics {
     overdueDrills: number;
     dueIn7Days: number;
   };
+  approvalSummary: {
+    pending: number;
+    deniedLast7Days: number;
+    watchlistPending: number;
+    randomCheckPending: number;
+    averagePendingMinutes: number;
+  };
+  permitSummary: {
+    requested: number;
+    active: number;
+    suspended: number;
+    overdue: number;
+  };
   quizSummary: {
     scoredResponses30Days: number;
     passedResponses30Days: number;
@@ -129,6 +142,9 @@ export async function getDashboardMetrics(
       drillsLast30Days,
       overdueDrills,
       dueDrillsIn7Days,
+      pendingApprovalRequests,
+      deniedApprovalRequestsLast7Days,
+      permitRequestsInFlight,
       quizActiveCooldowns,
       quizProfilesAttempted30Days,
       quizProfilesWithRecentFailures,
@@ -217,6 +233,36 @@ export async function getDashboardMetrics(
             gte: now,
             lte: sevenDaysFromNow,
           },
+        },
+      }),
+      db.visitorApprovalRequest.findMany({
+        where: {
+          company_id: companyId,
+          status: "PENDING",
+        },
+        select: {
+          requested_at: true,
+          watchlist_match: true,
+          random_check_triggered: true,
+        },
+      }),
+      db.visitorApprovalRequest.count({
+        where: {
+          company_id: companyId,
+          status: "DENIED",
+          reviewed_at: { gte: sevenDaysAgoUtc },
+        },
+      }),
+      db.permitRequest.findMany({
+        where: {
+          company_id: companyId,
+          status: {
+            in: ["REQUESTED", "APPROVED", "ACTIVE", "SUSPENDED"],
+          },
+        },
+        select: {
+          status: true,
+          validity_end: true,
         },
       }),
       db.inductionQuizAttempt.count({
@@ -364,6 +410,48 @@ export async function getDashboardMetrics(
       drillsLast30Days,
       overdueDrills,
       dueIn7Days: dueDrillsIn7Days,
+    };
+    const approvalSummary = {
+      pending: pendingApprovalRequests.length,
+      deniedLast7Days: deniedApprovalRequestsLast7Days,
+      watchlistPending: pendingApprovalRequests.filter(
+        (request) => request.watchlist_match,
+      ).length,
+      randomCheckPending: pendingApprovalRequests.filter(
+        (request) => request.random_check_triggered,
+      ).length,
+      averagePendingMinutes:
+        pendingApprovalRequests.length > 0
+          ? Math.round(
+              pendingApprovalRequests.reduce((acc, request) => {
+                return (
+                  acc +
+                  Math.max(
+                    0,
+                    Math.floor(
+                      (now.getTime() - request.requested_at.getTime()) / 60000,
+                    ),
+                  )
+                );
+              }, 0) / pendingApprovalRequests.length,
+            )
+          : 0,
+    };
+    const permitSummary = {
+      requested: permitRequestsInFlight.filter(
+        (request) => request.status === "REQUESTED",
+      ).length,
+      active: permitRequestsInFlight.filter((request) =>
+        request.status === "APPROVED" || request.status === "ACTIVE",
+      ).length,
+      suspended: permitRequestsInFlight.filter(
+        (request) => request.status === "SUSPENDED",
+      ).length,
+      overdue: permitRequestsInFlight.filter(
+        (request) =>
+          request.validity_end !== null &&
+          request.validity_end.getTime() < now.getTime(),
+      ).length,
     };
     const quizScoredResponses30Days = quizSignInAuditLogs.reduce(
       (acc: number, row: { details: unknown }) => {
@@ -540,6 +628,8 @@ export async function getDashboardMetrics(
       locationAuditSummary,
       rollCallSummary,
       drillSummary,
+      approvalSummary,
+      permitSummary,
       quizSummary,
       hostArrivalNotifications,
       recentSignIns,

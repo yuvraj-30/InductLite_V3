@@ -193,6 +193,15 @@ async function HistoryContent({
       );
     }
   }
+  const onSiteCount = historyResult.items.filter((record) => !record.sign_out_ts).length;
+  const signedOutCount = historyResult.items.filter((record) => Boolean(record.sign_out_ts)).length;
+  const locationCapturedCount = historyResult.items.filter(
+    (record) => record.location_captured_at !== null,
+  ).length;
+  const locationCoveragePercent =
+    historyResult.items.length > 0
+      ? Math.round((locationCapturedCount / historyResult.items.length) * 100)
+      : 0;
 
   return (
     <div className="space-y-6 p-3 sm:p-4">
@@ -212,6 +221,56 @@ async function HistoryContent({
           {"<-"} Live Register
         </Link>
       </div>
+
+      <section className="bento-grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+        <div className="bento-card border-indigo-300/35 bg-indigo-500/10">
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+            Filtered records
+          </p>
+          <p className="mt-2 text-3xl font-black text-indigo-950 dark:text-indigo-100">
+            {historyResult.total}
+          </p>
+          <p className="mt-1 text-xs text-secondary">
+            Current result set after site, date, and search filters.
+          </p>
+        </div>
+        <div className="bento-card border-emerald-400/35 bg-emerald-500/10">
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+            On site
+          </p>
+          <p className="mt-2 text-3xl font-black text-emerald-900 dark:text-emerald-100">
+            {onSiteCount}
+          </p>
+          <p className="mt-1 text-xs text-secondary">
+            People still active inside the filtered window.
+          </p>
+        </div>
+        <div className="bento-card border-cyan-400/35 bg-cyan-500/10">
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+            Location proof
+          </p>
+          <p className="mt-2 text-3xl font-black text-cyan-950 dark:text-cyan-100">
+            {locationCoveragePercent}%
+          </p>
+          <p className="mt-1 text-xs text-secondary">
+            {locationCapturedCount} of {historyResult.items.length} visible records include captured location.
+          </p>
+        </div>
+        <Link
+          href="/admin/exports"
+          className="kinetic-hover bento-card border-amber-400/35 bg-amber-500/10"
+        >
+          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+            Audit proof
+          </p>
+          <p className="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100">
+            {signedOutCount}
+          </p>
+          <p className="mt-1 text-xs text-secondary">
+            Signed-out visits in view. Use exports to package evidence for downstream audit requests.
+          </p>
+        </Link>
+      </section>
 
       {/* Filters */}
       <HistoryFiltersForm

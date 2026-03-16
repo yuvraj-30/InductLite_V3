@@ -98,6 +98,19 @@ export default async function AdminDashboardPage({
       overdueDrills: 0,
       dueIn7Days: 0,
     },
+    approvalSummary: {
+      pending: 0,
+      deniedLast7Days: 0,
+      watchlistPending: 0,
+      randomCheckPending: 0,
+      averagePendingMinutes: 0,
+    },
+    permitSummary: {
+      requested: 0,
+      active: 0,
+      suspended: 0,
+      overdue: 0,
+    },
     quizSummary: {
       scoredResponses30Days: 0,
       passedResponses30Days: 0,
@@ -154,6 +167,8 @@ export default async function AdminDashboardPage({
     locationAuditSummary,
     rollCallSummary,
     drillSummary,
+    approvalSummary,
+    permitSummary,
     quizSummary,
     hostArrivalNotifications,
     recentSignIns,
@@ -173,17 +188,127 @@ export default async function AdminDashboardPage({
             100,
         )
       : 0;
+  const controlRoomActions = [
+    {
+      href: "/admin/approvals",
+      label: "Visitor approvals",
+      value: approvalSummary.pending,
+      detail:
+        approvalSummary.pending > 0
+          ? `${approvalSummary.watchlistPending} watchlist and ${approvalSummary.randomCheckPending} random checks waiting`
+          : "No visitors are waiting for manual clearance.",
+      tone:
+        approvalSummary.pending > 0
+          ? "text-amber-900 dark:text-amber-100"
+          : "text-emerald-900 dark:text-emerald-100",
+    },
+    {
+      href: "/admin/permits",
+      label: "Permit action queue",
+      value: permitSummary.requested + permitSummary.overdue + permitSummary.suspended,
+      detail:
+        permitSummary.requested + permitSummary.overdue + permitSummary.suspended > 0
+          ? `${permitSummary.requested} requested, ${permitSummary.overdue} overdue, ${permitSummary.suspended} suspended`
+          : "No permit bottlenecks need attention right now.",
+      tone:
+        permitSummary.overdue > 0 || permitSummary.suspended > 0
+          ? "text-red-950 dark:text-red-100"
+          : "text-secondary",
+    },
+    {
+      href: "/admin/history",
+      label: "People on site",
+      value: currentlyOnSiteCount,
+      detail:
+        currentlyOnSiteCount > 0
+          ? `${liveOccupancyPercent}% of the last 7-day volume is currently active on site`
+          : "No active workers are currently signed in.",
+      tone:
+        currentlyOnSiteCount > 0
+          ? "text-[color:var(--accent-success)]"
+          : "text-secondary",
+    },
+  ];
 
   return (
     <div className="space-y-6 p-2 sm:p-3">
       <section className="surface-panel-strong overflow-hidden p-5 sm:p-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-          Overview
-        </p>
-        <h1 className="mt-1 text-3xl font-bold sm:text-4xl">Dashboard</h1>
-        <p className="mt-2 max-w-3xl text-sm text-secondary sm:text-base">
-          Live overview of sites, on-site workforce, and compliance risk.
-        </p>
+        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_320px]">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+              Live site control room
+            </p>
+            <h1 className="mt-1 text-3xl font-bold sm:text-4xl">Dashboard</h1>
+            <p className="mt-2 max-w-3xl text-sm text-secondary sm:text-base">
+              Run the site from one screen: see who is active, what is blocked, and what
+              needs approval next.
+            </p>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-emerald-400/35 bg-emerald-500/12 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-emerald-950 dark:text-emerald-100">
+                  On site now
+                </p>
+                <p className="mt-2 text-3xl font-black text-[color:var(--accent-success)]">
+                  {currentlyOnSiteCount}
+                </p>
+                <p className="mt-1 text-xs text-secondary">
+                  Active people visible to site management right now.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-amber-400/35 bg-amber-500/12 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-amber-900 dark:text-amber-100">
+                  Waiting for review
+                </p>
+                <p className="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100">
+                  {approvalSummary.pending + permitSummary.requested}
+                </p>
+                <p className="mt-1 text-xs text-secondary">
+                  {approvalSummary.averagePendingMinutes > 0
+                    ? `Average visitor approval wait is ${approvalSummary.averagePendingMinutes} minutes.`
+                    : "No current queue pressure detected."}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-red-400/35 bg-red-500/12 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-red-950 dark:text-red-100">
+                  Risk now
+                </p>
+                <p className="mt-2 text-3xl font-black text-red-950 dark:text-red-100">
+                  {documentsExpiringSoon + permitSummary.overdue + rollCallSummary.missingPeople}
+                </p>
+                <p className="mt-1 text-xs text-secondary">
+                  Expiring documents, overdue permits, and missing roll-call workers.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[1.25rem] border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+              Respond now
+            </p>
+            <ul className="mt-3 space-y-3">
+              {controlRoomActions.map((action) => (
+                <li key={action.href}>
+                  <Link
+                    href={action.href}
+                    className="block rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] px-3 py-3 hover:bg-[color:var(--bg-surface)]"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-semibold text-[color:var(--text-primary)]">
+                        {action.label}
+                      </p>
+                      <span className={`text-lg font-black ${action.tone}`}>{action.value}</span>
+                    </div>
+                    <p className="mt-1 text-xs text-secondary">{action.detail}</p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </section>
 
       {metricsLoadFailed && (

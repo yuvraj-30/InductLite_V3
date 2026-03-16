@@ -18,7 +18,10 @@ export default async function KioskPage({ params }: Props) {
   const { site, template } = result.data;
 
   return (
-    <PublicShell brand="InductLite" subtitle={`${site.name} - Kiosk Mode`}>
+    <PublicShell
+      brand="InductLite"
+      subtitle={`${site.name} | Shared-device sign-in kiosk`}
+    >
       <div className="mb-6 text-center">
         <span className="inline-flex items-center rounded-full border border-cyan-400/35 bg-cyan-500/15 px-3 py-1 text-sm font-medium text-cyan-950 dark:text-cyan-100">
           Kiosk Mode Active

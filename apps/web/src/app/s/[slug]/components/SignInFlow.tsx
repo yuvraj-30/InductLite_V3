@@ -77,6 +77,52 @@ interface SignInFlowProps {
 
 type Step = "details" | "induction" | "signature" | "success";
 
+const SIGN_IN_STEPS: Exclude<Step, "success">[] = [
+  "details",
+  "induction",
+  "signature",
+];
+
+const STEP_META: Record<
+  Exclude<Step, "success">,
+  {
+    index: number;
+    label: string;
+    shortLabel: string;
+    title: string;
+    description: string;
+    eta: string;
+  }
+> = {
+  details: {
+    index: 1,
+    label: "Your Details",
+    shortLabel: "Identify",
+    title: "Confirm who is checking in",
+    description:
+      "Start with the essentials so we can move you into site clearance quickly.",
+    eta: "About 30 seconds",
+  },
+  induction: {
+    index: 2,
+    label: "Induction",
+    shortLabel: "Review",
+    title: "Review site rules and answer required checks",
+    description:
+      "Work through the induction content, emergency instructions, and any mandatory questions.",
+    eta: "About 1 to 2 minutes",
+  },
+  signature: {
+    index: 3,
+    label: "Sign Off",
+    shortLabel: "Clear",
+    title: "Complete the final clearance check",
+    description:
+      "Sign once to confirm your induction is complete and activate your site access record.",
+    eta: "About 15 seconds",
+  },
+};
+
 interface VisitorDetails {
   visitorName: string;
   visitorPhone: string;
@@ -125,6 +171,11 @@ interface DraftState {
 interface LastVisitSnapshot {
   details: Omit<VisitorDetails, "hasAcceptedTerms" | "employerName">;
   signatureData?: string;
+  templateId?: string;
+  templateVersion?: number;
+  termsVersion?: number;
+  privacyVersion?: number;
+  languageCode?: string;
   savedAt: string;
 }
 
@@ -411,6 +462,18 @@ export function SignInFlow({
   const legalConsentStatement =
     site.legal?.consentStatement ??
     "I acknowledge the site safety terms and privacy notice.";
+  const lastVisitMatchesCurrentInduction = useMemo(() => {
+    if (!lastVisitSnapshot || !site.legal) {
+      return false;
+    }
+
+    return (
+      lastVisitSnapshot.templateId === template.id &&
+      lastVisitSnapshot.templateVersion === template.version &&
+      lastVisitSnapshot.termsVersion === site.legal.termsVersion &&
+      lastVisitSnapshot.privacyVersion === site.legal.privacyVersion
+    );
+  }, [lastVisitSnapshot, site.legal, template.id, template.version]);
   const locationDistanceMeters = useMemo(() => {
     if (!capturedLocation || !siteHasLocationTarget) {
       return null;
@@ -680,6 +743,11 @@ export function SignInFlow({
         hostRecipientId: payload.hostRecipientId ?? "",
       },
       signatureData,
+      templateId: template.id,
+      templateVersion: template.version,
+      termsVersion: site.legal?.termsVersion,
+      privacyVersion: site.legal?.privacyVersion,
+      languageCode: payload.languageCode,
       savedAt: new Date().toISOString(),
     };
 
@@ -803,7 +871,12 @@ export function SignInFlow({
     }
 
     setDetails({ ...details, visitorPhone: formatted });
-    setStep("induction");
+    const canFastPassDirectToSignature =
+      lastVisitMatchesCurrentInduction &&
+      expressMode &&
+      !mediaConfig.enabled &&
+      visibleQuestions.length === 0;
+    setStep(canFastPassDirectToSignature ? "signature" : "induction");
   };
 
   const captureLocation = () => {
@@ -1043,9 +1116,23 @@ export function SignInFlow({
   if (step === "success" && signInResult) {
     return <SuccessScreen slug={slug} result={signInResult} />;
   }
-  const currentStepNumber = step === "details" ? 1 : step === "induction" ? 2 : 3;
-  const currentStepLabel =
-    step === "details" ? "Your Details" : step === "induction" ? "Induction" : "Sign Off";
+  const currentStep = step === "success" ? "signature" : step;
+  const currentStepMeta = STEP_META[currentStep];
+  const currentStepNumber = currentStepMeta.index;
+  const currentStepLabel = currentStepMeta.label;
+  const currentStepIndex = SIGN_IN_STEPS.indexOf(currentStep);
+  const statusPills = [
+    prefillInvite ? "Invite loaded" : null,
+    lastVisitSnapshot ? "Fast pass available" : null,
+    lastVisitSnapshot && lastVisitMatchesCurrentInduction
+      ? "Induction unchanged"
+      : null,
+    lastVisitSnapshot && !lastVisitMatchesCurrentInduction
+      ? "Review updates required"
+      : null,
+    locationAuditEnabled ? "Location audit active" : null,
+    !isOnline ? "Offline queue ready" : null,
+  ].filter((value): value is string => Boolean(value));
 
   return (
     <div
@@ -1075,64 +1162,90 @@ export function SignInFlow({
           </div>
         )}
 
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
-          Step {currentStepNumber} of 3 · {currentStepLabel}
-        </p>
-
-        <div className="flex items-center">
-          <div
-            className={`flex h-10 w-10 items-center justify-center rounded-full text-base font-semibold ${
-              step === "details"
-                ? "bg-gradient-to-br from-indigo-600 to-cyan-500 text-white"
-                : "bg-emerald-500 text-white"
-            }`}
-          >
-            {step === "details" ? "1" : "Done"}
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+              Site clearance | Step {currentStepNumber} of 3 | {currentStepLabel}
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <h2 className="text-2xl font-black text-[color:var(--text-primary)]">
+                {currentStepMeta.title}
+              </h2>
+              <span className="rounded-full border border-indigo-400/30 bg-indigo-500/12 px-3 py-1 text-xs font-semibold text-indigo-950 dark:text-indigo-100">
+                {currentStepMeta.eta}
+              </span>
+            </div>
+            <p className="mt-2 max-w-2xl text-sm text-secondary">
+              {currentStepMeta.description}
+            </p>
+            {statusPills.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {statusPills.map((pill) => (
+                  <span
+                    key={pill}
+                    className="rounded-full border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] px-3 py-1 text-xs font-semibold text-secondary"
+                  >
+                    {pill}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="mx-2 h-1 flex-1 rounded-full bg-surface-strong">
-            <div
-              className={`h-full rounded-full bg-gradient-to-r from-indigo-600 to-cyan-500 transition-all ${
-                step === "induction" || step === "signature" ? "w-full" : "w-0"
-              }`}
-            />
-          </div>
+          <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+              Clearance path
+            </p>
+            <ul className="mt-3 space-y-2">
+              {SIGN_IN_STEPS.map((stepName, index) => {
+                const status =
+                  index < currentStepIndex
+                    ? "complete"
+                    : index === currentStepIndex
+                      ? "active"
+                      : "upcoming";
 
-          <div
-            className={`flex h-10 w-10 items-center justify-center rounded-full text-base font-semibold ${
-              step === "induction"
-                ? "bg-gradient-to-br from-indigo-600 to-cyan-500 text-white"
-                : step === "signature"
-                  ? "bg-emerald-500 text-white"
-                  : "bg-surface-strong text-secondary"
-            }`}
-          >
-            {step === "signature" ? "Done" : "2"}
-          </div>
-
-          <div className="mx-2 h-1 flex-1 rounded-full bg-surface-strong">
-            <div
-              className={`h-full rounded-full bg-gradient-to-r from-indigo-600 to-cyan-500 transition-all ${
-                step === "signature" ? "w-full" : "w-0"
-              }`}
-            />
-          </div>
-
-          <div
-            className={`flex h-10 w-10 items-center justify-center rounded-full text-base font-semibold ${
-              step === "signature"
-                ? "bg-gradient-to-br from-indigo-600 to-cyan-500 text-white"
-                : "bg-surface-strong text-secondary"
-            }`}
-          >
-            3
+                return (
+                  <li key={stepName} className="flex items-start gap-3">
+                    <span
+                      className={`mt-0.5 inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
+                        status === "complete"
+                          ? "bg-emerald-500 text-white"
+                          : status === "active"
+                            ? "bg-gradient-to-br from-indigo-600 to-cyan-500 text-white"
+                            : "bg-surface-soft text-secondary"
+                      }`}
+                    >
+                      {status === "complete" ? "OK" : index + 1}
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold text-[color:var(--text-primary)]">
+                        {STEP_META[stepName].shortLabel}
+                      </p>
+                      <p className="text-xs text-secondary">{STEP_META[stepName].label}</p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         </div>
 
-        <div className="mt-2 flex justify-between text-sm font-medium text-secondary">
-          <span>Your Details</span>
-          <span className="ml-2">Induction</span>
-          <span>Sign Off</span>
+        <div className="mt-4 flex items-center gap-2">
+          {SIGN_IN_STEPS.map((stepName, index) => (
+            <div key={stepName} className="flex flex-1 items-center gap-2">
+              <div
+                className={`h-2 flex-1 rounded-full transition-all ${
+                  index <= currentStepIndex
+                    ? "bg-gradient-to-r from-indigo-600 to-cyan-500"
+                    : "bg-surface-strong"
+                }`}
+              />
+              {index < SIGN_IN_STEPS.length - 1 && (
+                <div className="h-2 w-4 rounded-full bg-transparent" aria-hidden="true" />
+              )}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -1149,16 +1262,81 @@ export function SignInFlow({
             {site.address && <p className="text-sm text-secondary">{site.address}</p>}
           </div>
 
-          {prefillInvite && (
-            <div className="rounded-xl border border-emerald-400/35 bg-emerald-500/12 p-3">
-              <p className="text-sm font-semibold text-emerald-950 dark:text-emerald-100">
-                Pre-registration loaded
+          <section className="grid gap-3 md:grid-cols-[minmax(0,1fr)_280px]">
+            <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                Fastest path to site access
               </p>
-              <p className="mt-1 text-xs text-emerald-800 dark:text-emerald-200">
-                We pre-filled your details from an invite. Review and continue.
-              </p>
+              <ul className="mt-3 space-y-2 text-sm text-secondary">
+                <li className="flex items-start gap-2">
+                  <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500/15 text-[11px] font-bold text-indigo-900 dark:text-indigo-100">
+                    1
+                  </span>
+                  <span>Confirm your identity and contact details.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500/15 text-[11px] font-bold text-indigo-900 dark:text-indigo-100">
+                    2
+                  </span>
+                  <span>Review induction content and answer any required questions.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-0.5 inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500/15 text-[11px] font-bold text-indigo-900 dark:text-indigo-100">
+                    3
+                  </span>
+                  <span>Sign once to become active on site.</span>
+                </li>
+              </ul>
+              {prefillInvite && (
+                <div className="mt-3 rounded-lg border border-emerald-400/35 bg-emerald-500/12 px-3 py-2">
+                  <p className="text-sm font-semibold text-emerald-950 dark:text-emerald-100">
+                    Pre-registration loaded
+                  </p>
+                  <p className="mt-1 text-xs text-emerald-800 dark:text-emerald-200">
+                    We already loaded invite details for this visit. Review and continue.
+                  </p>
+                </div>
+              )}
             </div>
-          )}
+
+            <div className="rounded-xl border border-emerald-400/35 bg-emerald-500/12 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-emerald-950 dark:text-emerald-100">
+                Repeat visitor
+              </p>
+              {lastVisitSnapshot ? (
+                <>
+                  <p className="mt-2 text-sm font-semibold text-emerald-950 dark:text-emerald-100">
+                    Fast pass available on this device
+                  </p>
+                  <p className="mt-1 text-xs text-emerald-800 dark:text-emerald-200">
+                    Last used {new Date(lastVisitSnapshot.savedAt).toLocaleString("en-NZ")}.
+                    Reuse your saved details now, then move into the shortest valid clearance path.
+                  </p>
+                  <p className="mt-2 text-xs text-emerald-900 dark:text-emerald-100">
+                    {lastVisitMatchesCurrentInduction
+                      ? "The induction and legal versions match your last saved visit."
+                      : "This site or induction changed since your last visit, so a fresh review is required."}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={applyLastVisitDetails}
+                    className="btn-secondary mt-3 min-h-[44px] w-full border-emerald-400/35 bg-surface-strong px-3 py-2 text-sm text-emerald-900 hover:bg-emerald-100 dark:text-emerald-100"
+                  >
+                    Use Last Visit Details
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p className="mt-2 text-sm font-semibold text-emerald-950 dark:text-emerald-100">
+                    Speed up your next visit
+                  </p>
+                  <p className="mt-1 text-xs text-emerald-800 dark:text-emerald-200">
+                    We can remember your non-sensitive details on this device so repeat sign-ins take less time.
+                  </p>
+                </>
+              )}
+            </div>
+          </section>
 
           {locationAuditEnabled && (
             <div className="rounded-xl border border-cyan-400/35 bg-cyan-500/12 p-3">
@@ -1193,7 +1371,7 @@ export function SignInFlow({
               )}
               {locationDistanceMeters !== null && (
                 <p className="mt-1 text-xs font-semibold text-cyan-900 dark:text-cyan-100">
-                  {locationWithinRadius ? "Within" : "Outside"} site radius ·{" "}
+                  {locationWithinRadius ? "Within" : "Outside"} site radius |{" "}
                   {Math.round(locationDistanceMeters)}m from target
                 </p>
               )}
@@ -1292,27 +1470,14 @@ export function SignInFlow({
                 onChange={(e) => setExpressMode(e.target.checked)}
                 className="mt-0.5 h-5 w-5 rounded border-indigo-300 text-indigo-600 focus:ring-indigo-500"
               />
-              <span>Express Mode: show only essential fields for faster sign-in.</span>
+              <span>
+                <span className="font-semibold">Express mode</span>
+                <span className="mt-1 block text-xs text-indigo-900/80 dark:text-indigo-200">
+                  Show only the essential fields for the quickest possible sign-in.
+                </span>
+              </span>
             </label>
           </div>
-
-          {lastVisitSnapshot && (
-            <div className="rounded-xl border border-emerald-400/35 bg-emerald-500/12 p-3">
-              <p className="text-sm font-semibold text-emerald-950 dark:text-emerald-100">
-                Last visit found on this device
-              </p>
-              <p className="mt-1 text-xs text-emerald-800 dark:text-emerald-200">
-                Saved {new Date(lastVisitSnapshot.savedAt).toLocaleString("en-NZ")}
-              </p>
-              <button
-                type="button"
-                onClick={applyLastVisitDetails}
-                className="btn-secondary mt-2 min-h-[44px] border-emerald-400/35 bg-surface-strong px-3 py-2 text-sm text-emerald-900 hover:bg-emerald-100 dark:text-emerald-100"
-              >
-                Use Last Visit Details
-              </button>
-            </div>
-          )}
 
           <div className="rounded-xl border border-surface-soft bg-surface-soft p-3">
             <label className="flex items-start gap-3 text-sm text-secondary">
@@ -1424,7 +1589,7 @@ export function SignInFlow({
           )}
 
           <button type="submit" className="btn-primary min-h-[48px] w-full text-base font-semibold">
-            Continue to Induction -&gt;
+            Review Site Induction -&gt;
           </button>
         </form>
       )}
@@ -1440,6 +1605,69 @@ export function SignInFlow({
               Back to details
             </button>
           </div>
+
+          {lastVisitSnapshot && (
+            <section
+              className={`mb-5 rounded-xl border p-4 ${
+                lastVisitMatchesCurrentInduction
+                  ? "border-emerald-400/35 bg-emerald-500/12"
+                  : "border-amber-400/35 bg-amber-500/12"
+              }`}
+            >
+              <p
+                className={`text-xs font-semibold uppercase tracking-[0.1em] ${
+                  lastVisitMatchesCurrentInduction
+                    ? "text-emerald-950 dark:text-emerald-100"
+                    : "text-amber-900 dark:text-amber-100"
+                }`}
+              >
+                Repeat visit review
+              </p>
+              <p className="mt-2 text-sm text-secondary">
+                {lastVisitMatchesCurrentInduction
+                  ? `No induction or legal-version changes were detected since ${new Date(
+                      lastVisitSnapshot.savedAt,
+                    ).toLocaleString("en-NZ")}. Review only current site conditions and continue.`
+                  : "Induction content or legal terms changed since your last saved visit. Review the current material in full before clearance."}
+              </p>
+            </section>
+          )}
+
+          <section className="mb-5 grid gap-3 md:grid-cols-3">
+            <article className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                Review
+              </p>
+              <p className="mt-2 text-sm font-semibold text-[color:var(--text-primary)]">
+                Read the site induction material carefully.
+              </p>
+              <p className="mt-1 text-xs text-secondary">
+                Emergency contacts, procedures, and attached media are all part of clearance.
+              </p>
+            </article>
+            <article className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+                Confirm
+              </p>
+              <p className="mt-2 text-sm font-semibold text-[color:var(--text-primary)]">
+                Complete every required question before continuing.
+              </p>
+              <p className="mt-1 text-xs text-secondary">
+                We only ask for the checks needed to clear this visit.
+              </p>
+            </article>
+            <article className="rounded-xl border border-indigo-400/30 bg-indigo-500/10 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-indigo-950 dark:text-indigo-100">
+                Next
+              </p>
+              <p className="mt-2 text-sm font-semibold text-indigo-950 dark:text-indigo-100">
+                Sign once at the end to activate your site access record.
+              </p>
+              <p className="mt-1 text-xs text-indigo-900 dark:text-indigo-200">
+                This is the last step before you are visible as on site.
+              </p>
+            </article>
+          </section>
 
           {(emergencyContacts.length > 0 || emergencyProcedures.length > 0) && (
             <section className="mb-5 rounded-xl border border-red-400/35 bg-gradient-to-b from-red-500/12 to-transparent p-4">
@@ -1660,7 +1888,7 @@ export function SignInFlow({
             onClick={handleInductionSubmit}
             className="btn-primary mt-6 min-h-[48px] w-full text-base font-semibold"
           >
-            Continue to Sign Off -&gt;
+            Proceed to Final Clearance -&gt;
           </button>
         </div>
       )}
@@ -1670,8 +1898,13 @@ export function SignInFlow({
           <div className="kinetic-hover">
             <h2 className="kinetic-title text-xl font-black">Sign Off</h2>
             <p className="text-sm text-secondary">
-              Please sign below to confirm your induction completion.
+              You are one signature away from being cleared and visible on site.
             </p>
+            {lastVisitSnapshot && lastVisitMatchesCurrentInduction && (
+              <p className="mt-1 text-xs text-emerald-800 dark:text-emerald-200">
+                Repeat visit fast pass: your last accepted induction still matches the current site version.
+              </p>
+            )}
             {site.legal && (
               <p className="mt-1 text-xs text-muted">
                 Consent record: Terms v{site.legal.termsVersion}, Privacy v
@@ -1679,6 +1912,38 @@ export function SignInFlow({
               </p>
             )}
           </div>
+
+          <section className="rounded-xl border border-emerald-400/35 bg-emerald-500/12 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-emerald-950 dark:text-emerald-100">
+              Final clearance check
+            </p>
+            <div className="mt-3 grid gap-3 md:grid-cols-3">
+              <div className="rounded-lg border border-emerald-400/25 bg-[color:var(--bg-surface)] px-3 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+                  Identity
+                </p>
+                <p className="mt-1 text-sm font-semibold text-[color:var(--text-primary)]">
+                  Details confirmed
+                </p>
+              </div>
+              <div className="rounded-lg border border-emerald-400/25 bg-[color:var(--bg-surface)] px-3 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+                  Induction
+                </p>
+                <p className="mt-1 text-sm font-semibold text-[color:var(--text-primary)]">
+                  Review complete
+                </p>
+              </div>
+              <div className="rounded-lg border border-indigo-400/25 bg-[color:var(--bg-surface)] px-3 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+                  Remaining action
+                </p>
+                <p className="mt-1 text-sm font-semibold text-[color:var(--text-primary)]">
+                  Capture your signature
+                </p>
+              </div>
+            </div>
+          </section>
 
           {lastVisitSnapshot?.signatureData && (
             <label className="flex min-h-[48px] items-start gap-2 rounded-lg border border-indigo-400/30 bg-indigo-500/12 p-3 text-sm text-indigo-950 dark:text-indigo-100">

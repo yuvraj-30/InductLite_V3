@@ -2,6 +2,11 @@ import { type APIRequestContext, type Page } from "@playwright/test";
 import { test, expect } from "./test-fixtures";
 import { getTestRouteHeaders } from "./utils/test-route-auth";
 
+const DETAILS_TO_INDUCTION_CTA = /continue to induction|review site induction/i;
+const INDUCTION_TO_SIGN_OFF_CTA =
+  /continue to sign off|proceed to final clearance|complete sign-in|complete sign in|finish|sign off/i;
+const SUCCESS_HEADING_TEXT = /signed in successfully|cleared for site/i;
+
 function uniqueNzPhone(): string {
   const suffix = Math.floor(100000 + Math.random() * 900000);
   return `+6421${suffix}`;
@@ -198,9 +203,7 @@ async function submitEscalatedSignInAndExpectBlocked(input: {
   const visitorPhone = uniqueNzPhone();
   const nameField = page.getByLabel(/full name/i);
   const phoneField = page.getByLabel(/phone number/i);
-  const continueButton = page.getByRole("button", {
-    name: /continue to induction/i,
-  });
+  const continueButton = page.getByRole("button", { name: DETAILS_TO_INDUCTION_CTA });
   const inductionHeading = page.getByRole("heading", {
     level: 2,
     name: /site induction/i,
@@ -265,7 +268,7 @@ async function submitEscalatedSignInAndExpectBlocked(input: {
     .locator(`input[type="radio"][name="${redFlagQuestionId}"][value="yes"]`)
     .check();
   await page
-    .getByRole("button", { name: /continue to sign off/i })
+    .getByRole("button", { name: INDUCTION_TO_SIGN_OFF_CTA })
     .click();
 
   await expect(
@@ -385,7 +388,7 @@ test.describe.serial("Escalation approval flow", () => {
     const signOutAnchor = page.locator('a[href*="/sign-out"]');
     const successHeading = page.getByRole("heading", {
       level: 2,
-      name: /signed in successfully/i,
+      name: SUCCESS_HEADING_TEXT,
     });
     const blockedAlert = signInAlert(page);
 
@@ -506,7 +509,7 @@ test.describe.serial("Escalation approval flow", () => {
     const alert = signInAlert(page);
     const successHeading = page.getByRole("heading", {
       level: 2,
-      name: /signed in successfully/i,
+      name: SUCCESS_HEADING_TEXT,
     });
     const signOutAnchor = page.locator('a[href*="/sign-out"]');
 

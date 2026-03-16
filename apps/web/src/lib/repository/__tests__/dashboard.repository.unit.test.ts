@@ -27,6 +27,13 @@ function createBaseMockDb() {
     emergencyDrill: {
       count: vi.fn().mockResolvedValue(0),
     },
+    visitorApprovalRequest: {
+      findMany: vi.fn().mockResolvedValue([]),
+      count: vi.fn().mockResolvedValue(0),
+    },
+    permitRequest: {
+      findMany: vi.fn().mockResolvedValue([]),
+    },
     inductionQuizAttempt: {
       count: vi.fn().mockResolvedValue(0),
       findMany: vi.fn().mockResolvedValue([]),

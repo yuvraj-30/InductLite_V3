@@ -158,7 +158,10 @@ export default async function PublicSignInPage({
   }
 
   return (
-    <PublicShell brand={site.companyName} subtitle={site.name}>
+    <PublicShell
+      brand={site.companyName}
+      subtitle={`${site.name} | QR sign-in, induction, and site clearance`}
+    >
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:rounded-md focus:bg-[color:var(--bg-surface)] focus:p-4 focus:text-accent"

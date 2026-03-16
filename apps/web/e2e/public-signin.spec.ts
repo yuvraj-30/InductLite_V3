@@ -17,6 +17,11 @@ const E2E_QUIET = (() => {
   return v === "1" || v?.toLowerCase() === "true";
 })();
 
+const DETAILS_TO_INDUCTION_CTA = /continue to induction|review site induction/i;
+const INDUCTION_TO_SIGN_OFF_CTA =
+  /continue to sign off|proceed to final clearance|complete sign-in|complete sign in|finish|sign off/i;
+const SUCCESS_HEADING_TEXT = /signed in successfully|cleared for site/i;
+
 function uniqueNzPhone(): string {
   const suffix = Math.floor(100000 + Math.random() * 900000);
   return `+6421${suffix}`;
@@ -294,11 +299,11 @@ async function continueToInductionWithRetry(
   },
 ): Promise<boolean> {
   const inductionStepCta = page
-    .getByRole("button", { name: /continue to sign off/i })
+    .getByRole("button", { name: INDUCTION_TO_SIGN_OFF_CTA })
     .first();
   const detailsForm = page.locator("form").first();
   const continueButton = page
-    .getByRole("button", { name: /continue to induction/i })
+    .getByRole("button", { name: DETAILS_TO_INDUCTION_CTA })
     .first();
 
   for (let attempt = 1; attempt <= 6; attempt++) {
@@ -355,11 +360,11 @@ async function continueToSignOffWithRetry(page: Page): Promise<boolean> {
     .getByRole("button", { name: /confirm\s+(?:and|&)\s+sign in/i })
     .first();
   const successHeading = page
-    .getByRole("heading", { level: 2, name: /signed in successfully/i })
+    .getByRole("heading", { level: 2, name: SUCCESS_HEADING_TEXT })
     .first();
   const signOutLink = page.locator('a[href*="/sign-out"]').first();
   const continueToSignOffButton = page
-    .getByRole("button", { name: /continue to sign off|continue/i })
+    .getByRole("button", { name: INDUCTION_TO_SIGN_OFF_CTA })
     .first();
   const inductionAckCheckbox = page
     .getByLabel(/i acknowledge and agree to the above/i)
@@ -476,7 +481,7 @@ async function checkSignOffTermsIfPresent(page: Page): Promise<void> {
 async function submitSignOffWithSignatureRetry(page: Page): Promise<void> {
   const successHeading = page.getByRole("heading", {
     level: 2,
-    name: /signed in successfully/i,
+    name: SUCCESS_HEADING_TEXT,
   });
   const signOutLink = page.locator('a[href*="/sign-out"]').first();
   if (
@@ -770,7 +775,7 @@ test.describe.serial("Public Sign-In Flow", () => {
       ).toBeVisible();
 
       await page
-        .getByRole("button", { name: /continue to sign off/i })
+        .getByRole("button", { name: INDUCTION_TO_SIGN_OFF_CTA })
         .click();
 
       await expect(
@@ -789,7 +794,7 @@ test.describe.serial("Public Sign-In Flow", () => {
       await failedQuizOption.scrollIntoViewIfNeeded().catch(() => null);
       await failedQuizOption.check({ force: true });
       await page
-        .getByRole("button", { name: /continue to sign off/i })
+        .getByRole("button", { name: INDUCTION_TO_SIGN_OFF_CTA })
         .click();
 
       await expect(
@@ -860,7 +865,7 @@ test.describe.serial("Public Sign-In Flow", () => {
       await passingQuizOption.scrollIntoViewIfNeeded().catch(() => null);
       await passingQuizOption.check({ force: true });
       await page
-        .getByRole("button", { name: /continue to sign off/i })
+        .getByRole("button", { name: INDUCTION_TO_SIGN_OFF_CTA })
         .click();
 
       await expect(
@@ -875,7 +880,7 @@ test.describe.serial("Public Sign-In Flow", () => {
       const signOutLink = page.locator('a[href*="/sign-out"]');
       const successHeading = page.getByRole("heading", {
         level: 2,
-        name: /signed in successfully/i,
+        name: SUCCESS_HEADING_TEXT,
       });
 
       await expect
@@ -939,7 +944,7 @@ test.describe.serial("Public Sign-In Flow", () => {
         .first()
         .check();
       await page
-        .getByRole("button", { name: /continue to sign off/i })
+        .getByRole("button", { name: INDUCTION_TO_SIGN_OFF_CTA })
         .click();
       await submitSignOffWithSignatureRetry(page);
 
@@ -1000,14 +1005,14 @@ test.describe.serial("Public Sign-In Flow", () => {
         .first()
         .check();
       await page
-        .getByRole("button", { name: /continue to sign off/i })
+        .getByRole("button", { name: INDUCTION_TO_SIGN_OFF_CTA })
         .click();
       await submitSignOffWithSignatureRetry(page);
 
       await expect(
         page.getByRole("heading", {
           level: 2,
-          name: /signed in successfully/i,
+          name: SUCCESS_HEADING_TEXT,
         }),
       ).toBeVisible();
     } finally {
@@ -1043,7 +1048,7 @@ test.describe.serial("Public Sign-In Flow", () => {
 
     // Try to submit without filling required fields
     const submitButton = page.getByRole("button", {
-      name: /sign in|continue|submit/i,
+      name: DETAILS_TO_INDUCTION_CTA,
     });
     await submitButton.click();
 
@@ -1055,7 +1060,7 @@ test.describe.serial("Public Sign-In Flow", () => {
     await expect(page.locator("#visitorName")).toHaveValue("");
     await expect(page.locator("#visitorPhone")).toHaveValue("");
     await expect(
-      page.getByRole("button", { name: /continue to induction/i }),
+      page.getByRole("button", { name: DETAILS_TO_INDUCTION_CTA }),
     ).toBeVisible();
   });
 
@@ -1070,7 +1075,7 @@ test.describe.serial("Public Sign-In Flow", () => {
     });
 
     const submitButton = page.getByRole("button", {
-      name: /sign in|continue|submit/i,
+      name: DETAILS_TO_INDUCTION_CTA,
     });
     await submitButton.click();
 
@@ -1081,7 +1086,7 @@ test.describe.serial("Public Sign-In Flow", () => {
     ).toHaveCount(0);
     await expect(page.getByLabel(/phone number/i)).toBeVisible();
     await expect(
-      page.getByRole("button", { name: /continue to induction/i }),
+      page.getByRole("button", { name: DETAILS_TO_INDUCTION_CTA }),
     ).toBeVisible();
   });
 
@@ -1213,7 +1218,7 @@ test.describe.serial("Public Sign-In Flow", () => {
     });
     const successHeading = page.getByRole("heading", {
       level: 2,
-      name: /signed in successfully/i,
+      name: SUCCESS_HEADING_TEXT,
     }).first();
     const appErrorHeading = page.getByRole("heading", {
       level: 1,
@@ -1273,7 +1278,7 @@ test.describe.serial("Public Sign-In Flow", () => {
 
       const continueToSignOff = page
         .getByRole("button", {
-          name: /continue to sign off|complete sign-in|complete sign in|finish|sign off/i,
+          name: INDUCTION_TO_SIGN_OFF_CTA,
         })
         .first();
       await continueToSignOff.click({ force: true }).catch(() => null);
@@ -1397,7 +1402,7 @@ test.describe.serial("Public Sign-In Flow", () => {
     }
 
     await page
-      .getByRole("button", { name: /continue to induction/i })
+      .getByRole("button", { name: DETAILS_TO_INDUCTION_CTA })
       .click();
 
     await expect(
@@ -1405,7 +1410,7 @@ test.describe.serial("Public Sign-In Flow", () => {
     ).toBeVisible({ timeout: 10000 });
 
     const continueToSignOffButton = page
-      .getByRole("button", { name: /continue to sign off/i })
+      .getByRole("button", { name: INDUCTION_TO_SIGN_OFF_CTA })
       .first();
     const requiredAck = page
       .getByLabel(/i acknowledge and agree to the above/i)
@@ -1471,7 +1476,7 @@ test.describe.serial("Public Sign-In Flow", () => {
     const signOutAnchor = page.locator('a[href*="/sign-out"]');
     const successHeading = page.getByRole("heading", {
       level: 2,
-      name: /signed in successfully/i,
+      name: SUCCESS_HEADING_TEXT,
     }).first();
 
     await expect
