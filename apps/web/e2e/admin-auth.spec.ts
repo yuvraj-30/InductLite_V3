@@ -12,6 +12,14 @@
 import { test, expect } from "./test-fixtures";
 import { getTestRouteHeaders } from "./utils/test-route-auth";
 
+const VERIFIED_ADMIN_ROUTES = [
+  "/admin/integrations/channels",
+  "/admin/integrations/procore",
+  "/admin/mobile/native",
+  "/admin/contractors/new",
+  "/admin/templates/new",
+] as const;
+
 test.describe.serial("Admin Authentication", () => {
   test.describe.configure({ timeout: 90000 });
 
@@ -299,6 +307,45 @@ test.describe.serial("Admin Authentication", () => {
       );
     } catch (err) {
       console.warn("clear-rate-limit failed during cleanup:", String(err));
+    }
+  });
+
+  test("should keep collapsed admin nav sections interactive without crashing", async ({
+    page,
+    loginAs,
+    workerUser,
+  }) => {
+    await loginAs(workerUser.email);
+    await page.goto("/admin/dashboard");
+
+    const safetySummary = page.locator("summary").filter({ hasText: "Safety & Compliance" });
+    await expect(safetySummary).toBeVisible();
+
+    await safetySummary.click();
+    await expect(page.getByText(/application error/i)).toHaveCount(0);
+    await expect(page.getByText(/cannot read properties of null/i)).toHaveCount(0);
+
+    await safetySummary.click();
+    await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
+  });
+
+  test("should load linked admin routes that were previously reported as hard 404s", async ({
+    page,
+    loginAs,
+    workerUser,
+  }) => {
+    await loginAs(workerUser.email);
+
+    for (const path of VERIFIED_ADMIN_ROUTES) {
+      const response = await page.goto(path, { waitUntil: "domcontentloaded" });
+      expect(response, `route did not respond: ${path}`).not.toBeNull();
+      expect(
+        response?.status(),
+        `route returned an error status: ${path} (${response?.status()})`,
+      ).toBeLessThan(400);
+      await expect(page).not.toHaveURL(/\/login(?:\?|$)/);
+      await expect(page.getByText(/page not found/i)).toHaveCount(0);
+      await expect(page.getByText(/404/i)).toHaveCount(0);
     }
   });
 });

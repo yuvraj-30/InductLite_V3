@@ -415,15 +415,15 @@ body {
     align-items: center;
     justify-content: center;
     padding: var(--space-4);
+    background: color-mix(in srgb, var(--bg-base) 52%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 
   .modal-backdrop {
     position: absolute;
     inset: 0;
-    border: 0;
-    background: color-mix(in srgb, var(--bg-base) 52%, transparent);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    pointer-events: none;
   }
 
   .modal-panel {

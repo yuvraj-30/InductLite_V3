@@ -93,7 +93,7 @@ function FormFields() {
   );
 }
 
-export function ChangePasswordForm() {
+export function ChangePasswordForm({ email }: { email: string }) {
   const [state, formAction] = useActionState<ActionResult | null, FormData>(
     changePasswordAction,
     null,
@@ -101,6 +101,8 @@ export function ChangePasswordForm() {
 
   return (
     <form action={formAction} className="space-y-6">
+      <input type="email" name="email" value={email} autoComplete="username" readOnly hidden />
+
       {/* Error message */}
       {state && !state.success && (
         <div

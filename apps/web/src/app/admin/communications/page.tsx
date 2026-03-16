@@ -11,9 +11,7 @@ import {
   listCommunicationEvents,
   listEmergencyBroadcasts,
 } from "@/lib/repository/communication.repository";
-import {
-  createEmergencyBroadcastAction,
-} from "./actions";
+import { EmergencyBroadcastComposer } from "./emergency-broadcast-composer";
 
 export const metadata = {
   title: "Communications | InductLite",
@@ -144,73 +142,13 @@ export default async function CommunicationsPage() {
         <h2 className="text-sm font-semibold uppercase tracking-[0.08em] text-secondary">
           Emergency Broadcast Composer
         </h2>
-        <form
-          action={async (formData) => {
-            "use server";
-            await createEmergencyBroadcastAction(null, formData);
-          }}
-          className="mt-3 grid gap-3 md:grid-cols-3"
-        >
-          <label className="text-sm text-secondary">
-            Site Scope
-            <select name="siteId" className="input mt-1">
-              <option value="">All active attendees</option>
-              {sites.map((site) => (
-                <option key={site.id} value={site.id}>
-                  {site.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="text-sm text-secondary">
-            Severity
-            <select name="severity" className="input mt-1" defaultValue="WARNING">
-              <option value="INFO">INFO</option>
-              <option value="WARNING">WARNING</option>
-              <option value="CRITICAL">CRITICAL</option>
-            </select>
-          </label>
-          <label className="text-sm text-secondary">
-            Expires At (optional)
-            <input name="expiresAt" type="datetime-local" className="input mt-1" />
-          </label>
-          <label className="md:col-span-3 text-sm text-secondary">
-            Message
-            <textarea
-              name="message"
-              rows={3}
-              className="input mt-1"
-              placeholder="Emergency instruction for on-site workforce"
-              required
-            />
-          </label>
-          <label className="md:col-span-3 text-sm text-secondary">
-            Channels (comma-separated)
-            <input
-              name="channels"
-              className="input mt-1"
-              defaultValue="EMAIL,SMS"
-              placeholder="EMAIL,SMS,WEB_PUSH,TEAMS,SLACK"
-            />
-          </label>
-          <label className="flex items-center gap-2 text-sm text-secondary">
-            <input
-              name="requireAck"
-              type="checkbox"
-              defaultChecked
-              className="h-4 w-4 rounded border-[color:var(--border-soft)]"
-            />
-            Require acknowledgement
-          </label>
-          <div className="md:col-span-3">
-            <button
-              type="submit"
-              className="btn-danger"
-            >
-              Send Broadcast
-            </button>
-          </div>
-        </form>
+        <EmergencyBroadcastComposer
+          sites={sites.map((site) => ({ id: site.id, name: site.name }))}
+          defaultSeverity="WARNING"
+          defaultChannels="EMAIL,SMS"
+          includeExpiresAt
+          submitLabel="Send Broadcast"
+        />
       </section>
 
       <section className="surface-panel p-4">

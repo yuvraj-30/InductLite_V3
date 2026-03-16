@@ -120,6 +120,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
             <input
               name="displayName"
               defaultValue={initialConfig.displayName}
+              autoComplete="organization"
               className="input mt-1"
               placeholder="Company SSO"
             />
@@ -130,6 +131,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
             <input
               name="issuerUrl"
               defaultValue={initialConfig.issuerUrl}
+              autoComplete="url"
               className="input mt-1"
               placeholder="https://login.microsoftonline.com/{tenant}/v2.0"
             />
@@ -143,6 +145,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
             <input
               name="clientId"
               defaultValue={initialConfig.clientId}
+              autoComplete="off"
               className="input mt-1"
             />
             {getFieldError("clientId") && (
@@ -171,6 +174,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
               name="scopes"
               rows={2}
               defaultValue={initialConfig.scopes.join(", ")}
+              autoComplete="off"
               className="input mt-1"
               placeholder="openid, profile, email"
             />
@@ -202,6 +206,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
               <input
                 name="roleClaimPath"
                 defaultValue={initialConfig.roleClaimPath}
+                autoComplete="off"
                 className="input mt-1"
                 placeholder="roles"
               />
@@ -213,6 +218,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
                 name="roleMappingAdmin"
                 rows={2}
                 defaultValue={initialConfig.roleMapping.ADMIN.join(", ")}
+                autoComplete="off"
                 className="input mt-1"
               />
             </label>
@@ -223,6 +229,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
                 name="roleMappingSiteManager"
                 rows={2}
                 defaultValue={initialConfig.roleMapping.SITE_MANAGER.join(", ")}
+                autoComplete="off"
                 className="input mt-1"
               />
             </label>
@@ -233,6 +240,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
                 name="roleMappingViewer"
                 rows={2}
                 defaultValue={initialConfig.roleMapping.VIEWER.join(", ")}
+                autoComplete="off"
                 className="input mt-1"
               />
             </label>
@@ -245,6 +253,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
             name="allowedEmailDomains"
             rows={2}
             defaultValue={initialConfig.allowedEmailDomains.join(", ")}
+            autoComplete="off"
             className="input mt-1"
             placeholder="example.com"
           />
@@ -296,6 +305,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
                 name="partnerApiScopes"
                 rows={2}
                 defaultValue={initialConfig.partnerApiScopes.join(", ")}
+                autoComplete="off"
                 className="input mt-1"
                 placeholder="sites.read, signins.read"
               />
@@ -314,6 +324,7 @@ export default function SsoSettingsPanel({ initialConfig }: SsoSettingsPanelProp
                 min={100}
                 max={1_000_000}
                 defaultValue={initialConfig.partnerApiMonthlyQuota}
+                autoComplete="off"
                 className="input mt-1"
               />
               {getFieldError("partnerApiMonthlyQuota") && (

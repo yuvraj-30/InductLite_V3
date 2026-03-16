@@ -6,6 +6,7 @@ import {
   createPreRegistrationInviteAction,
   type PreRegistrationActionResult,
 } from "./actions";
+import { CopyButton } from "@/components/ui/copy-button";
 
 interface CreateInviteFormProps {
   sites: Array<{
@@ -103,13 +104,12 @@ export function CreateInviteForm({ sites, defaultSiteId }: CreateInviteFormProps
               <p className="break-all rounded border border-green-200 bg-[color:var(--bg-surface)] px-2 py-2 text-xs text-green-900">
                 {state.inviteLink}
               </p>
-              <button
-                type="button"
-                onClick={() => navigator.clipboard.writeText(state.inviteLink!)}
+              <CopyButton
+                value={state.inviteLink}
+                label="Copy Invite Link"
+                copiedLabel="Invite Link Copied"
                 className="mt-2 inline-flex min-h-[40px] items-center rounded-md border border-green-300 bg-[color:var(--bg-surface)] px-3 py-2 text-xs font-semibold text-green-800 hover:bg-green-50"
-              >
-                Copy Invite Link
-              </button>
+              />
               <div className="mt-3 inline-flex rounded-md border border-green-200 bg-[color:var(--bg-surface)] p-3">
                 {QRCodeSVGComponent ? (
                   <QRCodeSVGComponent

@@ -7,7 +7,7 @@ import { listPermitRequests } from "@/lib/repository/permit.repository";
 import { findAllSites } from "@/lib/repository/site.repository";
 import { PageWarningState } from "@/components/ui/page-state";
 import { LiveRegisterAutoRefresh } from "../live-register/auto-refresh";
-import { createEmergencyBroadcastAction } from "../communications/actions";
+import { EmergencyBroadcastComposer } from "../communications/emergency-broadcast-composer";
 import { CommandRollCall } from "./roll-call";
 
 export const metadata = {
@@ -195,64 +195,11 @@ export default async function CommandModePage() {
         <p className="mt-1 text-sm text-secondary">
           Send immediate instructions to everyone currently on site from command mode.
         </p>
-        <form
-          action={async (formData) => {
-            "use server";
-            await createEmergencyBroadcastAction(null, formData);
-          }}
-          className="mt-3 grid gap-3 md:grid-cols-3"
-        >
-          <label className="text-sm text-[color:var(--text-primary)]">
-            Site Scope
-            <select name="siteId" className="input mt-1">
-              <option value="">All active attendees</option>
-              {sites.map((site) => (
-                <option key={site.id} value={site.id}>
-                  {site.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="text-sm text-[color:var(--text-primary)]">
-            Severity
-            <select name="severity" className="input mt-1" defaultValue="CRITICAL">
-              <option value="INFO">INFO</option>
-              <option value="WARNING">WARNING</option>
-              <option value="CRITICAL">CRITICAL</option>
-            </select>
-          </label>
-          <label className="text-sm text-[color:var(--text-primary)]">
-            Channels
-            <input
-              name="channels"
-              className="input mt-1"
-              defaultValue="EMAIL,SMS"
-              placeholder="EMAIL,SMS,WEB_PUSH,TEAMS,SLACK"
-            />
-          </label>
-          <label className="md:col-span-3 text-sm text-[color:var(--text-primary)]">
-            Message
-            <textarea
-              name="message"
-              rows={3}
-              className="input mt-1"
-              placeholder="Emergency instruction for all on-site personnel"
-              required
-            />
-          </label>
-          <label className="flex items-center gap-2 text-sm text-[color:var(--text-primary)]">
-            <input name="requireAck" type="checkbox" defaultChecked className="h-4 w-4" />
-            Require acknowledgement
-          </label>
-          <div className="md:col-span-3">
-            <button
-              type="submit"
-              className="min-h-[40px] rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
-            >
-              Send Broadcast
-            </button>
-          </div>
-        </form>
+        <EmergencyBroadcastComposer
+          sites={sites.map((site) => ({ id: site.id, name: site.name }))}
+          defaultSeverity="CRITICAL"
+          submitLabel="Send Broadcast"
+        />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1.1fr,1fr]">

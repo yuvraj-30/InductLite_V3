@@ -199,9 +199,10 @@ export function AdminNav({
                   open={isOpen}
                   onToggle={(event) => {
                     if (normalizedQuery.length > 0 || hasActiveItem) return;
+                    const nextOpen = event.currentTarget.open;
                     setOpenSections((current) => ({
                       ...current,
-                      [section.title]: event.currentTarget.open,
+                      [section.title]: nextOpen,
                     }));
                   }}
                 >

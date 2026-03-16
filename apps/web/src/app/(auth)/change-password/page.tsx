@@ -23,7 +23,7 @@ export default async function ChangePasswordPage() {
 
       <p className="mb-6 text-sm text-secondary">Logged in as {user.email}</p>
 
-      <ChangePasswordForm />
+      <ChangePasswordForm email={user.email} />
 
       <div className="mt-6 text-center">
         <Link

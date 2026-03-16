@@ -80,6 +80,7 @@ export default function ComplianceSettingsForm({
               max={36500}
               required
               defaultValue={initialSettings.retention_days}
+              autoComplete="off"
               className="input mt-1"
             />
             {getFieldError("retentionDays") && (
@@ -98,6 +99,7 @@ export default function ComplianceSettingsForm({
               max={36500}
               required
               defaultValue={initialSettings.induction_retention_days}
+              autoComplete="off"
               className="input mt-1"
             />
             {getFieldError("inductionRetentionDays") && (
@@ -116,6 +118,7 @@ export default function ComplianceSettingsForm({
               max={36500}
               required
               defaultValue={initialSettings.audit_retention_days}
+              autoComplete="off"
               className="input mt-1"
             />
             <p className="mt-1 text-xs text-muted">
@@ -137,6 +140,7 @@ export default function ComplianceSettingsForm({
               max={36500}
               required
               defaultValue={initialSettings.incident_retention_days}
+              autoComplete="off"
               className="input mt-1"
             />
             {getFieldError("incidentRetentionDays") && (
@@ -155,6 +159,7 @@ export default function ComplianceSettingsForm({
               max={36500}
               required
               defaultValue={initialSettings.emergency_drill_retention_days}
+              autoComplete="off"
               className="input mt-1"
             />
             {getFieldError("emergencyDrillRetentionDays") && (
@@ -191,6 +196,7 @@ export default function ComplianceSettingsForm({
               rows={3}
               maxLength={500}
               defaultValue={initialSettings.compliance_legal_hold_reason ?? ""}
+              autoComplete="off"
               className="input mt-1"
               placeholder="Required when legal hold is enabled"
             />
@@ -257,6 +263,7 @@ export default function ComplianceSettingsForm({
             rows={3}
             maxLength={500}
             defaultValue={initialSettings.data_residency_notes ?? ""}
+            autoComplete="off"
             className="input mt-1"
             placeholder="Example: Primary region NZ, backups retained in AU."
           />

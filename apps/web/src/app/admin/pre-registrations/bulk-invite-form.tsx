@@ -6,6 +6,7 @@ import {
   bulkCreatePreRegistrationInvitesAction,
   type BulkPreRegistrationActionResult,
 } from "./actions";
+import { CopyButton } from "@/components/ui/copy-button";
 
 interface BulkInviteFormProps {
   sites: Array<{
@@ -231,13 +232,12 @@ export function BulkInviteForm({ sites, defaultSiteId }: BulkInviteFormProps) {
                       {row.inviteEmailQueued ? "Queued" : "-"}
                     </td>
                     <td className="px-3 py-2 text-xs text-secondary">
-                      <button
-                        type="button"
-                        onClick={() => navigator.clipboard.writeText(row.inviteLink)}
+                      <CopyButton
+                        value={row.inviteLink}
+                        label="Copy Link"
+                        copiedLabel="Copied"
                         className="rounded border border-[color:var(--border-soft)] px-2 py-1 font-semibold hover:bg-[color:var(--bg-surface-strong)]"
-                      >
-                        Copy Link
-                      </button>
+                      />
                     </td>
                   </tr>
                 ))}

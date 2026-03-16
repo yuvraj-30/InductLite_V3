@@ -179,6 +179,12 @@ export function AdminCommandPalette({ commands }: AdminCommandPaletteProps) {
     window.setTimeout(() => inputRef.current?.focus(), 0);
   }, [open]);
 
+  const handleOverlayDismiss = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (event.target === event.currentTarget) {
+      setOpen(false);
+    }
+  };
+
   return (
     <>
       <button
@@ -194,19 +200,18 @@ export function AdminCommandPalette({ commands }: AdminCommandPaletteProps) {
       </button>
 
       {open && (
-        <div className="modal-overlay items-start pt-10">
-          <button
-            type="button"
-            className="modal-backdrop"
-            aria-label="Close command palette"
-            onClick={() => setOpen(false)}
-          />
-
+        <div
+          className="modal-overlay items-start pt-10"
+          onMouseDown={handleOverlayDismiss}
+          onClick={handleOverlayDismiss}
+        >
           <div
             role="dialog"
             aria-modal="true"
             aria-label="Command palette"
             className="modal-panel relative w-[min(92vw,46rem)] max-w-[46rem]"
+            onMouseDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
           >
             <div className="border-b border-surface-soft p-4">
               <label htmlFor="command-search" className="sr-only">

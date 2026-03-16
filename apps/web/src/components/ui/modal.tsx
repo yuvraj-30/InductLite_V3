@@ -58,19 +58,27 @@ export function Modal({
 
   if (!open) return null;
 
+  const handleOverlayDismiss = (
+    event: React.MouseEvent<HTMLDivElement>,
+  ) => {
+    if (event.target === event.currentTarget) {
+      onClose?.();
+    }
+  };
+
   return (
-    <div className={cn("modal-overlay", className)}>
-      <button
-        type="button"
-        className="modal-backdrop"
-        aria-label="Close dialog"
-        onClick={() => onClose?.()}
-      />
+    <div
+      className={cn("modal-overlay", className)}
+      onMouseDown={handleOverlayDismiss}
+      onClick={handleOverlayDismiss}
+    >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         className={cn("modal-panel", widthClassName[width], panelClassName)}
+        onMouseDown={(event) => event.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
       >
         <div className="modal-header">
           <div>
