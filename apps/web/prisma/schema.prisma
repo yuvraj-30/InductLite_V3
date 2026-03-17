@@ -1139,21 +1139,21 @@ model CompetencyRequirement {
 }
 
 model WorkerCertification {
-  id                 String                        @id @default(cuid())
-  company_id         String
-  site_id            String?
-  requirement_id     String?
-  visitor_phone      String
-  visitor_email      String?
-  worker_name        String
-  employer_name      String?
-  status             CompetencyCertificationStatus @default(CURRENT)
-  issued_at          DateTime?
-  expires_at         DateTime?
-  evidence_refs      Json?
+  id                  String                        @id @default(cuid())
+  company_id          String
+  site_id             String?
+  requirement_id      String?
+  visitor_phone       String
+  visitor_email       String?
+  worker_name         String
+  employer_name       String?
+  status              CompetencyCertificationStatus @default(CURRENT)
+  issued_at           DateTime?
+  expires_at          DateTime?
+  evidence_refs       Json?
   verified_by_user_id String?
-  created_at         DateTime                      @default(now())
-  updated_at         DateTime                      @updatedAt
+  created_at          DateTime                      @default(now())
+  updated_at          DateTime                      @updatedAt
 
   @@index([company_id])
   @@index([company_id, site_id, status, expires_at])
@@ -1640,22 +1640,22 @@ enum ResourceBookingStatus {
 }
 
 model BookableResource {
-  id             String       @id @default(cuid())
-  company_id     String
-  site_id        String
-  name           String
-  resource_type  ResourceType @default(OTHER)
-  capacity       Int          @default(1)
-  location_label String?
-  notes          String?
-  readiness_status ResourceReadinessStatus @default(READY)
-  inspection_due_at DateTime?
-  service_due_at  DateTime?
-  blocked_reason  String?
+  id                       String                  @id @default(cuid())
+  company_id               String
+  site_id                  String
+  name                     String
+  resource_type            ResourceType            @default(OTHER)
+  capacity                 Int                     @default(1)
+  location_label           String?
+  notes                    String?
+  readiness_status         ResourceReadinessStatus @default(READY)
+  inspection_due_at        DateTime?
+  service_due_at           DateTime?
+  blocked_reason           String?
   last_compliance_check_at DateTime?
-  is_active      Boolean      @default(true)
-  created_at     DateTime     @default(now())
-  updated_at     DateTime     @updatedAt
+  is_active                Boolean                 @default(true)
+  created_at               DateTime                @default(now())
+  updated_at               DateTime                @updatedAt
 
   @@unique([company_id, site_id, name])
   @@index([company_id])
@@ -1700,16 +1700,16 @@ enum ResourceInspectionStatus {
 }
 
 model ResourceInspectionRecord {
-  id                  String                   @id @default(cuid())
-  company_id          String
-  site_id             String
-  resource_id         String
-  status              ResourceInspectionStatus @default(PASS)
-  inspected_at        DateTime                 @default(now())
+  id                   String                   @id @default(cuid())
+  company_id           String
+  site_id              String
+  resource_id          String
+  status               ResourceInspectionStatus @default(PASS)
+  inspected_at         DateTime                 @default(now())
   inspected_by_user_id String?
-  notes               String?
-  created_at          DateTime                 @default(now())
-  updated_at          DateTime                 @updatedAt
+  notes                String?
+  created_at           DateTime                 @default(now())
+  updated_at           DateTime                 @updatedAt
 
   @@index([company_id])
   @@index([company_id, site_id, inspected_at])
@@ -1749,20 +1749,20 @@ model InspectionSchedule {
 }
 
 model InspectionRun {
-  id                  String              @id @default(cuid())
-  company_id          String
-  site_id             String
-  schedule_id         String
-  submission_id       String?
+  id                   String              @id @default(cuid())
+  company_id           String
+  site_id              String
+  schedule_id          String
+  submission_id        String?
   performed_by_user_id String?
-  status              InspectionRunStatus @default(COMPLETED)
-  score_percent       Int?
-  failed_item_count   Int                 @default(0)
-  summary             String?
-  started_at          DateTime            @default(now())
-  completed_at        DateTime?
-  created_at          DateTime            @default(now())
-  updated_at          DateTime            @updatedAt
+  status               InspectionRunStatus @default(COMPLETED)
+  score_percent        Int?
+  failed_item_count    Int                 @default(0)
+  summary              String?
+  started_at           DateTime            @default(now())
+  completed_at         DateTime?
+  created_at           DateTime            @default(now())
+  updated_at           DateTime            @updatedAt
 
   @@index([company_id])
   @@index([company_id, site_id, completed_at])
