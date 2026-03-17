@@ -15,6 +15,8 @@ const mocks = vi.hoisted(() => ({
   createBookableResource: vi.fn(),
   createResourceBooking: vi.fn(),
   cancelResourceBooking: vi.fn(),
+  updateResourceCompliance: vi.fn(),
+  recordResourceInspection: vi.fn(),
   createAuditLog: vi.fn(),
   logger: {
     error: vi.fn(),
@@ -50,6 +52,8 @@ vi.mock("@/lib/repository/resource-booking.repository", () => ({
   createBookableResource: mocks.createBookableResource,
   createResourceBooking: mocks.createResourceBooking,
   cancelResourceBooking: mocks.cancelResourceBooking,
+  updateResourceCompliance: mocks.updateResourceCompliance,
+  recordResourceInspection: mocks.recordResourceInspection,
 }));
 
 vi.mock("@/lib/repository/audit.repository", () => ({
@@ -60,6 +64,8 @@ import {
   cancelResourceBookingAction,
   createResourceAction,
   createResourceBookingAction,
+  recordResourceInspectionAction,
+  updateResourceComplianceAction,
 } from "./actions";
 
 describe("resources actions", () => {
@@ -70,6 +76,8 @@ describe("resources actions", () => {
     mocks.requireAuthenticatedContextReadOnly.mockResolvedValue({
       companyId: "company-1",
       userId: "user-1",
+      userName: "User One",
+      userEmail: "user-1@example.test",
     });
     mocks.checkAdminMutationRateLimit.mockResolvedValue({ success: true });
     mocks.generateRequestId.mockReturnValue("req-1");
@@ -92,6 +100,21 @@ describe("resources actions", () => {
       id: "book-1",
       status: "CANCELLED",
       cancelled_at: new Date("2026-03-08T08:30:00.000Z"),
+    });
+    mocks.updateResourceCompliance.mockResolvedValue({
+      id: "res-1",
+      site_id: "cm0000000000000000000001",
+      readiness_status: "BLOCKED",
+      inspection_due_at: new Date("2026-03-08T08:00:00.000Z"),
+      service_due_at: null,
+      blocked_reason: "Awaiting service",
+    });
+    mocks.recordResourceInspection.mockResolvedValue({
+      id: "inspection-1",
+      site_id: "cm0000000000000000000001",
+      resource_id: "res-1",
+      status: "FAIL",
+      inspected_at: new Date("2026-03-08T08:30:00.000Z"),
     });
     mocks.createAuditLog.mockResolvedValue({});
   });
@@ -146,6 +169,48 @@ describe("resources actions", () => {
       expect.objectContaining({
         action: "resource.booking.cancel",
         entity_type: "ResourceBooking",
+      }),
+    );
+  });
+
+  it("updates resource compliance and redirects success", async () => {
+    const formData = new FormData();
+    formData.set("resourceId", "cm0000000000000000000101");
+    formData.set("readinessStatus", "BLOCKED");
+    formData.set("inspectionDueAt", "2026-03-08T08:00");
+    formData.set("blockedReason", "Awaiting service");
+
+    await expect(updateResourceComplianceAction(formData)).rejects.toThrow(
+      "REDIRECT:/admin/resources?flashStatus=ok&flashMessage=Resource+compliance+updated",
+    );
+    expect(mocks.updateResourceCompliance).toHaveBeenCalledWith(
+      "company-1",
+      expect.objectContaining({
+        resource_id: "cm0000000000000000000101",
+        readiness_status: "BLOCKED",
+        blocked_reason: "Awaiting service",
+      }),
+    );
+  });
+
+  it("records resource inspection and redirects success", async () => {
+    const formData = new FormData();
+    formData.set("resourceId", "cm0000000000000000000101");
+    formData.set("siteId", "cm0000000000000000000001");
+    formData.set("status", "FAIL");
+    formData.set("inspectedAt", "2026-03-08T08:30");
+    formData.set("notes", "Guard missing");
+
+    await expect(recordResourceInspectionAction(formData)).rejects.toThrow(
+      "REDIRECT:/admin/resources?flashStatus=ok&flashMessage=Resource+inspection+recorded",
+    );
+    expect(mocks.recordResourceInspection).toHaveBeenCalledWith(
+      "company-1",
+      expect.objectContaining({
+        resource_id: "cm0000000000000000000101",
+        site_id: "cm0000000000000000000001",
+        status: "FAIL",
+        notes: "Guard missing",
       }),
     );
   });

@@ -1,7 +1,7 @@
 # Tenant Owned Models
 
 Version: `v4`
-Updated: `2026-03-07`
+Updated: `2026-03-17`
 Source: `apps/web/prisma/schema.prisma`
 
 This file is the canonical `TENANT_OWNED_MODELS` registry.
@@ -25,6 +25,8 @@ Manual edits are not allowed.
 - `SiteEmergencyContact`
 - `SiteEmergencyProcedure`
 - `IncidentReport`
+- `ActionRegisterEntry`
+- `ActionComment`
 - `EmergencyDrill`
 - `LegalDocumentVersion`
 - `PermitTemplate`
@@ -32,6 +34,9 @@ Manual edits are not allowed.
 - `PermitRequest`
 - `PermitApproval`
 - `ContractorPrequalification`
+- `CompetencyRequirement`
+- `WorkerCertification`
+- `CompetencyDecision`
 - `VisitorApprovalPolicy`
 - `VisitorApprovalRequest`
 - `VisitorWatchlistEntry`
@@ -49,6 +54,9 @@ Manual edits are not allowed.
 - `DeliveryEvent`
 - `BookableResource`
 - `ResourceBooking`
+- `ResourceInspectionRecord`
+- `InspectionSchedule`
+- `InspectionRun`
 - `SafetyFormTemplate`
 - `SafetyFormSubmission`
 - `EvidenceManifest`

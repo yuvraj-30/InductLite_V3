@@ -141,6 +141,11 @@ interface SignInResult {
   visitorName: string;
   siteName: string;
   signInTime: Date;
+  competencyStatus?: "CLEAR" | "EXPIRING" | "BLOCKED";
+  competencyBlockedReason?: string | null;
+  competencyRequirementCount?: number;
+  competencyMissingCount?: number;
+  competencyExpiringCount?: number;
 }
 
 interface CapturedLocation {
@@ -773,6 +778,13 @@ export function SignInFlow({
     }
   };
 
+  const updateDetails = (updates: Partial<VisitorDetails>) => {
+    setDetails((previous) => ({
+      ...previous,
+      ...updates,
+    }));
+  };
+
   const submitPayload = async (payload: PublicSignInPayload): Promise<boolean> => {
     const result = await submitSignIn(payload);
 
@@ -795,6 +807,11 @@ export function SignInFlow({
       visitorName: result.data.visitorName,
       siteName: result.data.siteName,
       signInTime: new Date(result.data.signInTime),
+      competencyStatus: result.data.competencyStatus,
+      competencyBlockedReason: result.data.competencyBlockedReason,
+      competencyRequirementCount: result.data.competencyRequirementCount,
+      competencyMissingCount: result.data.competencyMissingCount,
+      competencyExpiringCount: result.data.competencyExpiringCount,
     });
     return true;
   };
@@ -825,30 +842,44 @@ export function SignInFlow({
     syncQueuedSubmission();
   }, [isOnline, queueStorageKey, step]);
 
-  const handleDetailsSubmit = (e: React.FormEvent) => {
+  const handleDetailsSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setFieldErrors({});
     setMissingRequiredQuestionIds([]);
 
-    if (!details.visitorName.trim()) {
+    const formData = new FormData(e.currentTarget);
+    const nextDetails: VisitorDetails = {
+      ...details,
+      visitorName: String(formData.get("visitorName") ?? "").trim(),
+      visitorPhone: String(formData.get("visitorPhone") ?? "").trim(),
+      visitorEmail: String(formData.get("visitorEmail") ?? "").trim(),
+      employerName: String(formData.get("employerName") ?? "").trim(),
+      roleOnSite: String(formData.get("roleOnSite") ?? "").trim(),
+      visitorType:
+        (formData.get("visitorType") as VisitorDetails["visitorType"] | null) ??
+        details.visitorType,
+      hostRecipientId: String(formData.get("hostRecipientId") ?? "").trim(),
+    };
+
+    if (!nextDetails.visitorName) {
       setFieldErrors({ visitorName: ["Name is required"] });
       return;
     }
 
-    if (!details.visitorPhone.trim()) {
+    if (!nextDetails.visitorPhone) {
       setFieldErrors({ visitorPhone: ["Phone number is required"] });
       return;
     }
 
-    if (!isValidPhoneE164(details.visitorPhone, "NZ")) {
+    if (!isValidPhoneE164(nextDetails.visitorPhone, "NZ")) {
       setFieldErrors({
         visitorPhone: ["Please enter a valid NZ phone number"],
       });
       return;
     }
 
-    const formatted = formatToE164(details.visitorPhone, "NZ");
+    const formatted = formatToE164(nextDetails.visitorPhone, "NZ");
     if (!formatted) {
       setFieldErrors({
         visitorPhone: ["Please enter a valid NZ phone number"],
@@ -870,7 +901,15 @@ export function SignInFlow({
       }
     }
 
-    setDetails({ ...details, visitorPhone: formatted });
+    updateDetails({
+      visitorName: nextDetails.visitorName,
+      visitorPhone: formatted,
+      visitorEmail: nextDetails.visitorEmail,
+      employerName: nextDetails.employerName,
+      visitorType: nextDetails.visitorType,
+      roleOnSite: nextDetails.roleOnSite,
+      hostRecipientId: nextDetails.hostRecipientId,
+    });
     const canFastPassDirectToSignature =
       lastVisitMatchesCurrentInduction &&
       expressMode &&
@@ -1428,10 +1467,11 @@ export function SignInFlow({
             </label>
             <input
               id="visitorName"
+              name="visitorName"
               type="text"
               value={details.visitorName}
               autoComplete={isKiosk ? "off" : "name"}
-              onChange={(e) => setDetails({ ...details, visitorName: e.target.value })}
+              onChange={(e) => updateDetails({ visitorName: e.target.value })}
               className={`input text-base ${fieldErrors.visitorName ? "border-red-500" : ""}`}
               placeholder="Enter your full name"
             />
@@ -1448,10 +1488,11 @@ export function SignInFlow({
             </label>
             <input
               id="visitorPhone"
+              name="visitorPhone"
               type="tel"
               value={details.visitorPhone}
               autoComplete={isKiosk ? "off" : "tel"}
-              onChange={(e) => setDetails({ ...details, visitorPhone: e.target.value })}
+              onChange={(e) => updateDetails({ visitorPhone: e.target.value })}
               className={`input text-base ${fieldErrors.visitorPhone ? "border-red-500" : ""}`}
               placeholder="021 123 4567"
             />
@@ -1499,10 +1540,10 @@ export function SignInFlow({
             </label>
             <select
               id="visitorType"
+              name="visitorType"
               value={details.visitorType}
               onChange={(e) =>
-                setDetails({
-                  ...details,
+                updateDetails({
                   visitorType: e.target.value as VisitorDetails["visitorType"],
                 })
               }
@@ -1522,10 +1563,10 @@ export function SignInFlow({
               </label>
               <select
                 id="hostRecipientId"
+                name="hostRecipientId"
                 value={details.hostRecipientId}
                 onChange={(e) =>
-                  setDetails({
-                    ...details,
+                  updateDetails({
                     hostRecipientId: e.target.value,
                   })
                 }
@@ -1549,10 +1590,11 @@ export function SignInFlow({
                 </label>
                 <input
                   id="visitorEmail"
+                  name="visitorEmail"
                   type="email"
                   value={details.visitorEmail}
                   autoComplete={isKiosk ? "off" : "email"}
-                  onChange={(e) => setDetails({ ...details, visitorEmail: e.target.value })}
+                  onChange={(e) => updateDetails({ visitorEmail: e.target.value })}
                   className="input text-base"
                   placeholder="your@email.com"
                 />
@@ -1564,9 +1606,10 @@ export function SignInFlow({
                 </label>
                 <input
                   id="employerName"
+                  name="employerName"
                   type="text"
                   value={details.employerName}
-                  onChange={(e) => setDetails({ ...details, employerName: e.target.value })}
+                  onChange={(e) => updateDetails({ employerName: e.target.value })}
                   className="input text-base"
                   placeholder="Your company name"
                 />
@@ -1578,9 +1621,10 @@ export function SignInFlow({
                 </label>
                 <input
                   id="roleOnSite"
+                  name="roleOnSite"
                   type="text"
                   value={details.roleOnSite}
-                  onChange={(e) => setDetails({ ...details, roleOnSite: e.target.value })}
+                  onChange={(e) => updateDetails({ roleOnSite: e.target.value })}
                   className="input text-base"
                   placeholder="e.g., Electrician, Delivery driver"
                 />
@@ -2131,8 +2175,7 @@ export function SignInFlow({
                 type="checkbox"
                 checked={details.hasAcceptedTerms}
                 onChange={(e) =>
-                  setDetails({
-                    ...details,
+                  updateDetails({
                     hasAcceptedTerms: e.target.checked,
                   })
                 }

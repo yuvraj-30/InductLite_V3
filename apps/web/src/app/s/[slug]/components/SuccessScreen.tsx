@@ -16,6 +16,11 @@ interface SignInResult {
   visitorName: string;
   siteName: string;
   signInTime: Date;
+  competencyStatus?: "CLEAR" | "EXPIRING" | "BLOCKED";
+  competencyBlockedReason?: string | null;
+  competencyRequirementCount?: number;
+  competencyMissingCount?: number;
+  competencyExpiringCount?: number;
 }
 
 interface SuccessScreenProps {
@@ -84,6 +89,10 @@ export function SuccessScreen({ slug, result }: SuccessScreenProps) {
     minute: "2-digit",
   });
   const badgeQrSize = badgePrintProfile === "THERMAL" ? 92 : 108;
+  const clearanceTone =
+    result.competencyStatus === "EXPIRING"
+      ? "border-amber-400/40 bg-amber-500/12 text-amber-950 dark:text-amber-100"
+      : "border-emerald-400/35 bg-emerald-500/12 text-emerald-950 dark:text-emerald-100";
 
   const printBadge = async () => {
     window.print();
@@ -133,6 +142,34 @@ export function SuccessScreen({ slug, result }: SuccessScreenProps) {
             </div>
           </div>
         </div>
+
+        {result.competencyStatus ? (
+          <div className={`rounded-xl border p-4 ${clearanceTone}`}>
+            <h3 className="font-semibold">Clearance check</h3>
+            <p className="mt-2 text-sm">
+              {result.competencyStatus === "EXPIRING"
+                ? "You are cleared for this visit, but one or more competency items are approaching expiry."
+                : "Required site competency checks were satisfied for this visit."}
+            </p>
+            <div className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
+              <div>
+                <p className="text-xs uppercase tracking-[0.08em] opacity-75">Requirements</p>
+                <p className="mt-1 font-semibold">{result.competencyRequirementCount ?? 0}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.08em] opacity-75">Missing</p>
+                <p className="mt-1 font-semibold">{result.competencyMissingCount ?? 0}</p>
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.08em] opacity-75">Expiring</p>
+                <p className="mt-1 font-semibold">{result.competencyExpiringCount ?? 0}</p>
+              </div>
+            </div>
+            {result.competencyBlockedReason ? (
+              <p className="mt-3 text-sm">{result.competencyBlockedReason}</p>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="rounded-xl border border-indigo-400/35 bg-indigo-500/12 p-4">
           <h3 className="mb-2 font-semibold text-indigo-950 dark:text-indigo-100">

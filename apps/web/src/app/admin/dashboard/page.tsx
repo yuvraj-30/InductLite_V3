@@ -111,6 +111,26 @@ export default async function AdminDashboardPage({
       suspended: 0,
       overdue: 0,
     },
+    actionSummary: {
+      open: 0,
+      overdue: 0,
+      blocked: 0,
+    },
+    inspectionSummary: {
+      activeSchedules: 0,
+      overdue: 0,
+      failedRuns30Days: 0,
+    },
+    competencySummary: {
+      blocked30Days: 0,
+      expiring: 0,
+      pendingVerification: 0,
+    },
+    resourceSummary: {
+      blocked: 0,
+      reviewRequired: 0,
+      overdueCompliance: 0,
+    },
     quizSummary: {
       scoredResponses30Days: 0,
       passedResponses30Days: 0,
@@ -169,6 +189,10 @@ export default async function AdminDashboardPage({
     drillSummary,
     approvalSummary,
     permitSummary,
+    actionSummary,
+    inspectionSummary,
+    competencySummary,
+    resourceSummary,
     quizSummary,
     hostArrivalNotifications,
     recentSignIns,
@@ -203,29 +227,29 @@ export default async function AdminDashboardPage({
           : "text-emerald-900 dark:text-emerald-100",
     },
     {
-      href: "/admin/permits",
-      label: "Permit action queue",
-      value: permitSummary.requested + permitSummary.overdue + permitSummary.suspended,
+      href: "/admin/actions",
+      label: "Action register",
+      value: actionSummary.open + actionSummary.blocked,
       detail:
-        permitSummary.requested + permitSummary.overdue + permitSummary.suspended > 0
-          ? `${permitSummary.requested} requested, ${permitSummary.overdue} overdue, ${permitSummary.suspended} suspended`
-          : "No permit bottlenecks need attention right now.",
+        actionSummary.open + actionSummary.blocked > 0
+          ? `${actionSummary.open} open, ${actionSummary.overdue} overdue, ${actionSummary.blocked} blocked`
+          : "No follow-up actions need attention right now.",
       tone:
-        permitSummary.overdue > 0 || permitSummary.suspended > 0
+        actionSummary.overdue > 0 || actionSummary.blocked > 0
           ? "text-red-950 dark:text-red-100"
           : "text-secondary",
     },
     {
-      href: "/admin/history",
-      label: "People on site",
-      value: currentlyOnSiteCount,
+      href: "/admin/inspections",
+      label: "Inspection queue",
+      value: inspectionSummary.overdue + inspectionSummary.failedRuns30Days,
       detail:
-        currentlyOnSiteCount > 0
-          ? `${liveOccupancyPercent}% of the last 7-day volume is currently active on site`
-          : "No active workers are currently signed in.",
+        inspectionSummary.overdue + inspectionSummary.failedRuns30Days > 0
+          ? `${inspectionSummary.overdue} overdue schedules, ${inspectionSummary.failedRuns30Days} failed runs in 30 days`
+          : "Inspection schedules are current.",
       tone:
-        currentlyOnSiteCount > 0
-          ? "text-[color:var(--accent-success)]"
+        inspectionSummary.overdue > 0 || inspectionSummary.failedRuns30Days > 0
+          ? "text-amber-900 dark:text-amber-100"
           : "text-secondary",
     },
   ];
@@ -262,7 +286,7 @@ export default async function AdminDashboardPage({
                   Waiting for review
                 </p>
                 <p className="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100">
-                  {approvalSummary.pending + permitSummary.requested}
+                  {approvalSummary.pending + actionSummary.open + inspectionSummary.overdue}
                 </p>
                 <p className="mt-1 text-xs text-secondary">
                   {approvalSummary.averagePendingMinutes > 0
@@ -276,10 +300,14 @@ export default async function AdminDashboardPage({
                   Risk now
                 </p>
                 <p className="mt-2 text-3xl font-black text-red-950 dark:text-red-100">
-                  {documentsExpiringSoon + permitSummary.overdue + rollCallSummary.missingPeople}
+                  {documentsExpiringSoon +
+                    permitSummary.overdue +
+                    rollCallSummary.missingPeople +
+                    actionSummary.overdue +
+                    resourceSummary.overdueCompliance}
                 </p>
                 <p className="mt-1 text-xs text-secondary">
-                  Expiring documents, overdue permits, and missing roll-call workers.
+                  Expiring docs, overdue actions, overdue permits, resource issues, and missing roll-call workers.
                 </p>
               </div>
             </div>
@@ -470,6 +498,154 @@ export default async function AdminDashboardPage({
       </section>
 
       <section className="bento-grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
+        <Link
+          href="/admin/actions"
+          className="kinetic-hover bento-card border-rose-300/40 bg-rose-500/10"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                Action Register
+              </p>
+              <p className="mt-2 text-3xl font-black text-rose-900 dark:text-rose-100">
+                {actionSummary.open}
+              </p>
+              <p className="mt-1 text-sm text-secondary">
+                Open follow-up items across incidents, hazards, permits, and inspections.
+              </p>
+              <p className="mt-1 text-xs text-secondary">
+                Overdue: {actionSummary.overdue} | Blocked: {actionSummary.blocked}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-rose-400/40 bg-rose-500/16 p-3">
+              <svg
+                className="h-6 w-6 text-rose-900 dark:text-rose-100"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5h6m-7 4h8m-9 4h10m-7 4h4M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"
+                />
+              </svg>
+            </div>
+          </div>
+        </Link>
+
+        <Link
+          href="/admin/inspections"
+          className="kinetic-hover bento-card border-cyan-300/40 bg-cyan-500/10"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                Inspections
+              </p>
+              <p className="mt-2 text-3xl font-black text-cyan-900 dark:text-cyan-100">
+                {inspectionSummary.activeSchedules}
+              </p>
+              <p className="mt-1 text-sm text-secondary">
+                Active recurring inspection schedules linked to site safety forms.
+              </p>
+              <p className="mt-1 text-xs text-secondary">
+                Overdue: {inspectionSummary.overdue} | Failed runs (30d): {inspectionSummary.failedRuns30Days}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-cyan-400/40 bg-cyan-500/16 p-3">
+              <svg
+                className="h-6 w-6 text-cyan-900 dark:text-cyan-100"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 11l3 3L22 4M7 7H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2v-2"
+                />
+              </svg>
+            </div>
+          </div>
+        </Link>
+
+        <Link
+          href="/admin/competency"
+          className="kinetic-hover bento-card border-indigo-300/40 bg-indigo-500/10"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                Competency Matrix
+              </p>
+              <p className="mt-2 text-3xl font-black text-indigo-900 dark:text-indigo-100">
+                {competencySummary.expiring}
+              </p>
+              <p className="mt-1 text-sm text-secondary">
+                Workers with expiring certifications or competency evidence in the next 30 days.
+              </p>
+              <p className="mt-1 text-xs text-secondary">
+                Blocked decisions (30d): {competencySummary.blocked30Days} | Pending verification: {competencySummary.pendingVerification}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-indigo-400/40 bg-indigo-500/16 p-3">
+              <svg
+                className="h-6 w-6 text-indigo-900 dark:text-indigo-100"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 6v6l4 2m5-2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+            </div>
+          </div>
+        </Link>
+
+        <Link
+          href="/admin/resources"
+          className="kinetic-hover bento-card border-amber-300/40 bg-amber-500/10"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
+                Resource readiness
+              </p>
+              <p className="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100">
+                {resourceSummary.overdueCompliance}
+              </p>
+              <p className="mt-1 text-sm text-secondary">
+                Equipment or bookable assets with overdue inspection or service dates.
+              </p>
+              <p className="mt-1 text-xs text-secondary">
+                Blocked: {resourceSummary.blocked} | Review required: {resourceSummary.reviewRequired}
+              </p>
+            </div>
+            <div className="rounded-2xl border border-amber-400/40 bg-amber-500/16 p-3">
+              <svg
+                className="h-6 w-6 text-amber-900 dark:text-amber-100"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
+            </div>
+          </div>
+        </Link>
+
         <Link
           href="/admin/live-register"
           className="kinetic-hover bento-card border-amber-300/40 bg-amber-500/10"

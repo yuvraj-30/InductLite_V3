@@ -48,6 +48,26 @@ export interface DashboardMetrics {
     suspended: number;
     overdue: number;
   };
+  actionSummary: {
+    open: number;
+    overdue: number;
+    blocked: number;
+  };
+  inspectionSummary: {
+    activeSchedules: number;
+    overdue: number;
+    failedRuns30Days: number;
+  };
+  competencySummary: {
+    blocked30Days: number;
+    expiring: number;
+    pendingVerification: number;
+  };
+  resourceSummary: {
+    blocked: number;
+    reviewRequired: number;
+    overdueCompliance: number;
+  };
   quizSummary: {
     scoredResponses30Days: number;
     passedResponses30Days: number;
@@ -145,6 +165,18 @@ export async function getDashboardMetrics(
       pendingApprovalRequests,
       deniedApprovalRequestsLast7Days,
       permitRequestsInFlight,
+      openActions,
+      overdueActions,
+      blockedActions,
+      activeInspectionSchedules,
+      overdueInspectionSchedules,
+      failedInspectionRuns30Days,
+      blockedCompetencyDecisions30Days,
+      expiringWorkerCertifications,
+      pendingVerificationCertifications,
+      blockedResources,
+      reviewRequiredResources,
+      overdueResources,
       quizActiveCooldowns,
       quizProfilesAttempted30Days,
       quizProfilesWithRecentFailures,
@@ -263,6 +295,95 @@ export async function getDashboardMetrics(
         select: {
           status: true,
           validity_end: true,
+        },
+      }),
+      db.actionRegisterEntry.count({
+        where: {
+          company_id: companyId,
+          status: { in: ["OPEN", "IN_PROGRESS"] },
+        },
+      }),
+      db.actionRegisterEntry.count({
+        where: {
+          company_id: companyId,
+          status: { in: ["OPEN", "IN_PROGRESS", "BLOCKED"] },
+          due_at: { lt: now },
+        },
+      }),
+      db.actionRegisterEntry.count({
+        where: {
+          company_id: companyId,
+          status: "BLOCKED",
+        },
+      }),
+      db.inspectionSchedule.count({
+        where: {
+          company_id: companyId,
+          is_active: true,
+        },
+      }),
+      db.inspectionSchedule.count({
+        where: {
+          company_id: companyId,
+          is_active: true,
+          next_due_at: { lt: now },
+        },
+      }),
+      db.inspectionRun.count({
+        where: {
+          company_id: companyId,
+          status: "COMPLETED",
+          failed_item_count: { gt: 0 },
+          completed_at: { gte: thirtyDaysAgoUtc },
+        },
+      }),
+      db.competencyDecision.count({
+        where: {
+          company_id: companyId,
+          status: "BLOCKED",
+          decided_at: { gte: thirtyDaysAgoUtc },
+        },
+      }),
+      db.workerCertification.count({
+        where: {
+          company_id: companyId,
+          OR: [
+            { status: "EXPIRING" },
+            {
+              status: "CURRENT",
+              expires_at: { gt: now, lte: thirtyDaysFromNow },
+            },
+          ],
+        },
+      }),
+      db.workerCertification.count({
+        where: {
+          company_id: companyId,
+          status: "PENDING_VERIFICATION",
+        },
+      }),
+      db.bookableResource.count({
+        where: {
+          company_id: companyId,
+          is_active: true,
+          readiness_status: "BLOCKED",
+        },
+      }),
+      db.bookableResource.count({
+        where: {
+          company_id: companyId,
+          is_active: true,
+          readiness_status: "REVIEW_REQUIRED",
+        },
+      }),
+      db.bookableResource.count({
+        where: {
+          company_id: companyId,
+          is_active: true,
+          OR: [
+            { inspection_due_at: { lte: now } },
+            { service_due_at: { lte: now } },
+          ],
         },
       }),
       db.inductionQuizAttempt.count({
@@ -453,6 +574,26 @@ export async function getDashboardMetrics(
           request.validity_end.getTime() < now.getTime(),
       ).length,
     };
+    const actionSummary = {
+      open: openActions,
+      overdue: overdueActions,
+      blocked: blockedActions,
+    };
+    const inspectionSummary = {
+      activeSchedules: activeInspectionSchedules,
+      overdue: overdueInspectionSchedules,
+      failedRuns30Days: failedInspectionRuns30Days,
+    };
+    const competencySummary = {
+      blocked30Days: blockedCompetencyDecisions30Days,
+      expiring: expiringWorkerCertifications,
+      pendingVerification: pendingVerificationCertifications,
+    };
+    const resourceSummary = {
+      blocked: blockedResources,
+      reviewRequired: reviewRequiredResources,
+      overdueCompliance: overdueResources,
+    };
     const quizScoredResponses30Days = quizSignInAuditLogs.reduce(
       (acc: number, row: { details: unknown }) => {
         const details =
@@ -630,6 +771,10 @@ export async function getDashboardMetrics(
       drillSummary,
       approvalSummary,
       permitSummary,
+      actionSummary,
+      inspectionSummary,
+      competencySummary,
+      resourceSummary,
       quizSummary,
       hostArrivalNotifications,
       recentSignIns,

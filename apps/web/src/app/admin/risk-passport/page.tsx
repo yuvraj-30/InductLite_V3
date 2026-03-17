@@ -7,6 +7,7 @@ import {
   listContractorRiskScores,
   listRiskScoreHistoryForScoreIds,
 } from "@/lib/repository/risk-passport.repository";
+import { getCompetencySummary } from "@/lib/repository/competency.repository";
 import { findAllSites } from "@/lib/repository/site.repository";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant/context";
 import { PageWarningState } from "@/components/ui/page-state";
@@ -121,10 +122,11 @@ export default async function RiskPassportPage({ searchParams }: RiskPassportPag
     throw error;
   }
 
-  const [sites, contractorPage, riskScores] = await Promise.all([
+  const [sites, contractorPage, riskScores, competencySummary] = await Promise.all([
     findAllSites(context.companyId),
     listContractors(context.companyId, { isActive: true }, { page: 1, pageSize: 500 }),
     listContractorRiskScores(context.companyId, { limit: 500 }),
+    getCompetencySummary(context.companyId),
   ]);
 
   const contractors = contractorPage.items;
@@ -248,6 +250,20 @@ export default async function RiskPassportPage({ searchParams }: RiskPassportPag
             <p className="mt-3 text-sm text-secondary">
               Focus on contractors with high thresholds or upward 30-day trends, then clear the document and permit components driving that score.
             </p>
+            <div className="mt-4 rounded-xl border border-indigo-400/30 bg-indigo-500/10 p-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-indigo-950 dark:text-indigo-100">
+                Competency pressure
+              </p>
+              <p className="mt-2 text-sm text-indigo-950 dark:text-indigo-100">
+                {competencySummary.expiring} expiring certifications and {competencySummary.pending_verification} pending checks may affect worker clearance.
+              </p>
+              <a
+                href="/admin/competency"
+                className="mt-3 inline-flex min-h-[36px] items-center rounded-lg border border-indigo-300/45 bg-white/70 px-3 py-2 text-xs font-semibold text-indigo-950 hover:bg-white dark:bg-indigo-950/20 dark:text-indigo-100"
+              >
+                Open competency matrix
+              </a>
+            </div>
           </div>
         </div>
       </div>

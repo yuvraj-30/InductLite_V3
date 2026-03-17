@@ -9,6 +9,7 @@ import {
   closeHazard,
   findHazardById,
 } from "@/lib/repository/hazard.repository";
+import { createActionEntry } from "@/lib/repository/action.repository";
 import { createAuditLog } from "@/lib/repository/audit.repository";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
@@ -19,6 +20,11 @@ const createHazardSchema = z.object({
   title: z.string().min(3, "Hazard title is required").max(160),
   description: z.string().max(4000).optional().or(z.literal("")),
   riskLevel: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).default("MEDIUM"),
+  followUpTitle: z.string().max(160).optional().or(z.literal("")),
+  followUpPriority: z
+    .enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"])
+    .default("MEDIUM"),
+  followUpDueAt: z.string().optional().or(z.literal("")),
 });
 
 export type HazardActionResult =
@@ -46,6 +52,9 @@ export async function createHazardAction(
     title: formData.get("title"),
     description: formData.get("description"),
     riskLevel: formData.get("riskLevel"),
+    followUpTitle: formData.get("followUpTitle"),
+    followUpPriority: formData.get("followUpPriority"),
+    followUpDueAt: formData.get("followUpDueAt"),
   };
   const parsed = createHazardSchema.safeParse(raw);
   if (!parsed.success) {
@@ -68,6 +77,13 @@ export async function createHazardAction(
   }
 
   const context = await requireAuthenticatedContextReadOnly();
+  let followUpDueAt: Date | undefined;
+  if (parsed.data.followUpDueAt) {
+    followUpDueAt = new Date(parsed.data.followUpDueAt);
+    if (Number.isNaN(followUpDueAt.getTime())) {
+      return { success: false, error: "Invalid follow-up due timestamp" };
+    }
+  }
 
   try {
     const hazard = await createHazard(context.companyId, {
@@ -90,7 +106,37 @@ export async function createHazardAction(
       request_id: requestId,
     });
 
+    if (parsed.data.followUpTitle?.trim()) {
+      const action = await createActionEntry(context.companyId, {
+        site_id: hazard.site_id,
+        source_type: "HAZARD",
+        source_id: hazard.id,
+        title: parsed.data.followUpTitle,
+        description:
+          hazard.description ||
+          `Apply controls and verify close-out for hazard ${hazard.title}.`,
+        priority: parsed.data.followUpPriority,
+        owner_user_id: null,
+        reported_by_user_id: context.userId,
+        due_at: followUpDueAt ?? null,
+      });
+
+      await createAuditLog(context.companyId, {
+        action: "action.create",
+        entity_type: "ActionRegisterEntry",
+        entity_id: action.id,
+        user_id: context.userId,
+        details: {
+          source_type: "HAZARD",
+          source_id: hazard.id,
+          site_id: hazard.site_id,
+        },
+        request_id: requestId,
+      });
+    }
+
     revalidatePath("/admin/hazards");
+    revalidatePath("/admin/actions");
     revalidatePath(`/admin/sites/${parsed.data.siteId}/emergency`);
 
     return { success: true, message: "Hazard added to register" };

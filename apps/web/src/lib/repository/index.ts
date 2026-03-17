@@ -408,13 +408,76 @@ export {
   createResourceBooking,
   listResourceBookings,
   cancelResourceBooking,
+  updateResourceCompliance,
+  recordResourceInspection,
+  listResourceInspectionRecords,
+  getResourceReadinessSummary,
 } from "./resource-booking.repository";
 export type {
   CreateBookableResourceInput,
   ListBookableResourcesFilter,
   CreateResourceBookingInput,
   ListResourceBookingsFilter,
+  UpdateResourceComplianceInput,
+  CreateResourceInspectionInput,
+  ResourceReadinessSummary,
 } from "./resource-booking.repository";
+
+// Action register repository
+export {
+  listActionEntries,
+  listActionEntriesForSource,
+  findActionEntryById,
+  createActionEntry,
+  updateActionEntry,
+  closeActionEntry,
+  listActionComments,
+  addActionComment,
+  getActionSummary,
+} from "./action.repository";
+export type {
+  ActionFilter,
+  CreateActionInput,
+  UpdateActionInput,
+  ActionSummary,
+} from "./action.repository";
+
+// Inspection repository
+export {
+  listInspectionSchedules,
+  findInspectionScheduleById,
+  createInspectionSchedule,
+  listInspectionRuns,
+  recordInspectionRun,
+  getInspectionSummary,
+} from "./inspection.repository";
+export type {
+  ListInspectionScheduleFilter,
+  CreateInspectionScheduleInput,
+  RecordInspectionRunInput,
+  InspectionSummary,
+} from "./inspection.repository";
+
+// Competency repository
+export {
+  listCompetencyRequirements,
+  createCompetencyRequirement,
+  listWorkerCertifications,
+  createWorkerCertification,
+  recordCompetencyDecision,
+  evaluateCompetencyForWorker,
+  getCompetencySummary,
+} from "./competency.repository";
+export type {
+  CompetencyRequirementFilter,
+  CreateCompetencyRequirementInput,
+  WorkerCertificationFilter,
+  CreateWorkerCertificationInput,
+  EvaluateCompetencyInput,
+  EvaluatedRequirement,
+  CompetencyEvaluation,
+  CompetencySummary,
+} from "./competency.repository";
 
 // Construction safety form suite repository
 export {

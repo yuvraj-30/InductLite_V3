@@ -2,13 +2,16 @@ import { test, expect } from "./test-fixtures";
 
 const UI_GAP_PATH_SAMPLES = [
   "/admin/access-ops",
+  "/admin/actions",
   "/admin/approvals",
   "/admin/audit-analytics",
   "/admin/benchmarks",
   "/admin/communications",
+  "/admin/competency",
   "/admin/deliveries",
   "/admin/evidence",
   "/admin/incidents",
+  "/admin/inspections",
   "/admin/integrations/channels",
   "/admin/integrations/procore",
   "/admin/mobile",

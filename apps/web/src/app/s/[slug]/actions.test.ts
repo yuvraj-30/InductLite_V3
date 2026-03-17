@@ -39,6 +39,11 @@ vi.mock("@/lib/repository/public-signin.repository", () => ({
   signOutWithToken: vi.fn(),
 }));
 
+vi.mock("@/lib/repository/competency.repository", () => ({
+  evaluateCompetencyForWorker: vi.fn(),
+  recordCompetencyDecision: vi.fn(),
+}));
+
 vi.mock("@/lib/repository/signin.repository", () => ({
   findSignInById: vi.fn(),
 }));
@@ -168,6 +173,10 @@ import {
   createPublicSignIn,
   signOutWithToken,
 } from "@/lib/repository/public-signin.repository";
+import {
+  evaluateCompetencyForWorker,
+  recordCompetencyDecision,
+} from "@/lib/repository/competency.repository";
 import { createAuditLog } from "@/lib/repository/audit.repository";
 import { queueEmailNotification } from "@/lib/repository/email.repository";
 import {
@@ -197,6 +206,27 @@ describe("Public Actions Error Handling", () => {
       last_attempt_at: new Date("2026-02-22T10:00:00Z"),
       last_score_percent: 100,
       last_passed: true,
+      created_at: new Date("2026-02-22T10:00:00Z"),
+      updated_at: new Date("2026-02-22T10:00:00Z"),
+    });
+    (evaluateCompetencyForWorker as Mock).mockResolvedValue({
+      status: "CLEAR",
+      blockedReason: null,
+      requirements: [],
+      requirementCount: 0,
+      missingCount: 0,
+      expiringCount: 0,
+    });
+    (recordCompetencyDecision as Mock).mockResolvedValue({
+      id: "decision-1",
+      company_id: "company-123",
+      site_id: "site-123",
+      sign_in_record_id: "signin-1",
+      visitor_phone: "+64211234567",
+      status: "CLEAR",
+      blocked_reason: null,
+      summary: null,
+      decided_at: new Date("2026-02-22T10:00:00Z"),
       created_at: new Date("2026-02-22T10:00:00Z"),
       updated_at: new Date("2026-02-22T10:00:00Z"),
     });
@@ -273,6 +303,35 @@ describe("Public Actions Error Handling", () => {
       if (!result.success) {
         expect(result.error.code).toBe("VALIDATION_ERROR");
       }
+    });
+
+    it("blocks sign-in when competency requirements are not met", async () => {
+      (findSiteByPublicSlug as Mock).mockResolvedValue(mockSite);
+      (getActiveTemplateForSite as Mock).mockResolvedValue(mockTemplate);
+      (evaluateCompetencyForWorker as Mock).mockResolvedValue({
+        status: "BLOCKED",
+        blockedReason: "Forklift certification: No certification recorded for this requirement.",
+        requirements: [],
+        requirementCount: 1,
+        missingCount: 1,
+        expiringCount: 0,
+      });
+
+      const result = await submitSignIn(validInput);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.code).toBe("VALIDATION_ERROR");
+        expect(result.error.message).toBe("Worker competency requirements are not met");
+      }
+      expect(createPublicSignIn).not.toHaveBeenCalled();
+      expect(recordCompetencyDecision).toHaveBeenCalledWith(
+        "company-123",
+        expect.objectContaining({
+          site_id: "site-123",
+          status: "BLOCKED",
+        }),
+      );
     });
 
     it("requires media acknowledgement when template media is configured", async () => {

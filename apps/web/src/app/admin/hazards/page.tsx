@@ -69,6 +69,12 @@ export default async function HazardsPage() {
         >
           Back to Dashboard
         </Link>
+        <Link
+          href="/admin/actions"
+          className="text-sm font-semibold text-accent hover:underline"
+        >
+          Open Action Register
+        </Link>
       </div>
 
       <InlineCopilotPanel
@@ -135,6 +141,39 @@ export default async function HazardsPage() {
               className="input mt-1"
             />
           </label>
+
+          <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-4 md:col-span-2">
+            <p className="text-sm font-semibold text-[color:var(--text-primary)]">
+              Optional follow-up action
+            </p>
+            <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+              <label className="text-sm text-secondary md:col-span-2">
+                Follow-up title
+                <input
+                  name="followUpTitle"
+                  type="text"
+                  maxLength={160}
+                  className="input mt-1"
+                  placeholder="Assign control verification or mitigation"
+                />
+              </label>
+
+              <label className="text-sm text-secondary">
+                Priority
+                <select name="followUpPriority" defaultValue="MEDIUM" className="input mt-1">
+                  <option value="LOW">LOW</option>
+                  <option value="MEDIUM">MEDIUM</option>
+                  <option value="HIGH">HIGH</option>
+                  <option value="CRITICAL">CRITICAL</option>
+                </select>
+              </label>
+
+              <label className="text-sm text-secondary">
+                Due at
+                <input name="followUpDueAt" type="datetime-local" className="input mt-1" />
+              </label>
+            </div>
+          </div>
 
           <div className="md:col-span-2">
             <button

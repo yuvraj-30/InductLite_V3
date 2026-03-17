@@ -748,6 +748,70 @@ enum IncidentStatus {
   CLOSED
 }
 
+enum ActionSourceType {
+  MANUAL
+  INCIDENT
+  HAZARD
+  PERMIT
+  EMERGENCY
+  INSPECTION
+  COMPETENCY
+  RESOURCE
+}
+
+enum ActionPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ActionStatus {
+  OPEN
+  IN_PROGRESS
+  BLOCKED
+  CLOSED
+}
+
+model ActionRegisterEntry {
+  id                  String           @id @default(cuid())
+  company_id          String
+  site_id             String?
+  source_type         ActionSourceType @default(MANUAL)
+  source_id           String?
+  title               String
+  description         String?
+  priority            ActionPriority   @default(MEDIUM)
+  status              ActionStatus     @default(OPEN)
+  owner_user_id       String?
+  reported_by_user_id String?
+  due_at              DateTime?
+  closed_at           DateTime?
+  closed_by_user_id   String?
+  evidence_refs       Json?
+  created_at          DateTime         @default(now())
+  updated_at          DateTime         @updatedAt
+
+  @@index([company_id])
+  @@index([company_id, site_id, status])
+  @@index([company_id, source_type, source_id])
+  @@index([company_id, owner_user_id, status])
+  @@index([company_id, due_at, status])
+}
+
+model ActionComment {
+  id             String   @id @default(cuid())
+  company_id     String
+  action_id      String
+  author_user_id String?
+  body           String
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@index([company_id])
+  @@index([company_id, action_id, created_at])
+}
+
 model EmailNotification {
   id         String             @id @default(cuid())
   company_id String
@@ -1031,6 +1095,89 @@ model ContractorPrequalification {
   @@unique([company_id, contractor_id, site_id])
   @@index([company_id])
   @@index([company_id, status, expires_at])
+}
+
+enum CompetencyEvidenceType {
+  INDUCTION
+  CERTIFICATION
+  DOCUMENT
+  LMS
+  OTHER
+}
+
+enum CompetencyCertificationStatus {
+  CURRENT
+  EXPIRING
+  EXPIRED
+  PENDING_VERIFICATION
+}
+
+enum CompetencyDecisionStatus {
+  CLEAR
+  EXPIRING
+  BLOCKED
+}
+
+model CompetencyRequirement {
+  id            String                 @id @default(cuid())
+  company_id    String
+  site_id       String?
+  role_key      String?
+  name          String
+  description   String?
+  evidence_type CompetencyEvidenceType @default(CERTIFICATION)
+  validity_days Int?
+  is_blocking   Boolean                @default(true)
+  sort_order    Int                    @default(0)
+  is_active     Boolean                @default(true)
+  created_at    DateTime               @default(now())
+  updated_at    DateTime               @updatedAt
+
+  @@index([company_id])
+  @@index([company_id, site_id, is_active])
+  @@index([company_id, role_key, is_active])
+}
+
+model WorkerCertification {
+  id                 String                        @id @default(cuid())
+  company_id         String
+  site_id            String?
+  requirement_id     String?
+  visitor_phone      String
+  visitor_email      String?
+  worker_name        String
+  employer_name      String?
+  status             CompetencyCertificationStatus @default(CURRENT)
+  issued_at          DateTime?
+  expires_at         DateTime?
+  evidence_refs      Json?
+  verified_by_user_id String?
+  created_at         DateTime                      @default(now())
+  updated_at         DateTime                      @updatedAt
+
+  @@index([company_id])
+  @@index([company_id, site_id, status, expires_at])
+  @@index([company_id, visitor_phone, expires_at])
+  @@index([company_id, requirement_id, visitor_phone])
+}
+
+model CompetencyDecision {
+  id                String                   @id @default(cuid())
+  company_id        String
+  site_id           String
+  sign_in_record_id String?
+  visitor_phone     String
+  status            CompetencyDecisionStatus
+  blocked_reason    String?
+  summary           Json?
+  decided_at        DateTime                 @default(now())
+  created_at        DateTime                 @default(now())
+  updated_at        DateTime                 @updatedAt
+
+  @@index([company_id])
+  @@index([company_id, site_id, status, decided_at])
+  @@index([company_id, visitor_phone, decided_at])
+  @@index([sign_in_record_id])
 }
 
 model VisitorApprovalPolicy {
@@ -1501,6 +1648,11 @@ model BookableResource {
   capacity       Int          @default(1)
   location_label String?
   notes          String?
+  readiness_status ResourceReadinessStatus @default(READY)
+  inspection_due_at DateTime?
+  service_due_at  DateTime?
+  blocked_reason  String?
+  last_compliance_check_at DateTime?
   is_active      Boolean      @default(true)
   created_at     DateTime     @default(now())
   updated_at     DateTime     @updatedAt
@@ -1508,6 +1660,9 @@ model BookableResource {
   @@unique([company_id, site_id, name])
   @@index([company_id])
   @@index([company_id, site_id, is_active])
+  @@index([company_id, readiness_status])
+  @@index([company_id, inspection_due_at])
+  @@index([company_id, service_due_at])
 }
 
 model ResourceBooking {
@@ -1531,6 +1686,87 @@ model ResourceBooking {
   @@index([company_id, site_id, starts_at])
   @@index([company_id, resource_id, starts_at])
   @@index([company_id, status, starts_at])
+}
+
+enum ResourceReadinessStatus {
+  READY
+  REVIEW_REQUIRED
+  BLOCKED
+}
+
+enum ResourceInspectionStatus {
+  PASS
+  FAIL
+}
+
+model ResourceInspectionRecord {
+  id                  String                   @id @default(cuid())
+  company_id          String
+  site_id             String
+  resource_id         String
+  status              ResourceInspectionStatus @default(PASS)
+  inspected_at        DateTime                 @default(now())
+  inspected_by_user_id String?
+  notes               String?
+  created_at          DateTime                 @default(now())
+  updated_at          DateTime                 @updatedAt
+
+  @@index([company_id])
+  @@index([company_id, site_id, inspected_at])
+  @@index([company_id, resource_id, inspected_at])
+}
+
+enum InspectionFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  AD_HOC
+}
+
+enum InspectionRunStatus {
+  COMPLETED
+  MISSED
+}
+
+model InspectionSchedule {
+  id               String              @id @default(cuid())
+  company_id       String
+  site_id          String
+  template_id      String
+  name             String
+  frequency        InspectionFrequency @default(WEEKLY)
+  starts_at        DateTime
+  next_due_at      DateTime
+  assigned_user_id String?
+  is_active        Boolean             @default(true)
+  created_at       DateTime            @default(now())
+  updated_at       DateTime            @updatedAt
+
+  @@index([company_id])
+  @@index([company_id, site_id, is_active])
+  @@index([company_id, next_due_at, is_active])
+}
+
+model InspectionRun {
+  id                  String              @id @default(cuid())
+  company_id          String
+  site_id             String
+  schedule_id         String
+  submission_id       String?
+  performed_by_user_id String?
+  status              InspectionRunStatus @default(COMPLETED)
+  score_percent       Int?
+  failed_item_count   Int                 @default(0)
+  summary             String?
+  started_at          DateTime            @default(now())
+  completed_at        DateTime?
+  created_at          DateTime            @default(now())
+  updated_at          DateTime            @updatedAt
+
+  @@index([company_id])
+  @@index([company_id, site_id, completed_at])
+  @@index([company_id, schedule_id, completed_at])
 }
 
 enum SafetyFormType {

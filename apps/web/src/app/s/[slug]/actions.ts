@@ -50,6 +50,11 @@ import {
 } from "@/lib/repository/emergency.repository";
 import { findContractorRiskScore } from "@/lib/repository/risk-passport.repository";
 import {
+  evaluateCompetencyForWorker,
+  recordCompetencyDecision,
+  type CompetencyEvaluation,
+} from "@/lib/repository/competency.repository";
+import {
   findRequiredPermitTemplateForSite,
   findActivePermitForVisitor,
 } from "@/lib/repository/permit.repository";
@@ -126,6 +131,16 @@ export type {
   SignOutInput,
   VisitorType,
 } from "@/lib/validation/schemas";
+
+type PublicSignInResponse = SignInResult & {
+  competencyStatus?: "CLEAR" | "EXPIRING" | "BLOCKED";
+  competencyBlockedReason?: string | null;
+  competencyRequirementCount?: number;
+  competencyMissingCount?: number;
+  competencyExpiringCount?: number;
+};
+
+const HARDWARE_ACCESS_DECISION_TIMEOUT_MS = 2_000;
 
 const badgePrintAuditSchema = z.object({
   slug: z.string().min(1, "Site slug is required"),
@@ -684,6 +699,57 @@ function buildEscalationEmailBody(input: {
   `;
 }
 
+function buildPublicSignInResponse(
+  result: SignInResult,
+  competencyEvaluation: CompetencyEvaluation,
+): PublicSignInResponse {
+  return {
+    ...result,
+    competencyStatus: competencyEvaluation.status,
+    competencyBlockedReason: competencyEvaluation.blockedReason,
+    competencyRequirementCount: competencyEvaluation.requirementCount,
+    competencyMissingCount: competencyEvaluation.missingCount,
+    competencyExpiringCount: competencyEvaluation.expiringCount,
+  };
+}
+
+function competencyDecisionSummary(
+  evaluation: CompetencyEvaluation,
+): {
+  status: CompetencyEvaluation["status"];
+  blockedReason: string | null;
+  requirementCount: number;
+  missingCount: number;
+  expiringCount: number;
+  requirements: Array<{
+    requirementId: string;
+    requirementName: string;
+    state: string;
+    message: string;
+    certificationId: string | null;
+    certificationStatus: string | null;
+    certificationExpiresAt: string | null;
+  }>;
+} {
+  return {
+    status: evaluation.status,
+    blockedReason: evaluation.blockedReason,
+    requirementCount: evaluation.requirementCount,
+    missingCount: evaluation.missingCount,
+    expiringCount: evaluation.expiringCount,
+    requirements: evaluation.requirements.map((entry) => ({
+      requirementId: entry.requirement.id,
+      requirementName: entry.requirement.name,
+      state: entry.state,
+      message: entry.message,
+      certificationId: entry.certification?.id ?? null,
+      certificationStatus: entry.certification?.status ?? null,
+      certificationExpiresAt:
+        entry.certification?.expires_at?.toISOString() ?? null,
+    })),
+  };
+}
+
 function buildHostArrivalEmailBody(input: {
   siteName: string;
   visitorName: string;
@@ -1166,19 +1232,39 @@ async function triggerHardwareAccessDecision(input: {
   metadata?: Record<string, unknown>;
 }) {
   try {
-    const result = await queueHardwareAccessDecision({
-      companyId: input.companyId,
-      siteId: input.siteId,
-      siteName: input.siteName,
-      accessControl: (input.site as { access_control?: unknown }).access_control,
-      decision: input.decision,
-      reason: input.reason,
-      signInRecordId: input.signInRecordId,
-      visitorName: input.visitorName,
-      visitorPhoneE164: input.visitorPhoneE164,
-      requestId: input.requestId,
-      metadata: input.metadata,
-    });
+    const result = await Promise.race([
+      queueHardwareAccessDecision({
+        companyId: input.companyId,
+        siteId: input.siteId,
+        siteName: input.siteName,
+        accessControl: (input.site as { access_control?: unknown }).access_control,
+        decision: input.decision,
+        reason: input.reason,
+        signInRecordId: input.signInRecordId,
+        visitorName: input.visitorName,
+        visitorPhoneE164: input.visitorPhoneE164,
+        requestId: input.requestId,
+        metadata: input.metadata,
+      }),
+      new Promise<null>((resolve) => {
+        setTimeout(() => resolve(null), HARDWARE_ACCESS_DECISION_TIMEOUT_MS);
+      }),
+    ]);
+
+    if (result === null) {
+      input.log.warn(
+        {
+          requestId: input.requestId,
+          companyId: input.companyId,
+          siteId: input.siteId,
+          decision: input.decision,
+          reason: input.reason,
+          timeoutMs: HARDWARE_ACCESS_DECISION_TIMEOUT_MS,
+        },
+        "Hardware access decision timed out; continuing public flow",
+      );
+      return;
+    }
 
     if (result.queued) {
       input.log.info(
@@ -1693,7 +1779,7 @@ export async function getSiteForSignIn(
 
 export async function submitSignIn(
   input: SignInInput,
-): Promise<ApiResponse<SignInResult>> {
+): Promise<ApiResponse<PublicSignInResponse>> {
   const requestId = generateRequestId();
   const log = createRequestLogger(requestId);
 
@@ -2645,6 +2731,50 @@ export async function submitSignIn(
         approvedQuizResult = quizEvaluation.quizResult;
       }
 
+      const approvedCompetencyEvaluation = await evaluateCompetencyForWorker(
+        site.company.id,
+        {
+          site_id: site.id,
+          visitor_phone: formattedPhone,
+          visitor_email: parsed.data.visitorEmail || undefined,
+          role_key: parsed.data.roleOnSite || undefined,
+        },
+      );
+      if (approvedCompetencyEvaluation.status === "BLOCKED") {
+        await recordCompetencyDecision(site.company.id, {
+          site_id: site.id,
+          visitor_phone: formattedPhone,
+          status: approvedCompetencyEvaluation.status,
+          blocked_reason: approvedCompetencyEvaluation.blockedReason,
+          summary: competencyDecisionSummary(approvedCompetencyEvaluation),
+        });
+        await triggerHardwareAccessDecision({
+          companyId: site.company.id,
+          siteId: site.id,
+          siteName: site.name,
+          site,
+          decision: "DENY",
+          reason: "competency_blocked",
+          visitorName: parsed.data.visitorName,
+          visitorPhoneE164: formattedPhone,
+          requestId,
+          log,
+          metadata: {
+            escalationId: escalationCreated.escalation.id,
+            competencyStatus: approvedCompetencyEvaluation.status,
+          },
+        });
+        return validationErrorResponse(
+          {
+            answers: [
+              approvedCompetencyEvaluation.blockedReason ??
+                "This worker is missing a required competency or certification for this site.",
+            ],
+          },
+          "Worker competency requirements are not met",
+        );
+      }
+
       const approvedResult = await createPublicSignIn({
         companyId: site.company.id,
         siteId: site.id,
@@ -2690,6 +2820,18 @@ export async function submitSignIn(
         },
         mediaEvidence,
       });
+      await recordCompetencyDecision(site.company.id, {
+        site_id: site.id,
+        sign_in_record_id: approvedResult.signInRecordId,
+        visitor_phone: formattedPhone,
+        status: approvedCompetencyEvaluation.status,
+        blocked_reason: approvedCompetencyEvaluation.blockedReason,
+        summary: competencyDecisionSummary(approvedCompetencyEvaluation),
+      });
+      const approvedResponse = buildPublicSignInResponse(
+        approvedResult,
+        approvedCompetencyEvaluation,
+      );
 
         const hostNotificationDelivery = await queueHostArrivalNotifications({
           companyId: site.company.id,
@@ -2739,6 +2881,14 @@ export async function submitSignIn(
             selected_language_code: selectedLanguageCode,
             selected_language_label: selectedLanguageVariant?.label ?? null,
             selected_language_variant: selectedLanguageVariant !== null,
+            competency_status: approvedCompetencyEvaluation.status,
+            competency_requirement_count:
+              approvedCompetencyEvaluation.requirementCount,
+            competency_missing_count: approvedCompetencyEvaluation.missingCount,
+            competency_expiring_count:
+              approvedCompetencyEvaluation.expiringCount,
+            competency_blocked_reason:
+              approvedCompetencyEvaluation.blockedReason,
             host_recipient_id: parsed.data.hostRecipientId ?? null,
             host_notifications_enabled:
               hostNotificationDelivery.featureEnabled,
@@ -2840,7 +2990,7 @@ export async function submitSignIn(
           log,
         });
 
-        return successResponse(approvedResult, "Signed in successfully");
+        return successResponse(approvedResponse, "Signed in successfully");
       }
 
       if (
@@ -3055,6 +3205,49 @@ export async function submitSignIn(
       quizResult = quizEvaluation.quizResult;
     }
 
+    const competencyEvaluation = await evaluateCompetencyForWorker(
+      site.company.id,
+      {
+        site_id: site.id,
+        visitor_phone: formattedPhone,
+        visitor_email: parsed.data.visitorEmail || undefined,
+        role_key: parsed.data.roleOnSite || undefined,
+      },
+    );
+    if (competencyEvaluation.status === "BLOCKED") {
+      await recordCompetencyDecision(site.company.id, {
+        site_id: site.id,
+        visitor_phone: formattedPhone,
+        status: competencyEvaluation.status,
+        blocked_reason: competencyEvaluation.blockedReason,
+        summary: competencyDecisionSummary(competencyEvaluation),
+      });
+      await triggerHardwareAccessDecision({
+        companyId: site.company.id,
+        siteId: site.id,
+        siteName: site.name,
+        site,
+        decision: "DENY",
+        reason: "competency_blocked",
+        visitorName: parsed.data.visitorName,
+        visitorPhoneE164: formattedPhone,
+        requestId,
+        log,
+        metadata: {
+          competencyStatus: competencyEvaluation.status,
+        },
+      });
+      return validationErrorResponse(
+        {
+          answers: [
+            competencyEvaluation.blockedReason ??
+              "This worker is missing a required competency or certification for this site.",
+          ],
+        },
+        "Worker competency requirements are not met",
+      );
+    }
+
     // Create sign-in record
     const result = await createPublicSignIn({
       companyId: site.company.id,
@@ -3099,6 +3292,15 @@ export async function submitSignIn(
       mediaEvidence,
       identityEvidence,
     });
+    await recordCompetencyDecision(site.company.id, {
+      site_id: site.id,
+      sign_in_record_id: result.signInRecordId,
+      visitor_phone: formattedPhone,
+      status: competencyEvaluation.status,
+      blocked_reason: competencyEvaluation.blockedReason,
+      summary: competencyDecisionSummary(competencyEvaluation),
+    });
+    const responseResult = buildPublicSignInResponse(result, competencyEvaluation);
 
     const hostNotificationDelivery = await queueHostArrivalNotifications({
       companyId: site.company.id,
@@ -3160,6 +3362,11 @@ export async function submitSignIn(
         selected_language_code: selectedLanguageCode,
         selected_language_label: selectedLanguageVariant?.label ?? null,
         selected_language_variant: selectedLanguageVariant !== null,
+        competency_status: competencyEvaluation.status,
+        competency_requirement_count: competencyEvaluation.requirementCount,
+        competency_missing_count: competencyEvaluation.missingCount,
+        competency_expiring_count: competencyEvaluation.expiringCount,
+        competency_blocked_reason: competencyEvaluation.blockedReason,
         host_recipient_id: parsed.data.hostRecipientId ?? null,
         host_notifications_enabled: hostNotificationDelivery.featureEnabled,
         host_notification_targets: hostNotificationDelivery.targets,
@@ -3268,7 +3475,7 @@ export async function submitSignIn(
       log,
     });
 
-    return successResponse(result, "Signed in successfully");
+    return successResponse(responseResult, "Signed in successfully");
   } catch (error) {
     log.error(
       {

@@ -34,6 +34,24 @@ function createBaseMockDb() {
     permitRequest: {
       findMany: vi.fn().mockResolvedValue([]),
     },
+    actionRegisterEntry: {
+      count: vi.fn().mockResolvedValue(0),
+    },
+    inspectionSchedule: {
+      count: vi.fn().mockResolvedValue(0),
+    },
+    inspectionRun: {
+      count: vi.fn().mockResolvedValue(0),
+    },
+    competencyDecision: {
+      count: vi.fn().mockResolvedValue(0),
+    },
+    workerCertification: {
+      count: vi.fn().mockResolvedValue(0),
+    },
+    bookableResource: {
+      count: vi.fn().mockResolvedValue(0),
+    },
     inductionQuizAttempt: {
       count: vi.fn().mockResolvedValue(0),
       findMany: vi.fn().mockResolvedValue([]),
@@ -110,6 +128,11 @@ describe("dashboard.repository host arrival notifications", () => {
       scoredResponses30Days: 0,
       passRatePercent: 0,
       topRiskTemplateSites: [],
+    });
+    expect(metrics.actionSummary).toEqual({
+      open: 0,
+      overdue: 0,
+      blocked: 0,
     });
   });
 

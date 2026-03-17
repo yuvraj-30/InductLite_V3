@@ -139,6 +139,30 @@ export default async function AdminLayout({
       keywords: ["incident", "worksafe", "report"],
       contexts: ["dashboard", "escalations"],
     },
+    {
+      id: "actions",
+      href: "/admin/actions",
+      title: "Open Action Register",
+      description: "Track open, overdue, and blocked safety actions.",
+      keywords: ["action", "capa", "follow-up"],
+      contexts: ["dashboard", "escalations"],
+    },
+    {
+      id: "inspections",
+      href: "/admin/inspections",
+      title: "Open Inspections",
+      description: "Schedule recurring inspections and record outcomes.",
+      keywords: ["inspection", "schedule", "checklist"],
+      contexts: ["dashboard", "sites", "escalations"],
+    },
+    {
+      id: "competency",
+      href: "/admin/competency",
+      title: "Open Competency Matrix",
+      description: "Manage site requirements and worker certifications.",
+      keywords: ["competency", "certification", "clearance"],
+      contexts: ["dashboard", "contractors", "sites"],
+    },
   ];
 
   if (canManageEscalations) {
@@ -393,6 +417,8 @@ export default async function AdminLayout({
       items: [
         { href: "/admin/hazards", label: "Hazard Register" },
         { href: "/admin/incidents", label: "Incidents" },
+        { href: "/admin/actions", label: "Action Register" },
+        { href: "/admin/inspections", label: "Inspections" },
         { href: "/admin/escalations", label: "Escalations", requires: "escalations" },
         { href: "/admin/permits", label: "Permit-to-Work" },
         ...(flowNavCompressionEnabled
@@ -410,6 +436,7 @@ export default async function AdminLayout({
         { href: "/admin/contractors", label: "Contractors", requires: "contractors" },
         { href: "/admin/templates", label: "Templates", requires: "contractors" },
         { href: "/admin/risk-passport", label: "Risk Passport" },
+        { href: "/admin/competency", label: "Competency Matrix" },
         ...(flowNavCompressionEnabled
           ? []
           : [

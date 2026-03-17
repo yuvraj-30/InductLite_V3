@@ -16,6 +16,8 @@ const TENANT_MODELS = [
   "evacuationEvent",
   "evacuationAttendance",
   "incidentReport",
+  "actionRegisterEntry",
+  "actionComment",
   "legalDocumentVersion",
   "siteManagerAssignment",
   "magicLinkToken",
@@ -31,6 +33,9 @@ const TENANT_MODELS = [
   "permitRequest",
   "permitApproval",
   "contractorPrequalification",
+  "competencyRequirement",
+  "workerCertification",
+  "competencyDecision",
   "visitorApprovalPolicy",
   "visitorApprovalRequest",
   "visitorWatchlistEntry",
@@ -52,6 +57,9 @@ const TENANT_MODELS = [
   "deliveryEvent",
   "bookableResource",
   "resourceBooking",
+  "resourceInspectionRecord",
+  "inspectionSchedule",
+  "inspectionRun",
   "safetyFormTemplate",
   "safetyFormSubmission",
   "evidenceManifest",
@@ -348,6 +356,22 @@ export function scopedDb(
       updateMany: (args?: any) => Promise<{ count: number }>;
       deleteMany: (args?: any) => Promise<any>;
     };
+    actionRegisterEntry: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    actionComment: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
     legalDocumentVersion: {
       findFirst: (args?: any) => Promise<any>;
       findMany: (args?: any) => Promise<any[]>;
@@ -460,6 +484,30 @@ export function scopedDb(
       deleteMany: (args?: any) => Promise<any>;
     };
     contractorPrequalification: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    competencyRequirement: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    workerCertification: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    competencyDecision: {
       findFirst: (args?: any) => Promise<any>;
       findMany: (args?: any) => Promise<any[]>;
       count: (args?: any) => Promise<number>;
@@ -596,6 +644,30 @@ export function scopedDb(
       deleteMany: (args?: any) => Promise<any>;
     };
     resourceBooking: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    resourceInspectionRecord: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    inspectionSchedule: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    inspectionRun: {
       findFirst: (args?: any) => Promise<any>;
       findMany: (args?: any) => Promise<any[]>;
       count: (args?: any) => Promise<number>;

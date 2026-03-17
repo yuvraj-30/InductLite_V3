@@ -9,6 +9,7 @@ import {
   findIncidentReportById,
   resolveIncidentReport,
 } from "@/lib/repository/incident.repository";
+import { createActionEntry } from "@/lib/repository/action.repository";
 import { createAuditLog } from "@/lib/repository/audit.repository";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
@@ -27,6 +28,11 @@ const createIncidentSchema = z.object({
   worksafeReferenceNumber: z.string().max(120).optional().or(z.literal("")),
   worksafeNotifiedAt: z.string().optional().or(z.literal("")),
   legalHold: z.coerce.boolean().default(false),
+  followUpTitle: z.string().max(160).optional().or(z.literal("")),
+  followUpPriority: z
+    .enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"])
+    .default("MEDIUM"),
+  followUpDueAt: z.string().optional().or(z.literal("")),
 });
 
 export type IncidentActionResult =
@@ -62,6 +68,9 @@ export async function createIncidentReportAction(
     worksafeReferenceNumber: formData.get("worksafeReferenceNumber"),
     worksafeNotifiedAt: formData.get("worksafeNotifiedAt"),
     legalHold: formData.get("legalHold") ?? false,
+    followUpTitle: formData.get("followUpTitle"),
+    followUpPriority: formData.get("followUpPriority"),
+    followUpDueAt: formData.get("followUpDueAt"),
   });
 
   if (!parsed.success) {
@@ -115,6 +124,14 @@ export async function createIncidentReportAction(
     };
   }
 
+  let followUpDueAt: Date | undefined;
+  if (parsed.data.followUpDueAt) {
+    followUpDueAt = new Date(parsed.data.followUpDueAt);
+    if (Number.isNaN(followUpDueAt.getTime())) {
+      return { success: false, error: "Invalid follow-up due timestamp" };
+    }
+  }
+
   const context = await requireAuthenticatedContextReadOnly();
 
   try {
@@ -153,7 +170,38 @@ export async function createIncidentReportAction(
       request_id: requestId,
     });
 
+    if (parsed.data.followUpTitle?.trim()) {
+      const action = await createActionEntry(context.companyId, {
+        site_id: created.site_id,
+        source_type: "INCIDENT",
+        source_id: created.id,
+        title: parsed.data.followUpTitle,
+        description:
+          created.immediate_actions ||
+          created.description ||
+          `Follow up ${created.incident_type.toLowerCase()} report ${created.title}.`,
+        priority: parsed.data.followUpPriority,
+        owner_user_id: null,
+        reported_by_user_id: context.userId,
+        due_at: followUpDueAt ?? null,
+      });
+
+      await createAuditLog(context.companyId, {
+        action: "action.create",
+        entity_type: "ActionRegisterEntry",
+        entity_id: action.id,
+        user_id: context.userId,
+        details: {
+          source_type: "INCIDENT",
+          source_id: created.id,
+          site_id: created.site_id,
+        },
+        request_id: requestId,
+      });
+    }
+
     revalidatePath("/admin/incidents");
+    revalidatePath("/admin/actions");
     revalidatePath("/admin/live-register");
     revalidatePath(`/admin/sites/${parsed.data.siteId}`);
 
