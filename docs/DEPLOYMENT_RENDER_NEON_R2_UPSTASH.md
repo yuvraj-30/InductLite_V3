@@ -92,6 +92,9 @@ Avoid reusing `CRON_SECRET` across environments (dev/staging/prod).
 
 Troubleshooting keep-alive failures:
 
+- The keep-alive workflow now retries `/health` up to 6 times when Render responds with `503` and `x-render-routing: hibernate-wake-error`.
+  - This is meant to absorb transient free-tier wake-ups rather than fail the whole scheduled job immediately.
+  - If retries still exhaust, inspect the logged response headers to confirm the service is waking rather than failing application health.
 - If GitHub Actions reports HTTP `403` on `/api/cron/export-scheduler`:
   - Confirm Render env has `TRUST_PROXY=1`.
   - Confirm `CRON_ALLOW_GITHUB_ACTIONS=1` (or set explicit `CRON_ALLOWED_IPS` CIDRs).

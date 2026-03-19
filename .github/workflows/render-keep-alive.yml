@@ -14,7 +14,20 @@ jobs:
         run: |
           set -euo pipefail
           url="${RENDER_APP_URL%/}/health"
-          status="$(curl -sS -D /tmp/health-headers.txt -o /tmp/health-body.txt -w "%{http_code}" -H "User-Agent: github-actions-render-keep-alive" "$url" || true)"
+          status=""
+          for attempt in 1 2 3 4 5 6; do
+            status="$(curl -sS -D /tmp/health-headers.txt -o /tmp/health-body.txt -w "%{http_code}" -H "User-Agent: github-actions-render-keep-alive" "$url" || true)"
+            if [[ "$status" =~ ^2 ]]; then
+              break
+            fi
+            routing_header="$(grep -i '^x-render-routing:' /tmp/health-headers.txt | tr -d '\r' | awk '{print $2}' || true)"
+            if [[ "$status" == "503" && "$routing_header" == "hibernate-wake-error" && "$attempt" -lt 6 ]]; then
+              echo "Render is waking from hibernation (attempt $attempt/6); retrying in 20s"
+              sleep 20
+              continue
+            fi
+            break
+          done
           if [[ ! "$status" =~ ^2 ]]; then
             echo "Health check failed: HTTP $status ($url)"
             echo "--- headers ---"
