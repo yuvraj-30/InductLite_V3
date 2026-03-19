@@ -6,6 +6,7 @@
 
 import { randomBytes } from "crypto";
 import { publicDb } from "@/lib/db/public-db";
+import { findUnscopedUserByEmail } from "@/lib/db/scoped";
 import { handlePrismaError, RepositoryError } from "./base";
 
 export interface RegisterCompanyWithAdminInput {
@@ -64,9 +65,7 @@ export async function registerCompanyWithAdmin(
   }
 
   try {
-    // eslint-disable-next-line security-guardrails/require-company-id -- signup/login bootstrap lookup by unique email is allowlisted
-    const existingUser = await publicDb.user.findFirst({
-      where: { email: normalizedEmail },
+    const existingUser = await findUnscopedUserByEmail(normalizedEmail, {
       select: { id: true },
     });
 

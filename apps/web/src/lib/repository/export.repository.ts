@@ -6,6 +6,12 @@
 
 import { scopedDb } from "@/lib/db/scoped-db";
 import { publicDb } from "@/lib/db/public-db";
+import {
+  countRunningExportJobsGlobal as countRunningExportJobsGlobalUnsafe,
+  findOldestQueuedExportJob,
+  listGlobalExportDownloadAuditLogsSince,
+  requeueStaleRunningExportJobs,
+} from "@/lib/db/scoped";
 import { Prisma } from "@prisma/client";
 import type { ExportJob, ExportStatus, ExportType } from "@prisma/client";
 import { nanoid } from "nanoid";
@@ -117,9 +123,7 @@ export async function countRunningExportJobs(
 
 export async function countRunningExportJobsGlobal(): Promise<number> {
   try {
-    return await publicDb.exportJob.count({
-      where: { status: "RUNNING" },
-    });
+    return await countRunningExportJobsGlobalUnsafe();
   } catch (error) {
     handlePrismaError(error, "ExportJob");
   }
@@ -307,14 +311,7 @@ export async function claimNextQueuedExportJob(): Promise<
     return null;
   }
 
-  // eslint-disable-next-line security-guardrails/require-company-id -- global queue claim intentionally scans across companies
-  const job = await publicDb.exportJob.findFirst({
-    where: {
-      status: "QUEUED",
-      run_at: { lte: now },
-    },
-    orderBy: { queued_at: "asc" },
-  });
+  const job = await findOldestQueuedExportJob(now);
 
   if (!job) return null;
 
@@ -341,19 +338,9 @@ export async function claimNextQueuedExportJob(): Promise<
 export async function requeueStaleExportJobs(): Promise<number> {
   const runtimeMs = GUARDRAILS.MAX_EXPORT_RUNTIME_SECONDS * 1000;
   const staleBefore = new Date(Date.now() - runtimeMs * 2);
-  // eslint-disable-next-line security-guardrails/require-company-id -- global stale-job recovery intentionally operates across companies
-  const result = await publicDb.exportJob.updateMany({
-    where: {
-      status: "RUNNING",
-      started_at: { lt: staleBefore },
-      attempts: { lt: GUARDRAILS.MAX_EXPORT_ATTEMPTS },
-    },
-    data: {
-      status: "QUEUED",
-      run_at: new Date(),
-      locked_at: null,
-      lock_token: null,
-    },
+  const result = await requeueStaleRunningExportJobs({
+    staleBefore,
+    maxAttempts: GUARDRAILS.MAX_EXPORT_ATTEMPTS,
   });
 
   return result.count;
@@ -533,14 +520,7 @@ export async function checkExportDownloadGuardrails(
       },
       select: { details: true },
     }),
-    // eslint-disable-next-line security-guardrails/require-company-id -- global download budget guardrail intentionally scans across companies
-    publicDb.auditLog.findMany({
-      where: {
-        action: "export.download",
-        created_at: { gte: since },
-      },
-      select: { details: true },
-    }),
+    listGlobalExportDownloadAuditLogsSince(since),
   ]);
 
   const tenantUsed = tenantLogs.reduce(

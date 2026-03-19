@@ -34,6 +34,29 @@ const CHECKS = [
     file: "apps/web/src/lib/api/__tests__/response.guardrails.test.ts",
     patterns: ['describe("guardrail denial payloads"', "controlId: \"EXPT-003\""],
   },
+  {
+    file: "apps/web/src/lib/env-validation.ts",
+    patterns: [
+      "const BUDGET_TIER_LIMITS",
+      "const REQUIRED_PRODUCTION_GUARDRAILS",
+      "Production requires UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN",
+    ],
+  },
+  {
+    file: "apps/web/src/app/api/integrations/channels/actions/route.ts",
+    patterns: [
+      "x-inductlite-timestamp",
+      "checkChannelActionRateLimit",
+      "CONTROL_ID: INT-002",
+    ],
+  },
+  {
+    file: "apps/web/src/app/api/integrations/channels/actions/route.test.ts",
+    patterns: [
+      "returns 403 when callback timestamp is stale",
+      "returns 429 when channel callback rate limit is exceeded",
+    ],
+  },
 ];
 
 function readText(relativePath) {

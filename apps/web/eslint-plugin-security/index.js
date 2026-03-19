@@ -226,6 +226,73 @@ module.exports = {
         };
       },
     },
+    "no-publicdb-tenant-access": {
+      meta: {
+        type: "problem",
+        docs: {
+          description:
+            "Disallow tenant-owned model access through publicDb outside approved DB infrastructure",
+          category: "Security",
+          recommended: true,
+        },
+        messages: {
+          noPublicDbTenantAccess:
+            "Do not access tenant-owned model '{{ modelName }}' via publicDb here. Use scopedDb(companyId) or move the query into src/lib/db/* infrastructure.",
+        },
+        schema: [],
+      },
+      create(context) {
+        const tenantOwnedModels = new Set([
+          "user",
+          "site",
+          "sitePublicLink",
+          "signInRecord",
+          "inductionQuestion",
+          "inductionResponse",
+          "contractor",
+          "contractorDocument",
+          "magicLinkToken",
+          "exportJob",
+          "auditLog",
+          "outboundWebhookDelivery",
+          "channelIntegrationConfig",
+          "accessConnectorConfig",
+          "emergencyBroadcast",
+          "identityOcrVerification",
+          "preRegistrationInvite",
+          "incidentReport",
+          "emergencyDrill",
+        ]);
+
+        const normalizedFilename = readFilename(context).replaceAll("\\", "/");
+        const isApprovedInfra =
+          normalizedFilename.includes("/src/lib/db/") ||
+          normalizedFilename.startsWith("src/lib/db/");
+
+        if (isApprovedInfra) {
+          return {};
+        }
+
+        return {
+          MemberExpression(node) {
+            if (
+              node.object &&
+              node.object.type === "Identifier" &&
+              node.object.name === "publicDb" &&
+              node.property &&
+              node.property.type === "Identifier" &&
+              tenantOwnedModels.has(node.property.name)
+            ) {
+              context.report({
+                node,
+                messageId: "noPublicDbTenantAccess",
+                data: { modelName: node.property.name },
+              });
+            }
+          },
+        };
+      },
+    },
     /**
      * Prevent environment variable access in client components
      *

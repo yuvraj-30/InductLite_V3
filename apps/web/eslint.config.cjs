@@ -60,6 +60,7 @@ const eslintConfig = [
     },
     rules: {
       "security-guardrails/no-raw-sql": "error",
+      "security-guardrails/no-publicdb-tenant-access": "error",
       "security-guardrails/no-env-secrets-client": "error",
       "security-guardrails/require-company-id": [
         "error",
@@ -110,6 +111,7 @@ const eslintConfig = [
       "no-console": "off",
       "@typescript-eslint/no-unused-vars": "off",
       "security-guardrails/no-raw-sql": "off",
+      "security-guardrails/no-publicdb-tenant-access": "off",
       "security-guardrails/require-company-id": "off",
       "security-guardrails/require-csrf-check": "off",
     },
@@ -128,6 +130,7 @@ const eslintConfig = [
       "no-console": "off",
       "@typescript-eslint/no-unused-vars": "off",
       "security-guardrails/no-raw-sql": "off",
+      "security-guardrails/no-publicdb-tenant-access": "off",
       "security-guardrails/require-company-id": "off",
       "security-guardrails/require-csrf-check": "off",
     },
@@ -140,6 +143,24 @@ const eslintConfig = [
       "no-console": "off",
       "no-eval": "off",
       "security-guardrails/no-raw-sql": "off",
+      "security-guardrails/no-publicdb-tenant-access": "off",
+      "security-guardrails/require-company-id": "off",
+      "security-guardrails/require-csrf-check": "off",
+    },
+  },
+  {
+    files: [
+      "**/__tests__/**",
+      "tests/**",
+      "e2e/**",
+      "**/*.spec.{ts,tsx}",
+      "**/*.test.{ts,tsx}",
+    ],
+    rules: {
+      "no-console": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+      "security-guardrails/no-publicdb-tenant-access": "off",
       "security-guardrails/require-company-id": "off",
       "security-guardrails/require-csrf-check": "off",
     },

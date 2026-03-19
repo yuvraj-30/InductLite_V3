@@ -24,75 +24,89 @@ import { revalidatePath } from "next/cache";
 import { GUARDRAILS, isOffPeakNow } from "@/lib/guardrails";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
+import {
+  enforceBudgetPath,
+  startBudgetTrackedOperation,
+} from "@/lib/cost/budget-service";
 
 export async function createExportAction(
   input: z.infer<typeof createExportSchema>,
 ): Promise<ApiResponse<{ exportJobId: string }>> {
+  const finishBudgetTracking = startBudgetTrackedOperation("server_action");
   const requestId = generateRequestId();
   const log = createRequestLogger(requestId);
 
-  // CSRF protection for server actions
   try {
-    await assertOrigin();
-  } catch {
-    return errorResponse("FORBIDDEN", "Invalid request origin");
-  }
-
-  // Validate payload
-  const parsed = createExportSchema.safeParse(input);
-  if (!parsed.success) {
-    return validationErrorResponse(
-      { export: parsed.error.issues.map((e) => e.message) },
-      "Invalid export parameters",
-    );
-  }
-
-  // Admin check
-  const guard = await checkAdmin();
-  if (!guard.success) return permissionDeniedResponse(guard.error);
-
-  if (!isFeatureEnabled("EXPORTS")) {
-    return errorResponse("FORBIDDEN", "Exports are currently disabled");
-  }
-
-  // Tenant context
-  const context = await requireAuthenticatedContextReadOnly();
-
-  const requiresAdvancedExport =
-    parsed.data.exportType === "SITE_PACK_PDF" ||
-    parsed.data.exportType === "COMPLIANCE_ZIP";
-  if (requiresAdvancedExport) {
+    // CSRF protection for server actions
     try {
-      await assertCompanyFeatureEnabled(context.companyId, "EXPORTS_ADVANCED");
-    } catch (error) {
-      if (error instanceof EntitlementDeniedError) {
-        return errorResponse(
-          "FORBIDDEN",
-          "Advanced export bundles are disabled for your current plan",
-        );
-      }
-
-      log.error(
-        {
-          requestId,
-          companyId: context.companyId,
-          exportType: parsed.data.exportType,
-          errorType: error instanceof Error ? error.name : "unknown",
-        },
-        "Failed to evaluate export entitlements",
-      );
-      return errorResponse("INTERNAL_ERROR", "Failed to queue export job");
+      await assertOrigin();
+    } catch {
+      return errorResponse("FORBIDDEN", "Invalid request origin");
     }
-  }
 
-  if (GUARDRAILS.EXPORT_OFFPEAK_ONLY && !isOffPeakNow()) {
-    return errorResponse(
-      "FORBIDDEN",
-      "Exports are only available during off-peak hours",
-    );
-  }
+    // Validate payload
+    const parsed = createExportSchema.safeParse(input);
+    if (!parsed.success) {
+      return validationErrorResponse(
+        { export: parsed.error.issues.map((e) => e.message) },
+        "Invalid export parameters",
+      );
+    }
 
-  try {
+    // Admin check
+    const guard = await checkAdmin();
+    if (!guard.success) return permissionDeniedResponse(guard.error);
+
+    if (!isFeatureEnabled("EXPORTS")) {
+      return errorResponse("FORBIDDEN", "Exports are currently disabled");
+    }
+
+    // Tenant context
+    const context = await requireAuthenticatedContextReadOnly();
+    const budgetDecision = await enforceBudgetPath("admin.export.create");
+    if (!budgetDecision.allowed) {
+      return guardrailDeniedResponse(
+        budgetDecision.controlId ?? "COST-008",
+        budgetDecision.violatedLimit ?? `ENV_BUDGET_TIER=${budgetDecision.state.budgetTier}`,
+        budgetDecision.scope,
+        budgetDecision.message,
+      );
+    }
+
+    const requiresAdvancedExport =
+      parsed.data.exportType === "SITE_PACK_PDF" ||
+      parsed.data.exportType === "COMPLIANCE_ZIP";
+    if (requiresAdvancedExport) {
+      try {
+        await assertCompanyFeatureEnabled(context.companyId, "EXPORTS_ADVANCED");
+      } catch (error) {
+        if (error instanceof EntitlementDeniedError) {
+          return errorResponse(
+            "FORBIDDEN",
+            "Advanced export bundles are disabled for your current plan",
+          );
+        }
+
+        log.error(
+          {
+            requestId,
+            companyId: context.companyId,
+            exportType: parsed.data.exportType,
+            errorType: error instanceof Error ? error.name : "unknown",
+          },
+          "Failed to evaluate export entitlements",
+        );
+        return errorResponse("INTERNAL_ERROR", "Failed to queue export job");
+      }
+    }
+
+    if (GUARDRAILS.EXPORT_OFFPEAK_ONLY && !isOffPeakNow()) {
+      return errorResponse(
+        "FORBIDDEN",
+        "Exports are only available during off-peak hours",
+      );
+    }
+
     const job = await queueExportJobWithLimits(context.companyId, {
       export_type: parsed.data.exportType,
       parameters: parsed.data,
@@ -137,6 +151,8 @@ export async function createExportAction(
     }
     log.error({ error: String(error) }, "Failed to queue export job");
     return errorResponse("INTERNAL_ERROR", "Failed to queue export job");
+  } finally {
+    finishBudgetTracking();
   }
 }
 

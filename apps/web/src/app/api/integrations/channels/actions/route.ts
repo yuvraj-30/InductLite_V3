@@ -1,8 +1,10 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { publicDb } from "@/lib/db/public-db";
+import { findActiveChannelIntegrationConfig } from "@/lib/db/scoped";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import { checkChannelActionRateLimit } from "@/lib/rate-limit";
+import { getStableClientKey } from "@/lib/rate-limit/clientKey";
 import {
   createChannelDelivery,
   createCommunicationEvent,
@@ -21,6 +23,8 @@ const channelActionSchema = z.object({
   notes: z.string().max(1000).optional(),
 });
 
+const DEFAULT_CHANNEL_TIMESTAMP_TOLERANCE_SECONDS = 300;
+
 function normalizeSignature(signatureHeader: string): string {
   const trimmed = signatureHeader.trim();
   if (trimmed.startsWith("sha256=")) {
@@ -33,9 +37,10 @@ function verifyHmacSignature(input: {
   payload: string;
   secret: string;
   signatureHeader: string;
+  timestamp: string;
 }): boolean {
   const expected = createHmac("sha256", input.secret)
-    .update(input.payload)
+    .update(`${input.timestamp}.${input.payload}`)
     .digest("hex");
   const provided = normalizeSignature(input.signatureHeader);
 
@@ -43,6 +48,30 @@ function verifyHmacSignature(input: {
   const providedBuffer = Buffer.from(provided, "hex");
   if (expectedBuffer.length !== providedBuffer.length) return false;
   return timingSafeEqual(expectedBuffer, providedBuffer);
+}
+
+function parseSignedTimestamp(rawTimestamp: string): number | null {
+  const trimmed = rawTimestamp.trim();
+  if (!trimmed) return null;
+
+  if (/^\d+$/.test(trimmed)) {
+    const numeric = Number(trimmed);
+    if (!Number.isFinite(numeric)) return null;
+    return trimmed.length > 10 ? numeric : numeric * 1000;
+  }
+
+  const parsed = Date.parse(trimmed);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function isTimestampWithinTolerance(
+  rawTimestamp: string,
+  toleranceSeconds: number,
+  nowMs = Date.now(),
+): boolean {
+  const timestampMs = parseSignedTimestamp(rawTimestamp);
+  if (timestampMs === null) return false;
+  return Math.abs(nowMs - timestampMs) <= toleranceSeconds * 1000;
 }
 
 export async function POST(request: NextRequest) {
@@ -72,16 +101,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const config = await publicDb.channelIntegrationConfig.findFirst({
-    where: { id: parsed.data.integrationConfigId, is_active: true },
-    select: {
-      id: true,
-      company_id: true,
-      provider: true,
-      signing_secret: true,
-      site_id: true,
-    },
-  });
+  const config = await findActiveChannelIntegrationConfig(
+    parsed.data.integrationConfigId,
+  );
   if (!config) {
     return NextResponse.json(
       { success: false, error: "Integration config not found or inactive" },
@@ -109,14 +131,39 @@ export async function POST(request: NextRequest) {
     request.headers.get("x-inductlite-signature") ??
     request.headers.get("x-channel-signature") ??
     "";
+  const timestampHeader =
+    request.headers.get("x-inductlite-timestamp") ??
+    request.headers.get("x-channel-timestamp") ??
+    "";
   const secret =
     config.signing_secret ??
     process.env.CHANNEL_INTEGRATION_SIGNING_SECRET ??
     "";
+  const timestampToleranceSeconds = Number(
+    process.env.CHANNEL_INTEGRATION_TIMESTAMP_TOLERANCE_SECONDS ??
+      DEFAULT_CHANNEL_TIMESTAMP_TOLERANCE_SECONDS,
+  );
 
-  if (!signatureHeader || !secret || secret.length < 16) {
+  if (!signatureHeader || !timestampHeader || !secret || secret.length < 16) {
     return NextResponse.json(
-      { success: false, error: "Missing signing credentials" },
+      {
+        success: false,
+        error: "Missing signing credentials (CONTROL_ID: INT-001)",
+      },
+      { status: 403 },
+    );
+  }
+
+  if (
+    !Number.isFinite(timestampToleranceSeconds) ||
+    timestampToleranceSeconds <= 0 ||
+    !isTimestampWithinTolerance(timestampHeader, timestampToleranceSeconds)
+  ) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Invalid or expired callback timestamp (CONTROL_ID: INT-002)",
+      },
       { status: 403 },
     );
   }
@@ -126,11 +173,41 @@ export async function POST(request: NextRequest) {
       payload: rawBody,
       secret,
       signatureHeader,
+      timestamp: timestampHeader,
     })
   ) {
     return NextResponse.json(
-      { success: false, error: "Invalid signature" },
+      {
+        success: false,
+        error: "Invalid signature (CONTROL_ID: INT-001)",
+      },
       { status: 403 },
+    );
+  }
+
+  const clientKey = getStableClientKey(
+    {
+      "x-forwarded-for": request.headers.get("x-forwarded-for") ?? undefined,
+      "x-real-ip": request.headers.get("x-real-ip") ?? undefined,
+      "user-agent": request.headers.get("user-agent") ?? undefined,
+      accept: request.headers.get("accept") ?? undefined,
+    },
+    { trustProxy: process.env.TRUST_PROXY === "1" },
+  );
+  const rateLimit = await checkChannelActionRateLimit(config.company_id, {
+    clientKey,
+  });
+  if (!rateLimit.success) {
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          "Channel action rate limit exceeded (CONTROL_ID: ABUSE-006|ABUSE-007)",
+        controlId: "ABUSE-006|ABUSE-007",
+        violatedLimit: `RL_ADMIN_PER_IP_PER_MIN=${process.env.RL_ADMIN_PER_IP_PER_MIN ?? "120"}|RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN=${process.env.RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN ?? "60"}`,
+        scope: "company",
+      },
+      { status: 429 },
     );
   }
 

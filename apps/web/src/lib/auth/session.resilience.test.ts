@@ -1,11 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  publicDb: {
-    user: {
-      findFirst: vi.fn(),
-    },
-  },
+  findUnscopedUserByEmail: vi.fn(),
   scopedDb: vi.fn(),
   verifyPassword: vi.fn(),
   hashPassword: vi.fn(),
@@ -14,8 +10,8 @@ const mocks = vi.hoisted(() => ({
   createRequestLogger: vi.fn(),
 }));
 
-vi.mock("@/lib/db/public-db", () => ({
-  publicDb: mocks.publicDb,
+vi.mock("@/lib/db/scoped", () => ({
+  findUnscopedUserByEmail: mocks.findUnscopedUserByEmail,
 }));
 
 vi.mock("@/lib/db/scoped-db", () => ({
@@ -62,7 +58,7 @@ describe("auth session resilience", () => {
   });
 
   it("returns invalid credentials when audit logging fails on wrong password", async () => {
-    mocks.publicDb.user.findFirst.mockResolvedValue({
+    mocks.findUnscopedUserByEmail.mockResolvedValue({
       id: "user-1",
       company_id: "company-1",
       email: "viewer@buildright.co.nz",
@@ -95,7 +91,7 @@ describe("auth session resilience", () => {
   });
 
   it("still succeeds when success-audit logging fails", async () => {
-    mocks.publicDb.user.findFirst.mockResolvedValue({
+    mocks.findUnscopedUserByEmail.mockResolvedValue({
       id: "user-2",
       company_id: "company-2",
       email: "admin@buildright.co.nz",

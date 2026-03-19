@@ -212,6 +212,12 @@ const ENV_CONFIG: EnvConfig[] = [
     description: "HMAC secret for Teams/Slack callback signatures",
   },
   {
+    name: "CHANNEL_INTEGRATION_TIMESTAMP_TOLERANCE_SECONDS",
+    required: false,
+    production: false,
+    description: "Accepted callback timestamp skew for Teams/Slack actions",
+  },
+  {
     name: "ACCOUNTING_SYNC_ENDPOINT_URL",
     required: false,
     production: false,
@@ -300,6 +306,12 @@ const ENV_CONFIG: EnvConfig[] = [
     required: false,
     production: false,
     description: "Enable/disable uploads",
+  },
+  {
+    name: "FEATURE_PUBLIC_SIGNIN_ENABLED",
+    required: false,
+    production: false,
+    description: "Enable/disable public sign-in",
   },
   {
     name: "FEATURE_VISUAL_REGRESSION_ENABLED",
@@ -459,6 +471,30 @@ const ENV_CONFIG: EnvConfig[] = [
     description: "Environment budget tier (MVP|EARLY|GROWTH)",
   },
   {
+    name: "MAX_MONTHLY_EGRESS_GB",
+    required: false,
+    production: false,
+    description: "Max monthly egress in GB",
+  },
+  {
+    name: "MAX_MONTHLY_STORAGE_GB",
+    required: false,
+    production: false,
+    description: "Max monthly storage in GB",
+  },
+  {
+    name: "MAX_MONTHLY_JOB_MINUTES",
+    required: false,
+    production: false,
+    description: "Max monthly job runtime minutes",
+  },
+  {
+    name: "MAX_MONTHLY_SERVER_ACTION_INVOCATIONS",
+    required: false,
+    production: false,
+    description: "Max monthly server action invocations",
+  },
+  {
     name: "MAX_MONTHLY_COMPUTE_INVOCATIONS",
     required: false,
     production: false,
@@ -547,6 +583,12 @@ const ENV_CONFIG: EnvConfig[] = [
     required: false,
     production: false,
     description: "Max export runtime seconds",
+  },
+  {
+    name: "MAX_EXPORT_QUEUE_AGE_MINUTES",
+    required: false,
+    production: false,
+    description: "Max export queue age in minutes",
   },
   {
     name: "MAX_EXPORT_BYTES_GLOBAL_PER_DAY",
@@ -732,9 +774,70 @@ const ENV_CONFIG: EnvConfig[] = [
   },
 ];
 
+type BudgetTier = "MVP" | "EARLY" | "GROWTH";
+
+const BUDGET_TIER_LIMITS: Record<
+  BudgetTier,
+  Record<
+    | "MAX_MONTHLY_EGRESS_GB"
+    | "MAX_MONTHLY_STORAGE_GB"
+    | "MAX_MONTHLY_JOB_MINUTES"
+    | "MAX_MONTHLY_SERVER_ACTION_INVOCATIONS"
+    | "MAX_MONTHLY_COMPUTE_INVOCATIONS"
+    | "MAX_MONTHLY_COMPUTE_RUNTIME_MINUTES",
+    number
+  >
+> = {
+  MVP: {
+    MAX_MONTHLY_EGRESS_GB: 100,
+    MAX_MONTHLY_STORAGE_GB: 50,
+    MAX_MONTHLY_JOB_MINUTES: 1000,
+    MAX_MONTHLY_SERVER_ACTION_INVOCATIONS: 1_000_000,
+    MAX_MONTHLY_COMPUTE_INVOCATIONS: 1_200_000,
+    MAX_MONTHLY_COMPUTE_RUNTIME_MINUTES: 2_500,
+  },
+  EARLY: {
+    MAX_MONTHLY_EGRESS_GB: 500,
+    MAX_MONTHLY_STORAGE_GB: 250,
+    MAX_MONTHLY_JOB_MINUTES: 5000,
+    MAX_MONTHLY_SERVER_ACTION_INVOCATIONS: 5_000_000,
+    MAX_MONTHLY_COMPUTE_INVOCATIONS: 6_000_000,
+    MAX_MONTHLY_COMPUTE_RUNTIME_MINUTES: 12_000,
+  },
+  GROWTH: {
+    MAX_MONTHLY_EGRESS_GB: 2500,
+    MAX_MONTHLY_STORAGE_GB: 1000,
+    MAX_MONTHLY_JOB_MINUTES: 25_000,
+    MAX_MONTHLY_SERVER_ACTION_INVOCATIONS: 20_000_000,
+    MAX_MONTHLY_COMPUTE_INVOCATIONS: 24_000_000,
+    MAX_MONTHLY_COMPUTE_RUNTIME_MINUTES: 48_000,
+  },
+};
+
+const REQUIRED_PRODUCTION_GUARDRAILS = [
+  "ENV_BUDGET_TIER",
+  "MAX_MONTHLY_EGRESS_GB",
+  "MAX_MONTHLY_STORAGE_GB",
+  "MAX_MONTHLY_JOB_MINUTES",
+  "MAX_MONTHLY_SERVER_ACTION_INVOCATIONS",
+  "MAX_MONTHLY_COMPUTE_INVOCATIONS",
+  "MAX_MONTHLY_COMPUTE_RUNTIME_MINUTES",
+  "FEATURE_EXPORTS_ENABLED",
+  "FEATURE_UPLOADS_ENABLED",
+  "FEATURE_PUBLIC_SIGNIN_ENABLED",
+  "FEATURE_VISUAL_REGRESSION_ENABLED",
+] as const;
+
 interface ValidationError {
   name: string;
   error: string;
+}
+
+function parseCommaSeparatedValues(value: string | undefined): string[] {
+  return (value ?? "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
 }
 
 export function validateEnv(): {
@@ -828,6 +931,13 @@ export function validateEnv(): {
 
   // Validate critical numeric guardrails for admin/auth abuse controls.
   const positiveIntEnv = [
+    "MAX_MONTHLY_EGRESS_GB",
+    "MAX_MONTHLY_STORAGE_GB",
+    "MAX_MONTHLY_JOB_MINUTES",
+    "MAX_MONTHLY_SERVER_ACTION_INVOCATIONS",
+    "MAX_MONTHLY_COMPUTE_INVOCATIONS",
+    "MAX_MONTHLY_COMPUTE_RUNTIME_MINUTES",
+    "MAX_EXPORT_QUEUE_AGE_MINUTES",
     "RL_DEMO_BOOKING_PER_IP_PER_HOUR",
     "RL_ADMIN_PER_USER_PER_MIN",
     "RL_ADMIN_PER_IP_PER_MIN",
@@ -840,6 +950,7 @@ export function validateEnv(): {
     "MAX_POLICY_SIM_RUNS_PER_COMPANY_PER_DAY",
     "MAX_RISK_SCORE_RECALC_JOBS_PER_DAY",
     "MAX_MOBILE_GEOFENCE_EVENTS_PER_COMPANY_PER_DAY",
+    "CHANNEL_INTEGRATION_TIMESTAMP_TOLERANCE_SECONDS",
     "MOBILE_GEOFENCE_EVENT_MAX_AGE_MINUTES",
     "MOBILE_GEOFENCE_EVENT_FUTURE_SKEW_MINUTES",
     "MAX_CONNECTOR_DELIVERIES_PER_COMPANY_PER_DAY",
@@ -931,6 +1042,72 @@ export function validateEnv(): {
     });
   }
 
+  if (isProd) {
+    for (const name of REQUIRED_PRODUCTION_GUARDRAILS) {
+      const value = process.env[name];
+      if (value === undefined || value === "") {
+        errors.push({
+          name,
+          error: `${name} is required in production`,
+        });
+      }
+    }
+
+    const rawTier = process.env.ENV_BUDGET_TIER?.trim().toUpperCase();
+    const budgetTier =
+      rawTier === "MVP" || rawTier === "EARLY" || rawTier === "GROWTH"
+        ? (rawTier as BudgetTier)
+        : null;
+
+    if (!budgetTier) {
+      errors.push({
+        name: "ENV_BUDGET_TIER",
+        error: "ENV_BUDGET_TIER must be MVP, EARLY, or GROWTH in production",
+      });
+    } else {
+      for (const [name, maxAllowed] of Object.entries(
+        BUDGET_TIER_LIMITS[budgetTier],
+      )) {
+        const rawValue = process.env[name];
+        if (!rawValue) {
+          continue;
+        }
+
+        const parsed = Number(rawValue);
+        if (!Number.isFinite(parsed) || parsed <= 0 || !Number.isInteger(parsed)) {
+          errors.push({
+            name,
+            error: `${name} must be a positive integer`,
+          });
+          continue;
+        }
+
+        if (parsed > maxAllowed) {
+          errors.push({
+            name,
+            error:
+              `${name}=${parsed} exceeds the ${budgetTier} tier ceiling (${maxAllowed})`,
+          });
+        }
+      }
+    }
+
+    for (const name of [
+      "FEATURE_EXPORTS_ENABLED",
+      "FEATURE_UPLOADS_ENABLED",
+      "FEATURE_PUBLIC_SIGNIN_ENABLED",
+      "FEATURE_VISUAL_REGRESSION_ENABLED",
+    ] as const) {
+      const value = process.env[name]?.trim().toLowerCase();
+      if (!value || !["true", "false", "1", "0"].includes(value)) {
+        errors.push({
+          name,
+          error: `${name} must be explicitly set to true/false in production`,
+        });
+      }
+    }
+  }
+
   // Production-specific warnings
   if (isProd) {
     if (process.env.SESSION_SECRET?.includes("dev-secret")) {
@@ -966,10 +1143,51 @@ export function validateEnv(): {
       }
     }
 
-    if (!process.env.UPSTASH_REDIS_REST_URL) {
-      warnings.push(
-        "Upstash Redis not configured. Using in-memory rate limiting (not cluster-safe).",
-      );
+    if (
+      !process.env.UPSTASH_REDIS_REST_URL ||
+      !process.env.UPSTASH_REDIS_REST_TOKEN
+    ) {
+      errors.push({
+        name: "UPSTASH_REDIS_REST_URL",
+        error:
+          "Production requires UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN to avoid in-memory rate limiting.",
+      });
+    }
+
+    const hasProviderBillingSource = Boolean(
+      process.env.BUDGET_TELEMETRY_PROVIDER_BILLING_JSON ||
+        process.env.BUDGET_TELEMETRY_PROVIDER_BILLING_FILE ||
+        process.env.BUDGET_TELEMETRY_PROVIDER_BILLING_URL,
+    );
+    if (!hasProviderBillingSource) {
+      errors.push({
+        name: "BUDGET_TELEMETRY_PROVIDER_BILLING_FILE",
+        error:
+          "Production requires BUDGET_TELEMETRY_PROVIDER_BILLING_JSON, BUDGET_TELEMETRY_PROVIDER_BILLING_FILE, or BUDGET_TELEMETRY_PROVIDER_BILLING_URL with provider-backed billing entries.",
+      });
+    }
+
+    const requiredBillingProviders = parseCommaSeparatedValues(
+      process.env.BUDGET_TELEMETRY_REQUIRED_PROVIDERS,
+    );
+    if (requiredBillingProviders.length === 0) {
+      errors.push({
+        name: "BUDGET_TELEMETRY_REQUIRED_PROVIDERS",
+        error:
+          "Production requires BUDGET_TELEMETRY_REQUIRED_PROVIDERS to declare every provider billing feed included in spend enforcement.",
+      });
+    }
+
+    if (
+      !hasProviderBillingSource &&
+      (process.env.BUDGET_TELEMETRY_SNAPSHOT_JSON ||
+        process.env.BUDGET_TELEMETRY_SNAPSHOT_FILE)
+    ) {
+      errors.push({
+        name: "BUDGET_TELEMETRY_SNAPSHOT_JSON",
+        error:
+          "BUDGET_TELEMETRY_SNAPSHOT_JSON/BUDGET_TELEMETRY_SNAPSHOT_FILE are non-compliant as the sole production spend source. Use provider billing manifest inputs instead.",
+      });
     }
 
     if (!process.env.SENTRY_DSN) {

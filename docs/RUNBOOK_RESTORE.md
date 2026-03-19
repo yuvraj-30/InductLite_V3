@@ -17,7 +17,7 @@
 3. Update production DATABASE_URL to point to restored DB.
 4. Run Prisma migrations if required.
 5. Run smoke tests (health, login, public sign-in, export).
-6. Re-enable background workers.
+6. Re-enable cron API routes / scheduled GitHub workflows.
 
 ## Validation
 
@@ -27,4 +27,5 @@
 ## Follow-Up
 
 - Document restore time and issues.
+- Save the drill artifact under `docs/drills/restore/YYYY-MM-DD.md`.
 - Adjust retention or backup schedules if needed.

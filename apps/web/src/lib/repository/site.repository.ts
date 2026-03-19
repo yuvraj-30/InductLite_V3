@@ -5,7 +5,7 @@
  */
 
 import { scopedDb } from "@/lib/db/scoped-db";
-import { publicDb } from "@/lib/db/public-db";
+import { findActiveSiteByPublicSlug } from "@/lib/db/scoped";
 import type { Site, Prisma } from "@prisma/client";
 import {
   requireCompanyId,
@@ -44,6 +44,18 @@ export interface SiteManagerNotificationRecipient {
   email: string;
   name: string;
 }
+type SitePublicLinkScopedDb = ReturnType<typeof scopedDb> & {
+  sitePublicLink: {
+    findMany: (args?: Record<string, unknown>) => Promise<
+      Array<{ site_id: string; slug: string }>
+    >;
+    findFirst: (args?: Record<string, unknown>) => Promise<
+      { site_id: string; slug: string } | null
+    >;
+    create: (args?: Record<string, unknown>) => Promise<{ id: string; slug: string }>;
+    updateMany: (args?: Record<string, unknown>) => Promise<{ count: number }>;
+  };
+};
 
 /**
  * Site filter options
@@ -141,22 +153,7 @@ export async function findSiteByPublicSlug(
   slug: string,
 ): Promise<(Site & { company: { id: string; name: string } }) | null> {
   try {
-    // eslint-disable-next-line security-guardrails/require-company-id -- public lookup by unique slug
-    const publicLink = await publicDb.sitePublicLink.findUnique({
-      where: { slug },
-      include: {
-        site: {
-          include: {
-            company: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-        },
-      },
-    });
+    const publicLink = await findActiveSiteByPublicSlug(slug);
 
     if (!publicLink || !publicLink.is_active || !publicLink.site.is_active) {
       return null;
@@ -354,7 +351,8 @@ export async function listActivePublicLinksForSites(
   if (siteIds.length === 0) return [];
 
   try {
-    return await publicDb.sitePublicLink.findMany({
+    const db = scopedDb(companyId) as SitePublicLinkScopedDb;
+    return await db.sitePublicLink.findMany({
       where: {
         site_id: { in: siteIds },
         is_active: true,
@@ -377,7 +375,8 @@ export async function findActivePublicLinkForSite(
   requireCompanyId(companyId);
 
   try {
-    return await publicDb.sitePublicLink.findFirst({
+    const db = scopedDb(companyId) as SitePublicLinkScopedDb;
+    return await db.sitePublicLink.findFirst({
       where: {
         site_id: siteId,
         is_active: true,
@@ -401,7 +400,8 @@ export async function createPublicLinkForSite(
   requireCompanyId(companyId);
 
   try {
-    return await publicDb.sitePublicLink.create({
+    const db = scopedDb(companyId) as SitePublicLinkScopedDb;
+    return await db.sitePublicLink.create({
       data: {
         site: { connect: { id: siteId } },
         slug,
@@ -424,7 +424,8 @@ export async function deactivatePublicLinksForSite(
   requireCompanyId(companyId);
 
   try {
-    await publicDb.sitePublicLink.updateMany({
+    const db = scopedDb(companyId) as SitePublicLinkScopedDb;
+    await db.sitePublicLink.updateMany({
       where: {
         site_id: siteId,
         is_active: true,

@@ -8,6 +8,9 @@ const TENANT_MODELS = [
   "inductionTemplate",
   "signInRecord",
   "contractor",
+  "sitePublicLink",
+  "inductionQuestion",
+  "inductionResponse",
   "contractorDocument",
   "hazardRegisterEntry",
   "siteEmergencyContact",
@@ -86,6 +89,12 @@ function getModelGuard(
   data?: object;
 } {
   switch (model) {
+    case "sitePublicLink":
+      return { where: { site: { company_id: companyId } } };
+    case "inductionQuestion":
+      return { where: { template: { company_id: companyId } } };
+    case "inductionResponse":
+      return { where: { sign_in_record: { company_id: companyId } } };
     case "contractorDocument":
       return { where: { contractor: { company_id: companyId } } };
     default:
@@ -93,6 +102,105 @@ function getModelGuard(
         where: { company_id: companyId },
         data: { company_id: companyId },
       };
+  }
+}
+
+function readRelationId(
+  row: Record<string, unknown>,
+  keys: {
+    foreignKey: string;
+    relationKey: string;
+  },
+): string | null {
+  const foreignKeyValue = row[keys.foreignKey];
+  if (typeof foreignKeyValue === "string" && foreignKeyValue.length > 0) {
+    return foreignKeyValue;
+  }
+
+  const relationValue = row[keys.relationKey];
+  if (
+    relationValue &&
+    typeof relationValue === "object" &&
+    "connect" in relationValue
+  ) {
+    const connectValue = (relationValue as { connect?: { id?: unknown } }).connect;
+    if (typeof connectValue?.id === "string" && connectValue.id.length > 0) {
+      return connectValue.id;
+    }
+  }
+
+  return null;
+}
+
+async function assertRelationOwnedRows(
+  model: string,
+  companyId: string,
+  rows: Array<Record<string, unknown>>,
+  genericPrisma: Record<string, Record<string, (...args: any[]) => any>>,
+) {
+  const relationConfigByModel: Record<
+    string,
+    {
+      parentModel: string;
+      foreignKey: string;
+      relationKey: string;
+    }
+  > = {
+    sitePublicLink: {
+      parentModel: "site",
+      foreignKey: "site_id",
+      relationKey: "site",
+    },
+    inductionQuestion: {
+      parentModel: "inductionTemplate",
+      foreignKey: "template_id",
+      relationKey: "template",
+    },
+    inductionResponse: {
+      parentModel: "signInRecord",
+      foreignKey: "sign_in_record_id",
+      relationKey: "sign_in_record",
+    },
+    contractorDocument: {
+      parentModel: "contractor",
+      foreignKey: "contractor_id",
+      relationKey: "contractor",
+    },
+  };
+
+  const relationConfig = relationConfigByModel[model];
+  if (!relationConfig || rows.length === 0) {
+    return;
+  }
+
+  const parentDelegate = genericPrisma[relationConfig.parentModel];
+  if (!parentDelegate?.findFirst) {
+    throw new Error(
+      `Prisma delegate "${relationConfig.parentModel}" is required to validate scoped create on "${model}".`,
+    );
+  }
+
+  for (const row of rows) {
+    const parentId = readRelationId(row, relationConfig);
+    if (!parentId) {
+      throw new Error(
+        `scopedDb ${model}.create requires ${relationConfig.foreignKey} or ${relationConfig.relationKey}.connect.id`,
+      );
+    }
+
+    const parentRecord = await parentDelegate.findFirst({
+      where: {
+        id: parentId,
+        company_id: companyId,
+      },
+      select: { id: true },
+    });
+
+    if (!parentRecord) {
+      throw new Error(
+        `Cross-tenant create denied for "${model}" because ${relationConfig.parentModel} "${parentId}" is outside company "${companyId}".`,
+      );
+    }
   }
 }
 
@@ -166,12 +274,17 @@ export function scopedDb(
         },
         updateMany: () => {
           throw new Error(
-            `Prisma delegate "${model}" is not mocked in this test. Add a mock for prisma.${model} with the required methods (findFirst/findMany/count/create/updateMany/deleteMany/groupBy).`,
+            `Prisma delegate "${model}" is not mocked in this test. Add a mock for prisma.${model} with the required methods (findFirst/findMany/count/create/createMany/updateMany/deleteMany/groupBy).`,
+          );
+        },
+        createMany: () => {
+          throw new Error(
+            `Prisma delegate "${model}" is not mocked in this test. Add a mock for prisma.${model} with the required methods (findFirst/findMany/count/create/createMany/updateMany/deleteMany/groupBy).`,
           );
         },
         deleteMany: () => {
           throw new Error(
-            `Prisma delegate "${model}" is not mocked in this test. Add a mock for prisma.${model} with the required methods (findFirst/findMany/count/create/updateMany/deleteMany/groupBy).`,
+            `Prisma delegate "${model}" is not mocked in this test. Add a mock for prisma.${model} with the required methods (findFirst/findMany/count/create/createMany/updateMany/deleteMany/groupBy).`,
           );
         },
         groupBy: () => {
@@ -190,6 +303,7 @@ export function scopedDb(
       findMany: (args?: any) => any;
       count: (args?: any) => any;
       create: (args?: any) => any;
+      createMany: (args?: any) => any;
       updateMany: (args?: any) => any;
       deleteMany: (args?: any) => any;
       groupBy?: (args?: any) => any;
@@ -211,14 +325,38 @@ export function scopedDb(
           ...(args ?? {}),
           where: andWhere(modelGuard.where, args?.where),
         }),
-      create: (args?: Record<string, unknown>) =>
-        d.create({
+      create: async (args?: Record<string, unknown>) => {
+        const data = ((args as Record<string, any>)?.data ?? {}) as Record<
+          string,
+          unknown
+        >;
+        await assertRelationOwnedRows(model, companyId, [data], genericPrisma);
+
+        return d.create({
           ...(args ?? {}),
           data: {
-            ...((args as Record<string, any>)?.data ?? {}),
+            ...data,
             ...(modelGuard.data ?? {}),
           },
-        }),
+        });
+      },
+      createMany: (args?: Record<string, unknown>) => {
+        const inputData = ((args as Record<string, any>)?.data ?? []) as
+          | Record<string, unknown>
+          | Array<Record<string, unknown>>;
+        const rows = Array.isArray(inputData) ? inputData : [inputData];
+
+        return assertRelationOwnedRows(model, companyId, rows, genericPrisma).then(
+          () =>
+            d.createMany({
+              ...(args ?? {}),
+              data: rows.map((row) => ({
+                ...row,
+                ...(modelGuard.data ?? {}),
+              })),
+            }),
+        );
+      },
       updateMany: (args?: Record<string, unknown>) =>
         d.updateMany({
           ...(args ?? {}),
@@ -268,6 +406,15 @@ export function scopedDb(
       create: (args?: any) => Promise<any>;
       updateMany: (args?: any) => Promise<{ count: number }>;
     };
+    sitePublicLink: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      createMany: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
     inductionTemplate: {
       findFirst: (args?: any) => Promise<any>;
       findMany: (args?: any) => Promise<any[]>;
@@ -283,6 +430,24 @@ export function scopedDb(
       create: (args?: any) => Promise<any>;
       updateMany: (args?: any) => Promise<{ count: number }>;
       groupBy: (args?: any) => Promise<any>;
+    };
+    inductionQuestion: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      createMany: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    inductionResponse: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      createMany: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
     };
     contractor: {
       findFirst: (args?: any) => Promise<any>;
@@ -608,6 +773,15 @@ export function scopedDb(
       findMany: (args?: any) => Promise<any[]>;
       count: (args?: any) => Promise<number>;
       create: (args?: any) => Promise<any>;
+      updateMany: (args?: any) => Promise<{ count: number }>;
+      deleteMany: (args?: any) => Promise<any>;
+    };
+    accessConnectorConfig: {
+      findFirst: (args?: any) => Promise<any>;
+      findMany: (args?: any) => Promise<any[]>;
+      count: (args?: any) => Promise<number>;
+      create: (args?: any) => Promise<any>;
+      createMany: (args?: any) => Promise<any>;
       updateMany: (args?: any) => Promise<{ count: number }>;
       deleteMany: (args?: any) => Promise<any>;
     };

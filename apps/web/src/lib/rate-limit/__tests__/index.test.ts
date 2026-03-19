@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
+  checkChannelActionRateLimit,
   checkPublicSlugRateLimit,
   checkLoginRateLimit,
 } from "@/lib/rate-limit";
@@ -48,5 +49,20 @@ describe("rate-limit index", () => {
 
     expect(last.success).toBe(false);
     expect(last.limit).toBe(5);
+  });
+
+  it("checkChannelActionRateLimit enforces the company mutation cap with endpoint-specific keys", async () => {
+    const companyId = `company-${Date.now()}`;
+    let last: any = null;
+
+    for (let i = 0; i < 61; i++) {
+      last = await checkChannelActionRateLimit(companyId, {
+        clientKey: `ua:channel-client-${companyId}`,
+      });
+    }
+
+    expect(last.success).toBe(false);
+    expect(last.limit).toBe(60);
+    expect(last.remaining).toBe(0);
   });
 });

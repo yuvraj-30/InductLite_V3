@@ -5,7 +5,6 @@
  */
 
 import { scopedDb } from "@/lib/db/scoped-db";
-import { publicDb } from "@/lib/db/public-db";
 import type {
   Contractor,
   ContractorDocument,
@@ -674,7 +673,7 @@ export async function deleteContractorDocumentById(
 ): Promise<void> {
   requireCompanyId(companyId);
 
-  await publicDb.contractorDocument.deleteMany({
+  await scopedDb(companyId).contractorDocument.deleteMany({
     where: {
       id: documentId,
       contractor: { is: { company_id: companyId } },

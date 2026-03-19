@@ -78,6 +78,7 @@ vi.mock("@/lib/db/public-db", () => ({
 vi.mock("@/lib/db/scoped-db", () => ({
   scopedDb: vi.fn(() => ({
     inductionTemplate: templateDelegate,
+    inductionQuestion: questionDelegate,
   })),
 }));
 
@@ -153,7 +154,11 @@ describe("Question Repository Unit Tests", () => {
 
   describe("findQuestionById", () => {
     it("should return null when question not found", async () => {
-      vi.mocked(publicDb.inductionQuestion.findFirst).mockResolvedValue(null);
+      vi.mocked(scopedDb).mockReturnValue({
+        inductionTemplate: templateDelegate,
+        inductionQuestion: questionDelegate,
+      } as unknown as ReturnType<typeof scopedDb>);
+      vi.mocked(questionDelegate.findFirst).mockResolvedValue(null);
 
       const result = await findQuestionById("company-id", "non-existent");
 
@@ -168,7 +173,11 @@ describe("Question Repository Unit Tests", () => {
         },
       };
 
-      vi.mocked(publicDb.inductionQuestion.findFirst).mockResolvedValue(
+      vi.mocked(scopedDb).mockReturnValue({
+        inductionTemplate: templateDelegate,
+        inductionQuestion: questionDelegate,
+      } as unknown as ReturnType<typeof scopedDb>);
+      vi.mocked(questionDelegate.findFirst).mockResolvedValue(
         mockQuestion as InductionQuestion,
       );
 
@@ -185,6 +194,7 @@ describe("Question Repository Unit Tests", () => {
     beforeEach(() => {
       vi.mocked(scopedDb).mockReturnValue({
         inductionTemplate: templateDelegate,
+        inductionQuestion: questionDelegate,
       } as unknown as ReturnType<typeof scopedDb>);
       vi.mocked(templateDelegate.findFirst).mockResolvedValue(
         mockEditableTemplate,

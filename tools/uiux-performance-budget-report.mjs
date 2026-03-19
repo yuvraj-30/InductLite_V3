@@ -66,11 +66,15 @@ function summarize(data) {
     const measurement = byLabel.get(budget.label);
     const lcpValue = Number(measurement?.lcpMs ?? 0);
     const tbtValue = Number(measurement?.tbtMs ?? 0);
+    const clsValue = Number(measurement?.cls ?? 0);
+    const inpValue = Number(measurement?.inpMs ?? 0);
     const jsValue = Number(measurement?.jsBytes ?? 0);
     const lcpPass = lcpValue <= Number(budget.lcpMs);
     const tbtPass = tbtValue <= Number(budget.tbtMs);
+    const clsPass = clsValue <= Number(budget.cls ?? 0);
+    const inpPass = inpValue <= Number(budget.inpMs ?? 0);
     const jsPass = jsValue <= Number(budget.jsBytes);
-    const pass = lcpPass && tbtPass && jsPass;
+    const pass = lcpPass && tbtPass && clsPass && inpPass && jsPass;
     if (!pass) failedCount += 1;
 
     rows.push({
@@ -78,12 +82,22 @@ function summarize(data) {
       route: budget.route,
       lcpValue,
       tbtValue,
+      clsValue,
+      inpValue,
       jsValue,
       lcpBudget: Number(budget.lcpMs),
       tbtBudget: Number(budget.tbtMs),
+      clsBudget: Number(budget.cls ?? 0),
+      inpBudget: Number(budget.inpMs ?? 0),
       jsBudget: Number(budget.jsBytes),
       lcpUtilization: formatPercent(lcpValue / Number(budget.lcpMs || 1)),
       tbtUtilization: formatPercent(tbtValue / Number(budget.tbtMs || 1)),
+      clsUtilization: formatPercent(
+        clsValue / Number((budget.cls ?? 0) || 1),
+      ),
+      inpUtilization: formatPercent(
+        inpValue / Number((budget.inpMs ?? 0) || 1),
+      ),
       jsUtilization: formatPercent(jsValue / Number(budget.jsBytes || 1)),
       pass,
     });
@@ -105,13 +119,13 @@ function buildMarkdown(summary) {
     `- Status: **${status}**`,
     `- Checked routes: ${summary.rows.length}`,
     "",
-    "| Route | LCP (ms) | LCP Budget | TBT Surrogate (ms) | TBT Budget | JS Transfer (bytes) | JS Budget | Utilization (LCP/TBT/JS) | Result |",
-    "| --- | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |",
+    "| Route | LCP (ms) | LCP Budget | TBT Surrogate (ms) | TBT Budget | CLS | CLS Budget | INP (ms) | INP Budget | JS Transfer (bytes) | JS Budget | Utilization (LCP/TBT/CLS/INP/JS) | Result |",
+    "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |",
   ];
 
   for (const row of summary.rows) {
     lines.push(
-      `| \`${row.route}\` | ${row.lcpValue} | ${row.lcpBudget} | ${row.tbtValue} | ${row.tbtBudget} | ${row.jsValue} | ${row.jsBudget} | ${row.lcpUtilization} / ${row.tbtUtilization} / ${row.jsUtilization} | ${row.pass ? "PASS" : "FAIL"} |`,
+      `| \`${row.route}\` | ${row.lcpValue} | ${row.lcpBudget} | ${row.tbtValue} | ${row.tbtBudget} | ${row.clsValue} | ${row.clsBudget} | ${row.inpValue} | ${row.inpBudget} | ${row.jsValue} | ${row.jsBudget} | ${row.lcpUtilization} / ${row.tbtUtilization} / ${row.clsUtilization} / ${row.inpUtilization} / ${row.jsUtilization} | ${row.pass ? "PASS" : "FAIL"} |`,
     );
   }
 
@@ -120,6 +134,8 @@ function buildMarkdown(summary) {
   lines.push("- Metrics are produced by `apps/web/e2e/performance-budget.spec.ts` on chromium stable lane.");
   lines.push("- LCP uses the largest-contentful-paint browser entry (fallback: navigation DOMContentLoaded).");
   lines.push("- TBT surrogate aggregates long-task blocking time above 50ms.");
+  lines.push("- CLS uses browser layout-shift entries without recent input.");
+  lines.push("- INP is approximated from browser event-duration entries to keep local chromium runs deterministic.");
   lines.push("- JS transfer uses browser resource timings for script resources.");
   lines.push("");
 

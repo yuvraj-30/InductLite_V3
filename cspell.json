@@ -3,10 +3,14 @@
   "version": "0.2",
   "language": "en",
   "words": [
+    "ahau",
     "inductlite",
+    "domcontentloaded",
+    "geofence",
     "networkidle",
     "behaviour",
     "monkeypatch",
+    "Maori",
     "TOCTOU",
     "IDOR",
     "signin",
@@ -22,8 +26,11 @@
     "prerendered",
     "revalidate",
     "revalidated",
+    "ture",
     "testcontainers",
-    "vitest"
+    "vitest",
+    "whakaae",
+    "whakauru"
   ],
   "ignorePaths": [
     "node_modules",

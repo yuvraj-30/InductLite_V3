@@ -2,6 +2,7 @@ import { scopedDb } from "@/lib/db/scoped-db";
 import type { Prisma } from "@prisma/client";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 import { createAuditLog } from "@/lib/repository/audit.repository";
+import { enforceBudgetPath } from "@/lib/cost/budget-service";
 
 const DEFAULT_PROVIDER_TIMEOUT_MS = 8_000;
 const DEFAULT_MAX_MESSAGES_PER_COMPANY_PER_MONTH = 0;
@@ -192,6 +193,15 @@ export async function sendSmsWithQuota(
       status: "DISABLED",
       controlId: SMS_CONTROL_ID_DISABLED,
       reason: "SMS is disabled by guardrail",
+    };
+  }
+
+  const budgetDecision = await enforceBudgetPath("notifications.sms.send");
+  if (!budgetDecision.allowed) {
+    return {
+      status: "DENIED",
+      controlId: budgetDecision.controlId ?? "COST-008",
+      reason: budgetDecision.message,
     };
   }
 

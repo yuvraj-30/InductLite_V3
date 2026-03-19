@@ -12,6 +12,18 @@ vi.mock("@/lib/db/prisma", () => ({
       deleteMany: vi.fn(),
       groupBy: vi.fn(),
     },
+    site: {
+      findFirst: vi.fn(),
+    },
+    sitePublicLink: {
+      create: vi.fn(),
+    },
+    inductionTemplate: {
+      findFirst: vi.fn(),
+    },
+    inductionQuestion: {
+      createMany: vi.fn(),
+    },
   },
 }));
 
@@ -107,5 +119,52 @@ describe("scopedDb", () => {
         }
       )._unsafe.query("findUnique", {}),
     ).toThrow(/Unsafe Prisma operation "findUnique" on tenant model "user"/);
+  });
+
+  it("should validate relation-owned creates against parent company ownership", async () => {
+    vi.mocked(prisma.site.findFirst).mockResolvedValue({ id: "site-1" } as never);
+    vi.mocked(prisma.sitePublicLink.create).mockResolvedValue({
+      id: "link-1",
+      slug: "alpha",
+    } as never);
+
+    const db = scopedDb("company-123");
+
+    await db.sitePublicLink.create({
+      data: {
+        site_id: "site-1",
+        slug: "alpha",
+      },
+    });
+
+    expect(prisma.site.findFirst).toHaveBeenCalledWith({
+      where: { id: "site-1", company_id: "company-123" },
+      select: { id: true },
+    });
+    expect(prisma.sitePublicLink.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          site_id: "site-1",
+          slug: "alpha",
+        }),
+      }),
+    );
+  });
+
+  it("should reject cross-tenant relation-owned createMany calls", async () => {
+    vi.mocked(prisma.inductionTemplate.findFirst).mockResolvedValue(null);
+
+    const db = scopedDb("company-123");
+
+    await expect(
+      db.inductionQuestion.createMany({
+        data: [
+          {
+            template_id: "template-other",
+            question_text: "Question?",
+          },
+        ],
+      }),
+    ).rejects.toThrow(/Cross-tenant create denied for "inductionQuestion"/);
   });
 });

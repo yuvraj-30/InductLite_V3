@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { publicDb } from "@/lib/db/public-db";
+import { findBroadcastForAcknowledgement } from "@/lib/db/scoped";
 import {
   buildBroadcastAckToken,
   createCommunicationEvent,
@@ -21,10 +21,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const broadcast = await publicDb.emergencyBroadcast.findFirst({
-    where: { id: broadcastId },
-    select: { id: true, company_id: true, site_id: true },
-  });
+  const broadcast = await findBroadcastForAcknowledgement(broadcastId);
   if (!broadcast) {
     return NextResponse.json(
       { success: false, error: "Broadcast not found" },

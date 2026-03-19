@@ -247,6 +247,47 @@ export interface RateLimitResult {
   reset: number;
 }
 
+function shouldFailClosedOnRedisOutage(): boolean {
+  return process.env.NODE_ENV === "production";
+}
+
+function buildRedisOutageBlockedResult(options: {
+  log: ReturnType<typeof createRequestLogger>;
+  limit: number;
+  windowMs: number;
+  kind: string;
+  clientKey: string;
+  meta?: Record<string, unknown>;
+  message: string;
+  error: unknown;
+}): RateLimitResult {
+  options.log.error(
+    {
+      clientKey: options.clientKey,
+      error:
+        options.error instanceof Error
+          ? options.error.message
+          : String(options.error),
+      meta: options.meta ?? {},
+    },
+    options.message,
+  );
+  recordRateLimitBlocked({
+    kind: options.kind,
+    clientKey: options.clientKey,
+    meta: {
+      ...(options.meta ?? {}),
+      degraded: "redis_unavailable",
+    },
+  });
+  return {
+    success: false,
+    limit: options.limit,
+    remaining: 0,
+    reset: Date.now() + options.windowMs,
+  };
+}
+
 /**
  * Check rate limit for public slug access
  *
@@ -316,6 +357,18 @@ export async function checkPublicSlugRateLimit(
         reset: result.reset,
       };
     } catch (error) {
+      if (shouldFailClosedOnRedisOutage()) {
+        return buildRedisOutageBlockedResult({
+          log,
+          limit: RL_PUBLIC_SLUG_PER_IP_PER_MIN,
+          windowMs: 60_000,
+          kind: "public-slug",
+          clientKey,
+          meta: { slug },
+          message: "Redis public slug limiter unavailable; failing closed",
+          error,
+        });
+      }
       log.warn(
         {
           clientKey,
@@ -431,8 +484,18 @@ export async function checkLoginRateLimit(
         reset: result.reset,
       };
     } catch (error) {
-      // Do not block authentication if external Redis is unreachable.
-      // Fall back to local in-memory limits for degraded-mode resilience.
+      if (shouldFailClosedOnRedisOutage()) {
+        return buildRedisOutageBlockedResult({
+          log,
+          limit: 5,
+          windowMs: 15 * 60 * 1000,
+          kind: "login",
+          clientKey,
+          meta: { email },
+          message: "Redis login limiter unavailable; failing closed",
+          error,
+        });
+      }
       log.warn(
         { error: String(error) },
         "Redis login rate limiter unavailable, falling back to in-memory",
@@ -522,6 +585,18 @@ export async function checkContractorMagicLinkRateLimit(options?: {
         reset: result.reset,
       };
     } catch (error) {
+      if (shouldFailClosedOnRedisOutage()) {
+        return buildRedisOutageBlockedResult({
+          log,
+          limit: RL_CONTRACTOR_MAGIC_LINK_PER_IP_PER_HOUR,
+          windowMs: 60 * 60 * 1000,
+          kind: "contractor-magic-link",
+          clientKey,
+          message:
+            "Redis contractor magic-link limiter unavailable; failing closed",
+          error,
+        });
+      }
       log.warn(
         {
           clientKey,
@@ -613,6 +688,17 @@ export async function checkDemoBookingRateLimit(options?: {
         reset: result.reset,
       };
     } catch (error) {
+      if (shouldFailClosedOnRedisOutage()) {
+        return buildRedisOutageBlockedResult({
+          log,
+          limit: RL_DEMO_BOOKING_PER_IP_PER_HOUR,
+          windowMs: 60 * 60 * 1000,
+          kind: "demo-booking",
+          clientKey,
+          message: "Redis demo booking limiter unavailable; failing closed",
+          error,
+        });
+      }
       log.warn(
         {
           clientKey,
@@ -715,6 +801,19 @@ export async function checkSignInRateLimit(
         reset: Math.max(ipResult.reset, siteResult.reset),
       };
     } catch (error) {
+      if (shouldFailClosedOnRedisOutage()) {
+        return buildRedisOutageBlockedResult({
+          log,
+          limit: Math.min(RL_SIGNIN_PER_IP_PER_MIN, RL_SIGNIN_PER_SITE_PER_MIN),
+          windowMs: 60 * 1000,
+          kind: "signin",
+          clientKey,
+          meta: { siteSlug },
+          message: "Redis sign-in limiter unavailable; failing closed",
+          error,
+        });
+      }
+
       log.warn(
         {
           clientKey,
@@ -810,6 +909,18 @@ export async function checkSignOutRateLimit(
         reset: result.reset,
       };
     } catch (error) {
+      if (shouldFailClosedOnRedisOutage()) {
+        return buildRedisOutageBlockedResult({
+          log,
+          limit: RL_SIGNOUT_PER_IP_PER_MIN,
+          windowMs: 60 * 1000,
+          kind: "signout",
+          clientKey,
+          meta: { tokenPrefix },
+          message: "Redis sign-out limiter unavailable; failing closed",
+          error,
+        });
+      }
       log.warn(
         {
           clientKey,
@@ -937,6 +1048,22 @@ export async function checkAdminMutationRateLimit(
         reset: Math.max(userResult.reset, ipResult.reset, companyResult.reset),
       };
     } catch (error) {
+      if (shouldFailClosedOnRedisOutage()) {
+        return buildRedisOutageBlockedResult({
+          log,
+          limit: Math.min(
+            RL_ADMIN_PER_USER_PER_MIN,
+            RL_ADMIN_PER_IP_PER_MIN,
+            RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN,
+          ),
+          windowMs: 60 * 1000,
+          kind: "admin-mutation",
+          clientKey,
+          meta: { userId, companyId },
+          message: "Redis admin mutation limiter unavailable; failing closed",
+          error,
+        });
+      }
       log.warn(
         { error: String(error) },
         "Redis admin mutation limiter unavailable, falling back to in-memory",
@@ -975,6 +1102,139 @@ export async function checkAdminMutationRateLimit(
     ),
     remaining: Math.min(
       Math.max(0, RL_ADMIN_PER_USER_PER_MIN - userCount),
+      Math.max(0, RL_ADMIN_PER_IP_PER_MIN - ipCount),
+      Math.max(0, RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN - companyCount),
+    ),
+    reset: Date.now() + windowMs,
+  };
+}
+
+/**
+ * Check rate limit for inbound channel action callbacks.
+ *
+ * Uses dedicated endpoint keys so callback abuse cannot hide inside broader
+ * admin mutation traffic.
+ */
+export async function checkChannelActionRateLimit(
+  companyId: string,
+  options?: { requestId?: string; clientKey?: string },
+): Promise<RateLimitResult> {
+  const requestId = options?.requestId ?? generateRequestId();
+  const log = createRequestLogger(requestId);
+
+  let clientKey: string;
+  if (options?.clientKey) {
+    clientKey = options.clientKey;
+  } else {
+    const headersList = await headers();
+    const headersObj: Record<string, string | undefined> = {
+      "x-forwarded-for": headersList.get("x-forwarded-for") ?? undefined,
+      "x-real-ip": headersList.get("x-real-ip") ?? undefined,
+      "user-agent": headersList.get("user-agent") ?? undefined,
+      accept: headersList.get("accept") ?? undefined,
+    };
+
+    clientKey = getStableClientKey(headersObj, {
+      trustProxy: process.env.TRUST_PROXY === "1",
+    });
+  }
+
+  const endpoint = "channel-actions";
+  const ipKey = `${TEST_RUN_PREFIX}${endpoint}:ip:${clientKey}`;
+  const companyKey = `${TEST_RUN_PREFIX}${endpoint}:company:${companyId}`;
+
+  const redis = getRateLimitRedisClient();
+  if (redis) {
+    try {
+      const ipLimiter = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(RL_ADMIN_PER_IP_PER_MIN, "1 m"),
+        analytics: RATE_LIMIT_ANALYTICS_ENABLED,
+        prefix: "inductlite:channel-actions-ip-ratelimit",
+      });
+      const companyLimiter = new Ratelimit({
+        redis,
+        limiter: Ratelimit.slidingWindow(
+          RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN,
+          "1 m",
+        ),
+        analytics: RATE_LIMIT_ANALYTICS_ENABLED,
+        prefix: "inductlite:channel-actions-company-ratelimit",
+      });
+
+      const [ipResult, companyResult] = await Promise.all([
+        ipLimiter.limit(ipKey),
+        companyLimiter.limit(companyKey),
+      ]);
+
+      const success = ipResult.success && companyResult.success;
+      if (!success) {
+        log.warn(
+          { clientKey, companyId },
+          "Channel action rate limit exceeded",
+        );
+        recordRateLimitBlocked({
+          kind: "admin-mutation",
+          clientKey,
+          meta: { companyId, endpoint },
+        });
+      }
+
+      return {
+        success,
+        limit: Math.min(ipResult.limit, companyResult.limit),
+        remaining: Math.min(ipResult.remaining, companyResult.remaining),
+        reset: Math.max(ipResult.reset, companyResult.reset),
+      };
+    } catch (error) {
+      if (shouldFailClosedOnRedisOutage()) {
+        return buildRedisOutageBlockedResult({
+          log,
+          limit: Math.min(
+            RL_ADMIN_PER_IP_PER_MIN,
+            RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN,
+          ),
+          windowMs: 60 * 1000,
+          kind: "admin-mutation",
+          clientKey,
+          meta: { companyId, endpoint },
+          message: "Redis channel action limiter unavailable; failing closed",
+          error,
+        });
+      }
+      log.warn(
+        { error: String(error) },
+        "Redis channel action limiter unavailable, falling back to in-memory",
+      );
+    }
+  }
+
+  const windowMs = 60 * 1000;
+  const ipCount = await inMemoryStore.incr(ipKey, windowMs);
+  const companyCount = await inMemoryStore.incr(companyKey, windowMs);
+  const success =
+    ipCount <= RL_ADMIN_PER_IP_PER_MIN &&
+    companyCount <= RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN;
+
+  if (!success) {
+    log.warn(
+      { clientKey, companyId },
+      "Channel action rate limit exceeded (in-memory)",
+    );
+    recordRateLimitBlocked({
+      kind: "admin-mutation",
+      clientKey,
+      meta: { companyId, endpoint },
+    });
+  }
+
+  return {
+    success,
+    limit: Math.min(
+      RL_ADMIN_PER_IP_PER_MIN,
+      RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN,
+    ),
+    remaining: Math.min(
       Math.max(0, RL_ADMIN_PER_IP_PER_MIN - ipCount),
       Math.max(0, RL_ADMIN_MUTATION_PER_COMPANY_PER_MIN - companyCount),
     ),
@@ -1041,6 +1301,18 @@ export async function checkMagicLinkVerifyRateLimit(
         reset: result.reset,
       };
     } catch (error) {
+      if (shouldFailClosedOnRedisOutage()) {
+        return buildRedisOutageBlockedResult({
+          log,
+          limit,
+          windowMs: 60 * 1000,
+          kind: "magic-verify",
+          clientKey,
+          meta: { tokenPrefix },
+          message: "Redis magic-link verify limiter unavailable; failing closed",
+          error,
+        });
+      }
       log.warn(
         {
           clientKey,
@@ -1129,6 +1401,17 @@ export async function checkCspReportRateLimit(options?: {
         reset: result.reset,
       };
     } catch (error) {
+      if (shouldFailClosedOnRedisOutage()) {
+        return buildRedisOutageBlockedResult({
+          log,
+          limit,
+          windowMs,
+          kind: "csp-report",
+          clientKey,
+          message: "Redis CSP report limiter unavailable; failing closed",
+          error,
+        });
+      }
       log.warn(
         {
           clientKey,
@@ -1213,6 +1496,17 @@ export async function checkReadinessRateLimit(options?: {
         reset: result.reset,
       };
     } catch (error) {
+      if (shouldFailClosedOnRedisOutage()) {
+        return buildRedisOutageBlockedResult({
+          log,
+          limit: RL_READY_PER_IP_PER_MIN,
+          windowMs,
+          kind: "readiness",
+          clientKey,
+          message: "Redis readiness limiter unavailable; failing closed",
+          error,
+        });
+      }
       log.warn(
         {
           clientKey,

@@ -15,6 +15,12 @@ import { Prisma } from "@prisma/client";
 import { requireCompanyId, handlePrismaError, RepositoryError } from "./base";
 
 type JsonValue = Prisma.JsonValue;
+type QuestionScopedDb = ReturnType<typeof scopedDb> & {
+  inductionQuestion: {
+    findFirst: (args?: Record<string, unknown>) => Promise<Question | null>;
+    findMany: (args?: Record<string, unknown>) => Promise<Question[]>;
+  };
+};
 
 // ============================================================================
 // TYPES
@@ -127,7 +133,8 @@ export async function findQuestionById(
   requireCompanyId(companyId);
 
   try {
-    const question = await publicDb.inductionQuestion.findFirst({
+    const db = scopedDb(companyId) as QuestionScopedDb;
+    const question = await db.inductionQuestion.findFirst({
       where: {
         id: questionId,
         template: { company_id: companyId },
@@ -163,7 +170,8 @@ export async function listQuestions(
   }
 
   try {
-    const questions = await publicDb.inductionQuestion.findMany({
+    const questionDb = scopedDb(companyId) as QuestionScopedDb;
+    const questions = await questionDb.inductionQuestion.findMany({
       where: { template_id: templateId },
       orderBy: { display_order: "asc" },
     });

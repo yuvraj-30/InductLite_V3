@@ -8,7 +8,7 @@
  */
 
 import { prisma } from "./prisma";
-import type { Prisma, PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient, User, WebhookDeliveryStatus } from "@prisma/client";
 
 export type ScopedPrisma = {
   company_id: string;
@@ -335,4 +335,423 @@ export async function createAuditLog(
       request_id: data.requestId,
     },
   });
+}
+
+export async function findUnscopedUserByEmail(
+  email: string,
+): Promise<User | null>;
+export async function findUnscopedUserByEmail<T extends Prisma.UserFindFirstArgs>(
+  email: string,
+  args: T,
+): Promise<Prisma.UserGetPayload<T> | null>;
+export async function findUnscopedUserByEmail(
+  email: string,
+  args?: Prisma.UserFindFirstArgs,
+) {
+  const { where, ...rest } = args ?? {};
+
+  return prisma.user.findFirst({
+    ...rest,
+    where: {
+      ...(where ?? {}),
+      email: email.toLowerCase().trim(),
+    },
+  });
+}
+
+export async function findActiveSiteByPublicSlug(slug: string) {
+  return prisma.sitePublicLink.findUnique({
+    where: { slug },
+    include: {
+      site: {
+        include: {
+          company: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+}
+
+export async function listPublicSitemapLinks(limit: number) {
+  return prisma.sitePublicLink.findMany({
+    where: { is_active: true },
+    select: { slug: true, created_at: true },
+    take: limit,
+    orderBy: { created_at: "desc" },
+  });
+}
+
+export async function findBroadcastForAcknowledgement(broadcastId: string) {
+  return prisma.emergencyBroadcast.findFirst({
+    where: { id: broadcastId },
+    select: { id: true, company_id: true, site_id: true },
+  });
+}
+
+export async function findActiveChannelIntegrationConfig(
+  integrationConfigId: string,
+) {
+  return prisma.channelIntegrationConfig.findFirst({
+    where: { id: integrationConfigId, is_active: true },
+    select: {
+      id: true,
+      company_id: true,
+      provider: true,
+      signing_secret: true,
+      site_id: true,
+    },
+  });
+}
+
+export async function countRunningExportJobsGlobal() {
+  return prisma.exportJob.count({
+    where: { status: "RUNNING" },
+  });
+}
+
+export async function findOldestQueuedExportJob(now: Date) {
+  return prisma.exportJob.findFirst({
+    where: {
+      status: "QUEUED",
+      run_at: { lte: now },
+    },
+    orderBy: { queued_at: "asc" },
+  });
+}
+
+export async function requeueStaleRunningExportJobs(input: {
+  staleBefore: Date;
+  maxAttempts: number;
+}) {
+  return prisma.exportJob.updateMany({
+    where: {
+      status: "RUNNING",
+      started_at: { lt: input.staleBefore },
+      attempts: { lt: input.maxAttempts },
+    },
+    data: {
+      status: "QUEUED",
+      run_at: new Date(),
+      locked_at: null,
+      lock_token: null,
+    },
+  });
+}
+
+export async function listGlobalExportDownloadAuditLogsSince(since: Date) {
+  return prisma.auditLog.findMany({
+    where: {
+      action: "export.download",
+      created_at: { gte: since },
+    },
+    select: { details: true },
+  });
+}
+
+export async function listDueOutboundWebhookDeliveriesGlobal(
+  statuses: string[],
+  now: Date,
+  take: number,
+) {
+  return prisma.outboundWebhookDelivery.findMany({
+    where: {
+      status: { in: statuses as WebhookDeliveryStatus[] },
+      next_attempt_at: { lte: now },
+    },
+    orderBy: [{ next_attempt_at: "asc" }, { created_at: "asc" }],
+    take,
+    select: {
+      id: true,
+      company_id: true,
+      site_id: true,
+      event_type: true,
+      target_url: true,
+      payload: true,
+      status: true,
+      attempts: true,
+      max_attempts: true,
+    },
+  });
+}
+
+export async function claimOutboundWebhookDeliveryGlobal(
+  id: string,
+  statuses: string[],
+) {
+  return prisma.outboundWebhookDelivery.updateMany({
+    where: {
+      id,
+      status: { in: statuses as WebhookDeliveryStatus[] },
+    },
+    data: {
+      status: "PROCESSING",
+      last_attempt_at: new Date(),
+    },
+  });
+}
+
+export async function markOutboundWebhookDeliverySentGlobal(input: {
+  id: string;
+  statusCode: number;
+  responseBody?: string | null;
+}) {
+  return prisma.outboundWebhookDelivery.updateMany({
+    where: {
+      id: input.id,
+      status: "PROCESSING",
+    },
+    data: {
+      status: "SENT",
+      attempts: { increment: 1 },
+      sent_at: new Date(),
+      last_status_code: input.statusCode,
+      last_response_body: input.responseBody ?? null,
+      last_error: null,
+    },
+  });
+}
+
+export async function markOutboundWebhookDeliveryFailureGlobal(input: {
+  id: string;
+  statusCode?: number | null;
+  errorMessage?: string | null;
+  responseBody?: string | null;
+  nextAttemptAt: Date;
+  dead: boolean;
+}) {
+  return prisma.outboundWebhookDelivery.updateMany({
+    where: {
+      id: input.id,
+      status: "PROCESSING",
+    },
+    data: {
+      status: input.dead ? "DEAD" : "RETRYING",
+      attempts: { increment: 1 },
+      next_attempt_at: input.nextAttemptAt,
+      last_status_code: input.statusCode ?? null,
+      last_error: input.errorMessage ?? null,
+      last_response_body: input.responseBody ?? null,
+    },
+  });
+}
+
+export async function countGlobalIdentityOcrVerifications(since: Date) {
+  return prisma.identityOcrVerification.count({
+    where: {
+      created_at: { gte: since },
+    },
+  });
+}
+
+export async function consumeMagicLinkTokenByHash(
+  tokenHash: string,
+  now: Date,
+) {
+  return prisma.magicLinkToken.updateMany({
+    where: {
+      token_hash: tokenHash,
+      used_at: null,
+      expires_at: { gt: now },
+    },
+    data: { used_at: now },
+  });
+}
+
+export async function findMagicLinkTokenByHash(tokenHash: string) {
+  return prisma.magicLinkToken.findFirst({
+    where: { token_hash: tokenHash },
+    include: {
+      contractor: {
+        select: { id: true, name: true, contact_email: true },
+      },
+      company: {
+        select: { id: true, name: true, slug: true },
+      },
+    },
+  });
+}
+
+export async function completePublicSignOutByToken(input: {
+  signInRecordId: string;
+  tokenHash: string;
+  now: Date;
+}) {
+  return prisma.signInRecord.updateMany({
+    where: {
+      id: input.signInRecordId,
+      sign_out_ts: null,
+      sign_out_token: input.tokenHash,
+      OR: [
+        { sign_out_token_exp: null },
+        { sign_out_token_exp: { gte: input.now } },
+      ],
+    },
+    data: {
+      sign_out_ts: input.now,
+      signed_out_by: null,
+      sign_out_token: null,
+      sign_out_token_exp: null,
+    },
+  });
+}
+
+export async function findPublicSignOutRecordState(signInRecordId: string) {
+  return prisma.signInRecord.findFirst({
+    where: { id: signInRecordId },
+    select: {
+      id: true,
+      visitor_phone: true,
+      sign_out_ts: true,
+      sign_out_token: true,
+      sign_out_token_exp: true,
+    },
+  });
+}
+
+export async function findPublicSignOutRecordResult(signInRecordId: string) {
+  return prisma.signInRecord.findFirst({
+    where: { id: signInRecordId },
+    select: {
+      id: true,
+      visitor_name: true,
+      company_id: true,
+      site_id: true,
+      site: {
+        select: { name: true },
+      },
+    },
+  });
+}
+
+export async function findPublicSignInSummary(signInRecordId: string) {
+  return prisma.signInRecord.findFirst({
+    where: { id: signInRecordId },
+    select: {
+      id: true,
+      visitor_name: true,
+      sign_in_ts: true,
+      sign_out_ts: true,
+      site: {
+        select: { name: true },
+      },
+      company: {
+        select: { name: true },
+      },
+    },
+  });
+}
+
+export async function listPendingRedFlagResponsesForEmailWorker(input: {
+  createdAfter: Date;
+  take: number;
+  cursorId?: string;
+}) {
+  return prisma.inductionResponse.findMany({
+    where: {
+      passed: true,
+      sign_in_record: {
+        created_at: { gte: input.createdAfter },
+      },
+    },
+    select: {
+      id: true,
+      answers: true,
+      sign_in_record: {
+        select: {
+          company_id: true,
+          site_id: true,
+          visitor_name: true,
+          site: {
+            select: {
+              name: true,
+              site_managers: {
+                select: {
+                  user: {
+                    select: { email: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      template: {
+        select: {
+          questions: true,
+        },
+      },
+    },
+    orderBy: { id: "asc" },
+    take: input.take,
+    ...(input.cursorId ? { skip: 1, cursor: { id: input.cursorId } } : {}),
+  });
+}
+
+export async function listAuditLogEntityIdsByAction(input: {
+  action: string;
+  entityIds: string[];
+}) {
+  if (input.entityIds.length === 0) {
+    return [];
+  }
+
+  return prisma.auditLog.findMany({
+    where: {
+      action: input.action,
+      entity_id: { in: input.entityIds },
+    },
+    select: { entity_id: true },
+  });
+}
+
+export async function getWeeklyDigestMetricsByCompany(input: {
+  companyIds: string[];
+  lastWeek: Date;
+  now: Date;
+  thirtyDaysFromNow: Date;
+}) {
+  const [inductionCounts, redFlagCounts, expiringDocuments] = await Promise.all([
+    prisma.signInRecord.groupBy({
+      by: ["company_id"],
+      where: {
+        company_id: { in: input.companyIds },
+        sign_in_ts: { gte: input.lastWeek },
+      },
+      _count: { id: true },
+    }),
+    prisma.auditLog.groupBy({
+      by: ["company_id"],
+      where: {
+        company_id: { in: input.companyIds },
+        action: "email.red_flag_alert",
+        created_at: { gte: input.lastWeek },
+      },
+      _count: { id: true },
+    }),
+    prisma.contractorDocument.findMany({
+      where: {
+        contractor: { company_id: { in: input.companyIds } },
+        expires_at: {
+          gt: input.now,
+          lt: input.thirtyDaysFromNow,
+        },
+      },
+      select: {
+        contractor: {
+          select: { company_id: true },
+        },
+      },
+    }),
+  ]);
+
+  return {
+    inductionCounts,
+    redFlagCounts,
+    expiringDocuments,
+  };
 }

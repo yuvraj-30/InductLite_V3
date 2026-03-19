@@ -15,6 +15,7 @@ const mocks = vi.hoisted(() => {
     count: vi.fn(),
     assertCompanyFeatureEnabled: vi.fn(),
     createAuditLog: vi.fn(),
+    enforceBudgetPath: vi.fn(),
     EntitlementDeniedError: TestEntitlementDeniedError,
   };
 });
@@ -36,6 +37,10 @@ vi.mock("@/lib/repository/audit.repository", () => ({
   createAuditLog: mocks.createAuditLog,
 }));
 
+vi.mock("@/lib/cost/budget-service", () => ({
+  enforceBudgetPath: mocks.enforceBudgetPath,
+}));
+
 import { sendSmsWithQuota } from "../wrapper";
 
 describe("sms wrapper", () => {
@@ -47,6 +52,14 @@ describe("sms wrapper", () => {
     mocks.count.mockResolvedValue(0);
     mocks.assertCompanyFeatureEnabled.mockResolvedValue(undefined);
     mocks.createAuditLog.mockResolvedValue(undefined);
+    mocks.enforceBudgetPath.mockResolvedValue({
+      allowed: true,
+      controlId: null,
+      violatedLimit: null,
+      scope: "environment",
+      message: "Budget state is healthy",
+      state: { budgetTier: "MVP" },
+    });
     vi.stubGlobal("fetch", vi.fn());
   });
 
@@ -95,6 +108,29 @@ describe("sms wrapper", () => {
       "company-1",
       expect.objectContaining({ action: "sms.denied" }),
     );
+  });
+
+  it("returns denied when budget protect disables SMS notifications", async () => {
+    process.env.SMS_ENABLED = "true";
+    mocks.enforceBudgetPath.mockResolvedValue({
+      allowed: false,
+      controlId: "COST-008",
+      violatedLimit: "PROJECTED_MONTHLY_SPEND_NZD<=150",
+      scope: "environment",
+      message:
+        "This operation is disabled because the environment is in BUDGET_PROTECT mode",
+      state: { budgetTier: "MVP" },
+    });
+
+    const result = await sendSmsWithQuota({
+      companyId: "company-1",
+      toE164: "+64211234567",
+      message: "hello",
+    });
+
+    expect(result.status).toBe("DENIED");
+    expect(result.controlId).toBe("COST-008");
+    expect(result.reason).toContain("BUDGET_PROTECT");
   });
 
   it("sends with mock provider and records audit", async () => {

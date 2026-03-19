@@ -8,6 +8,8 @@ const mocks = vi.hoisted(() => ({
   getSignedDownloadUrl: vi.fn(),
   generateRequestId: vi.fn(),
   readFile: vi.fn(),
+  enforceBudgetPath: vi.fn(),
+  startBudgetTrackedOperation: vi.fn(),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -29,6 +31,11 @@ vi.mock("@/lib/storage", () => ({
 
 vi.mock("@/lib/auth/csrf", () => ({
   generateRequestId: mocks.generateRequestId,
+}));
+
+vi.mock("@/lib/cost/budget-service", () => ({
+  enforceBudgetPath: mocks.enforceBudgetPath,
+  startBudgetTrackedOperation: mocks.startBudgetTrackedOperation,
 }));
 
 vi.mock("fs/promises", () => ({
@@ -61,6 +68,15 @@ describe("GET /api/exports/[id]/download", () => {
     mocks.checkExportDownloadGuardrails.mockResolvedValue({ allowed: true });
     mocks.generateRequestId.mockReturnValue("req-1");
     mocks.getSignedDownloadUrl.mockResolvedValue("https://signed.example/export");
+    mocks.enforceBudgetPath.mockResolvedValue({
+      allowed: true,
+      controlId: null,
+      violatedLimit: null,
+      scope: "environment",
+      message: "Budget state is healthy",
+      state: { budgetTier: "MVP" },
+    });
+    mocks.startBudgetTrackedOperation.mockReturnValue(vi.fn());
   });
 
   afterEach(() => {
@@ -134,5 +150,50 @@ describe("GET /api/exports/[id]/download", () => {
       "exports/company-1/job-1.csv",
       300,
     );
+  });
+
+  it("allows compliance export retrieval during budget protect", async () => {
+    mocks.findExportJobById.mockResolvedValue({
+      id: "job-1",
+      status: "SUCCEEDED",
+      file_path: "exports/company-1/job-1.zip",
+      file_name: "compliance.zip",
+      file_size: 2048,
+      expires_at: null,
+      export_type: "COMPLIANCE_ZIP",
+    });
+
+    await GET(new Request("http://localhost/api/exports/job-1/download"), {
+      params: Promise.resolve({ id: "job-1" }),
+    });
+
+    expect(mocks.enforceBudgetPath).toHaveBeenCalledWith(
+      "compliance.export.download",
+    );
+  });
+
+  it("returns deterministic budget-protect payload for non-compliance export downloads", async () => {
+    mocks.enforceBudgetPath.mockResolvedValue({
+      allowed: false,
+      controlId: "COST-008",
+      violatedLimit: "PROJECTED_MONTHLY_SPEND_NZD<=150",
+      scope: "environment",
+      message:
+        "This operation is disabled because the environment is in BUDGET_PROTECT mode",
+      state: { budgetTier: "MVP" },
+    });
+
+    const res = await GET(new Request("http://localhost/api/exports/job-1/download"), {
+      params: Promise.resolve({ id: "job-1" }),
+    });
+    const body = await res.json();
+
+    expect(res.status).toBe(429);
+    expect(body.error.guardrail).toMatchObject({
+      controlId: "COST-008",
+      scope: "environment",
+      violatedLimit: "PROJECTED_MONTHLY_SPEND_NZD<=150",
+    });
+    expect(mocks.checkExportDownloadGuardrails).not.toHaveBeenCalled();
   });
 });

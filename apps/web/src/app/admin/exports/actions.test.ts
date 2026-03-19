@@ -28,6 +28,8 @@ const mocks = vi.hoisted(() => ({
     debug: vi.fn(),
   },
   createRequestLogger: vi.fn(),
+  enforceBudgetPath: vi.fn(),
+  startBudgetTrackedOperation: vi.fn(),
 }));
 
 vi.mock("next/cache", () => ({
@@ -74,6 +76,11 @@ vi.mock("@/lib/plans", () => ({
   assertCompanyFeatureEnabled: mocks.assertCompanyFeatureEnabled,
 }));
 
+vi.mock("@/lib/cost/budget-service", () => ({
+  enforceBudgetPath: mocks.enforceBudgetPath,
+  startBudgetTrackedOperation: mocks.startBudgetTrackedOperation,
+}));
+
 import { createExportAction } from "./actions";
 import { ExportGlobalBytesLimitReachedError } from "@/lib/repository/export.repository";
 
@@ -92,6 +99,15 @@ describe("createExportAction guardrails", () => {
     mocks.generateRequestId.mockReturnValue("req-1");
     mocks.isFeatureEnabled.mockReturnValue(true);
     mocks.createRequestLogger.mockReturnValue(mocks.logger);
+    mocks.enforceBudgetPath.mockResolvedValue({
+      allowed: true,
+      controlId: null,
+      violatedLimit: null,
+      scope: "environment",
+      message: "Budget state is healthy",
+      state: { budgetTier: "MVP" },
+    });
+    mocks.startBudgetTrackedOperation.mockReturnValue(vi.fn());
   });
 
   it("maps global export-byte budget denial to deterministic EXPT-002 payload", async () => {
@@ -128,6 +144,32 @@ describe("createExportAction guardrails", () => {
       expect(result.error.code).toBe("FORBIDDEN");
       expect(result.error.message).toBe(
         "Advanced export bundles are disabled for your current plan",
+      );
+    }
+
+    expect(mocks.queueExportJobWithLimits).not.toHaveBeenCalled();
+  });
+
+  it("returns deterministic budget-protect payload when export creation is disabled", async () => {
+    mocks.enforceBudgetPath.mockResolvedValue({
+      allowed: false,
+      controlId: "COST-008",
+      violatedLimit: "PROJECTED_MONTHLY_SPEND_NZD<=150",
+      scope: "environment",
+      message:
+        "This operation is disabled because the environment is in BUDGET_PROTECT mode",
+      state: { budgetTier: "MVP" },
+    });
+
+    const result = await createExportAction({ exportType: "SIGN_IN_CSV" });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("RATE_LIMITED");
+      expect(result.error.guardrail?.controlId).toBe("COST-008");
+      expect(result.error.guardrail?.scope).toBe("environment");
+      expect(result.error.guardrail?.violatedLimit).toBe(
+        "PROJECTED_MONTHLY_SPEND_NZD<=150",
       );
     }
 

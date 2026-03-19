@@ -15,7 +15,7 @@ import {
   sessionOptions,
   SESSION_DURATION,
 } from "./session-config";
-import { publicDb } from "@/lib/db/public-db";
+import { findUnscopedUserByEmail } from "@/lib/db/scoped";
 import { scopedDb } from "@/lib/db/scoped-db";
 import { verifyPassword, hashPassword, needsRehash } from "./password";
 import { decryptTotpSecret, verifyTotpCode } from "./mfa";
@@ -168,9 +168,7 @@ export async function login(
     method: "POST",
   });
 
-  // Find user by email (this is auth bootstrap - allowed without company_id)
-  const user = await publicDb.user.findFirst({
-    where: { email: email.toLowerCase().trim() },
+  const user = await findUnscopedUserByEmail(email, {
     include: { company: true },
   });
 

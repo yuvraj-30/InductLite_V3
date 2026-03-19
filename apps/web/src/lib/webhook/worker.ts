@@ -1,7 +1,7 @@
 import { createHmac } from "crypto";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
-import { publicDb } from "@/lib/db/public-db";
+import { scopedDb } from "@/lib/db/scoped-db";
 import {
   claimOutboundWebhookDelivery,
   listDueOutboundWebhookDeliveries,
@@ -131,7 +131,7 @@ export async function processOutboundWebhookQueue(
       return cached;
     }
 
-    const site = await publicDb.site.findFirst({
+    const site = await scopedDb(delivery.company_id).site.findFirst({
       where: {
         id: delivery.site_id,
         company_id: delivery.company_id,
@@ -219,7 +219,9 @@ export async function processOutboundWebhookQueue(
       const tokenCacheKey = `${delivery.company_id}:${delivery.site_id}:${connectorProvider}`;
       let connectorToken = connectorTokenCache.get(tokenCacheKey);
       if (connectorToken === undefined) {
-        const connectorConfig = await publicDb.accessConnectorConfig.findFirst({
+        const connectorConfig = await scopedDb(
+          delivery.company_id,
+        ).accessConnectorConfig.findFirst({
           where: {
             company_id: delivery.company_id,
             site_id: delivery.site_id,

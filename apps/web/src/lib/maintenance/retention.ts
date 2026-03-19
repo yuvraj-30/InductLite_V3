@@ -1,4 +1,5 @@
 import { publicDb } from "@/lib/db/public-db";
+import { scopedDb } from "@/lib/db/scoped-db";
 import { GUARDRAILS } from "@/lib/guardrails";
 import { deleteObject } from "@/lib/storage";
 import { deleteExportJob } from "@/lib/repository/export.repository";
@@ -14,6 +15,11 @@ const DEFAULT_INDUCTION_RETENTION_DAYS = 365;
 const DEFAULT_AUDIT_RETENTION_DAYS = 90;
 const DEFAULT_INCIDENT_RETENTION_DAYS = 1825;
 const DEFAULT_EMERGENCY_DRILL_RETENTION_DAYS = 1825;
+type RetentionScopedDb = ReturnType<typeof scopedDb> & {
+  signInRecord: {
+    deleteMany: (args?: Record<string, unknown>) => Promise<{ count: number }>;
+  };
+};
 
 async function runWithConcurrency<T>(
   items: T[],
@@ -45,63 +51,6 @@ export async function runRetentionTasks(): Promise<void> {
   const log = createRequestLogger(generateRequestId());
   const now = new Date();
 
-  // Purge expired export files + jobs (batch fetch, tenant-safe delete by company+id)
-  const expiredExports = await publicDb.exportJob.findMany({
-    where: {
-      expires_at: { lt: now },
-      file_path: { not: null },
-    },
-    select: { id: true, company_id: true, file_path: true },
-    orderBy: { expires_at: "asc" },
-    take: 500,
-  });
-
-  await runWithConcurrency(expiredExports, 10, async (job) => {
-    try {
-      if (job.file_path) {
-        await deleteObject(job.file_path);
-      }
-      await deleteExportJob(job.company_id, job.id);
-    } catch (err) {
-      log.warn(
-        { companyId: job.company_id, jobId: job.id, err: String(err) },
-        "Export retention cleanup failed",
-      );
-    }
-  });
-
-  // Purge expired contractor documents (batch fetch, tenant-safe delete by company+id)
-  const expiredDocs = await publicDb.contractorDocument.findMany({
-    where: {
-      expires_at: { lt: now },
-    },
-    select: {
-      id: true,
-      file_path: true,
-      contractor: { select: { company_id: true } },
-    },
-    orderBy: { expires_at: "asc" },
-    take: 500,
-  });
-
-  await runWithConcurrency(expiredDocs, 10, async (doc) => {
-    try {
-      await deleteObject(doc.file_path);
-      await deleteContractorDocumentById(doc.contractor.company_id, doc.id);
-    } catch (err) {
-      log.warn(
-        {
-          companyId: doc.contractor.company_id,
-          documentId: doc.id,
-          err: String(err),
-        },
-        "Document cleanup failed",
-      );
-    }
-  });
-
-  // Purge signed-out sign-in records based on per-company retention policy.
-  // InductionResponse rows are cascaded by FK when SignInRecord is deleted.
   const companies = await publicDb.company.findMany({
     select: {
       id: true,
@@ -115,6 +64,62 @@ export async function runRetentionTasks(): Promise<void> {
   });
 
   await runWithConcurrency(companies, 10, async (company) => {
+    const db = scopedDb(company.id) as RetentionScopedDb;
+
+    const expiredExports = await db.exportJob.findMany({
+      where: {
+        expires_at: { lt: now },
+        file_path: { not: null },
+      },
+      select: { id: true, company_id: true, file_path: true },
+      orderBy: { expires_at: "asc" },
+      take: 500,
+    });
+
+    await runWithConcurrency(expiredExports, 10, async (job) => {
+      try {
+        if (job.file_path) {
+          await deleteObject(job.file_path);
+        }
+        await deleteExportJob(company.id, job.id);
+      } catch (err) {
+        log.warn(
+          { companyId: company.id, jobId: job.id, err: String(err) },
+          "Export retention cleanup failed",
+        );
+      }
+    });
+
+    const expiredDocs = await db.contractorDocument.findMany({
+      where: {
+        expires_at: { lt: now },
+      },
+      select: {
+        id: true,
+        file_path: true,
+      },
+      orderBy: { expires_at: "asc" },
+      take: 500,
+    });
+
+    await runWithConcurrency(expiredDocs, 10, async (doc) => {
+      try {
+        await deleteObject(doc.file_path);
+        await deleteContractorDocumentById(company.id, doc.id);
+      } catch (err) {
+        log.warn(
+          {
+            companyId: company.id,
+            documentId: doc.id,
+            err: String(err),
+          },
+          "Document cleanup failed",
+        );
+      }
+    });
+
+    // Purge signed-out sign-in records based on per-company retention policy.
+    // InductionResponse rows are cascaded by FK when SignInRecord is deleted.
     const signInRetentionDays =
       company.retention_days > 0
         ? company.retention_days
@@ -138,7 +143,7 @@ export async function runRetentionTasks(): Promise<void> {
     }
 
     try {
-      const deleted = await publicDb.signInRecord.deleteMany({
+      const deleted = await db.signInRecord.deleteMany({
         where: {
           company_id: company.id,
           sign_out_ts: { lt: signInCutoff },
@@ -185,7 +190,7 @@ export async function runRetentionTasks(): Promise<void> {
     const auditCutoff = getRetentionCutoff(effectiveAuditRetentionDays, now);
 
     try {
-      const auditDeleted = await publicDb.auditLog.deleteMany({
+      const auditDeleted = await db.auditLog.deleteMany({
         where: {
           company_id: company.id,
           created_at: { lt: auditCutoff },
@@ -219,7 +224,7 @@ export async function runRetentionTasks(): Promise<void> {
         : DEFAULT_INCIDENT_RETENTION_DAYS;
     const incidentCutoff = getRetentionCutoff(incidentRetentionDays, now);
     try {
-      const incidentDeleted = await publicDb.incidentReport.deleteMany({
+      const incidentDeleted = await db.incidentReport.deleteMany({
         where: {
           company_id: company.id,
           status: "CLOSED",
@@ -258,7 +263,7 @@ export async function runRetentionTasks(): Promise<void> {
         : DEFAULT_EMERGENCY_DRILL_RETENTION_DAYS;
     const drillCutoff = getRetentionCutoff(drillRetentionDays, now);
     try {
-      const drillDeleted = await publicDb.emergencyDrill.deleteMany({
+      const drillDeleted = await db.emergencyDrill.deleteMany({
         where: {
           company_id: company.id,
           legal_hold: false,

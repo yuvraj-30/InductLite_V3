@@ -1,10 +1,11 @@
 # Critical Paths
 
-Version: `v1`
-Updated: `2026-02-15`
+Version: `v2`
+Updated: `2026-03-19`
 Owner: `Architecture + Security`
 
 This file is the canonical allowlist for `BUDGET_PROTECT` mode.
+Runtime enforcement lives in `apps/web/src/lib/cost/budget-service.ts`.
 
 ## Allowed Critical Paths
 
