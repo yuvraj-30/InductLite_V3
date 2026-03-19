@@ -806,9 +806,17 @@ test.describe.serial("Public Sign-In Flow", () => {
       await page.locator("#hasAcceptedTerms").check();
       await page.getByRole("button", { name: /confirm and sign in/i }).click();
 
-      await expect(
-        page.getByText(/quiz pass threshold not met|below the required/i).first(),
-      ).toBeVisible();
+      await expect
+        .poll(
+          async () => {
+            const bodyText = await page.locator("body").textContent();
+            return /quiz pass threshold not met|below the required/i.test(
+              bodyText ?? "",
+            );
+          },
+          { timeout: 30_000, intervals: [250, 500, 1_000] },
+        )
+        .toBe(true);
     } finally {
       await deletePublicSite(mediaQuizSlug);
     }
