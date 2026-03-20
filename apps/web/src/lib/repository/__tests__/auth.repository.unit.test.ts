@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => ({
   tx: {
     company: { create: vi.fn() },
     user: { create: vi.fn() },
-    site: { create: vi.fn() },
+    site: { create: vi.fn(), findFirst: vi.fn() },
     siteManagerAssignment: { create: vi.fn() },
     sitePublicLink: { create: vi.fn() },
     auditLog: { create: vi.fn() },
@@ -47,6 +47,9 @@ describe("Auth Repository (unit)", () => {
     vi.mocked(mocks.tx.site.create).mockResolvedValue({
       id: "site-123",
       name: "Main Site",
+    });
+    vi.mocked(mocks.tx.site.findFirst).mockResolvedValue({
+      id: "site-123",
     });
     vi.mocked(mocks.tx.siteManagerAssignment.create).mockResolvedValue({
       id: "assignment-1",

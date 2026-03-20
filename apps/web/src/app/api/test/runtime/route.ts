@@ -1,4 +1,5 @@
 import { ensureTestRouteAccess } from "../_guard";
+import { serializeRuntimeError, withRuntimePrisma } from "../_runtime-prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,8 +20,24 @@ export async function GET(req: Request) {
   };
 
   const env = getEnv();
+  let dbReady = false;
+  let dbError: Record<string, unknown> | null = null;
+
+  if (env.DATABASE_URL) {
+    try {
+      await withRuntimePrisma(async (client) => {
+        await client.user.count();
+      });
+      dbReady = true;
+    } catch (error) {
+      dbError = serializeRuntimeError(error);
+    }
+  }
+
   const payload = {
     dbPresent: !!env.DATABASE_URL,
+    dbReady,
+    dbError,
     nodeEnv: env.NODE_ENV ?? null,
     allowTestRunner: !!env.ALLOW_TEST_RUNNER,
     ciRuntime: env.CI === "true" || env.GITHUB_ACTIONS === "true",

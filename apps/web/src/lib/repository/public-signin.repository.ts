@@ -13,6 +13,7 @@ import { publicDb } from "@/lib/db/public-db";
 import { scopedDb } from "@/lib/db/scoped-db";
 import {
   completePublicSignOutByToken,
+  findInductionTemplateOwnershipById,
   findPublicSignInSummary,
   findPublicSignOutRecordResult,
   findPublicSignOutRecordState,
@@ -465,17 +466,10 @@ export async function createPublicSignIn(
       // (FORBIDDEN). We intentionally do a bare id lookup so we can provide a
       // descriptive error to callers — we enforce tenant scoping by checking
       // the returned template's company_id below.
-      /* eslint-disable security-guardrails/require-company-id -- intentional id-only lookup followed by explicit company_id check */
-      const templateById = await tx.inductionTemplate.findFirst({
-        where: { id: input.templateId },
-        select: {
-          id: true,
-          company_id: true,
-          version: true,
-          force_reinduction: true,
-        },
-      });
-      /* eslint-enable security-guardrails/require-company-id */
+      const templateById = await findInductionTemplateOwnershipById(
+        input.templateId,
+        tx,
+      );
 
       if (!templateById) {
         throw new RepositoryError("Selected template not found", "FOREIGN_KEY");
@@ -503,7 +497,7 @@ export async function createPublicSignIn(
         throw new RepositoryError("Unserializable answers", "VALIDATION");
       }
 
-      const templateQuestions = await tx.inductionQuestion.findMany({
+      const templateQuestions = await db.inductionQuestion.findMany({
         where: { template_id: input.templateId },
         select: {
           id: true,
@@ -601,7 +595,7 @@ export async function createPublicSignIn(
       };
 
       // 4. Create induction response
-      await tx.inductionResponse.create({
+      await db.inductionResponse.create({
         data: {
           sign_in_record_id: signInRecord.id,
           template_id: input.templateId,

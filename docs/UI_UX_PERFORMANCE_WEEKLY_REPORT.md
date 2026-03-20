@@ -1,16 +1,16 @@
 # UI/UX Performance Weekly Report
 
-- Generated: 2026-03-19T14:40:43.184Z
-- Status: **FAIL**
+- Generated: 2026-03-20T08:37:27.975Z
+- Status: **PASS**
 - Checked routes: 5
 
 | Route | LCP (ms) | LCP Budget | TBT Surrogate (ms) | TBT Budget | CLS | CLS Budget | INP (ms) | INP Budget | JS Transfer (bytes) | JS Budget | Utilization (LCP/TBT/CLS/INP/JS) | Result |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- | --- |
-| `/login` | 232 | 2500 | 526 | 1500 | 0 | 0.15 | 48 | 350 | 2806592 | 400000 | 9% / 35% / 0% / 14% / 702% | FAIL |
-| `/admin/sites` | 1164 | 2500 | 2081 | 3300 | 0 | 0.15 | 392 | 400 | 2914320 | 575000 | 47% / 63% / 0% / 98% / 507% | FAIL |
-| `/admin/live-register` | 2192 | 2500 | 1166 | 3200 | 0 | 0.15 | 144 | 450 | 2912704 | 625000 | 88% / 36% / 0% / 32% / 466% | FAIL |
-| `/admin/settings` | 364 | 2800 | 1960 | 3500 | 0 | 0.15 | 288 | 450 | 3093720 | 650000 | 13% / 56% / 0% / 64% / 476% | FAIL |
-| `/s/perf-budget-site-fqtlvi` | 580 | 2500 | 1214 | 2200 | 0 | 0.1 | 96 | 350 | 3476143 | 700000 | 23% / 55% / 0% / 27% / 497% | FAIL |
+| `/login` | 84 | 2500 | 29 | 1500 | 0 | 0.15 | 56 | 350 | 125748 | 400000 | 3% / 2% / 0% / 16% / 31% | PASS |
+| `/admin/sites` | 368 | 2500 | 906 | 3300 | 0 | 0.15 | 248 | 400 | 129696 | 575000 | 15% / 27% / 0% / 62% / 23% | PASS |
+| `/admin/live-register` | 104 | 2500 | 92 | 3200 | 0 | 0.15 | 16 | 450 | 129937 | 625000 | 4% / 3% / 0% / 4% / 21% | PASS |
+| `/admin/settings` | 88 | 2800 | 198 | 3500 | 0.025 | 0.15 | 40 | 450 | 141069 | 650000 | 3% / 6% / 17% / 9% / 22% | PASS |
+| `/s/perf-budget-site-755e7d` | 52 | 2500 | 0 | 2200 | 0 | 0.1 | 24 | 350 | 196451 | 700000 | 2% / 0% / 0% / 7% / 28% | PASS |
 
 ## Notes
 - Metrics are produced by `apps/web/e2e/performance-budget.spec.ts` on chromium stable lane.

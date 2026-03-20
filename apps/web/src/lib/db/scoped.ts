@@ -5,6 +5,7 @@
  * to ensure tenant isolation. Direct prisma access is only allowed for:
  * - Auth bootstrap (login/session lookup)
  * - Public slug resolution (slug -> site -> company_id)
+ * - Public sign-in ownership probes that must distinguish missing vs cross-tenant IDs
  */
 
 import { prisma } from "./prisma";
@@ -411,6 +412,36 @@ export async function findActiveChannelIntegrationConfig(
 export async function countRunningExportJobsGlobal() {
   return prisma.exportJob.count({
     where: { status: "RUNNING" },
+  });
+}
+
+type ScopedDbClient = Prisma.TransactionClient | PrismaClient;
+
+export async function aggregateSucceededExportJobBytesSince(
+  since: Date,
+  client: ScopedDbClient = prisma,
+) {
+  return client.exportJob.aggregate({
+    _sum: { file_size: true },
+    where: {
+      status: "SUCCEEDED",
+      completed_at: { gte: since },
+    },
+  });
+}
+
+export async function findInductionTemplateOwnershipById(
+  templateId: string,
+  client: ScopedDbClient = prisma,
+) {
+  return client.inductionTemplate.findFirst({
+    where: { id: templateId },
+    select: {
+      id: true,
+      company_id: true,
+      version: true,
+      force_reinduction: true,
+    },
   });
 }
 

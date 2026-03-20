@@ -26,8 +26,8 @@ This file is the machine-checkable registry for MUST-level controls.
 | COST-005 | MAX_MONTHLY_COMPUTE_INVOCATIONS | 1200000 (MVP) | 1.2M/6M/24M | compute counter limiter | guardrails-counter-check | Platform |
 | COST-006 | MAX_MONTHLY_COMPUTE_RUNTIME_MINUTES | 2500 (MVP) | 2500/12000/48000 | compute runtime limiter | guardrails-counter-check | Platform |
 | COST-007 | ENV_BUDGET_TIER | MVP | MVP/EARLY/GROWTH | startup env validation + budget service | guardrails-policy-check | Platform |
-| COST-008 | N/A | fail-safe `BUDGET_PROTECT` at stale telemetry or >=100% projected budget | N/A | `apps/web/src/lib/cost/budget-service.ts` + export/SMS entrypoints | budget-service-state | Platform |
-| COST-009 | N/A | disable non-critical paths at >=80% projected budget | N/A | `apps/web/src/lib/cost/budget-service.ts` + export/SMS entrypoints | budget-service-state | Platform |
+| COST-008 | N/A | fail-safe `BUDGET_PROTECT` at stale telemetry or >=100% projected budget | N/A | `apps/web/src/lib/cost/budget-service.ts` + export/SMS/email/visual entrypoints | budget-service-state | Platform |
+| COST-009 | N/A | disable non-critical paths at >=80% projected budget | N/A | `apps/web/src/lib/cost/budget-service.ts` + export/SMS/email/visual entrypoints | budget-service-state | Platform |
 | FILE-005 | MAX_UPLOAD_MB | 5 | 5/5/5 | upload presign + commit validation | guardrails-upload-size | Security |
 | FILE-001 | UPLOAD_ALLOWED_MIME | application/pdf,image/jpeg,image/png | same/same/same | upload commit + server MIME validation | guardrails-upload-mime | Security |
 | FILE-002 | UPLOAD_ALLOWED_EXTENSIONS | pdf,jpg,jpeg,png | same/same/same | upload presign + commit validation | guardrails-upload-mime | Security |

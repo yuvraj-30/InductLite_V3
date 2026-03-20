@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import { createPrismaClient } from "@/lib/db/prisma";
 import { ensureTestRouteAccess } from "../_guard";
-
-const prisma = createPrismaClient();
+import { withRuntimePrisma } from "../_runtime-prisma";
 
 export async function POST(req: Request) {
   const accessDenied = ensureTestRouteAccess(req);
@@ -21,26 +19,33 @@ export async function POST(req: Request) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    const updated = await prisma.user.updateMany({
-      where: { email: normalizedEmail },
-      data: {
-        failed_logins: failedLogins,
-        locked_until: lock ? new Date(Date.now() + 15 * 60 * 1000) : null,
-      },
-    });
+    const { updated, user } = await withRuntimePrisma(async (client) => {
+      const updatedResult = await client.user.updateMany({
+        where: { email: normalizedEmail },
+        data: {
+          failed_logins: failedLogins,
+          locked_until: lock ? new Date(Date.now() + 15 * 60 * 1000) : null,
+        },
+      });
 
-    const user = await prisma.user.findFirst({
-      where: { email: normalizedEmail },
-      select: {
-        email: true,
-        failed_logins: true,
-        locked_until: true,
-      },
+      const userResult = await client.user.findFirst({
+        where: { email: normalizedEmail },
+        select: {
+          email: true,
+          failed_logins: true,
+          locked_until: true,
+        },
+      });
+
+      return {
+        updated: updatedResult.count,
+        user: userResult,
+      };
     });
 
     return NextResponse.json({
       success: true,
-      updated: updated.count,
+      updated,
       user,
     });
   } catch (err: unknown) {

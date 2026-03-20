@@ -5,6 +5,7 @@
  */
 
 import { scopedDb } from "@/lib/db/scoped-db";
+import { enforceBudgetPath } from "@/lib/cost/budget-service";
 import type { EmailNotification } from "@prisma/client";
 import { handlePrismaError, RepositoryError, requireCompanyId } from "./base";
 
@@ -36,6 +37,11 @@ export async function queueEmailNotification(
   }
 
   try {
+    const budgetDecision = await enforceBudgetPath("notifications.email.queue");
+    if (!budgetDecision.allowed) {
+      throw new RepositoryError(budgetDecision.message, "FORBIDDEN");
+    }
+
     const db = scopedDb(companyId);
     return await db.emailNotification.create({
       data: {

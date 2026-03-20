@@ -6,6 +6,7 @@ Owner: `Architecture + Security`
 
 This file is the canonical allowlist for `BUDGET_PROTECT` mode.
 Runtime enforcement lives in `apps/web/src/lib/cost/budget-service.ts`.
+Entry-point enforcement for denied paths currently lives in exports, SMS, email queue, and visual-regression runners.
 
 ## Allowed Critical Paths
 

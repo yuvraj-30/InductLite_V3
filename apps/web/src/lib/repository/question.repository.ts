@@ -212,9 +212,10 @@ export async function createQuestion(
 
   try {
     const question = await publicDb.$transaction(async (tx) => {
+      const db = scopedDb(companyId, tx);
       let displayOrder = input.display_order;
       if (displayOrder === undefined) {
-        const maxOrder = await tx.inductionQuestion.findFirst({
+        const maxOrder = await db.inductionQuestion.findFirst({
           where: { template_id: templateId },
           orderBy: { display_order: "desc" },
           select: { display_order: true },
@@ -222,7 +223,7 @@ export async function createQuestion(
         displayOrder = (maxOrder?.display_order ?? 0) + 1;
       }
 
-      return tx.inductionQuestion.create({
+      return db.inductionQuestion.create({
         data: {
           template_id: templateId,
           question_text: input.question_text,
@@ -271,8 +272,9 @@ export async function updateQuestion(
 
   try {
     return await publicDb.$transaction(async (tx) => {
+      const db = scopedDb(companyId, tx);
       // Find question with template info - atomic within transaction
-      const question = await tx.inductionQuestion.findFirst({
+      const question = await db.inductionQuestion.findFirst({
         where: {
           id: questionId,
           template: { company_id: companyId },
@@ -304,7 +306,7 @@ export async function updateQuestion(
       }
 
       // Update within same transaction - template verified
-      const updatedResult = await tx.inductionQuestion.updateMany({
+      const updatedResult = await db.inductionQuestion.updateMany({
         where: { id: questionId, template_id: question.template_id },
         data: {
           question_text: input.question_text,
@@ -335,7 +337,7 @@ export async function updateQuestion(
         throw new RepositoryError("Question not found", "NOT_FOUND");
       }
 
-      const updated = await tx.inductionQuestion.findFirst({
+      const updated = await db.inductionQuestion.findFirst({
         where: { id: questionId, template_id: question.template_id },
       });
 
@@ -367,8 +369,9 @@ export async function deleteQuestion(
 
   try {
     await publicDb.$transaction(async (tx) => {
+      const db = scopedDb(companyId, tx);
       // Find question with template info - atomic within transaction
-      const question = await tx.inductionQuestion.findFirst({
+      const question = await db.inductionQuestion.findFirst({
         where: {
           id: questionId,
           template: { company_id: companyId },
@@ -400,12 +403,12 @@ export async function deleteQuestion(
       }
 
       // Delete within same transaction - template verified
-      await tx.inductionQuestion.deleteMany({
+      await db.inductionQuestion.deleteMany({
         where: { id: questionId, template_id: question.template_id },
       });
 
       // Reorder remaining questions
-      await tx.inductionQuestion.updateMany({
+      await db.inductionQuestion.updateMany({
         where: {
           template_id: question.template_id,
           display_order: { gt: question.display_order },
@@ -435,8 +438,9 @@ export async function reorderQuestions(
 
   // Perform verification and updates inside a single transaction to prevent TOCTOU
   const result = await publicDb.$transaction(async (tx) => {
+    const db = scopedDb(companyId, tx);
     // Verify template is editable within transaction
-    const t = await tx.inductionTemplate.findFirst({
+    const t = await db.inductionTemplate.findFirst({
       where: { id: templateId, company_id: companyId },
       select: { is_archived: true, is_published: true },
     });
@@ -460,7 +464,7 @@ export async function reorderQuestions(
     }
 
     // Validate all questions belong to this template
-    const questions = await tx.inductionQuestion.findMany({
+    const questions = await db.inductionQuestion.findMany({
       where: { template_id: templateId },
       select: { id: true },
     });
@@ -478,7 +482,7 @@ export async function reorderQuestions(
     // Apply updates atomically
     await Promise.all(
       questionOrders.map((order) =>
-        tx.inductionQuestion.updateMany({
+        db.inductionQuestion.updateMany({
           where: { id: order.questionId, template_id: templateId },
           data: { display_order: order.newOrder },
         }),
@@ -486,7 +490,7 @@ export async function reorderQuestions(
     );
 
     // Return updated questions from transaction for consistency
-    return (await tx.inductionQuestion.findMany({
+    return (await db.inductionQuestion.findMany({
       where: { template_id: templateId },
       orderBy: { display_order: "asc" },
     })) as Question[];
@@ -507,7 +511,8 @@ export async function bulkCreateQuestions(
 
   // Perform verification and creation inside a transaction to prevent TOCTOU
   const created = await publicDb.$transaction(async (tx) => {
-    const template = await tx.inductionTemplate.findFirst({
+    const db = scopedDb(companyId, tx);
+    const template = await db.inductionTemplate.findFirst({
       where: { id: templateId, company_id: companyId },
       select: { is_archived: true, is_published: true },
     });
@@ -530,7 +535,7 @@ export async function bulkCreateQuestions(
       );
     }
 
-    await tx.inductionQuestion.createMany({
+    await db.inductionQuestion.createMany({
       data: questions.map((q, index) => ({
         template_id: templateId,
         question_text: q.question_text,
@@ -543,7 +548,7 @@ export async function bulkCreateQuestions(
       })),
     });
 
-    return (await tx.inductionQuestion.findMany({
+    return (await db.inductionQuestion.findMany({
       where: { template_id: templateId },
       orderBy: { display_order: "asc" },
     })) as Question[];

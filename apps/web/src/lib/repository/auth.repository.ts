@@ -6,6 +6,7 @@
 
 import { randomBytes } from "crypto";
 import { publicDb } from "@/lib/db/public-db";
+import { scopedDb } from "@/lib/db/scoped-db";
 import { findUnscopedUserByEmail } from "@/lib/db/scoped";
 import { handlePrismaError, RepositoryError } from "./base";
 
@@ -87,7 +88,9 @@ export async function registerCompanyWithAdmin(
         },
       });
 
-      const user = await tx.user.create({
+      const db = scopedDb(company.id, tx);
+
+      const user = await db.user.create({
         data: {
           company_id: company.id,
           email: normalizedEmail,
@@ -98,7 +101,7 @@ export async function registerCompanyWithAdmin(
         },
       });
 
-      const site = await tx.site.create({
+      const site = await db.site.create({
         data: {
           company_id: company.id,
           name: input.firstSiteName.trim(),
@@ -107,7 +110,7 @@ export async function registerCompanyWithAdmin(
       });
 
       // Ensure the founding admin receives site-level escalation notifications.
-      await tx.siteManagerAssignment.create({
+      await db.siteManagerAssignment.create({
         data: {
           company_id: company.id,
           site_id: site.id,
@@ -115,7 +118,7 @@ export async function registerCompanyWithAdmin(
         },
       });
 
-      await tx.sitePublicLink.create({
+      await db.sitePublicLink.create({
         data: {
           site_id: site.id,
           slug: generateSecurePublicSlug(),
@@ -123,7 +126,7 @@ export async function registerCompanyWithAdmin(
         },
       });
 
-      await tx.auditLog.create({
+      await db.auditLog.create({
         data: {
           company_id: company.id,
           user_id: user.id,

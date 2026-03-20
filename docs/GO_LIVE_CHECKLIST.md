@@ -66,5 +66,5 @@ Status legend: [ ] todo [x] done [!] blocked
 - Keep costs within NZD 150/mo budget target by enforcing guardrails.
 - Keep backups and restore drills aligned with runbooks in docs/.
 - Production budget telemetry must refresh at least hourly from provider billing manifests; stale telemetry >6h must disable non-critical paths via `BUDGET_PROTECT`.
-- Before launch, Platform + Finance must run `npm run provider-billing-check -- --file docs/artifacts/provider-billing/provider-billing-manifest.json --required render,neon,cloudflare_r2,upstash,resend` and attach the validated manifest plus command output to the release record.
+- Before launch, Platform + Finance must refresh `docs/artifacts/provider-billing/provider-billing-manifest.json` with the current live provider-origin capture, run `npm run provider-billing-check -- --file docs/artifacts/provider-billing/provider-billing-manifest.json --required render,neon,cloudflare_r2,upstash,resend`, and attach the validated manifest plus command output to the release record.
 - Provider billing manifest schema and execution steps live in [PROVIDER_BILLING_TELEMETRY_RUNBOOK.md](./PROVIDER_BILLING_TELEMETRY_RUNBOOK.md).

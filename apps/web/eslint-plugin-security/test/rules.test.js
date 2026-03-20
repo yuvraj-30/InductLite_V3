@@ -61,6 +61,10 @@ runRuleTest(
         code: `publicDb.signInRecord.findFirst({ where: { id: "rec_1" } })`,
       },
       {
+        filename: "src/lib/db/scoped.ts",
+        code: `async function run(tx) { return tx.inductionTemplate.findFirst({ where: { id: "tmpl_1" } }); }`,
+      },
+      {
         filename: "src/lib/repository/site.repository.ts",
         code: `publicDb.company.findFirst({ where: { slug: "alpha" } })`,
       },
@@ -74,6 +78,11 @@ runRuleTest(
       {
         filename: "src/lib/email/worker.ts",
         code: `publicDb.auditLog.create({ data: { action: "x" } })`,
+        errors: [{ messageId: "noPublicDbTenantAccess" }],
+      },
+      {
+        filename: "src/lib/repository/question.repository.ts",
+        code: `publicDb.$transaction(async (tx) => tx.inductionQuestion.findFirst({ where: { id: "q_1" } }));`,
         errors: [{ messageId: "noPublicDbTenantAccess" }],
       },
     ],

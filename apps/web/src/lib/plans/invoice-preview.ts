@@ -82,12 +82,19 @@ export async function buildCompanyInvoicePreview(
   const sites = await findAllSites(companyId);
   const activeSites = sites.filter((site) => site.is_active);
 
-  const siteInvoices: SiteInvoicePreview[] = [];
-  const entitlementSnapshots = [];
+  const siteInvoiceInputs = await Promise.all(
+    activeSites.map(async (site) => {
+      const entitlements = await getEffectiveEntitlements(companyId, site.id);
+      return { site, entitlements };
+    }),
+  );
 
-  for (const site of activeSites) {
-    const entitlements = await getEffectiveEntitlements(companyId, site.id);
-    entitlementSnapshots.push(entitlements);
+  const siteInvoices: SiteInvoicePreview[] = [];
+  const entitlementSnapshots = siteInvoiceInputs.map(
+    ({ entitlements }) => entitlements,
+  );
+
+  for (const { site, entitlements } of siteInvoiceInputs) {
     const sitePrice = calculateSitePriceCents(entitlements);
 
     const lineItems: InvoiceLineItem[] = [

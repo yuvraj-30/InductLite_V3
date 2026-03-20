@@ -7,6 +7,7 @@
 import { scopedDb } from "@/lib/db/scoped-db";
 import { publicDb } from "@/lib/db/public-db";
 import {
+  aggregateSucceededExportJobBytesSince,
   countRunningExportJobsGlobal as countRunningExportJobsGlobalUnsafe,
   findOldestQueuedExportJob,
   listGlobalExportDownloadAuditLogsSince,
@@ -180,13 +181,7 @@ export async function queueExportJobWithLimits(
                 status: "RUNNING",
               },
             }),
-            tx.exportJob.aggregate({
-              _sum: { file_size: true },
-              where: {
-                status: "SUCCEEDED",
-                completed_at: { gte: since },
-              },
-            }),
+            aggregateSucceededExportJobBytesSince(since, tx),
           ]);
 
           if (

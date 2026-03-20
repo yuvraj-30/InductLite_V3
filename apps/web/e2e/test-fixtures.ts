@@ -520,14 +520,19 @@ export const test = base.extend<MyFixtures, MyWorkerFixtures>({
             try {
               return JSON.parse(txt) as {
                 allowTestRunner?: boolean;
+                dbReady?: boolean;
                 nodeEnv?: string;
               };
             } catch {
-              return {} as { allowTestRunner?: boolean; nodeEnv?: string };
+              return {} as {
+                allowTestRunner?: boolean;
+                dbReady?: boolean;
+                nodeEnv?: string;
+              };
             }
           })();
 
-          if (runtimeBody.allowTestRunner) {
+          if (runtimeBody.allowTestRunner && runtimeBody.dbReady) {
             runtimeAllowSeen = true;
             break;
           }

@@ -1,4 +1,5 @@
 ﻿import { publicDb } from "@/lib/db/public-db";
+import { enforceBudgetPath } from "@/lib/cost/budget-service";
 import { sendEmail } from "@/lib/email/resend";
 import {
   getWeeklyDigestMetricsByCompany,
@@ -607,6 +608,19 @@ export async function processEmailQueue() {
   const log = createRequestLogger(requestId);
 
   try {
+    const budgetDecision = await enforceBudgetPath("notifications.email.queue");
+    if (!budgetDecision.allowed) {
+      log.warn(
+        {
+          requestId,
+          controlId: budgetDecision.controlId,
+          mode: budgetDecision.mode,
+        },
+        "Skipping email queue processing because budget guard denied optional notifications",
+      );
+      return;
+    }
+
     // 1. Process Red Flags (High Priority)
     // Process recent responses in chunks to keep memory bounded.
     const redFlagBatchSize = 100;

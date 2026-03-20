@@ -231,13 +231,13 @@ module.exports = {
         type: "problem",
         docs: {
           description:
-            "Disallow tenant-owned model access through publicDb outside approved DB infrastructure",
+            "Disallow tenant-owned model access through publicDb or raw transaction clients outside approved DB infrastructure",
           category: "Security",
           recommended: true,
         },
         messages: {
           noPublicDbTenantAccess:
-            "Do not access tenant-owned model '{{ modelName }}' via publicDb here. Use scopedDb(companyId) or move the query into src/lib/db/* infrastructure.",
+            "Do not access tenant-owned model '{{ modelName }}' via {{ clientName }} here. Use scopedDb(companyId, tx) or move the query into src/lib/db/* infrastructure.",
         },
         schema: [],
       },
@@ -263,6 +263,7 @@ module.exports = {
           "incidentReport",
           "emergencyDrill",
         ]);
+        const transactionClientNames = new Set(["tx", "transaction", "trx"]);
 
         const normalizedFilename = readFilename(context).replaceAll("\\", "/");
         const isApprovedInfra =
@@ -278,15 +279,28 @@ module.exports = {
             if (
               node.object &&
               node.object.type === "Identifier" &&
-              node.object.name === "publicDb" &&
               node.property &&
               node.property.type === "Identifier" &&
               tenantOwnedModels.has(node.property.name)
             ) {
+              let clientName = null;
+              if (node.object.name === "publicDb") {
+                clientName = "publicDb";
+              } else if (transactionClientNames.has(node.object.name)) {
+                clientName = node.object.name;
+              }
+
+              if (!clientName) {
+                return;
+              }
+
               context.report({
                 node,
                 messageId: "noPublicDbTenantAccess",
-                data: { modelName: node.property.name },
+                data: {
+                  modelName: node.property.name,
+                  clientName,
+                },
               });
             }
           },

@@ -4,6 +4,11 @@ Expected release artifact:
 
 - `provider-billing-manifest.json`
 
+Repo-local handoff note:
+
+- Keep `provider-billing-manifest.json` schema-valid in the repo so `npm run provider-billing-check` stays reproducible.
+- Replace its contents with the current live provider-origin export/API capture before launch approval.
+
 Template:
 
 - `provider-billing-manifest.template.json`

@@ -12,6 +12,9 @@ This runbook defines the production evidence path for `BUDGET_PROTECT` telemetry
 - Manifest: `docs/artifacts/provider-billing/provider-billing-manifest.json`
 - Validator output: attach command output to the release record / change ticket
 
+The repo now carries a schema-valid handoff manifest at that path so the validator command is reproducible locally.
+Before launch approval, replace the file contents with the current live provider-origin export/API capture for the target release window.
+
 ## Manifest source contract
 
 The manifest must be built from provider-originated billing exports or billing API payloads, not manual estimates.

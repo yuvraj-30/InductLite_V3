@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { processEmailQueue } from "../worker";
 import { publicDb } from "../../db/public-db";
 import { sendEmail } from "../resend";
+import { enforceBudgetPath } from "@/lib/cost/budget-service";
 import { queueEmailNotification } from "@/lib/repository/email.repository";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 
@@ -11,6 +12,15 @@ vi.mock("../resend", () => ({
 
 vi.mock("@/lib/repository/email.repository", () => ({
   queueEmailNotification: vi.fn().mockResolvedValue({ id: "queued-1" }),
+}));
+
+vi.mock("@/lib/cost/budget-service", () => ({
+  enforceBudgetPath: vi.fn().mockResolvedValue({
+    allowed: true,
+    mode: "NORMAL",
+    controlId: null,
+    message: "Budget state is healthy",
+  }),
 }));
 
 vi.mock("@/lib/plans", () => ({
@@ -35,6 +45,12 @@ describe("processEmailQueue", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(assertCompanyFeatureEnabled).mockResolvedValue({} as any);
+    vi.mocked(enforceBudgetPath).mockResolvedValue({
+      allowed: true,
+      mode: "NORMAL",
+      controlId: null,
+      message: "Budget state is healthy",
+    } as any);
 
     const dbAny = publicDb as any;
     dbAny.inductionResponse = {
@@ -171,6 +187,31 @@ describe("processEmailQueue", () => {
         data: expect.objectContaining({ status: "SENT" }),
       }),
     );
+  });
+
+  it("skips email queue processing when budget guard denies optional notifications", async () => {
+    const dbAny = publicDb as any;
+    vi.mocked(enforceBudgetPath).mockResolvedValue({
+      allowed: false,
+      mode: "BUDGET_PROTECT",
+      controlId: "COST-008",
+      message: "This operation is disabled because the environment is in BUDGET_PROTECT mode",
+    } as any);
+    dbAny.emailNotification.findMany = vi.fn().mockResolvedValue([
+      {
+        id: "notif-1",
+        to: "user@example.com",
+        subject: "Test Subject",
+        body: "Test Body",
+        attempts: 0,
+      },
+    ]);
+
+    await processEmailQueue();
+
+    expect(dbAny.emailNotification.findMany).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
+    expect(queueEmailNotification).not.toHaveBeenCalled();
   });
 
   it("queues pre-registration reminder emails once per company batch", async () => {
