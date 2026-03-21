@@ -11,7 +11,7 @@ import { readS3ObjectBytes } from "@/lib/storage";
 import { isContractorDocumentKeyForTenant } from "@/lib/storage/keys";
 import {
   extensionFromFileName,
-  extensionFromMimeType,
+  extensionsFromMimeType,
   sniffFileTypeFromBytes,
   validateFileMagicNumber,
 } from "@/lib/storage/validation";
@@ -100,9 +100,9 @@ export async function POST(req: Request) {
     );
   }
 
-  const declaredExtension = extensionFromMimeType(normalizedMimeType);
+  const declaredExtensions = extensionsFromMimeType(normalizedMimeType);
   const fileNameExtension = extensionFromFileName(fileName);
-  if (!declaredExtension || !fileNameExtension) {
+  if (declaredExtensions.length === 0 || !fileNameExtension) {
     return NextResponse.json(
       { error: "Unsupported file type" },
       { status: 400 },
@@ -110,7 +110,7 @@ export async function POST(req: Request) {
   }
 
   if (
-    fileNameExtension !== declaredExtension ||
+    !declaredExtensions.includes(fileNameExtension) ||
     !GUARDRAILS.UPLOAD_ALLOWED_EXTENSIONS.includes(fileNameExtension)
   ) {
     return NextResponse.json(
@@ -134,7 +134,7 @@ export async function POST(req: Request) {
     if (
       !sniffedType ||
       sniffedType.mime !== normalizedMimeType ||
-      sniffedType.extension !== declaredExtension
+      !declaredExtensions.includes(sniffedType.extension)
     ) {
       return NextResponse.json(
         { error: "File content does not match declared MIME type" },

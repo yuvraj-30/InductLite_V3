@@ -205,6 +205,36 @@ describe("Contractor document upload guardrails", () => {
     expect(createAuditLog).toHaveBeenCalled();
   });
 
+  it("accepts jpeg filenames when the declared MIME is image/jpeg", async () => {
+    vi.mocked(readS3ObjectBytes as Mock).mockResolvedValue(
+      Buffer.from("ffd8ffe000104a464946", "hex"),
+    );
+
+    const req = new Request("http://localhost", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: "https://localhost",
+        host: "localhost",
+      },
+      body: JSON.stringify({
+        contractorId: "contractor-1",
+        key: "contractors/company-1/contractor-1/photo.jpeg",
+        fileName: "photo.jpeg",
+        mimeType: "image/jpeg",
+        fileSize: 1024,
+        documentType: "INSURANCE",
+      }),
+    });
+
+    const res = await commitPost(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data).toEqual({ success: true, documentId: "doc-1" });
+    expect(addContractorDocument).toHaveBeenCalled();
+  });
+
   it("rejects commit when filename extension does not match declared MIME type", async () => {
     vi.mocked(readS3ObjectBytes as Mock).mockResolvedValue(
       Buffer.from("255044462d312e370a", "hex"),

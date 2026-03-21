@@ -1,5 +1,6 @@
 import { describe, test, expect } from "vitest";
 import {
+  extensionsFromMimeType,
   extensionFromFileName,
   sniffFileTypeFromBytes,
   validateFileMagicNumber,
@@ -44,6 +45,10 @@ describe("File Magic Number Validation", () => {
       extension: "png",
       mime: "image/png",
     });
+  });
+
+  test("should return every supported extension for a MIME type", () => {
+    expect(extensionsFromMimeType("image/jpeg")).toEqual(["jpg", "jpeg"]);
   });
 
   test("should reject filenames without a supported extension", () => {

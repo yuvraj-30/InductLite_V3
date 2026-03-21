@@ -67,4 +67,18 @@ describe("Redis limiter outage handling", () => {
     expect(result.remaining).toBe(0);
     expect(mockLimit).toHaveBeenCalled();
   });
+
+  it("keeps readiness probes open in production when the redis limiter throws", async () => {
+    const rateLimit = await import("../index");
+    await rateLimit.__test_clearInMemoryStoreForClient("fallback-ready");
+
+    const result = await rateLimit.checkReadinessRateLimit({
+      clientKey: "fallback-ready",
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.limit).toBe(120);
+    expect(result.remaining).toBe(120);
+    expect(mockLimit).toHaveBeenCalled();
+  });
 });

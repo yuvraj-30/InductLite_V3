@@ -48,6 +48,13 @@ export function extensionFromMimeType(
   return (entry?.[0] as AllowedExtension | undefined) ?? null;
 }
 
+export function extensionsFromMimeType(mimeType: string): AllowedExtension[] {
+  const normalized = mimeType.trim().toLowerCase();
+  return Object.entries(ALLOWED_FILE_TYPES)
+    .filter(([, config]) => config.mime === normalized)
+    .map(([extension]) => extension as AllowedExtension);
+}
+
 export function extensionFromFileName(fileName: string): AllowedExtension | null {
   const lastDotIndex = fileName.lastIndexOf(".");
   if (lastDotIndex < 0 || lastDotIndex === fileName.length - 1) {

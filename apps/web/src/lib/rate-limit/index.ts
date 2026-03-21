@@ -288,6 +288,32 @@ function buildRedisOutageBlockedResult(options: {
   };
 }
 
+function buildRedisOutageAllowedResult(options: {
+  log: ReturnType<typeof createRequestLogger>;
+  limit: number;
+  windowMs: number;
+  clientKey: string;
+  message: string;
+  error: unknown;
+}): RateLimitResult {
+  options.log.error(
+    {
+      clientKey: options.clientKey,
+      error:
+        options.error instanceof Error
+          ? options.error.message
+          : String(options.error),
+    },
+    options.message,
+  );
+  return {
+    success: true,
+    limit: options.limit,
+    remaining: options.limit,
+    reset: Date.now() + options.windowMs,
+  };
+}
+
 /**
  * Check rate limit for public slug access
  *
@@ -1497,13 +1523,12 @@ export async function checkReadinessRateLimit(options?: {
       };
     } catch (error) {
       if (shouldFailClosedOnRedisOutage()) {
-        return buildRedisOutageBlockedResult({
+        return buildRedisOutageAllowedResult({
           log,
           limit: RL_READY_PER_IP_PER_MIN,
           windowMs,
-          kind: "readiness",
           clientKey,
-          message: "Redis readiness limiter unavailable; failing closed",
+          message: "Redis readiness limiter unavailable; allowing readiness probe",
           error,
         });
       }
