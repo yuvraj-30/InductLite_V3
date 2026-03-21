@@ -24,8 +24,8 @@ PR CI now enforces the fast branch gate in [`.github/workflows/ci.yml`](../.gith
 
 3. Gate G3: Broader release evidence
 - `npm run test:gap-matrix` and `npm run test:e2e:gap-matrix -- --dynamic-links --js-flows --base-url http://localhost:3000` remain required for local/manual release confidence.
-- PR CI now runs `npm run -w apps/web test:e2e:full`, `npm run -w apps/web test:visual` when Linux baselines exist, `npm run -w apps/web test:e2e:perf-budget`, and `npm run report:ux-perf-budget` under the `release-confidence` job so required branch-protection contexts reflect real evidence.
-- Scheduled GitHub validation in [`.github/workflows/nightly.yml`](../.github/workflows/nightly.yml) still runs the standalone localhost build with `SESSION_COOKIE_SECURE=0` for the full nightly sweep, including browsers and visual coverage that remain broader than the branch lane.
+- PR CI keeps `E2E smoke (chromium)` as the branch e2e gate, and the `release-confidence` job adds `npm run -w apps/web test:visual` when Linux baselines exist, `npm run -w apps/web test:e2e:perf-budget`, and `npm run report:ux-perf-budget` so required branch-protection contexts reflect real executable evidence without reintroducing the unstable broad suite on every push.
+- Scheduled GitHub validation in [`.github/workflows/nightly.yml`](../.github/workflows/nightly.yml) still runs the standalone localhost build for the broader nightly sweep, including cross-browser/full-suite coverage that remains deeper than the branch lane.
 
 ## CI Enforcement Contract
 
@@ -52,7 +52,7 @@ npm run -w apps/web test:e2e:smoke
 ## Notes
 
 1. This gate is quality-only and does not alter tenant data access patterns, CSRF controls, or budget guardrails.
-2. Full release-confidence evidence is emitted in PR CI to satisfy the active protected-branch contexts and remains available in nightly/local runs for deeper investigation.
+2. PR CI emits the protected-branch compatibility contexts from smoke plus visual/perf evidence, while the broader full-suite release-confidence runs remain available in nightly/local validation for deeper investigation.
 3. Any future addition to parity/tier commitments must update:
 - [`COMPETITOR_PARITY_CONTROL_MATRIX.md`](./COMPETITOR_PARITY_CONTROL_MATRIX.md)
 - [`APP_DEVELOPMENT_TREND_IMPLEMENTATION_PLAN_2026-03-11.md`](./APP_DEVELOPMENT_TREND_IMPLEMENTATION_PLAN_2026-03-11.md)

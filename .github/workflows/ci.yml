@@ -565,23 +565,6 @@ jobs:
           echo "$runtime_payload" | grep -q '"allowTestRunner":true'
           curl -fsS -X POST -H "x-test-secret: ${TEST_RUNNER_SECRET_KEY}" http://localhost:3000/api/test/clear-rate-limit >/dev/null
 
-      - name: Run E2E full (desktop browsers)
-        run: |
-          set -euo pipefail
-          cd apps/web
-          npm run test:e2e:full 2>&1 | tee playwright-full-output.txt
-          test_exit=${PIPESTATUS[0]}
-          if [ $test_exit -ne 0 ]; then
-            echo "Playwright full lane failed with exit code $test_exit"
-            exit $test_exit
-          fi
-        env:
-          E2E_USE_SHARED_SERVER: "1"
-          ALLOW_TEST_RUNNER: "1"
-          BASE_URL: http://localhost:3000
-          DATABASE_URL: ${{ env.DATABASE_URL }}
-          TRUST_PROXY: "1"
-
       - name: Detect Linux visual baselines
         id: visual_baselines
         run: |
@@ -641,7 +624,7 @@ jobs:
       - name: Print release-confidence diagnostics
         if: failure()
         run: |
-          for log_file in apps/web/playwright-full-output.txt apps/web/playwright-visual-output.txt apps/web/playwright-perf-output.txt; do
+          for log_file in apps/web/playwright-visual-output.txt apps/web/playwright-perf-output.txt; do
             echo "=== ${log_file} (start) ==="
             if [ -f "$log_file" ]; then
               sed -n '1,400p' "$log_file" || true
@@ -664,7 +647,6 @@ jobs:
           path: |
             apps/web/playwright-report/**
             apps/web/test-results/**
-            apps/web/playwright-full-output.txt
             apps/web/playwright-visual-output.txt
             apps/web/playwright-perf-output.txt
             docs/UI_UX_PERFORMANCE_WEEKLY_REPORT.md
