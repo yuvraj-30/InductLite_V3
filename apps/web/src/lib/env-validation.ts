@@ -840,6 +840,15 @@ function parseCommaSeparatedValues(value: string | undefined): string[] {
     .filter(Boolean);
 }
 
+function isProductionCiTestRunnerHarness(): boolean {
+  const isCi = process.env.CI === "true" || process.env.CI === "1";
+  return (
+    process.env.NODE_ENV === "production" &&
+    process.env.ALLOW_TEST_RUNNER === "1" &&
+    isCi
+  );
+}
+
 export function validateEnv(): {
   valid: boolean;
   errors: ValidationError[];
@@ -848,6 +857,11 @@ export function validateEnv(): {
   const errors: ValidationError[] = [];
   const warnings: string[] = [];
   const isProd = process.env.NODE_ENV === "production";
+  // Shared standalone E2E runs boot a production Next server in CI so route
+  // behavior matches release builds, but those runs must not require live
+  // provider billing or Redis infrastructure just to execute smoke coverage.
+  const enforceStrictProductionEnv =
+    isProd && !isProductionCiTestRunnerHarness();
   const storageMode = process.env.STORAGE_MODE || "local";
 
   // Runtime fallback: If DATABASE_URL is not set but a NEON_POOLER_URL is present,
@@ -878,7 +892,7 @@ export function validateEnv(): {
     const isR2Var = config.name.startsWith("R2_");
 
     // Check if required
-    if (config.required || (config.production && isProd)) {
+    if (config.required || (config.production && enforceStrictProductionEnv)) {
       // Special case: S3/R2 vars are validated based on STORAGE_MODE=s3 below
       if (isS3Var || isR2Var) {
         // Only validate presence/format if provided
@@ -1042,7 +1056,7 @@ export function validateEnv(): {
     });
   }
 
-  if (isProd) {
+  if (enforceStrictProductionEnv) {
     for (const name of REQUIRED_PRODUCTION_GUARDRAILS) {
       const value = process.env[name];
       if (value === undefined || value === "") {
@@ -1109,7 +1123,7 @@ export function validateEnv(): {
   }
 
   // Production-specific warnings
-  if (isProd) {
+  if (enforceStrictProductionEnv) {
     if (process.env.SESSION_SECRET?.includes("dev-secret")) {
       errors.push({
         name: "SESSION_SECRET",

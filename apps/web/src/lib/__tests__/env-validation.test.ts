@@ -363,6 +363,38 @@ describe("validateEnv", () => {
       ).toBe(true);
     });
 
+    it("should allow the CI test-runner harness without live production-only integrations", () => {
+      process.env.DATABASE_URL = "postgresql://test@localhost/test";
+      process.env.SESSION_SECRET =
+        "production-secret-at-least-32-characters-long";
+      process.env.NEXT_PUBLIC_APP_URL = "https://example.com";
+      process.env.ALLOW_TEST_RUNNER = "1";
+      process.env.CI = "1";
+
+      delete process.env.ENV_BUDGET_TIER;
+      delete process.env.MAX_MONTHLY_EGRESS_GB;
+      delete process.env.MAX_MONTHLY_STORAGE_GB;
+      delete process.env.MAX_MONTHLY_JOB_MINUTES;
+      delete process.env.MAX_MONTHLY_SERVER_ACTION_INVOCATIONS;
+      delete process.env.MAX_MONTHLY_COMPUTE_INVOCATIONS;
+      delete process.env.MAX_MONTHLY_COMPUTE_RUNTIME_MINUTES;
+      delete process.env.FEATURE_EXPORTS_ENABLED;
+      delete process.env.FEATURE_UPLOADS_ENABLED;
+      delete process.env.FEATURE_PUBLIC_SIGNIN_ENABLED;
+      delete process.env.FEATURE_VISUAL_REGRESSION_ENABLED;
+      delete process.env.BUDGET_TELEMETRY_PROVIDER_BILLING_FILE;
+      delete process.env.BUDGET_TELEMETRY_PROVIDER_BILLING_JSON;
+      delete process.env.BUDGET_TELEMETRY_PROVIDER_BILLING_URL;
+      delete process.env.BUDGET_TELEMETRY_REQUIRED_PROVIDERS;
+      delete process.env.UPSTASH_REDIS_REST_URL;
+      delete process.env.UPSTASH_REDIS_REST_TOKEN;
+
+      const result = validateEnv();
+
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
     it("should fail when a monthly budget cap exceeds the selected tier ceiling", () => {
       process.env.DATABASE_URL = "postgresql://test@localhost/test";
       process.env.SESSION_SECRET =
