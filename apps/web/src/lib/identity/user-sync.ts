@@ -1,6 +1,6 @@
 import { randomBytes } from "crypto";
 import type { UserRole } from "@prisma/client";
-import { publicDb } from "@/lib/db/public-db";
+import { findUnscopedUserByEmail } from "@/lib/db/scoped";
 import { scopedDb } from "@/lib/db/scoped-db";
 import { hashPassword } from "@/lib/auth/password";
 
@@ -35,8 +35,7 @@ function normalizeName(name: string, email: string): string {
 }
 
 async function findGlobalUserByEmail(email: string) {
-  return publicDb.user.findFirst({
-    where: { email },
+  return findUnscopedUserByEmail(email, {
     select: {
       id: true,
       company_id: true,

@@ -34,7 +34,7 @@ Advance to the next stage only when all acceptance checks pass for at least 24 h
 
 1. Disable impacted `UIX_*` flag(s) in environment config.
 2. Redeploy web service with flag-off config.
-3. If worker behavior is impacted, redeploy worker service to last known good deploy.
+3. Re-run cron API routes and scheduled workflows against the rollback candidate.
 4. Verify critical paths (`/login`, `/s/:slug`, `/admin/live-register`) before reopening rollout.
 
 ## Per-Flag Validation and Rollback Checks
@@ -71,5 +71,11 @@ Advance to the next stage only when all acceptance checks pass for at least 24 h
 
 1. Check `/health` and `/api/ready`.
 2. Verify public sign-in and admin login.
-3. Confirm exports queue and worker stability.
+3. Confirm exports queue plus cron-driven maintenance routes remain stable.
 4. Confirm entitlement-denied routes still return deterministic control IDs.
+
+## Evidence Artifact
+
+- Save each rollback drill as `docs/drills/rollback/YYYY-MM-DD.md`.
+- Include triggering reason, release SHA before/after rollback, smoke results, and sign-off.
+- Prepared template: [Rollback drill template (2026-03-19)](./drills/rollback/2026-03-19-pending-production-drill.md)

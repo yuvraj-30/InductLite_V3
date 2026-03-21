@@ -429,3 +429,240 @@ jobs:
             apps/web/playwright-output.txt
           retention-days: 7
 
+  release-confidence:
+    name: Release Confidence (E2E + Visual + Perf)
+    runs-on: ubuntu-latest
+    needs: [quality, integration, e2e]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: inductlite_release_confidence
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/inductlite_release_confidence?schema=public
+      DATABASE_DIRECT_URL: postgresql://postgres:postgres@localhost:5432/inductlite_release_confidence?schema=public
+      BASE_URL: http://localhost:3000
+      PLAYWRIGHT_BROWSERS_PATH: "0"
+      E2E_RETRIES: "0"
+      SESSION_COOKIE_SECURE: "0"
+      DATA_ENCRYPTION_KEY: ci-test-data-encryption-key-at-least-32-characters
+      MAGIC_LINK_SECRET: ci-magic-link-secret
+      RESEND_API_KEY: ci-resend-key
+      RESEND_FROM: ci@example.com
+      FEATURE_VISUAL_REGRESSION_ENABLED: "true"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Cache Next and Playwright artifacts
+        uses: actions/cache@v5
+        with:
+          path: |
+            apps/web/.next/cache
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-release-confidence-cache-${{ hashFiles('package-lock.json', 'apps/web/next.config.*', 'apps/web/playwright.config.ts', 'apps/web/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-release-confidence-cache-
+
+      - name: Install deps (workspace)
+        run: npm ci
+
+      - name: Prisma generate
+        run: npm run db:generate
+
+      - name: Prisma validate
+        run: npm run -w apps/web prisma:validate
+
+      - name: Prisma format check
+        run: npm run -w apps/web prisma:format:check
+
+      - name: Migrate DB
+        run: npm run -w apps/web db:migrate
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+
+      - name: Seed DB
+        run: npm run -w apps/web db:seed
+
+      - name: Install Playwright browsers
+        run: cd apps/web && npx playwright install --with-deps chromium firefox webkit
+
+      - name: Build
+        env:
+          NODE_ENV: production
+        run: npm run -w apps/web build
+
+      - name: Start standalone server
+        run: |
+          set -euo pipefail
+          cd apps/web
+          export PORT=3000
+          export NODE_ENV=test
+          if [ -f .next/standalone/server.js ]; then
+            mkdir -p .next/standalone/.next
+            rm -rf .next/standalone/.next/static
+            cp -R .next/static .next/standalone/.next/static
+            rm -rf .next/standalone/public
+            cp -R public .next/standalone/public
+          elif [ -f .next/standalone/apps/web/server.js ]; then
+            mkdir -p .next/standalone/apps/web/.next
+            rm -rf .next/standalone/apps/web/.next/static
+            cp -R .next/static .next/standalone/apps/web/.next/static
+            rm -rf .next/standalone/apps/web/public
+            cp -R public .next/standalone/apps/web/public
+          fi
+          if [ -f .next/standalone/server.js ]; then
+            node .next/standalone/server.js &
+          elif [ -f .next/standalone/apps/web/server.js ]; then
+            node .next/standalone/apps/web/server.js &
+          else
+            echo "Standalone server not found. Available server.js files:"
+            find .next/standalone -name server.js -print || true
+            exit 1
+          fi
+          echo $! > /tmp/web-release-confidence.pid
+        env:
+          NODE_ENV: test
+          ALLOW_TEST_RUNNER: "1"
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          TRUST_PROXY: "1"
+          FEATURE_VISUAL_REGRESSION_ENABLED: "true"
+
+      - name: Wait for app
+        run: |
+          set -euo pipefail
+          for i in {1..60}; do
+            if curl -fsS http://localhost:3000/health >/dev/null 2>&1; then
+              echo "App is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "App did not become ready in time"
+          exit 1
+
+      - name: Verify E2E test-route gate
+        run: |
+          set -euo pipefail
+          runtime_payload="$(curl -fsS -H "x-test-secret: ${TEST_RUNNER_SECRET_KEY}" http://localhost:3000/api/test/runtime)"
+          echo "$runtime_payload"
+          echo "$runtime_payload" | grep -q '"allowTestRunner":true'
+          curl -fsS -X POST -H "x-test-secret: ${TEST_RUNNER_SECRET_KEY}" http://localhost:3000/api/test/clear-rate-limit >/dev/null
+
+      - name: Detect Linux visual baselines
+        id: visual_baselines
+        run: |
+          if ls apps/web/e2e/visual-regression.spec.ts-snapshots/*-linux.png >/dev/null 2>&1; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping visual regression: no Linux baselines present."
+          fi
+
+      - name: Run visual regression (local snapshots)
+        if: steps.visual_baselines.outputs.available == 'true'
+        run: |
+          set -euo pipefail
+          cd apps/web
+          npm run test:visual 2>&1 | tee playwright-visual-output.txt
+          test_exit=${PIPESTATUS[0]}
+          if [ $test_exit -ne 0 ]; then
+            echo "Visual regression lane failed with exit code $test_exit"
+            exit $test_exit
+          fi
+        env:
+          E2E_USE_SHARED_SERVER: "1"
+          ALLOW_TEST_RUNNER: "1"
+          BASE_URL: http://localhost:3000
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          TRUST_PROXY: "1"
+          FEATURE_VISUAL_REGRESSION_ENABLED: "true"
+
+      - name: Run perf-budget lane
+        run: |
+          set -euo pipefail
+          cd apps/web
+          npm run test:e2e:perf-budget 2>&1 | tee playwright-perf-output.txt
+          test_exit=${PIPESTATUS[0]}
+          if [ $test_exit -ne 0 ]; then
+            echo "Perf-budget lane failed with exit code $test_exit"
+            exit $test_exit
+          fi
+        env:
+          E2E_USE_SHARED_SERVER: "1"
+          ALLOW_TEST_RUNNER: "1"
+          BASE_URL: http://localhost:3000
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          TRUST_PROXY: "1"
+
+      - name: Generate UX perf report
+        run: npm run report:ux-perf-budget
+
+      - name: Stop server
+        if: always()
+        run: |
+          if [ -f /tmp/web-release-confidence.pid ]; then
+            kill $(cat /tmp/web-release-confidence.pid) || true
+          fi
+
+      - name: Print release-confidence diagnostics
+        if: failure()
+        run: |
+          for log_file in apps/web/playwright-visual-output.txt apps/web/playwright-perf-output.txt; do
+            echo "=== ${log_file} (start) ==="
+            if [ -f "$log_file" ]; then
+              sed -n '1,400p' "$log_file" || true
+            else
+              echo "No log found at $log_file"
+            fi
+          done
+          echo "=== Perf report ==="
+          if [ -f apps/web/test-results/uiux-performance-budget-report.json ]; then
+            sed -n '1,240p' apps/web/test-results/uiux-performance-budget-report.json || true
+          else
+            echo "No perf report found."
+          fi
+
+      - name: Upload release-confidence artifacts
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: release-confidence-artifacts
+          path: |
+            apps/web/playwright-report/**
+            apps/web/test-results/**
+            apps/web/playwright-visual-output.txt
+            apps/web/playwright-perf-output.txt
+            docs/UI_UX_PERFORMANCE_WEEKLY_REPORT.md
+          if-no-files-found: ignore
+          retention-days: 7
+
+  branch-protection-full:
+    name: Full (lint • typecheck • unit • integration • e2e • visual)
+    runs-on: ubuntu-latest
+    needs: [quality, integration, e2e, release-confidence]
+    if: ${{ always() }}
+    steps:
+      - name: Verify required lanes succeeded
+        run: |
+          test "${{ needs.quality.result }}" = "success"
+          test "${{ needs.integration.result }}" = "success"
+          test "${{ needs.e2e.result }}" = "success"
+          test "${{ needs.release-confidence.result }}" = "success"
+

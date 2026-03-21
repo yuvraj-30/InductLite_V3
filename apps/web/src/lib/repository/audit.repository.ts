@@ -6,7 +6,6 @@
  */
 
 import { scopedDb } from "@/lib/db/scoped-db";
-import { publicDb } from "@/lib/db/public-db";
 import type { AuditLog, Prisma } from "@prisma/client";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
@@ -262,8 +261,8 @@ export async function createSystemAuditLog(
   input: CreateAuditLogInput & { company_id: string },
 ): Promise<AuditLog> {
   try {
-    // System logs can write to any company - use publicDb explicitly
-    return await publicDb.auditLog.create({
+    const db = scopedDb(input.company_id);
+    return await db.auditLog.create({
       data: {
         company_id: input.company_id,
         action: input.action,

@@ -43,15 +43,20 @@ describe("Template Versioning Logic", () => {
     const mockTemplate = {
       id: templateId,
       name: "Test",
+      site_id: "site-1",
       questions: [{ id: "q1" }],
     };
 
     const mockUpdateMany = vi.fn().mockResolvedValue({ count: 1 });
+    const mockInvalidateResponses = vi.fn().mockResolvedValue({ count: 0 });
     const mockFindFirst = vi
       .fn()
       .mockResolvedValue({ ...mockTemplate, is_published: false });
 
     vi.mocked(scopedDb).mockReturnValue({
+      inductionResponse: {
+        updateMany: mockInvalidateResponses,
+      },
       inductionTemplate: {
         findFirst: mockFindFirst,
         updateMany: mockUpdateMany,
@@ -63,6 +68,18 @@ describe("Template Versioning Logic", () => {
     expect(mockUpdateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ force_reinduction: true }),
+      }),
+    );
+    expect(mockInvalidateResponses).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          template: expect.objectContaining({
+            company_id: companyId,
+            name: mockTemplate.name,
+            site_id: mockTemplate.site_id,
+          }),
+        }),
+        data: { passed: false },
       }),
     );
   });

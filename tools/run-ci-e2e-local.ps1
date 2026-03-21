@@ -241,7 +241,8 @@ function Wait-ForRuntimeRoute {
         $null -ne $payload -and
         $payload.allowTestRunner -eq $true -and
         $payload.ciRuntime -eq $true -and
-        $payload.dbPresent -eq $true
+        $payload.dbPresent -eq $true -and
+        $payload.dbReady -eq $true
       ) {
         return $payload
       }

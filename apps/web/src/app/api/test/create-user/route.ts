@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
-import { createPrismaClient, prisma } from "@/lib/db/prisma";
+import { createPrismaClient } from "@/lib/db/prisma";
 import { hashPassword } from "@/lib/auth/password";
 import { ensureTestRouteAccess } from "../_guard";
+import {
+  getRuntimeDatabaseUrl,
+  withRuntimePrisma,
+} from "../_runtime-prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,16 +31,7 @@ export async function POST(req: Request) {
     // Runtime diagnostics: log masked DB URL and current schema + table count
     if (E2E_DEBUG_TEST_ROUTES) {
       try {
-        // Read runtime env safely
-
-        const env = (function getEnv() {
-          try {
-            return eval("process").env ?? {};
-          } catch {
-            return {};
-          }
-        })();
-        const dbUrl = env.DATABASE_URL ?? null;
+        const dbUrl = getRuntimeDatabaseUrl();
         if (dbUrl) {
           try {
             const u = new URL(dbUrl);
@@ -93,69 +88,31 @@ export async function POST(req: Request) {
       );
     }
 
-    // Find or create a test company specific to this worker/run
-    let company = await prisma.company.findUnique({
-      where: { slug: companySlug },
-    });
-    if (!company) {
-      company = await prisma.company.create({
-        data: { name: `Test Company ${companySlug}`, slug: companySlug },
-      });
-    }
-
     // Hash the password properly for UI login tests
     const passwordHash = await hashPassword(password);
 
     // Create user with properly hashed password
-    const safeEmail = String(email);
+    const safeEmail = String(email).toLowerCase().trim();
     const safeName = (safeEmail.split("@")[0] ?? safeEmail) as string;
-    // Use a runtime-bound Prisma client so we write to the same DB the server process sees
-    let created: any = null;
-    let runtimeClient:
-      | import("@prisma/client").PrismaClient
-      | null = null;
-    try {
-      const env = (function getEnv() {
-        try {
-          return eval("process").env ?? {};
-        } catch {
-          return {};
-        }
-      })();
-      const dbUrl = env.DATABASE_URL ?? null;
-      if (dbUrl) {
-        runtimeClient = createPrismaClient(dbUrl);
-        await runtimeClient.$connect();
-        created = await runtimeClient.user.create({
-          data: {
-            company_id: company.id,
-            email: safeEmail,
-            password_hash: passwordHash,
-            name: safeName,
-            role: roleValue,
-            is_active: true,
-          },
-        });
-      } else {
-        // Fallback to existing global prisma if DATABASE_URL is not present at runtime
-        created = await prisma.user.create({
-          data: {
-            company_id: company.id,
-            email: safeEmail,
-            password_hash: passwordHash,
-            name: safeName,
-            role: roleValue,
-            is_active: true,
-          },
-        });
-      }
-    } catch (e) {
-      e2eWarn(
-        "E2E: create-user runtime write failed, falling back to global prisma:",
-        String(e),
-      );
-      created = await prisma.user.create({
-        data: {
+    const created = await withRuntimePrisma(async (client) => {
+      const company =
+        (await client.company.findUnique({
+          where: { slug: companySlug },
+        })) ??
+        (await client.company.create({
+          data: { name: `Test Company ${companySlug}`, slug: companySlug },
+        }));
+
+      return client.user.upsert({
+        where: { email: safeEmail },
+        update: {
+          company_id: company.id,
+          password_hash: passwordHash,
+          name: safeName,
+          role: roleValue,
+          is_active: true,
+        },
+        create: {
           company_id: company.id,
           email: safeEmail,
           password_hash: passwordHash,
@@ -164,11 +121,7 @@ export async function POST(req: Request) {
           is_active: true,
         },
       });
-    } finally {
-      if (runtimeClient) {
-        await runtimeClient.$disconnect().catch(() => undefined);
-      }
-    }
+    });
 
     // Log created user id for diagnostics
     e2eLog("E2E: create-user created id=", created?.id);
@@ -176,14 +129,7 @@ export async function POST(req: Request) {
     // Confirm visibility of created user from the same runtime DB URL (diagnostic)
     if (E2E_DEBUG_TEST_ROUTES) {
       try {
-        const env = (function getEnv() {
-          try {
-            return eval("process").env ?? {};
-          } catch {
-            return {};
-          }
-        })();
-        const dbUrl = env.DATABASE_URL ?? null;
+        const dbUrl = getRuntimeDatabaseUrl();
         if (dbUrl) {
           try {
             const diag = createPrismaClient(dbUrl);

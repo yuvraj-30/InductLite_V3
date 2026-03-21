@@ -17,7 +17,7 @@ vi.mock("../client", () => ({
   getRedisClient: vi.fn(() => ({})),
 }));
 
-describe("Redis limiter fallback", () => {
+describe("Redis limiter outage handling", () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
@@ -37,22 +37,48 @@ describe("Redis limiter fallback", () => {
     vi.clearAllMocks();
   });
 
-  it("falls back to in-memory when public slug redis limiter throws", async () => {
+  it("fails closed in production when the public slug redis limiter throws", async () => {
     const rateLimit = await import("../index");
     await rateLimit.__test_clearInMemoryStoreForClient("fallback-client");
 
     const first = await rateLimit.checkPublicSlugRateLimit("site-a", {
       clientKey: "fallback-client",
     });
-    const second = await rateLimit.checkPublicSlugRateLimit("site-a", {
-      clientKey: "fallback-client",
+
+    expect(first.success).toBe(false);
+    expect(first.limit).toBe(10);
+    expect(first.remaining).toBe(0);
+    expect(mockLimit).toHaveBeenCalled();
+  });
+
+  it("fails closed in production when the public sign-in redis limiter throws", async () => {
+    process.env.RL_SIGNIN_PER_IP_PER_MIN = "12";
+    process.env.RL_SIGNIN_PER_SITE_PER_MIN = "30";
+
+    const rateLimit = await import("../index");
+    await rateLimit.__test_clearInMemoryStoreForClient("fallback-signin");
+
+    const result = await rateLimit.checkSignInRateLimit("site-a", {
+      clientKey: "fallback-signin",
     });
 
-    expect(first.success).toBe(true);
-    expect(first.limit).toBe(10);
-    expect(first.remaining).toBe(9);
-    expect(second.success).toBe(true);
-    expect(second.remaining).toBe(8);
+    expect(result.success).toBe(false);
+    expect(result.limit).toBe(12);
+    expect(result.remaining).toBe(0);
+    expect(mockLimit).toHaveBeenCalled();
+  });
+
+  it("keeps readiness probes open in production when the redis limiter throws", async () => {
+    const rateLimit = await import("../index");
+    await rateLimit.__test_clearInMemoryStoreForClient("fallback-ready");
+
+    const result = await rateLimit.checkReadinessRateLimit({
+      clientKey: "fallback-ready",
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.limit).toBe(120);
+    expect(result.remaining).toBe(120);
     expect(mockLimit).toHaveBeenCalled();
   });
 });

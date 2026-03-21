@@ -5,7 +5,7 @@
  */
 
 import { scopedDb } from "@/lib/db/scoped-db";
-import { publicDb } from "@/lib/db/public-db";
+import { findUnscopedUserByEmail } from "@/lib/db/scoped";
 import type { User, UserRole, Prisma } from "@prisma/client";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
@@ -139,10 +139,8 @@ export async function findUserForLogin(
   (User & { company: { id: string; name: string; slug: string } }) | null
 > {
   try {
-    // eslint-disable-next-line security-guardrails/require-company-id -- login requires cross-company user lookup
-    return (await publicDb.user.findFirst({
+    return (await findUnscopedUserByEmail(email, {
       where: {
-        email: email.toLowerCase(),
         is_active: true,
       },
       include: {

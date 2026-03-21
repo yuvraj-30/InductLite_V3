@@ -6,6 +6,14 @@
 
 import { scopedDb } from "@/lib/db/scoped-db";
 import { publicDb } from "@/lib/db/public-db";
+import {
+  aggregateSucceededExportJobBytesSince,
+  countRunningExportJobsGlobal as countRunningExportJobsGlobalUnsafe,
+  findOldestQueuedExportJob,
+  listExportJobsQueuedSince,
+  listGlobalExportDownloadAuditLogsSince,
+  requeueStaleRunningExportJobs,
+} from "@/lib/db/scoped";
 import { Prisma } from "@prisma/client";
 import type { ExportJob, ExportStatus, ExportType } from "@prisma/client";
 import { nanoid } from "nanoid";
@@ -42,6 +50,24 @@ export class ExportGlobalBytesLimitReachedError extends Error {
     super("Global export byte budget reached");
     this.name = "ExportGlobalBytesLimitReachedError";
   }
+}
+
+export class ExportQueueAgeLimitReachedError extends Error {
+  constructor(public readonly oldestQueuedAgeMinutes: number) {
+    super("Export queue age limit reached");
+    this.name = "ExportQueueAgeLimitReachedError";
+  }
+}
+
+export interface ExportOffPeakDecision {
+  active: boolean;
+  reason: "disabled" | "static" | "auto";
+  thresholdPercent: number;
+  queueDelaySeconds: number;
+  windowDays: number;
+  delayedJobs: number;
+  observedJobs: number;
+  delayedPercent: number;
 }
 
 export type ExportDownloadGuardrailResult =
@@ -84,6 +110,92 @@ function parseDownloadBytes(details: Prisma.JsonValue | null | undefined): numbe
   return 0;
 }
 
+function roundToTwoDecimals(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+function getQueueDelaySeconds(input: {
+  queuedAt: Date;
+  startedAt: Date | null;
+  now: Date;
+}): number {
+  const effectiveStart = input.startedAt ?? input.now;
+  const delayMs = Math.max(0, effectiveStart.getTime() - input.queuedAt.getTime());
+  return delayMs / 1000;
+}
+
+export async function getOldestQueuedExportAgeMinutes(
+  now: Date = new Date(),
+): Promise<number | null> {
+  const oldestQueuedJob = await findOldestQueuedExportJob(now);
+  if (!oldestQueuedJob) {
+    return null;
+  }
+
+  return (now.getTime() - oldestQueuedJob.queued_at.getTime()) / (60 * 1000);
+}
+
+export async function getExportOffPeakDecision(
+  now: Date = new Date(),
+): Promise<ExportOffPeakDecision> {
+  if (GUARDRAILS.EXPORT_OFFPEAK_ONLY) {
+    return {
+      active: true,
+      reason: "static",
+      thresholdPercent: GUARDRAILS.EXPORT_OFFPEAK_AUTO_ENABLE_THRESHOLD_PERCENT,
+      queueDelaySeconds: GUARDRAILS.EXPORT_OFFPEAK_AUTO_ENABLE_QUEUE_DELAY_SECONDS,
+      windowDays: GUARDRAILS.EXPORT_OFFPEAK_AUTO_ENABLE_DAYS,
+      delayedJobs: 0,
+      observedJobs: 0,
+      delayedPercent: 0,
+    };
+  }
+
+  const windowStart = new Date(
+    now.getTime() -
+      GUARDRAILS.EXPORT_OFFPEAK_AUTO_ENABLE_DAYS * 24 * 60 * 60 * 1000,
+  );
+  const jobs = await listExportJobsQueuedSince(windowStart);
+  if (jobs.length === 0) {
+    return {
+      active: false,
+      reason: "disabled",
+      thresholdPercent: GUARDRAILS.EXPORT_OFFPEAK_AUTO_ENABLE_THRESHOLD_PERCENT,
+      queueDelaySeconds: GUARDRAILS.EXPORT_OFFPEAK_AUTO_ENABLE_QUEUE_DELAY_SECONDS,
+      windowDays: GUARDRAILS.EXPORT_OFFPEAK_AUTO_ENABLE_DAYS,
+      delayedJobs: 0,
+      observedJobs: 0,
+      delayedPercent: 0,
+    };
+  }
+
+  const delayedJobs = jobs.filter((job) => {
+    return (
+      getQueueDelaySeconds({
+        queuedAt: job.queued_at,
+        startedAt: job.started_at,
+        now,
+      }) >= GUARDRAILS.EXPORT_OFFPEAK_AUTO_ENABLE_QUEUE_DELAY_SECONDS
+    );
+  }).length;
+  const delayedPercent = roundToTwoDecimals((delayedJobs / jobs.length) * 100);
+
+  return {
+    active:
+      delayedPercent >= GUARDRAILS.EXPORT_OFFPEAK_AUTO_ENABLE_THRESHOLD_PERCENT,
+    reason:
+      delayedPercent >= GUARDRAILS.EXPORT_OFFPEAK_AUTO_ENABLE_THRESHOLD_PERCENT
+        ? "auto"
+        : "disabled",
+    thresholdPercent: GUARDRAILS.EXPORT_OFFPEAK_AUTO_ENABLE_THRESHOLD_PERCENT,
+    queueDelaySeconds: GUARDRAILS.EXPORT_OFFPEAK_AUTO_ENABLE_QUEUE_DELAY_SECONDS,
+    windowDays: GUARDRAILS.EXPORT_OFFPEAK_AUTO_ENABLE_DAYS,
+    delayedJobs,
+    observedJobs: jobs.length,
+    delayedPercent,
+  };
+}
+
 export async function countExportJobsSince(
   companyId: string,
   since: Date,
@@ -117,9 +229,7 @@ export async function countRunningExportJobs(
 
 export async function countRunningExportJobsGlobal(): Promise<number> {
   try {
-    return await publicDb.exportJob.count({
-      where: { status: "RUNNING" },
-    });
+    return await countRunningExportJobsGlobalUnsafe();
   } catch (error) {
     handlePrismaError(error, "ExportJob");
   }
@@ -156,6 +266,13 @@ export async function queueExportJobWithLimits(
   requireCompanyId(companyId);
 
   const since = utcDayStart();
+  const oldestQueuedAgeMinutes = await getOldestQueuedExportAgeMinutes();
+  if (
+    oldestQueuedAgeMinutes !== null &&
+    oldestQueuedAgeMinutes > GUARDRAILS.MAX_EXPORT_QUEUE_AGE_MINUTES
+  ) {
+    throw new ExportQueueAgeLimitReachedError(oldestQueuedAgeMinutes);
+  }
 
   for (let attempt = 1; attempt <= MAX_SERIALIZABLE_RETRIES; attempt++) {
     try {
@@ -176,13 +293,7 @@ export async function queueExportJobWithLimits(
                 status: "RUNNING",
               },
             }),
-            tx.exportJob.aggregate({
-              _sum: { file_size: true },
-              where: {
-                status: "SUCCEEDED",
-                completed_at: { gte: since },
-              },
-            }),
+            aggregateSucceededExportJobBytesSince(since, tx),
           ]);
 
           if (
@@ -222,6 +333,9 @@ export async function queueExportJobWithLimits(
         throw error;
       }
       if (error instanceof ExportGlobalBytesLimitReachedError) {
+        throw error;
+      }
+      if (error instanceof ExportQueueAgeLimitReachedError) {
         throw error;
       }
 
@@ -292,6 +406,59 @@ export async function findNextQueuedExportJob(
   }
 }
 
+export async function failQueuedExportJobsExceedingAgeLimit(
+  now: Date = new Date(),
+): Promise<
+  Array<{
+    id: string;
+    company_id: string;
+    oldestQueuedAgeMinutes: number;
+  }>
+> {
+  const expiredJobs: Array<{
+    id: string;
+    company_id: string;
+    oldestQueuedAgeMinutes: number;
+  }> = [];
+
+  while (true) {
+    const oldestQueuedJob = await findOldestQueuedExportJob(now);
+    if (!oldestQueuedJob) {
+      return expiredJobs;
+    }
+
+    const oldestQueuedAgeMinutes =
+      (now.getTime() - oldestQueuedJob.queued_at.getTime()) / (60 * 1000);
+
+    if (oldestQueuedAgeMinutes <= GUARDRAILS.MAX_EXPORT_QUEUE_AGE_MINUTES) {
+      return expiredJobs;
+    }
+
+    const result = await scopedDb(oldestQueuedJob.company_id).exportJob.updateMany({
+      where: {
+        id: oldestQueuedJob.id,
+        status: "QUEUED",
+        company_id: oldestQueuedJob.company_id,
+      },
+      data: {
+        status: "FAILED",
+        completed_at: now,
+        error_message: `Export queue age exceeded MAX_EXPORT_QUEUE_AGE_MINUTES (${roundToTwoDecimals(oldestQueuedAgeMinutes)}m > ${GUARDRAILS.MAX_EXPORT_QUEUE_AGE_MINUTES}m)`,
+      },
+    });
+
+    if (result.count === 0) {
+      continue;
+    }
+
+    expiredJobs.push({
+      id: oldestQueuedJob.id,
+      company_id: oldestQueuedJob.company_id,
+      oldestQueuedAgeMinutes,
+    });
+  }
+}
+
 /**
  * System-level: claim next queued export job (no tenant scope)
  * Uses optimistic claim (findFirst + updateMany) to avoid raw SQL.
@@ -307,14 +474,7 @@ export async function claimNextQueuedExportJob(): Promise<
     return null;
   }
 
-  // eslint-disable-next-line security-guardrails/require-company-id -- global queue claim intentionally scans across companies
-  const job = await publicDb.exportJob.findFirst({
-    where: {
-      status: "QUEUED",
-      run_at: { lte: now },
-    },
-    orderBy: { queued_at: "asc" },
-  });
+  const job = await findOldestQueuedExportJob(now);
 
   if (!job) return null;
 
@@ -341,19 +501,9 @@ export async function claimNextQueuedExportJob(): Promise<
 export async function requeueStaleExportJobs(): Promise<number> {
   const runtimeMs = GUARDRAILS.MAX_EXPORT_RUNTIME_SECONDS * 1000;
   const staleBefore = new Date(Date.now() - runtimeMs * 2);
-  // eslint-disable-next-line security-guardrails/require-company-id -- global stale-job recovery intentionally operates across companies
-  const result = await publicDb.exportJob.updateMany({
-    where: {
-      status: "RUNNING",
-      started_at: { lt: staleBefore },
-      attempts: { lt: GUARDRAILS.MAX_EXPORT_ATTEMPTS },
-    },
-    data: {
-      status: "QUEUED",
-      run_at: new Date(),
-      locked_at: null,
-      lock_token: null,
-    },
+  const result = await requeueStaleRunningExportJobs({
+    staleBefore,
+    maxAttempts: GUARDRAILS.MAX_EXPORT_ATTEMPTS,
   });
 
   return result.count;
@@ -533,14 +683,7 @@ export async function checkExportDownloadGuardrails(
       },
       select: { details: true },
     }),
-    // eslint-disable-next-line security-guardrails/require-company-id -- global download budget guardrail intentionally scans across companies
-    publicDb.auditLog.findMany({
-      where: {
-        action: "export.download",
-        created_at: { gte: since },
-      },
-      select: { details: true },
-    }),
+    listGlobalExportDownloadAuditLogsSince(since),
   ]);
 
   const tenantUsed = tenantLogs.reduce(

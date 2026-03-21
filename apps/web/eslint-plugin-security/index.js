@@ -226,6 +226,116 @@ module.exports = {
         };
       },
     },
+    "no-publicdb-tenant-access": {
+      meta: {
+        type: "problem",
+        docs: {
+          description:
+            "Disallow tenant-owned model access through publicDb or raw transaction clients outside approved DB infrastructure",
+          category: "Security",
+          recommended: true,
+        },
+        messages: {
+          noPublicDbTenantAccess:
+            "Do not access tenant-owned model '{{ modelName }}' via {{ clientName }} here. Use scopedDb(companyId, tx) or move the query into src/lib/db/* infrastructure.",
+        },
+        schema: [],
+      },
+      create(context) {
+        const tenantOwnedModels = new Set([
+          "user",
+          "site",
+          "sitePublicLink",
+          "signInRecord",
+          "inductionQuestion",
+          "inductionResponse",
+          "contractor",
+          "contractorDocument",
+          "magicLinkToken",
+          "exportJob",
+          "auditLog",
+          "emailNotification",
+          "outboundWebhookDelivery",
+          "channelIntegrationConfig",
+          "accessConnectorConfig",
+          "emergencyBroadcast",
+          "identityOcrVerification",
+          "preRegistrationInvite",
+          "incidentReport",
+          "emergencyDrill",
+        ]);
+        const transactionClientNames = new Set(["tx", "transaction", "trx"]);
+
+        const normalizedFilename = readFilename(context).replaceAll("\\", "/");
+        const isApprovedInfra =
+          normalizedFilename.includes("/src/lib/db/") ||
+          normalizedFilename.startsWith("src/lib/db/");
+
+        if (isApprovedInfra) {
+          return {};
+        }
+
+        const aliasedClients = new Map();
+
+        function resolveClientName(identifierName) {
+          if (identifierName === "publicDb") {
+            return "publicDb";
+          }
+          if (transactionClientNames.has(identifierName)) {
+            return identifierName;
+          }
+          return aliasedClients.get(identifierName) ?? null;
+        }
+
+        return {
+          VariableDeclarator(node) {
+            if (
+              !node.id ||
+              node.id.type !== "Identifier" ||
+              !node.init
+            ) {
+              return;
+            }
+
+            const init = unwrapTypeWrapper(node.init);
+            if (!init || init.type !== "Identifier") {
+              return;
+            }
+
+            const clientName = resolveClientName(init.name);
+            if (!clientName) {
+              return;
+            }
+
+            aliasedClients.set(node.id.name, clientName);
+          },
+          MemberExpression(node) {
+            if (
+              node.object &&
+              node.object.type === "Identifier" &&
+              node.property &&
+              node.property.type === "Identifier" &&
+              tenantOwnedModels.has(node.property.name)
+            ) {
+              const clientName = resolveClientName(node.object.name);
+
+              if (!clientName) {
+                return;
+              }
+
+              context.report({
+                node,
+                messageId: "noPublicDbTenantAccess",
+                data: {
+                  modelName: node.property.name,
+                  clientName,
+                },
+              });
+            }
+          },
+        };
+      },
+    },
     /**
      * Prevent environment variable access in client components
      *
@@ -627,4 +737,19 @@ function getCalleeName(callee) {
     return `${objectPart}.${propertyPart}`;
   }
   return "";
+}
+
+function unwrapTypeWrapper(node) {
+  let current = node;
+
+  while (
+    current &&
+    (current.type === "TSAsExpression" ||
+      current.type === "TSSatisfiesExpression" ||
+      current.type === "TSNonNullExpression")
+  ) {
+    current = current.expression;
+  }
+
+  return current;
 }

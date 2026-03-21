@@ -20,14 +20,14 @@ Status legend: [ ] todo [x] done [!] blocked
 - [ ] Configure R2 bucket lifecycle and retention.
   - Pass: Upload/download tested; retention rule visible.
 - [ ] Configure Upstash Redis for rate limiting.
-  - Pass: Production env uses Upstash; rate limits hit as expected.
+  - Pass: Production env uses Upstash; startup fails closed without Upstash credentials; rate limits hit as expected.
 
 ## Day 2-3: Deployments
 
 - [ ] Deploy Render web service (Next.js app).
   - Pass: /health and /api/live return 200.
-- [ ] Deploy Render worker service (exports + maintenance).
-  - Pass: Export queue processed; maintenance job logs visible.
+- [ ] Verify cron API routes and scheduled workflows (exports + maintenance).
+  - Pass: Export scheduler, retention, email queue, and webhook maintenance routes run successfully from GitHub Actions/cron.
 
 ## Day 3: Observability
 
@@ -44,6 +44,8 @@ Status legend: [ ] todo [x] done [!] blocked
   - Pass: Oversized upload blocked.
 - [ ] Verify export guardrails (rows/size/day).
   - Pass: Guardrails enforced under load.
+- [ ] Verify inbound channel callback hardening.
+  - Pass: Signed callbacks require `X-InductLite-Timestamp`, stale callbacks are rejected, and callback-specific rate limits trigger `429`.
 
 ## Day 4: Final Verification
 
@@ -63,3 +65,6 @@ Status legend: [ ] todo [x] done [!] blocked
 
 - Keep costs within NZD 150/mo budget target by enforcing guardrails.
 - Keep backups and restore drills aligned with runbooks in docs/.
+- Production budget telemetry must refresh at least hourly from provider billing manifests; stale telemetry >6h must disable non-critical paths via `BUDGET_PROTECT`.
+- Before launch, Platform + Finance must refresh `docs/artifacts/provider-billing/provider-billing-manifest.json` with the current live provider-origin capture, run `npm run provider-billing-check -- --file docs/artifacts/provider-billing/provider-billing-manifest.json --required render,neon,cloudflare_r2,upstash,resend`, and attach the validated manifest plus command output to the release record.
+- Provider billing manifest schema and execution steps live in [PROVIDER_BILLING_TELEMETRY_RUNBOOK.md](./PROVIDER_BILLING_TELEMETRY_RUNBOOK.md).

@@ -5,7 +5,6 @@
  */
 
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { checkAuthReadOnly, checkPermissionReadOnly } from "@/lib/auth";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { findAllSites, findSitesByIds } from "@/lib/repository";
@@ -15,20 +14,10 @@ import { getOnboardingProgress } from "@/lib/repository/dashboard.repository";
 import { OnboardingChecklist } from "../components/OnboardingChecklist";
 import { statusChipClass } from "../components/status-chip";
 import { PageEmptyState } from "@/components/ui/page-state";
-
-const DeactivateSiteButton = dynamic(
-  () =>
-    import("./site-buttons").then((mod) => ({
-      default: mod.DeactivateSiteButton,
-    })),
-);
-
-const ReactivateSiteButton = dynamic(
-  () =>
-    import("./site-buttons").then((mod) => ({
-      default: mod.ReactivateSiteButton,
-    })),
-);
+import {
+  DeactivateSiteButton,
+  ReactivateSiteButton,
+} from "./site-buttons";
 
 export const metadata = {
   title: "Sites | InductLite",

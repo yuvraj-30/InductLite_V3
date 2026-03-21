@@ -1,9 +1,21 @@
 ﻿import { publicDb } from "@/lib/db/public-db";
+import { enforceBudgetPath } from "@/lib/cost/budget-service";
 import { sendEmail } from "@/lib/email/resend";
+import {
+  getWeeklyDigestMetricsByCompany,
+  listAuditLogEntityIdsByAction,
+  listPendingRedFlagResponsesForEmailWorker,
+} from "@/lib/db/scoped";
+import { scopedDb } from "@/lib/db/scoped-db";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
 import { decryptJsonValue } from "@/lib/security/data-protection";
-import { queueEmailNotification } from "@/lib/repository/email.repository";
+import {
+  listPendingEmailNotifications,
+  markEmailNotificationAttemptFailed,
+  markEmailNotificationSent,
+  queueEmailNotification,
+} from "@/lib/repository/email.repository";
 import {
   assertCompanyFeatureEnabled,
   EntitlementDeniedError,
@@ -33,6 +45,45 @@ type ContractorDocumentReminderCandidate = {
   documentType: string;
   expiresAt: Date;
   windowDays: DocumentReminderWindowDays;
+};
+type PreRegistrationInviteReminderRow = {
+  site: { name: string };
+  visitor_name: string;
+  visitor_type: string;
+  expires_at: Date;
+};
+type ContractorDocumentReminderRow = {
+  id: string;
+  contractor_id: string;
+  document_type: string;
+  expires_at: Date | null;
+};
+type ContractorReminderRow = {
+  id: string;
+  name: string;
+};
+type EmailWorkerScopedDb = ReturnType<typeof scopedDb> & {
+  auditLog: {
+    findFirst: (args?: Record<string, unknown>) => Promise<{ id: string } | null>;
+    findMany: (
+      args?: Record<string, unknown>,
+    ) => Promise<Array<{ entity_id: string | null }>>;
+    create: (args?: Record<string, unknown>) => Promise<unknown>;
+    createMany: (args?: Record<string, unknown>) => Promise<unknown>;
+  };
+  preRegistrationInvite: {
+    findMany: (
+      args?: Record<string, unknown>,
+    ) => Promise<PreRegistrationInviteReminderRow[]>;
+  };
+  contractorDocument: {
+    findMany: (
+      args?: Record<string, unknown>,
+    ) => Promise<ContractorDocumentReminderRow[]>;
+  };
+  contractor: {
+    findMany: (args?: Record<string, unknown>) => Promise<ContractorReminderRow[]>;
+  };
 };
 
 async function isCompanyFeatureEnabled(input: {
@@ -165,6 +216,7 @@ async function queuePreRegistrationInviteReminderBatches(input: {
     }
 
     for (const company of companies) {
+      const db = scopedDb(company.id) as EmailWorkerScopedDb;
       const preregFeatureEnabled = await isCompanyFeatureEnabled({
         companyId: company.id,
         featureKey: "PREREG_INVITES",
@@ -175,7 +227,7 @@ async function queuePreRegistrationInviteReminderBatches(input: {
         continue;
       }
 
-      const alreadySent = await publicDb.auditLog.findFirst({
+      const alreadySent = await db.auditLog.findFirst({
         where: {
           company_id: company.id,
           action: "preregistration.reminder_batch",
@@ -188,7 +240,7 @@ async function queuePreRegistrationInviteReminderBatches(input: {
         continue;
       }
 
-      const invites = await publicDb.preRegistrationInvite.findMany({
+      const invites = await db.preRegistrationInvite.findMany({
         where: {
           company_id: company.id,
           is_active: true,
@@ -252,7 +304,7 @@ async function queuePreRegistrationInviteReminderBatches(input: {
         (result) => result.status === "fulfilled",
       ).length;
 
-      await publicDb.auditLog.create({
+      await db.auditLog.create({
         data: {
           company_id: company.id,
           action: "preregistration.reminder_batch",
@@ -376,6 +428,7 @@ async function queueContractorDocumentExpiryReminders(input: {
     }
 
     for (const company of companies) {
+      const db = scopedDb(company.id) as EmailWorkerScopedDb;
       const remindersFeatureEnabled = await isCompanyFeatureEnabled({
         companyId: company.id,
         featureKey: "REMINDERS_ENHANCED",
@@ -386,7 +439,7 @@ async function queueContractorDocumentExpiryReminders(input: {
         continue;
       }
 
-      const documents = await publicDb.contractorDocument.findMany({
+      const documents = await db.contractorDocument.findMany({
         where: {
           contractor: { company_id: company.id },
           expires_at: {
@@ -409,7 +462,7 @@ async function queueContractorDocumentExpiryReminders(input: {
       }
 
       const contractorIds = [...new Set(documents.map((document) => document.contractor_id))];
-      const contractors = await publicDb.contractor.findMany({
+      const contractors = await db.contractor.findMany({
         where: {
           company_id: company.id,
           id: { in: contractorIds },
@@ -452,7 +505,7 @@ async function queueContractorDocumentExpiryReminders(input: {
         continue;
       }
 
-      const existingReminderAuditLogs = await publicDb.auditLog.findMany({
+      const existingReminderAuditLogs = await db.auditLog.findMany({
         where: {
           company_id: company.id,
           action: "contractor.document_expiry_reminder",
@@ -514,7 +567,7 @@ async function queueContractorDocumentExpiryReminders(input: {
         continue;
       }
 
-      await publicDb.auditLog.createMany({
+      await db.auditLog.createMany({
         data: unsentReminders.map((reminder) => ({
           company_id: company.id,
           action: "contractor.document_expiry_reminder",
@@ -531,7 +584,7 @@ async function queueContractorDocumentExpiryReminders(input: {
         })),
       });
 
-      await publicDb.auditLog.create({
+      await db.auditLog.create({
         data: {
           company_id: company.id,
           action: "contractor.document_expiry_reminder_batch",
@@ -560,6 +613,19 @@ export async function processEmailQueue() {
   const log = createRequestLogger(requestId);
 
   try {
+    const budgetDecision = await enforceBudgetPath("notifications.email.queue");
+    if (!budgetDecision.allowed) {
+      log.warn(
+        {
+          requestId,
+          controlId: budgetDecision.controlId,
+          mode: budgetDecision.mode,
+        },
+        "Skipping email queue processing because budget guard denied optional notifications",
+      );
+      return;
+    }
+
     // 1. Process Red Flags (High Priority)
     // Process recent responses in chunks to keep memory bounded.
     const redFlagBatchSize = 100;
@@ -567,54 +633,17 @@ export async function processEmailQueue() {
     let redFlagCursor: string | undefined;
 
     while (true) {
-      const pendingRedFlags = await publicDb.inductionResponse.findMany({
-        where: {
-          passed: true, // They finished, but we need to check answers
-          sign_in_record: {
-            created_at: { gte: redFlagWindowStart },
-          },
-        },
-        select: {
-          id: true,
-          answers: true,
-          sign_in_record: {
-            select: {
-              company_id: true,
-              site_id: true,
-              visitor_name: true,
-              site: {
-                select: {
-                  name: true,
-                  site_managers: {
-                    select: {
-                      user: {
-                        select: { email: true },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-          template: {
-            select: {
-              questions: true,
-            },
-          },
-        },
-        orderBy: { id: "asc" },
+      const pendingRedFlags = await listPendingRedFlagResponsesForEmailWorker({
+        createdAfter: redFlagWindowStart,
         take: redFlagBatchSize,
-        ...(redFlagCursor ? { skip: 1, cursor: { id: redFlagCursor } } : {}),
+        cursorId: redFlagCursor,
       });
 
       if (pendingRedFlags.length === 0) break;
 
-      const existingAlerts = await publicDb.auditLog.findMany({
-        where: {
-          action: "email.red_flag_alert",
-          entity_id: { in: pendingRedFlags.map((response) => response.id) },
-        },
-        select: { entity_id: true },
+      const existingAlerts = await listAuditLogEntityIdsByAction({
+        action: "email.red_flag_alert",
+        entityIds: pendingRedFlags.map((response) => response.id),
       });
       const alertedResponseIds = new Set(
         existingAlerts
@@ -686,7 +715,7 @@ export async function processEmailQueue() {
         }
 
         // Record that we sent it
-        await publicDb.auditLog.create({
+        await scopedDb(response.sign_in_record.company_id).auditLog.create({
           data: {
             company_id: response.sign_in_record.company_id,
             action: "email.red_flag_alert",
@@ -716,56 +745,30 @@ export async function processEmailQueue() {
     });
 
     // 4. Process Pending Notifications from EmailNotification table
-    // Type-safe workaround for late-bound schema models
-    const dbAny = publicDb as unknown as {
-      emailNotification: {
-        findMany: (args: unknown) => Promise<
-          Array<{
-            id: string;
-            to: string;
-            subject: string;
-            body: string;
-            attempts: number;
-          }>
-        >;
-        update: (args: unknown) => Promise<unknown>;
-      };
-    };
-    const notificationTable = dbAny.emailNotification;
+    const pendingNotifications = await listPendingEmailNotifications(50);
 
-    if (notificationTable) {
-      const pending = await notificationTable.findMany({
-        where: { status: "PENDING", attempts: { lt: 3 } },
-        take: 50,
-      });
+    for (const notification of pendingNotifications) {
+      const nextAttempts = notification.attempts + 1;
 
-      for (const notification of pending) {
-        try {
-          await sendEmail({
-            to: notification.to,
-            subject: notification.subject,
-            html: notification.body,
-          });
+      try {
+        await sendEmail({
+          to: notification.to,
+          subject: notification.subject,
+          html: notification.body,
+        });
 
-          await notificationTable.update({
-            where: { id: notification.id },
-            data: {
-              status: "SENT",
-              sent_at: new Date(),
-              attempts: notification.attempts + 1,
-            },
-          });
-        } catch (err) {
-          await notificationTable.update({
-            where: { id: notification.id },
-            data: {
-              attempts: notification.attempts + 1,
-              last_tried: new Date(),
-              error: String(err),
-              status: notification.attempts >= 2 ? "FAILED" : "PENDING",
-            },
-          });
-        }
+        await markEmailNotificationSent(
+          notification.company_id,
+          notification.id,
+          nextAttempts,
+        );
+      } catch (err) {
+        await markEmailNotificationAttemptFailed(
+          notification.company_id,
+          notification.id,
+          nextAttempts,
+          String(err),
+        );
       }
     }
 
@@ -808,40 +811,13 @@ export async function processWeeklyDigest() {
 
       const companyIds = companies.map((company) => company.id);
 
-      const [inductionCounts, redFlagCounts, expiringDocuments] =
-        await Promise.all([
-          publicDb.signInRecord.groupBy({
-            by: ["company_id"],
-            where: {
-              company_id: { in: companyIds },
-              sign_in_ts: { gte: lastWeek },
-            },
-            _count: { id: true },
-          }),
-          publicDb.auditLog.groupBy({
-            by: ["company_id"],
-            where: {
-              company_id: { in: companyIds },
-              action: "email.red_flag_alert",
-              created_at: { gte: lastWeek },
-            },
-            _count: { id: true },
-          }),
-          publicDb.contractorDocument.findMany({
-            where: {
-              contractor: { company_id: { in: companyIds } },
-              expires_at: {
-                gt: now,
-                lt: thirtyDaysFromNow,
-              },
-            },
-            select: {
-              contractor: {
-                select: { company_id: true },
-              },
-            },
-          }),
-        ]);
+      const { inductionCounts, redFlagCounts, expiringDocuments } =
+        await getWeeklyDigestMetricsByCompany({
+          companyIds,
+          lastWeek,
+          now,
+          thirtyDaysFromNow,
+        });
 
       const inductionCountByCompany = new Map<string, number>(
         inductionCounts.map((row) => [row.company_id, row._count.id]),
@@ -884,7 +860,7 @@ export async function processWeeklyDigest() {
           });
         }
 
-        await publicDb.auditLog.create({
+        await scopedDb(company.id).auditLog.create({
           data: {
             company_id: company.id,
             action: "email.weekly_digest",

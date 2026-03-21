@@ -17,6 +17,8 @@ const mocks = vi.hoisted(() => ({
   requireAuthenticatedContextReadOnly: vi.fn(),
   assertCompanyFeatureEnabled: vi.fn(),
   queueExportJobWithLimits: vi.fn(),
+  getExportOffPeakDecision: vi.fn(),
+  isOffPeakNow: vi.fn(),
   createAuditLog: vi.fn(),
   revalidatePath: vi.fn(),
   generateRequestId: vi.fn(),
@@ -28,6 +30,8 @@ const mocks = vi.hoisted(() => ({
     debug: vi.fn(),
   },
   createRequestLogger: vi.fn(),
+  enforceBudgetPath: vi.fn(),
+  startBudgetTrackedOperation: vi.fn(),
 }));
 
 vi.mock("next/cache", () => ({
@@ -50,6 +54,7 @@ vi.mock("@/lib/repository/export.repository", async () => {
   return {
     ...actual,
     queueExportJobWithLimits: mocks.queueExportJobWithLimits,
+    getExportOffPeakDecision: mocks.getExportOffPeakDecision,
   };
 });
 
@@ -69,13 +74,31 @@ vi.mock("@/lib/feature-flags", () => ({
   isFeatureEnabled: mocks.isFeatureEnabled,
 }));
 
+vi.mock("@/lib/guardrails", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/guardrails")>(
+    "@/lib/guardrails",
+  );
+  return {
+    ...actual,
+    isOffPeakNow: mocks.isOffPeakNow,
+  };
+});
+
 vi.mock("@/lib/plans", () => ({
   EntitlementDeniedError: mocks.EntitlementDeniedError,
   assertCompanyFeatureEnabled: mocks.assertCompanyFeatureEnabled,
 }));
 
+vi.mock("@/lib/cost/budget-service", () => ({
+  enforceBudgetPath: mocks.enforceBudgetPath,
+  startBudgetTrackedOperation: mocks.startBudgetTrackedOperation,
+}));
+
 import { createExportAction } from "./actions";
-import { ExportGlobalBytesLimitReachedError } from "@/lib/repository/export.repository";
+import {
+  ExportGlobalBytesLimitReachedError,
+  ExportQueueAgeLimitReachedError,
+} from "@/lib/repository/export.repository";
 
 describe("createExportAction guardrails", () => {
   beforeEach(() => {
@@ -88,10 +111,30 @@ describe("createExportAction guardrails", () => {
     });
     mocks.assertCompanyFeatureEnabled.mockResolvedValue(undefined);
     mocks.queueExportJobWithLimits.mockResolvedValue({ id: "job-1" });
+    mocks.getExportOffPeakDecision.mockResolvedValue({
+      active: false,
+      reason: "disabled",
+      thresholdPercent: 20,
+      queueDelaySeconds: 60,
+      windowDays: 7,
+      delayedJobs: 0,
+      observedJobs: 0,
+      delayedPercent: 0,
+    });
+    mocks.isOffPeakNow.mockReturnValue(false);
     mocks.createAuditLog.mockResolvedValue(undefined);
     mocks.generateRequestId.mockReturnValue("req-1");
     mocks.isFeatureEnabled.mockReturnValue(true);
     mocks.createRequestLogger.mockReturnValue(mocks.logger);
+    mocks.enforceBudgetPath.mockResolvedValue({
+      allowed: true,
+      controlId: null,
+      violatedLimit: null,
+      scope: "environment",
+      message: "Budget state is healthy",
+      state: { budgetTier: "MVP" },
+    });
+    mocks.startBudgetTrackedOperation.mockReturnValue(vi.fn());
   });
 
   it("maps global export-byte budget denial to deterministic EXPT-002 payload", async () => {
@@ -129,6 +172,73 @@ describe("createExportAction guardrails", () => {
       expect(result.error.message).toBe(
         "Advanced export bundles are disabled for your current plan",
       );
+    }
+
+    expect(mocks.queueExportJobWithLimits).not.toHaveBeenCalled();
+  });
+
+  it("returns deterministic budget-protect payload when export creation is disabled", async () => {
+    mocks.enforceBudgetPath.mockResolvedValue({
+      allowed: false,
+      controlId: "COST-008",
+      violatedLimit: "PROJECTED_MONTHLY_SPEND_NZD<=150",
+      scope: "environment",
+      message:
+        "This operation is disabled because the environment is in BUDGET_PROTECT mode",
+      state: { budgetTier: "MVP" },
+    });
+
+    const result = await createExportAction({ exportType: "SIGN_IN_CSV" });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("RATE_LIMITED");
+      expect(result.error.guardrail?.controlId).toBe("COST-008");
+      expect(result.error.guardrail?.scope).toBe("environment");
+      expect(result.error.guardrail?.violatedLimit).toBe(
+        "PROJECTED_MONTHLY_SPEND_NZD<=150",
+      );
+    }
+
+    expect(mocks.queueExportJobWithLimits).not.toHaveBeenCalled();
+  });
+
+  it("returns deterministic EXPT-014 payload when queue age pressure blocks new exports", async () => {
+    mocks.queueExportJobWithLimits.mockRejectedValue(
+      new ExportQueueAgeLimitReachedError(61),
+    );
+
+    const result = await createExportAction({ exportType: "SIGN_IN_CSV" });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("RATE_LIMITED");
+      expect(result.error.guardrail?.controlId).toBe("EXPT-014");
+      expect(result.error.guardrail?.scope).toBe("environment");
+      expect(result.error.message).toContain("queue pressure");
+    }
+  });
+
+  it("returns deterministic auto-offpeak payload when scheduler policy is active", async () => {
+    mocks.getExportOffPeakDecision.mockResolvedValue({
+      active: true,
+      reason: "auto",
+      thresholdPercent: 20,
+      queueDelaySeconds: 60,
+      windowDays: 7,
+      delayedJobs: 2,
+      observedJobs: 8,
+      delayedPercent: 25,
+    });
+
+    const result = await createExportAction({ exportType: "SIGN_IN_CSV" });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("RATE_LIMITED");
+      expect(result.error.guardrail?.controlId).toBe("EXPT-005");
+      expect(result.error.guardrail?.scope).toBe("environment");
+      expect(result.error.message).toContain("off-peak hours");
     }
 
     expect(mocks.queueExportJobWithLimits).not.toHaveBeenCalled();

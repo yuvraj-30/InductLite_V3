@@ -644,7 +644,7 @@ export async function ensureDefaultPublishedTemplate(
       }
 
       if (template.questions.length === 0) {
-        await tx.inductionQuestion.createMany({
+        await txDb.inductionQuestion.createMany({
           data: QUICK_START_QUESTIONS.map((question, index) => ({
             template_id: template.id,
             question_text: question.question_text,
@@ -661,7 +661,7 @@ export async function ensureDefaultPublishedTemplate(
 
       // Backfill safety flags/answers for legacy quick-start templates that
       // were created before red-flag escalation rules were encoded.
-      const safetyQuestions = await tx.inductionQuestion.findMany({
+      const safetyQuestions = await txDb.inductionQuestion.findMany({
         where: {
           template_id: template.id,
           question_text: {
@@ -690,7 +690,7 @@ export async function ensureDefaultPublishedTemplate(
         const nextCorrectAnswer =
           expectedAnswer === null ? Prisma.JsonNull : expectedAnswer;
 
-        await tx.inductionQuestion.updateMany({
+        await txDb.inductionQuestion.updateMany({
           where: { id: question.id, template_id: template.id },
           data: {
             red_flag: true,
@@ -868,7 +868,7 @@ export async function publishTemplate(
 
     if (forceReinduction) {
       // Find all responses for previous versions of this template name/site combination
-      await tx.inductionResponse.updateMany({
+      await db.inductionResponse.updateMany({
         where: {
           template: {
             company_id: companyId,
@@ -1018,7 +1018,7 @@ export async function createNewVersion(
     // Copy questions to new template
     if (source.questions.length > 0) {
       const questions = source.questions as QuestionData[];
-      await tx.inductionQuestion.createMany({
+      await db.inductionQuestion.createMany({
         data: questions.map((q) => ({
           template_id: newTemplate.id,
           question_text: q.question_text,

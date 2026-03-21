@@ -11,6 +11,8 @@ import { writeExportFile } from "@/lib/storage";
 import {
   claimNextQueuedExportJob,
   countRunningExportJobs,
+  failQueuedExportJobsExceedingAgeLimit,
+  getExportOffPeakDecision,
   markExportJobFailed,
   markExportJobSucceeded,
   requeueExportJob,
@@ -45,6 +47,26 @@ export async function processNextExportJob(): Promise<null | {
     await requeueStaleExportJobs();
   } catch (err) {
     log.warn({ err: String(err) }, "Failed to requeue stale export jobs");
+  }
+
+  try {
+    const expiredJobs = await failQueuedExportJobsExceedingAgeLimit();
+    for (const job of expiredJobs) {
+      await createSystemAuditLog({
+        company_id: job.company_id,
+        action: "export.denied",
+        entity_type: "exportJob",
+        entity_id: job.id,
+        details: {
+          reason: "queue_age_exceeded",
+          oldest_queued_age_minutes: job.oldestQueuedAgeMinutes,
+          max_queue_age_minutes: GUARDRAILS.MAX_EXPORT_QUEUE_AGE_MINUTES,
+          actor: "system",
+        },
+      });
+    }
+  } catch (err) {
+    log.warn({ err: String(err) }, "Failed to expire aged queued export jobs");
   }
 
   const job = await claimNextQueuedExportJob();
@@ -114,7 +136,27 @@ export async function processNextExportJob(): Promise<null | {
     return null;
   }
 
-  if (GUARDRAILS.EXPORT_OFFPEAK_ONLY && !isOffPeakNow()) {
+  const offPeakDecision = await getExportOffPeakDecision();
+  if (offPeakDecision.active && !isOffPeakNow()) {
+    if (offPeakDecision.reason === "auto") {
+      await createSystemAuditLog({
+        company_id: job.company_id,
+        action: "export.denied",
+        entity_type: "exportJob",
+        entity_id: job.id,
+        user_id: job.requested_by,
+        details: {
+          reason: "offpeak_auto_enabled",
+          delayed_jobs: offPeakDecision.delayedJobs,
+          observed_jobs: offPeakDecision.observedJobs,
+          delayed_percent: offPeakDecision.delayedPercent,
+          threshold_percent: offPeakDecision.thresholdPercent,
+          queue_delay_seconds: offPeakDecision.queueDelaySeconds,
+          window_days: offPeakDecision.windowDays,
+          actor: "system",
+        },
+      });
+    }
     await requeueExportJob(job.company_id, job.id, 60 * 60 * 1000);
     return null;
   }

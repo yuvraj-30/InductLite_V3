@@ -6,6 +6,7 @@ const DETAILS_TO_INDUCTION_CTA = /continue to induction|review site induction/i;
 const INDUCTION_TO_SIGN_OFF_CTA =
   /continue to sign off|proceed to final clearance|complete sign-in|complete sign in|finish|sign off/i;
 const SUCCESS_HEADING_TEXT = /signed in successfully|cleared for site/i;
+const ESCALATION_BLOCKED_ALERT_TIMEOUT_MS = 60_000;
 
 function uniqueNzPhone(): string {
   const suffix = Math.floor(100000 + Math.random() * 900000);
@@ -293,7 +294,11 @@ async function submitEscalatedSignInAndExpectBlocked(input: {
     .poll(
       async () =>
         (await signInAlert(page).textContent().catch(() => ""))?.trim() ?? "",
-      { timeout: 30000 },
+      {
+        // In dev-server smoke runs the first escalation submit can pay a one-time
+        // compilation cost before the blocked-state alert is rendered.
+        timeout: ESCALATION_BLOCKED_ALERT_TIMEOUT_MS,
+      },
     )
     .toMatch(
       /(supervisor approval required before sign-in|critical safety response detected|supervisor review required)/i,

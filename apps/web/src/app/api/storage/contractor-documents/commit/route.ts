@@ -10,7 +10,9 @@ import { createAuditLog } from "@/lib/repository/audit.repository";
 import { readS3ObjectBytes } from "@/lib/storage";
 import { isContractorDocumentKeyForTenant } from "@/lib/storage/keys";
 import {
-  extensionFromMimeType,
+  extensionFromFileName,
+  extensionsFromMimeType,
+  sniffFileTypeFromBytes,
   validateFileMagicNumber,
 } from "@/lib/storage/validation";
 import { DocumentType } from "@prisma/client";
@@ -75,6 +77,7 @@ export async function POST(req: Request) {
 
   const { contractorId, key, fileName, mimeType, fileSize, documentType } =
     parsed.data;
+  const normalizedMimeType = mimeType.trim().toLowerCase();
   const maxBytes = GUARDRAILS.MAX_UPLOAD_MB * 1024 * 1024;
 
   if (
@@ -83,7 +86,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid storage key" }, { status: 400 });
   }
 
-  if (!isAllowedMimeType(mimeType)) {
+  if (!isAllowedMimeType(normalizedMimeType)) {
     return NextResponse.json(
       { error: "Unsupported file type" },
       { status: 400 },
@@ -97,17 +100,28 @@ export async function POST(req: Request) {
     );
   }
 
-  const expectedExtension = extensionFromMimeType(mimeType);
-  if (!expectedExtension) {
+  const declaredExtensions = extensionsFromMimeType(normalizedMimeType);
+  const fileNameExtension = extensionFromFileName(fileName);
+  if (declaredExtensions.length === 0 || !fileNameExtension) {
     return NextResponse.json(
       { error: "Unsupported file type" },
       { status: 400 },
     );
   }
 
+  if (
+    !declaredExtensions.includes(fileNameExtension) ||
+    !GUARDRAILS.UPLOAD_ALLOWED_EXTENSIONS.includes(fileNameExtension)
+  ) {
+    return NextResponse.json(
+      { error: "File extension does not match declared MIME type" },
+      { status: 400 },
+    );
+  }
+
   let header: Buffer;
   try {
-    header = await readUploadedHeader(key, 8);
+    header = await readUploadedHeader(key, 16);
   } catch {
     return NextResponse.json(
       { error: "Unable to verify uploaded file contents" },
@@ -115,7 +129,23 @@ export async function POST(req: Request) {
     );
   }
 
-  const isMagicValid = await validateFileMagicNumber(header, expectedExtension);
+  if (GUARDRAILS.UPLOAD_REQUIRE_SERVER_MIME_SNIFF) {
+    const sniffedType = sniffFileTypeFromBytes(header);
+    if (
+      !sniffedType ||
+      sniffedType.mime !== normalizedMimeType ||
+      !declaredExtensions.includes(sniffedType.extension)
+    ) {
+      return NextResponse.json(
+        { error: "File content does not match declared MIME type" },
+        { status: 400 },
+      );
+    }
+  }
+
+  const isMagicValid = GUARDRAILS.UPLOAD_REQUIRE_MAGIC_BYTES
+    ? await validateFileMagicNumber(header, fileNameExtension)
+    : true;
   if (!isMagicValid) {
     return NextResponse.json(
       { error: "File content does not match declared MIME type" },
@@ -132,7 +162,7 @@ export async function POST(req: Request) {
     file_name: fileName,
     file_path: key,
     file_size: fileSize,
-    mime_type: mimeType,
+    mime_type: normalizedMimeType,
     expires_at: expiresAt,
     notes: parsed.data.notes,
   });

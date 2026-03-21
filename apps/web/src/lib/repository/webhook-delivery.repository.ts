@@ -1,5 +1,10 @@
-import { publicDb } from "@/lib/db/public-db";
 import { scopedDb } from "@/lib/db/scoped-db";
+import {
+  claimOutboundWebhookDeliveryGlobal,
+  listDueOutboundWebhookDeliveriesGlobal,
+  markOutboundWebhookDeliveryFailureGlobal,
+  markOutboundWebhookDeliverySentGlobal,
+} from "@/lib/db/scoped";
 import type { Prisma, WebhookDeliveryStatus } from "@prisma/client";
 import { handlePrismaError, requireCompanyId } from "./base";
 
@@ -191,26 +196,11 @@ export async function listDueOutboundWebhookDeliveries(
   take: number,
 ): Promise<OutboundWebhookDeliveryWorkItem[]> {
   try {
-    // eslint-disable-next-line security-guardrails/require-company-id -- global worker queue processing across tenants
-    return await publicDb.outboundWebhookDelivery.findMany({
-      where: {
-        status: { in: PROCESSABLE_WEBHOOK_STATUSES },
-        next_attempt_at: { lte: now },
-      },
-      orderBy: [{ next_attempt_at: "asc" }, { created_at: "asc" }],
+    return await listDueOutboundWebhookDeliveriesGlobal(
+      PROCESSABLE_WEBHOOK_STATUSES,
+      now,
       take,
-      select: {
-        id: true,
-        company_id: true,
-        site_id: true,
-        event_type: true,
-        target_url: true,
-        payload: true,
-        status: true,
-        attempts: true,
-        max_attempts: true,
-      },
-    });
+    );
   } catch (error) {
     handlePrismaError(error, "OutboundWebhookDelivery");
   }
@@ -218,17 +208,10 @@ export async function listDueOutboundWebhookDeliveries(
 
 export async function claimOutboundWebhookDelivery(id: string): Promise<boolean> {
   try {
-    // eslint-disable-next-line security-guardrails/require-company-id -- claim by id for globally scheduled worker rows
-    const result = await publicDb.outboundWebhookDelivery.updateMany({
-      where: {
-        id,
-        status: { in: PROCESSABLE_WEBHOOK_STATUSES },
-      },
-      data: {
-        status: "PROCESSING",
-        last_attempt_at: new Date(),
-      },
-    });
+    const result = await claimOutboundWebhookDeliveryGlobal(
+      id,
+      PROCESSABLE_WEBHOOK_STATUSES,
+    );
     return result.count > 0;
   } catch (error) {
     handlePrismaError(error, "OutboundWebhookDelivery");
@@ -241,21 +224,7 @@ export async function markOutboundWebhookDeliverySent(input: {
   responseBody?: string | null;
 }): Promise<void> {
   try {
-    // eslint-disable-next-line security-guardrails/require-company-id -- update by claimed id/status in worker process
-    await publicDb.outboundWebhookDelivery.updateMany({
-      where: {
-        id: input.id,
-        status: "PROCESSING",
-      },
-      data: {
-        status: "SENT",
-        attempts: { increment: 1 },
-        sent_at: new Date(),
-        last_status_code: input.statusCode,
-        last_response_body: input.responseBody ?? null,
-        last_error: null,
-      },
-    });
+    await markOutboundWebhookDeliverySentGlobal(input);
   } catch (error) {
     handlePrismaError(error, "OutboundWebhookDelivery");
   }
@@ -270,21 +239,7 @@ export async function markOutboundWebhookDeliveryRetriableFailure(input: {
   dead: boolean;
 }): Promise<void> {
   try {
-    // eslint-disable-next-line security-guardrails/require-company-id -- update by claimed id/status in worker process
-    await publicDb.outboundWebhookDelivery.updateMany({
-      where: {
-        id: input.id,
-        status: "PROCESSING",
-      },
-      data: {
-        status: input.dead ? "DEAD" : "RETRYING",
-        attempts: { increment: 1 },
-        next_attempt_at: input.nextAttemptAt,
-        last_status_code: input.statusCode ?? null,
-        last_error: input.errorMessage ?? null,
-        last_response_body: input.responseBody ?? null,
-      },
-    });
+    await markOutboundWebhookDeliveryFailureGlobal(input);
   } catch (error) {
     handlePrismaError(error, "OutboundWebhookDelivery");
   }

@@ -1,5 +1,5 @@
-import { publicDb } from "@/lib/db/public-db";
 import { scopedDb } from "@/lib/db/scoped-db";
+import { countGlobalIdentityOcrVerifications } from "@/lib/db/scoped";
 import type { IdentityOcrStatus, IdentityOcrVerification } from "@prisma/client";
 import { handlePrismaError, RepositoryError, requireCompanyId } from "./base";
 
@@ -133,11 +133,7 @@ export async function countGlobalIdentityOcrVerificationsSince(
   since: Date,
 ): Promise<number> {
   try {
-    return await publicDb.identityOcrVerification.count({
-      where: {
-        created_at: { gte: since },
-      },
-    });
+    return await countGlobalIdentityOcrVerifications(since);
   } catch (error) {
     handlePrismaError(error, "IdentityOcrVerification");
   }

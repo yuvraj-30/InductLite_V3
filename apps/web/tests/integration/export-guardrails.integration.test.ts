@@ -97,4 +97,72 @@ describe("Export guardrails integration", () => {
       expect(result.scope).toBe("environment");
     }
   });
+
+  it("denies enqueue when the oldest queued export breaches the queue-age guardrail", async () => {
+    const staleQueuedAt = new Date(
+      Date.now() - (GUARDRAILS.MAX_EXPORT_QUEUE_AGE_MINUTES + 5) * 60 * 1000,
+    );
+
+    await prisma.exportJob.create({
+      data: {
+        company_id: companyB.id,
+        export_type: "SIGN_IN_CSV",
+        parameters: {},
+        requested_by: userB.id,
+        status: "QUEUED",
+        queued_at: staleQueuedAt,
+        run_at: staleQueuedAt,
+      },
+    });
+
+    await expect(
+      exportRepo.queueExportJobWithLimits(companyA.id, {
+        export_type: "SIGN_IN_CSV",
+        parameters: {},
+        requested_by: userA.id,
+      }),
+    ).rejects.toBeInstanceOf(exportRepo.ExportQueueAgeLimitReachedError);
+  });
+
+  it("auto-enables off-peak processing when delayed exports exceed the rolling threshold", async () => {
+    const now = new Date();
+    const delayedQueuedAt = new Date(now.getTime() - 5 * 60 * 1000);
+
+    await prisma.exportJob.create({
+      data: {
+        company_id: companyA.id,
+        export_type: "SIGN_IN_CSV",
+        parameters: {},
+        requested_by: userA.id,
+        status: "SUCCEEDED",
+        queued_at: delayedQueuedAt,
+        started_at: new Date(now.getTime() - 3 * 60 * 1000),
+        completed_at: new Date(now.getTime() - 2 * 60 * 1000),
+      },
+    });
+
+    for (let index = 0; index < 4; index += 1) {
+      const queuedAt = new Date(now.getTime() - (index + 1) * 30 * 1000);
+      await prisma.exportJob.create({
+        data: {
+          company_id: companyA.id,
+          export_type: "SIGN_IN_CSV",
+          parameters: {},
+          requested_by: userA.id,
+          status: "SUCCEEDED",
+          queued_at: queuedAt,
+          started_at: new Date(queuedAt.getTime() + 10 * 1000),
+          completed_at: new Date(queuedAt.getTime() + 20 * 1000),
+        },
+      });
+    }
+
+    const decision = await exportRepo.getExportOffPeakDecision(now);
+
+    expect(decision.active).toBe(true);
+    expect(decision.reason).toBe("auto");
+    expect(decision.delayedJobs).toBe(1);
+    expect(decision.observedJobs).toBe(5);
+    expect(decision.delayedPercent).toBe(20);
+  });
 });

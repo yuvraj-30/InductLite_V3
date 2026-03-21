@@ -1,15 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Prisma } from "@prisma/client";
 
-const mockDb = vi.hoisted(() => ({
-  signInRecord: {
-    findFirst: vi.fn(),
-  },
+const scopedHelpers = vi.hoisted(() => ({
+  findPublicSignInSummary: vi.fn(),
 }));
 
-vi.mock("@/lib/db/public-db", () => ({
-  publicDb: mockDb,
-}));
+vi.mock("@/lib/db/scoped", () => scopedHelpers);
 
 // Import after mocking
 import { findPublicSignInById } from "../public-signin.repository";
@@ -43,19 +39,17 @@ describe("PublicSignIn Repository - findPublicSignInById", () => {
   beforeEach(() => vi.clearAllMocks());
 
   it("returns null when record is not found", async () => {
-    vi.mocked(mockDb.signInRecord.findFirst).mockResolvedValue(null);
+    vi.mocked(scopedHelpers.findPublicSignInSummary).mockResolvedValue(null);
 
     const res = await findPublicSignInById("missing-id");
 
     expect(res).toBeNull();
-    expect(mockDb.signInRecord.findFirst).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: "missing-id" } }),
-    );
+    expect(scopedHelpers.findPublicSignInSummary).toHaveBeenCalledWith("missing-id");
   });
 
   it("maps and returns record fields when found (active sign-in)", async () => {
     const mock = createMockRecord();
-    vi.mocked(mockDb.signInRecord.findFirst).mockResolvedValue(mock);
+    vi.mocked(scopedHelpers.findPublicSignInSummary).mockResolvedValue(mock);
 
     const res = await findPublicSignInById("s-public-1");
 
@@ -75,7 +69,7 @@ describe("PublicSignIn Repository - findPublicSignInById", () => {
     const mock = createMockRecord({
       sign_out_ts: new Date("2023-01-01T12:00:00Z"),
     });
-    vi.mocked(mockDb.signInRecord.findFirst).mockResolvedValue(mock);
+    vi.mocked(scopedHelpers.findPublicSignInSummary).mockResolvedValue(mock);
 
     const res = await findPublicSignInById("s-public-1");
 

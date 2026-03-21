@@ -4,9 +4,7 @@ import {
   __test_clearInMemoryStoreForClient,
 } from "@/lib/rate-limit";
 import { ensureTestRouteAccess } from "../_guard";
-import { createPrismaClient } from "@/lib/db/prisma";
-
-const prisma = createPrismaClient();
+import { serializeRuntimeError, withRuntimePrisma } from "../_runtime-prisma";
 
 export async function POST(req: Request) {
   const accessDenied = ensureTestRouteAccess(req);
@@ -47,19 +45,25 @@ export async function POST(req: Request) {
 
     // Also reset locked accounts: prefer explicit email param, else reset users containing the clientKey
     try {
-      if (body?.email) {
-        await prisma.user.updateMany({
-          where: { email: body.email },
-          data: { failed_logins: 0, locked_until: null },
-        });
-      } else if (clientKey) {
-        // Reset users whose email contains the clientKey (our create-user uses clientKey in email)
-        await prisma.user.updateMany({
-          where: { email: { contains: clientKey } },
-          data: { failed_logins: 0, locked_until: null },
-        });
-      } else {
-        await prisma.user.updateMany({
+      await withRuntimePrisma(async (client) => {
+        if (body?.email) {
+          await client.user.updateMany({
+            where: { email: body.email.toLowerCase().trim() },
+            data: { failed_logins: 0, locked_until: null },
+          });
+          return;
+        }
+
+        if (clientKey) {
+          // Reset users whose email contains the clientKey (our create-user uses clientKey in email)
+          await client.user.updateMany({
+            where: { email: { contains: clientKey } },
+            data: { failed_logins: 0, locked_until: null },
+          });
+          return;
+        }
+
+        await client.user.updateMany({
           where: {
             email: {
               in: ["admin@buildright.co.nz", "viewer@buildright.co.nz"],
@@ -67,10 +71,13 @@ export async function POST(req: Request) {
           },
           data: { failed_logins: 0, locked_until: null },
         });
-      }
+      });
     } catch (dbErr) {
       // Non-fatal: log and continue
-      console.warn("Failed to reset user lock state:", String(dbErr));
+      console.warn(
+        "Failed to reset user lock state:",
+        JSON.stringify(serializeRuntimeError(dbErr)),
+      );
     }
 
     return NextResponse.json({ success: true });

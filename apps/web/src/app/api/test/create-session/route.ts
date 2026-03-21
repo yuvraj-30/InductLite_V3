@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
-import { createPrismaClient, prisma } from "@/lib/db/prisma";
+import { createPrismaClient } from "@/lib/db/prisma";
 import { generateCsrfToken } from "@/lib/auth/csrf";
 import { ensureTestRouteAccess } from "../_guard";
+import {
+  getRuntimeDatabaseUrl,
+  getRuntimeEnv,
+  serializeRuntimeError,
+  withRuntimePrisma,
+} from "../_runtime-prisma";
 
 const E2E_DEBUG_TEST_ROUTES = (() => {
   const v = process.env.E2E_DEBUG_TEST_ROUTES;
@@ -23,20 +29,10 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request) {
   const accessDenied = ensureTestRouteAccess(req);
   if (accessDenied) return accessDenied;
-
-  // Use runtime env access to avoid build-time snapshotting
-  const getEnv = () => {
-    try {
-      return eval("process").env ?? {};
-    } catch {
-      return {};
-    }
-  };
-
-  const env = getEnv();
+  const env = getRuntimeEnv();
 
   // Fail fast with a clear 503 if the server process does not have DATABASE_URL at runtime
-  if (!env.DATABASE_URL) {
+  if (!getRuntimeDatabaseUrl(env)) {
     return NextResponse.json(
       {
         error: "DATABASE_URL not available to server process at runtime",
@@ -58,14 +54,7 @@ export async function GET(req: Request) {
       try {
         // read runtime env
 
-        const env = (function getEnv() {
-          try {
-            return eval("process").env ?? {};
-          } catch {
-            return {};
-          }
-        })();
-        const dbUrl = env.DATABASE_URL ?? null;
+        const dbUrl = getRuntimeDatabaseUrl();
         if (dbUrl) {
           try {
             const u = new URL(dbUrl);
@@ -93,67 +82,47 @@ export async function GET(req: Request) {
     }
 
     // Use a runtime-bound Prisma client for consistent visibility with request-time DATABASE_URL
-    let user: any = null;
-    let runtimeClient:
-      | import("@prisma/client").PrismaClient
-      | null = null;
-    try {
-      const env = (function getEnv() {
-        try {
-          return eval("process").env ?? {};
-        } catch {
-          return {};
-        }
-      })();
-      const dbUrl = env.DATABASE_URL ?? null;
-      if (dbUrl) {
-        runtimeClient = createPrismaClient(dbUrl);
-        await runtimeClient.$connect();
-        user = await runtimeClient.user.findUnique({
-          where: { email },
-          include: { company: true },
-        });
-      } else {
-        user = await prisma.user.findUnique({
-          where: { email },
-          include: { company: true },
-        });
-      }
-    } catch (e) {
-      e2eWarn(
-        "E2E: create-session runtime lookup failed, falling back to global prisma:",
-        String(e),
-      );
-      user = await prisma.user.findUnique({
-        where: { email },
-        include: { company: true },
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await withRuntimePrisma(async (client) => {
+      const foundUser = await client.user.findUnique({
+        where: { email: normalizedEmail },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          company_id: true,
+        },
       });
-    } finally {
-      if (runtimeClient) {
-        await runtimeClient.$disconnect().catch(() => undefined);
-      }
-    }
+
+      if (!foundUser) return null;
+
+      const company = await client.company.findUnique({
+        where: { id: foundUser.company_id },
+        select: { name: true },
+      });
+
+      return {
+        ...foundUser,
+        companyName: company?.name ?? null,
+      };
+    });
 
     if (!user) {
       // Diagnostic: report counts and schema for current runtime DB to help debug visibility
       if (E2E_DEBUG_TEST_ROUTES) {
         try {
-          const env = (function getEnv() {
-            try {
-              return eval("process").env ?? {};
-            } catch {
-              return {};
-            }
-          })();
-          const dbUrl = env.DATABASE_URL ?? null;
+          const dbUrl = getRuntimeDatabaseUrl();
           if (dbUrl) {
             try {
               const diag = createPrismaClient(dbUrl);
               await diag.$connect();
-              const count = await diag.user.count({ where: { email } });
+              const count = await diag.user.count({
+                where: { email: normalizedEmail },
+              });
               e2eWarn(
                 "E2E: create-session user not found; diag count for email=",
-                email,
+                normalizedEmail,
                 "count=",
                 count,
               );
@@ -178,7 +147,7 @@ export async function GET(req: Request) {
         name: user.name,
         role: user.role,
         companyId: user.company_id,
-        companyName: user.company?.name ?? null,
+        companyName: user.companyName,
       },
       csrfToken: generateCsrfToken(),
       createdAt: Date.now(),
@@ -227,7 +196,9 @@ export async function GET(req: Request) {
 
     return res;
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err ?? "");
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json(
+      { error: serializeRuntimeError(err) },
+      { status: 500 },
+    );
   }
 }

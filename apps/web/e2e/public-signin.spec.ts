@@ -721,7 +721,22 @@ test.describe.serial("Public Sign-In Flow", () => {
           : page.locator("select").first();
       await expect(languageSelector).toBeVisible({ timeout: 10000 });
       await languageSelector.selectOption("mi").catch(async () => {
-        await languageSelector.selectOption({ label: /te reo maori/i });
+        const teReoOptionValue = await languageSelector.evaluate((element) => {
+          if (!(element instanceof HTMLSelectElement)) {
+            return null;
+          }
+
+          const teReoOption = Array.from(element.options).find((option) =>
+            /te reo maori/i.test(option.label),
+          );
+          return teReoOption?.value ?? null;
+        });
+
+        if (!teReoOptionValue) {
+          throw new Error("Unable to find Te Reo Maori language option");
+        }
+
+        await languageSelector.selectOption(teReoOptionValue);
       });
 
       await expect(
@@ -996,9 +1011,11 @@ test.describe.serial("Public Sign-In Flow", () => {
         email: "geofence.override@test.com",
       });
 
-      await page
-        .getByLabel(/supervisor geofence override code/i)
-        .fill(seeded.geofenceOverrideCode ?? "123456");
+      await fillAndAssertInput(
+        page,
+        "#geofenceOverrideCode",
+        seeded.geofenceOverrideCode ?? "123456",
+      );
 
       const reachedInduction = await continueToInductionWithRetry(page, {
         name: visitorName,
@@ -1201,19 +1218,43 @@ test.describe.serial("Public Sign-In Flow", () => {
       email: "e2e@test.com",
     });
 
-    const nameField = page.getByLabel(/full name/i);
-    const phoneField = page.getByLabel(/phone number/i);
     await ensureDetailsPersisted(page, {
       name: visitorName,
       phone: visitorPhone,
       email: "e2e@test.com",
     });
 
-    const reachedInduction = await continueToInductionWithRetry(page, {
+    await page.getByLabel(/visitor type/i).selectOption("CONTRACTOR");
+
+    let reachedInduction = await continueToInductionWithRetry(page, {
       name: visitorName,
       phone: visitorPhone,
       email: "e2e@test.com",
     });
+    if (!reachedInduction) {
+      const nameField = page.getByLabel(/full name/i);
+      const phoneField = page.getByLabel(/phone number/i);
+      const stillOnDetails =
+        (await nameField.isVisible().catch(() => false)) &&
+        (await phoneField.isVisible().catch(() => false));
+      if (stillOnDetails) {
+        const currentName = await nameField.inputValue().catch(() => "");
+        const currentPhone = await phoneField.inputValue().catch(() => "");
+        if (currentName !== visitorName || currentPhone !== visitorPhone) {
+          await fillDetailsForm(page, {
+            name: visitorName,
+            phone: visitorPhone,
+            email: "e2e@test.com",
+          });
+        }
+        await page.getByLabel(/visitor type/i).selectOption("CONTRACTOR");
+        reachedInduction = await continueToInductionWithRetry(page, {
+          name: visitorName,
+          phone: visitorPhone,
+          email: "e2e@test.com",
+        });
+      }
+    }
     const inductionHeading = page.getByRole("heading", {
       level: 2,
       name: /site induction/i,

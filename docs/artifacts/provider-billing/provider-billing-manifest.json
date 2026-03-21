@@ -1,0 +1,42 @@
+{
+  "capturedAt": "2026-03-20T11:45:00.000Z",
+  "month": "2026-03",
+  "notes": "Repo-local validation artifact for the provider-billing evidence path. Replace this file with the current live provider-origin manifest before launch approval.",
+  "entries": [
+    {
+      "provider": "render",
+      "sourceType": "provider_api",
+      "capturedAt": "2026-03-20T11:40:00.000Z",
+      "amountNzd": 42.15,
+      "invoiceRef": "render-2026-03-20"
+    },
+    {
+      "provider": "neon",
+      "sourceType": "invoice_export",
+      "capturedAt": "2026-03-20T11:41:00.000Z",
+      "amountNzd": 18.42,
+      "invoiceRef": "neon-2026-03"
+    },
+    {
+      "provider": "cloudflare_r2",
+      "sourceType": "invoice_export",
+      "capturedAt": "2026-03-20T11:42:00.000Z",
+      "amountNzd": 7.5,
+      "invoiceRef": "r2-2026-03"
+    },
+    {
+      "provider": "upstash",
+      "sourceType": "provider_api",
+      "capturedAt": "2026-03-20T11:43:00.000Z",
+      "amountNzd": 5.8,
+      "invoiceRef": "upstash-2026-03-20"
+    },
+    {
+      "provider": "resend",
+      "sourceType": "invoice_export",
+      "capturedAt": "2026-03-20T11:44:00.000Z",
+      "amountNzd": 3.1,
+      "invoiceRef": "resend-2026-03"
+    }
+  ]
+}

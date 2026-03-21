@@ -42,6 +42,21 @@ Note: IP allowlist matching supports IPv4 and IPv6 CIDR entries.
 - UPSTASH_REDIS_REST_URL
 - UPSTASH_REDIS_REST_TOKEN
 
+### Budget Telemetry
+
+- BUDGET_TELEMETRY_STALE_AFTER_HOURS=6
+- BUDGET_TELEMETRY_REQUIRED_PROVIDERS=render,neon,cloudflare_r2,upstash,resend
+- One of:
+  - BUDGET_TELEMETRY_PROVIDER_BILLING_JSON
+  - BUDGET_TELEMETRY_PROVIDER_BILLING_FILE
+  - BUDGET_TELEMETRY_PROVIDER_BILLING_URL
+- Optional:
+  - BUDGET_TELEMETRY_PROVIDER_BILLING_TOKEN
+
+Budget telemetry must be refreshed at least hourly from provider billing/invoice data. The runtime now expects a provider billing manifest that contains one entry per required provider export/API feed and fails closed if a required provider is missing. If telemetry is missing or older than the stale window, the runtime enters `BUDGET_PROTECT` and disables non-critical paths (exports, optional notifications, visual regression).
+
+Legacy `BUDGET_TELEMETRY_SNAPSHOT_JSON` / `BUDGET_TELEMETRY_SNAPSHOT_FILE` inputs remain available for local development and targeted tests only; they are not production-compliant as the sole spend source.
+
 ### Outbound Webhooks
 
 - WEBHOOK_SIGNING_SECRET (optional, min 16 chars; enables `X-InductLite-Signature` HMAC header on outbound webhook deliveries)
@@ -58,6 +73,7 @@ Note: IP allowlist matching supports IPv4 and IPv6 CIDR entries.
 - Single Render service keeps free-tier hours under control.
 - GitHub Actions cron triggers export + maintenance via API routes.
   - Maintenance route now runs retention tasks plus queued-email processing (including pre-registration reminder batches and contractor document expiry reminders) and outbound webhook queue processing (retry/backoff/dead-letter handling).
+- There is no separate Render worker service in the current production topology; scheduled work is driven through cron API routes and GitHub Actions.
 - Apply schema migrations before first traffic after deploy:
   - One-off command: `cd apps/web && npm run db:migrate`
 - For production migration/rollback operations (including Render free tier without shell), use:

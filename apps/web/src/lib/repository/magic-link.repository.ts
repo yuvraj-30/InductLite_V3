@@ -4,8 +4,11 @@
  * Handles magic link token persistence and consumption.
  */
 
-import { publicDb } from "@/lib/db/public-db";
 import { scopedDb } from "@/lib/db/scoped-db";
+import {
+  consumeMagicLinkTokenByHash,
+  findMagicLinkTokenByHash,
+} from "@/lib/db/scoped";
 import { handlePrismaError, requireCompanyId } from "./base";
 import { decryptNullableString } from "@/lib/security/data-protection";
 
@@ -66,31 +69,11 @@ export async function consumeMagicLinkToken(tokenHash: string): Promise<
 > {
   try {
     const now = new Date();
-    // eslint-disable-next-line security-guardrails/require-company-id -- public token consumption by unique token hash
-    const consumeResult = await publicDb.magicLinkToken.updateMany({
-      where: {
-        token_hash: tokenHash,
-        used_at: null,
-        expires_at: { gt: now },
-      },
-      data: { used_at: now },
-    });
+    const consumeResult = await consumeMagicLinkTokenByHash(tokenHash, now);
 
     if (consumeResult.count === 0) return null;
 
-    // allowlisted public lookup by unique token hash after successful consume
-    // eslint-disable-next-line security-guardrails/require-company-id -- public lookup by token hash
-    const token = await publicDb.magicLinkToken.findFirst({
-      where: { token_hash: tokenHash },
-      include: {
-        contractor: {
-          select: { id: true, name: true, contact_email: true },
-        },
-        company: {
-          select: { id: true, name: true, slug: true },
-        },
-      },
-    });
+    const token = await findMagicLinkTokenByHash(tokenHash);
 
     if (!token) return null;
     return {

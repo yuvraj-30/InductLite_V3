@@ -1,13 +1,14 @@
 const { RuleTester } = require("eslint");
 const plugin = require("../index.js");
 
-// Use a JS parser that ships with ESLint
 const ruleTester = new RuleTester({
-  parser: require.resolve("@typescript-eslint/parser"),
-  parserOptions: {
+  languageOptions: {
+    parser: require("@typescript-eslint/parser"),
     ecmaVersion: 2020,
     sourceType: "module",
-    ecmaFeatures: { jsx: true },
+    parserOptions: {
+      ecmaFeatures: { jsx: true },
+    },
   },
 });
 
@@ -15,14 +16,13 @@ function runRuleTest(name, rule, tests) {
   try {
     console.log(`Running rule tests for: ${name}`);
     ruleTester.run(name, rule, tests);
-    console.log(`✓ ${name} tests passed`);
+    console.log(`PASS ${name} tests passed`);
   } catch (err) {
-    console.error(`✗ ${name} tests FAILED`);
+    console.error(`FAIL ${name} tests FAILED`);
     throw err;
   }
 }
 
-// --- no-raw-sql tests ---
 runRuleTest("no-raw-sql", plugin.rules["no-raw-sql"], {
   valid: ["prisma.user.findMany();", "client.$query;"],
   invalid: [
@@ -37,7 +37,6 @@ runRuleTest("no-raw-sql", plugin.rules["no-raw-sql"], {
   ],
 });
 
-// --- require-company-id tests ---
 runRuleTest("require-company-id", plugin.rules["require-company-id"], {
   valid: [
     {
@@ -52,7 +51,54 @@ runRuleTest("require-company-id", plugin.rules["require-company-id"], {
   invalid: [],
 });
 
-// --- no-env-secrets-client tests ---
+runRuleTest(
+  "no-publicdb-tenant-access",
+  plugin.rules["no-publicdb-tenant-access"],
+  {
+    valid: [
+      {
+        filename: "src/lib/db/scoped.ts",
+        code: `publicDb.signInRecord.findFirst({ where: { id: "rec_1" } })`,
+      },
+      {
+        filename: "src/lib/db/scoped.ts",
+        code: `async function run(tx) { return tx.inductionTemplate.findFirst({ where: { id: "tmpl_1" } }); }`,
+      },
+      {
+        filename: "src/lib/repository/site.repository.ts",
+        code: `publicDb.company.findFirst({ where: { slug: "alpha" } })`,
+      },
+    ],
+    invalid: [
+      {
+        filename: "src/lib/repository/export.repository.ts",
+        code: `publicDb.exportJob.findFirst({ where: { status: "QUEUED" } })`,
+        errors: [{ messageId: "noPublicDbTenantAccess" }],
+      },
+      {
+        filename: "src/lib/email/worker.ts",
+        code: `publicDb.auditLog.create({ data: { action: "x" } })`,
+        errors: [{ messageId: "noPublicDbTenantAccess" }],
+      },
+      {
+        filename: "src/lib/email/worker.ts",
+        code: `const dbAny = publicDb as unknown as { emailNotification: unknown }; dbAny.emailNotification.findMany({ where: { status: "PENDING" } });`,
+        errors: [{ messageId: "noPublicDbTenantAccess" }],
+      },
+      {
+        filename: "src/lib/repository/question.repository.ts",
+        code: `publicDb.$transaction(async (tx) => tx.inductionQuestion.findFirst({ where: { id: "q_1" } }));`,
+        errors: [{ messageId: "noPublicDbTenantAccess" }],
+      },
+      {
+        filename: "src/lib/repository/question.repository.ts",
+        code: `const rawTx = tx as typeof tx; rawTx.emailNotification.update({ where: { id: "n_1" } });`,
+        errors: [{ messageId: "noPublicDbTenantAccess" }],
+      },
+    ],
+  },
+);
+
 runRuleTest("no-env-secrets-client", plugin.rules["no-env-secrets-client"], {
   valid: [
     {
@@ -63,7 +109,6 @@ runRuleTest("no-env-secrets-client", plugin.rules["no-env-secrets-client"], {
       filename: "src/server/util.ts",
       code: `const s = process.env.SESSION_SECRET;`,
     },
-    // Strings that contain 'process.env.SESSION_SECRET' as literal text should be ignored
     {
       filename: "src/components/clientLiteralString.tsx",
       code: `"use client";\nconst token = 'process.env.SESSION_SECRET';`,
@@ -73,7 +118,6 @@ runRuleTest("no-env-secrets-client", plugin.rules["no-env-secrets-client"], {
       code:
         `"use client";\nconst token = ` + "`process.env.SESSION_SECRET`" + `;`,
     },
-    // JSX text nodes that contain the literal phrase should be ignored
     {
       filename: "src/components/clientJsxText.tsx",
       code: `"use client";\nconst v = <div>process.env.SESSION_SECRET</div>;`,
@@ -90,13 +134,11 @@ runRuleTest("no-env-secrets-client", plugin.rules["no-env-secrets-client"], {
       code: `"use client";\nconst key = process.env.PRIVATE_KEY;`,
       errors: [{ messageId: "noEnvSecretsClient" }],
     },
-    // Ensure comments containing process.env.<VAR> are ignored and do not create duplicate reports
     {
       filename: "src/components/clientWithComment.tsx",
       code: `"use client";\n// process.env.SESSION_SECRET\nconst token = process.env.SESSION_SECRET;`,
       errors: [{ messageId: "noEnvSecretsClient" }],
     },
-    // Template interpolation should be detected and reported
     {
       filename: "src/components/clientTemplateInterpolation.tsx",
       code:
@@ -105,7 +147,6 @@ runRuleTest("no-env-secrets-client", plugin.rules["no-env-secrets-client"], {
         `;`,
       errors: [{ messageId: "noEnvSecretsClient" }],
     },
-    // JSX expression interpolation should be detected and reported
     {
       filename: "src/components/clientJsxExpr.tsx",
       code: `"use client";\nconst v = <div>{process.env.SESSION_SECRET}</div>;`,
@@ -114,7 +155,6 @@ runRuleTest("no-env-secrets-client", plugin.rules["no-env-secrets-client"], {
   ],
 });
 
-// --- require-csrf-check tests ---
 runRuleTest("require-csrf-check", plugin.rules["require-csrf-check"], {
   valid: [
     {

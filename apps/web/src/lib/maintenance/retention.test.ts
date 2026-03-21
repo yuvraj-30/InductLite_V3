@@ -13,32 +13,19 @@ const mocks = vi.hoisted(() => ({
   deleteContractorDocumentById: vi.fn(),
   logInfo: vi.fn(),
   logWarn: vi.fn(),
+  scopedDb: vi.fn(),
 }));
 
 vi.mock("@/lib/db/public-db", () => ({
   publicDb: {
-    auditLog: {
-      deleteMany: mocks.auditDeleteMany,
-    },
-    exportJob: {
-      findMany: mocks.exportFindMany,
-    },
-    contractorDocument: {
-      findMany: mocks.contractorDocFindMany,
-    },
     company: {
       findMany: mocks.companyFindMany,
     },
-    signInRecord: {
-      deleteMany: mocks.signInDeleteMany,
-    },
-    incidentReport: {
-      deleteMany: mocks.incidentDeleteMany,
-    },
-    emergencyDrill: {
-      deleteMany: mocks.emergencyDrillDeleteMany,
-    },
   },
+}));
+
+vi.mock("@/lib/db/scoped-db", () => ({
+  scopedDb: mocks.scopedDb,
 }));
 
 vi.mock("@/lib/storage", () => ({
@@ -96,6 +83,14 @@ describe("runRetentionTasks", () => {
         compliance_legal_hold: false,
       },
     ]);
+    mocks.scopedDb.mockReturnValue({
+      exportJob: { findMany: mocks.exportFindMany },
+      contractorDocument: { findMany: mocks.contractorDocFindMany },
+      signInRecord: { deleteMany: mocks.signInDeleteMany },
+      auditLog: { deleteMany: mocks.auditDeleteMany },
+      incidentReport: { deleteMany: mocks.incidentDeleteMany },
+      emergencyDrill: { deleteMany: mocks.emergencyDrillDeleteMany },
+    });
   });
 
   it("applies per-company sign-in and audit retention cutoffs", async () => {

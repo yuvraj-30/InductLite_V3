@@ -3,14 +3,13 @@ import { QuestionType } from "@prisma/client";
 import { __test_clearInMemoryStore } from "@/lib/rate-limit";
 import { ensureTestRouteAccess } from "../_guard";
 import { hashGeofenceOverrideCode } from "@/lib/access-control/config";
-import { createPrismaClient } from "@/lib/db/prisma";
-
-const prisma = createPrismaClient();
+import { connectRuntimePrisma } from "../_runtime-prisma";
 
 export async function POST(req: Request) {
   const accessDenied = ensureTestRouteAccess(req);
   if (accessDenied) return accessDenied;
 
+  const prisma = await connectRuntimePrisma();
   try {
     const body = await req.json().catch(() => ({}) as Record<string, unknown>);
     const slugPrefix = (body.slugPrefix as string) ?? "test-site-e2e";
@@ -301,6 +300,8 @@ export async function POST(req: Request) {
       { success: false, error: message },
       { status: 500 },
     );
+  } finally {
+    await prisma.$disconnect().catch(() => undefined);
   }
 }
 
@@ -308,6 +309,7 @@ export async function DELETE(req: Request) {
   const accessDenied = ensureTestRouteAccess(req);
   if (accessDenied) return accessDenied;
 
+  const prisma = await connectRuntimePrisma();
   try {
     const url = new URL(req.url);
     const slug = url.searchParams.get("slug");
@@ -339,5 +341,7 @@ export async function DELETE(req: Request) {
       { success: false, error: message },
       { status: 500 },
     );
+  } finally {
+    await prisma.$disconnect().catch(() => undefined);
   }
 }

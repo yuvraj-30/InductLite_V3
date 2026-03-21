@@ -1,11 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
-  publicDb: {
-    emergencyBroadcast: {
-      findFirst: vi.fn(),
-    },
-  },
+  findBroadcastForAcknowledgement: vi.fn(),
   buildBroadcastAckToken: vi.fn(),
   findBroadcastRecipientByTokenHash: vi.fn(),
   updateBroadcastRecipientStatus: vi.fn(),
@@ -15,8 +11,8 @@ const mocks = vi.hoisted(() => ({
   getUserAgentFromHeaders: vi.fn(),
 }));
 
-vi.mock("@/lib/db/public-db", () => ({
-  publicDb: mocks.publicDb,
+vi.mock("@/lib/db/scoped", () => ({
+  findBroadcastForAcknowledgement: mocks.findBroadcastForAcknowledgement,
 }));
 
 vi.mock("@/lib/repository/communication.repository", () => ({
@@ -48,7 +44,7 @@ function nextRequest(url: string): any {
 describe("GET /api/broadcasts/ack", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.publicDb.emergencyBroadcast.findFirst.mockResolvedValue({
+    mocks.findBroadcastForAcknowledgement.mockResolvedValue({
       id: "broadcast-1",
       company_id: "company-1",
       site_id: "cm0000000000000000000001",

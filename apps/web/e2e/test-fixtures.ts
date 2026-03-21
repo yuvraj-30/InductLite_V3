@@ -34,6 +34,9 @@ type MyFixtures = {
   deletePublicSite: (
     slug: string,
   ) => Promise<{ success?: boolean; deleted?: boolean; error?: string }>;
+};
+
+type MyWorkerFixtures = {
   /** Worker-scoped server (baseUrl & schema) for parallel test isolation */
   workerServer: { baseUrl: string; schema: string };
   /** Worker-scoped user for parallel test isolation */
@@ -80,7 +83,7 @@ function createPrismaClient(connectionString?: string): PrismaClient {
   });
 }
 
-export const test = base.extend<MyFixtures>({
+export const test = base.extend<MyFixtures, MyWorkerFixtures>({
   loginAs: async ({ context, workerUser }, playUse, testInfo) => {
     const projectName = testInfo.project.name;
     const forceUiLogin =
@@ -517,14 +520,19 @@ export const test = base.extend<MyFixtures>({
             try {
               return JSON.parse(txt) as {
                 allowTestRunner?: boolean;
+                dbReady?: boolean;
                 nodeEnv?: string;
               };
             } catch {
-              return {} as { allowTestRunner?: boolean; nodeEnv?: string };
+              return {} as {
+                allowTestRunner?: boolean;
+                dbReady?: boolean;
+                nodeEnv?: string;
+              };
             }
           })();
 
-          if (runtimeBody.allowTestRunner) {
+          if (runtimeBody.allowTestRunner && runtimeBody.dbReady) {
             runtimeAllowSeen = true;
             break;
           }

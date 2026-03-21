@@ -8,6 +8,10 @@ import { createAuditLog } from "@/lib/repository/audit.repository";
 import { getSignedDownloadUrl } from "@/lib/storage";
 import { generateRequestId } from "@/lib/auth/csrf";
 import { guardrailDeniedResponse } from "@/lib/api";
+import {
+  enforceBudgetPath,
+  startBudgetTrackedOperation,
+} from "@/lib/cost/budget-service";
 import fs from "fs/promises";
 
 function inferContentType(fileName?: string | null): string {
@@ -21,79 +25,103 @@ export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const guard = await checkPermissionReadOnly("export:create");
-  if (!guard.success) {
-    return NextResponse.json(
-      { error: guard.error },
-      { status: guard.code === "FORBIDDEN" ? 403 : 401 },
+  const finishBudgetTracking = startBudgetTrackedOperation("route_handler");
+
+  try {
+    const guard = await checkPermissionReadOnly("export:create");
+    if (!guard.success) {
+      return NextResponse.json(
+        { error: guard.error },
+        { status: guard.code === "FORBIDDEN" ? 403 : 401 },
+      );
+    }
+
+    const context = guard.user;
+    const { id } = await params;
+
+    const job = await findExportJobById(context.companyId, id);
+    if (!job || job.status !== "SUCCEEDED" || !job.file_path) {
+      return NextResponse.json(
+        { error: "Export not available" },
+        { status: 404 },
+      );
+    }
+
+    if (job.expires_at && job.expires_at < new Date()) {
+      return NextResponse.json({ error: "Export expired" }, { status: 410 });
+    }
+
+    const budgetDecision = await enforceBudgetPath(
+      job.export_type === "COMPLIANCE_ZIP"
+        ? "compliance.export.download"
+        : "admin.export.download",
     );
-  }
+    if (!budgetDecision.allowed) {
+      return NextResponse.json(
+        guardrailDeniedResponse(
+          budgetDecision.controlId ?? "COST-008",
+          budgetDecision.violatedLimit ??
+            `ENV_BUDGET_TIER=${budgetDecision.state.budgetTier}`,
+          budgetDecision.scope,
+          budgetDecision.message,
+        ),
+        { status: 429 },
+      );
+    }
 
-  const context = guard.user;
-  const { id } = await params;
+    const downloadBytes = Number(job.file_size ?? 0);
+    if (!Number.isFinite(downloadBytes) || downloadBytes <= 0) {
+      return NextResponse.json(
+        { error: "Export metadata incomplete" },
+        { status: 409 },
+      );
+    }
 
-  const job = await findExportJobById(context.companyId, id);
-  if (!job || job.status !== "SUCCEEDED" || !job.file_path) {
-    return NextResponse.json(
-      { error: "Export not available" },
-      { status: 404 },
+    const budgetCheck = await checkExportDownloadGuardrails(
+      context.companyId,
+      downloadBytes,
     );
-  }
+    if (!budgetCheck.allowed) {
+      return NextResponse.json(
+        guardrailDeniedResponse(
+          budgetCheck.controlId,
+          budgetCheck.violatedLimit,
+          budgetCheck.scope,
+          budgetCheck.message,
+        ),
+        { status: 429 },
+      );
+    }
 
-  if (job.expires_at && job.expires_at < new Date()) {
-    return NextResponse.json({ error: "Export expired" }, { status: 410 });
-  }
-
-  const downloadBytes = Number(job.file_size ?? 0);
-  if (!Number.isFinite(downloadBytes) || downloadBytes <= 0) {
-    return NextResponse.json(
-      { error: "Export metadata incomplete" },
-      { status: 409 },
-    );
-  }
-
-  const budgetCheck = await checkExportDownloadGuardrails(
-    context.companyId,
-    downloadBytes,
-  );
-  if (!budgetCheck.allowed) {
-    return NextResponse.json(
-      guardrailDeniedResponse(
-        budgetCheck.controlId,
-        budgetCheck.violatedLimit,
-        budgetCheck.scope,
-        budgetCheck.message,
-      ),
-      { status: 429 },
-    );
-  }
-
-  const requestId = generateRequestId();
-  await createAuditLog(context.companyId, {
-    action: "export.download",
-    entity_type: "ExportJob",
-    entity_id: job.id,
-    user_id: context.id,
-    request_id: requestId,
-    details: {
-      export_type: job.export_type,
-      file_name: job.file_name,
-      download_bytes: downloadBytes,
-    },
-  });
-
-  const storageMode = (process.env.STORAGE_MODE || "local").toLowerCase();
-  if (storageMode === "local") {
-    const data = await fs.readFile(job.file_path);
-    const contentType = inferContentType(job.file_name);
-    return new NextResponse(data, {
-      headers: {
-        "content-type": contentType,
-        "content-disposition": `attachment; filename="${job.file_name ?? "export.csv"}"`,
+    const requestId = generateRequestId();
+    await createAuditLog(context.companyId, {
+      action: "export.download",
+      entity_type: "ExportJob",
+      entity_id: job.id,
+      user_id: context.id,
+      request_id: requestId,
+      details: {
+        export_type: job.export_type,
+        file_name: job.file_name,
+        download_bytes: downloadBytes,
       },
     });
-  }
 
-  const url = await getSignedDownloadUrl(job.file_path, 300);
-  return NextResponse.redirect(url);
+    const storageMode = (process.env.STORAGE_MODE || "local").toLowerCase();
+    if (storageMode === "local") {
+      const data = await fs.readFile(job.file_path);
+      const contentType = inferContentType(job.file_name);
+      return new NextResponse(data, {
+        headers: {
+          "content-type": contentType,
+          "content-disposition": `attachment; filename="${job.file_name ?? "export.csv"}"`,
+        },
+      });
+    }
+
+    const url = await getSignedDownloadUrl(job.file_path, 300);
+    return NextResponse.redirect(url);
+  } finally {
+    finishBudgetTracking();
+  }
 }

@@ -11,6 +11,7 @@ This budget defines measurable thresholds for high-traffic routes affected by th
 | `/login` | Auth entry | <= 2500 ms | <= 1500 ms | <= 400000 bytes |
 | `/admin/sites` | Core admin list | <= 2500 ms | <= 3000 ms | <= 575000 bytes |
 | `/admin/live-register` | Core admin operations | <= 2500 ms | <= 3200 ms | <= 625000 bytes |
+| `/admin/settings` | Compliance and billing controls | <= 2800 ms | <= 3500 ms | <= 650000 bytes |
 | `/s/:slug` | Public induction entry | <= 2500 ms | <= 2200 ms | <= 700000 bytes |
 
 ## Enforcement
@@ -32,6 +33,7 @@ Budget misses fail the performance lane and are release-blocking until remediate
 ## Route-Level Optimizations Landed
 
 1. `/login`: split-intent selector is lazy-loaded to trim initial auth bundle.
-2. `/admin/sites`: activation action buttons are lazy-loaded client modules.
+2. `/admin/sites`: activation action buttons stay in the main route bundle to avoid first-interaction lag on the managed-site list.
 3. `/admin/live-register`: sign-out action module is lazy-loaded client-side.
-4. `/s/:slug`: induction question/success views are lazy-loaded to reduce initial entry payload.
+4. `/admin/settings`: billing preview work streams behind the page shell so compliance controls paint before invoice calculations finish.
+5. `/s/:slug`: induction question/success views are lazy-loaded to reduce initial entry payload.

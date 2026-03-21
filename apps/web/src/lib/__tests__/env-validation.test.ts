@@ -141,6 +141,8 @@ describe("validateEnv", () => {
     beforeEach(() => {
       (process.env as Record<string, string | undefined>).NODE_ENV =
         "production";
+      delete process.env.ALLOW_TEST_RUNNER;
+      delete process.env.CI;
       process.env.CRON_SECRET = "cron-secret-at-least-16";
       process.env.DATABASE_DIRECT_URL = "postgresql://test@localhost/test";
       process.env.MAGIC_LINK_SECRET = "magic-link-secret-at-least-32-chars";
@@ -148,6 +150,23 @@ describe("validateEnv", () => {
         "production-data-encryption-key-at-least-32";
       process.env.RESEND_API_KEY = "re_test_key";
       process.env.RESEND_FROM = "no-reply@example.com";
+      process.env.ENV_BUDGET_TIER = "MVP";
+      process.env.MAX_MONTHLY_EGRESS_GB = "100";
+      process.env.MAX_MONTHLY_STORAGE_GB = "50";
+      process.env.MAX_MONTHLY_JOB_MINUTES = "1000";
+      process.env.MAX_MONTHLY_SERVER_ACTION_INVOCATIONS = "1000000";
+      process.env.MAX_MONTHLY_COMPUTE_INVOCATIONS = "1200000";
+      process.env.MAX_MONTHLY_COMPUTE_RUNTIME_MINUTES = "2500";
+      process.env.FEATURE_EXPORTS_ENABLED = "true";
+      process.env.FEATURE_UPLOADS_ENABLED = "true";
+      process.env.FEATURE_PUBLIC_SIGNIN_ENABLED = "true";
+      process.env.FEATURE_VISUAL_REGRESSION_ENABLED = "false";
+      process.env.BUDGET_TELEMETRY_REQUIRED_PROVIDERS =
+        "render,neon,cloudflare_r2,upstash,resend";
+      process.env.BUDGET_TELEMETRY_PROVIDER_BILLING_FILE =
+        "./artifacts/provider-billing.json";
+      process.env.UPSTASH_REDIS_REST_URL = "https://redis.upstash.io";
+      process.env.UPSTASH_REDIS_REST_TOKEN = "token";
     });
 
     it("should warn about local storage mode", () => {
@@ -273,7 +292,7 @@ describe("validateEnv", () => {
       ).toBe(true);
     });
 
-    it("should warn about missing Upstash Redis", () => {
+    it("should fail when Upstash Redis is missing", () => {
       process.env.DATABASE_URL = "postgresql://test@localhost/test";
       process.env.SESSION_SECRET =
         "production-secret-at-least-32-characters-long";
@@ -289,8 +308,111 @@ describe("validateEnv", () => {
 
       const result = validateEnv();
 
+      expect(result.valid).toBe(false);
       expect(
-        result.warnings.some((w) => w.includes("Upstash Redis not configured")),
+        result.errors.some((e) => e.name === "UPSTASH_REDIS_REST_URL"),
+      ).toBe(true);
+    });
+
+    it("should fail when ENV_BUDGET_TIER is missing", () => {
+      process.env.DATABASE_URL = "postgresql://test@localhost/test";
+      process.env.SESSION_SECRET =
+        "production-secret-at-least-32-characters-long";
+      process.env.NEXT_PUBLIC_APP_URL = "https://example.com";
+      delete process.env.ENV_BUDGET_TIER;
+
+      const result = validateEnv();
+
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.name === "ENV_BUDGET_TIER")).toBe(
+        true,
+      );
+    });
+
+    it("should fail when provider billing manifest config is missing", () => {
+      process.env.DATABASE_URL = "postgresql://test@localhost/test";
+      process.env.SESSION_SECRET =
+        "production-secret-at-least-32-characters-long";
+      process.env.NEXT_PUBLIC_APP_URL = "https://example.com";
+      delete process.env.BUDGET_TELEMETRY_PROVIDER_BILLING_FILE;
+      delete process.env.BUDGET_TELEMETRY_PROVIDER_BILLING_JSON;
+      delete process.env.BUDGET_TELEMETRY_PROVIDER_BILLING_URL;
+
+      const result = validateEnv();
+
+      expect(result.valid).toBe(false);
+      expect(
+        result.errors.some(
+          (e) => e.name === "BUDGET_TELEMETRY_PROVIDER_BILLING_FILE",
+        ),
+      ).toBe(true);
+    });
+
+    it("should fail when required provider list is missing", () => {
+      process.env.DATABASE_URL = "postgresql://test@localhost/test";
+      process.env.SESSION_SECRET =
+        "production-secret-at-least-32-characters-long";
+      process.env.NEXT_PUBLIC_APP_URL = "https://example.com";
+      delete process.env.BUDGET_TELEMETRY_REQUIRED_PROVIDERS;
+
+      const result = validateEnv();
+
+      expect(result.valid).toBe(false);
+      expect(
+        result.errors.some(
+          (e) => e.name === "BUDGET_TELEMETRY_REQUIRED_PROVIDERS",
+        ),
+      ).toBe(true);
+    });
+
+    it("should allow the CI test-runner harness without live production-only integrations", () => {
+      process.env.DATABASE_URL = "postgresql://test@localhost/test";
+      process.env.SESSION_SECRET =
+        "production-secret-at-least-32-characters-long";
+      process.env.NEXT_PUBLIC_APP_URL = "https://example.com";
+      process.env.ALLOW_TEST_RUNNER = "1";
+      process.env.CI = "1";
+
+      delete process.env.ENV_BUDGET_TIER;
+      delete process.env.MAX_MONTHLY_EGRESS_GB;
+      delete process.env.MAX_MONTHLY_STORAGE_GB;
+      delete process.env.MAX_MONTHLY_JOB_MINUTES;
+      delete process.env.MAX_MONTHLY_SERVER_ACTION_INVOCATIONS;
+      delete process.env.MAX_MONTHLY_COMPUTE_INVOCATIONS;
+      delete process.env.MAX_MONTHLY_COMPUTE_RUNTIME_MINUTES;
+      delete process.env.FEATURE_EXPORTS_ENABLED;
+      delete process.env.FEATURE_UPLOADS_ENABLED;
+      delete process.env.FEATURE_PUBLIC_SIGNIN_ENABLED;
+      delete process.env.FEATURE_VISUAL_REGRESSION_ENABLED;
+      delete process.env.BUDGET_TELEMETRY_PROVIDER_BILLING_FILE;
+      delete process.env.BUDGET_TELEMETRY_PROVIDER_BILLING_JSON;
+      delete process.env.BUDGET_TELEMETRY_PROVIDER_BILLING_URL;
+      delete process.env.BUDGET_TELEMETRY_REQUIRED_PROVIDERS;
+      delete process.env.UPSTASH_REDIS_REST_URL;
+      delete process.env.UPSTASH_REDIS_REST_TOKEN;
+
+      const result = validateEnv();
+
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
+
+    it("should fail when a monthly budget cap exceeds the selected tier ceiling", () => {
+      process.env.DATABASE_URL = "postgresql://test@localhost/test";
+      process.env.SESSION_SECRET =
+        "production-secret-at-least-32-characters-long";
+      process.env.NEXT_PUBLIC_APP_URL = "https://example.com";
+      process.env.MAX_MONTHLY_EGRESS_GB = "101";
+
+      const result = validateEnv();
+
+      expect(result.valid).toBe(false);
+      expect(
+        result.errors.some(
+          (e) =>
+            e.name === "MAX_MONTHLY_EGRESS_GB" &&
+            e.error.includes("exceeds the MVP tier ceiling"),
+        ),
       ).toBe(true);
     });
 

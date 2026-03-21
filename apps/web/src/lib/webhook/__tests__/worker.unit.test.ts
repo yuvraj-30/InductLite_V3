@@ -7,12 +7,17 @@ vi.mock("@/lib/repository/webhook-delivery.repository", () => ({
   markOutboundWebhookDeliveryRetriableFailure: vi.fn(),
 }));
 
-vi.mock("@/lib/db/public-db", () => ({
-  publicDb: {
-    site: {
-      findFirst: vi.fn().mockResolvedValue(null),
-    },
+const scopedDelegates = vi.hoisted(() => ({
+  site: {
+    findFirst: vi.fn().mockResolvedValue(null),
   },
+  accessConnectorConfig: {
+    findFirst: vi.fn().mockResolvedValue(null),
+  },
+}));
+
+vi.mock("@/lib/db/scoped-db", () => ({
+  scopedDb: vi.fn(() => scopedDelegates),
 }));
 
 vi.mock("@/lib/logger", () => ({
@@ -33,14 +38,18 @@ import {
   markOutboundWebhookDeliveryRetriableFailure,
   markOutboundWebhookDeliverySent,
 } from "@/lib/repository/webhook-delivery.repository";
-import { publicDb } from "@/lib/db/public-db";
+import { scopedDb } from "@/lib/db/scoped-db";
 import { processOutboundWebhookQueue } from "../worker";
 
 describe("processOutboundWebhookQueue", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.WEBHOOK_SIGNING_SECRET = "";
-    vi.mocked(publicDb.site.findFirst).mockResolvedValue(null);
+    vi.mocked(scopedDb).mockReturnValue(
+      scopedDelegates as unknown as ReturnType<typeof scopedDb>,
+    );
+    vi.mocked(scopedDelegates.site.findFirst).mockResolvedValue(null);
+    vi.mocked(scopedDelegates.accessConnectorConfig.findFirst).mockResolvedValue(null);
   });
 
   it("sends due webhooks and marks successful deliveries", async () => {
@@ -137,7 +146,7 @@ describe("processOutboundWebhookQueue", () => {
 
   it("prefers site-level webhook signing secret over env default", async () => {
     process.env.WEBHOOK_SIGNING_SECRET = "env-default-secret";
-    vi.mocked(publicDb.site.findFirst).mockResolvedValue({
+    vi.mocked(scopedDelegates.site.findFirst).mockResolvedValue({
       webhooks: {
         endpoints: [{ url: "https://example.com/hook", enabled: true }],
         signingSecret: "site-specific-signing-secret",
@@ -173,7 +182,7 @@ describe("processOutboundWebhookQueue", () => {
         }),
       }),
     );
-    expect(publicDb.site.findFirst).toHaveBeenCalledWith(
+    expect(scopedDelegates.site.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
         where: {
           id: "site-1",
@@ -220,7 +229,7 @@ describe("processOutboundWebhookQueue", () => {
   });
 
   it("adds lms auth headers for lms completion events", async () => {
-    vi.mocked(publicDb.site.findFirst).mockResolvedValue({
+    vi.mocked(scopedDelegates.site.findFirst).mockResolvedValue({
       webhooks: null,
       lms_connector: {
         enabled: true,
@@ -266,7 +275,7 @@ describe("processOutboundWebhookQueue", () => {
   });
 
   it("adds hardware auth headers for hardware access events", async () => {
-    vi.mocked(publicDb.site.findFirst).mockResolvedValue({
+    vi.mocked(scopedDelegates.site.findFirst).mockResolvedValue({
       webhooks: null,
       lms_connector: null,
       access_control: {

@@ -1,34 +1,13 @@
 import { test } from "./test-fixtures";
 import { checkA11y, injectAxe } from "axe-playwright";
 import type { Page } from "@playwright/test";
+import { A11Y_ADMIN_ROUTES, A11Y_PUBLIC_ROUTES } from "./route-governance";
 
 test.describe("Accessibility Checks", () => {
   test.describe.configure({ mode: "serial" });
   test.setTimeout(120_000);
 
   let TEST_SITE_SLUG = "test-site";
-
-  const adminRoutes = [
-    "/admin/dashboard",
-    "/admin/live-register",
-    "/admin/sites",
-    "/admin/sites/new",
-    "/admin/templates",
-    "/admin/templates/new",
-    "/admin/history",
-    "/admin/exports",
-    "/admin/audit-log",
-    "/admin/users",
-    "/admin/users/new",
-    "/admin/contractors",
-    "/admin/pre-registrations",
-    "/admin/hazards",
-    "/admin/incidents",
-    "/admin/settings",
-    "/admin/plan-configurator",
-    "/admin/policy-simulator",
-    "/admin/risk-passport",
-  ] as const;
 
   async function runSeriousA11yCheck(path: string, page: Page) {
     await page.goto(path);
@@ -73,12 +52,13 @@ test.describe("Accessibility Checks", () => {
   });
 
   test("public routes meet serious+critical a11y", async ({ page }) => {
-    await runSeriousA11yCheck("/", page);
-    await runSeriousA11yCheck("/login", page);
+    for (const route of A11Y_PUBLIC_ROUTES) {
+      await runSeriousA11yCheck(route, page);
+    }
     await runSeriousA11yCheck(`/s/${TEST_SITE_SLUG}`, page);
   });
 
-  for (const route of adminRoutes) {
+  for (const route of A11Y_ADMIN_ROUTES) {
     test(
       `${route} meets serious+critical a11y`,
       async ({ page, loginAs, workerUser }) => {

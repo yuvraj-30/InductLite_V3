@@ -24,6 +24,15 @@ function loadEnvFile(filePath: string): Record<string, string> {
 }
 
 const rootEnvPath = path.resolve(__dirname, "..", "..", ".env");
+const defaultProviderBillingManifestPath = path.resolve(
+  __dirname,
+  "..",
+  "..",
+  "docs",
+  "artifacts",
+  "provider-billing",
+  "provider-billing-manifest.json",
+);
 const rootEnv = loadEnvFile(rootEnvPath);
 // Never inherit NODE_ENV from .env here; Playwright and Next should control it explicitly.
 const { NODE_ENV: _ignoredNodeEnv, ...rootEnvWithoutNodeEnv } = rootEnv;
@@ -82,6 +91,50 @@ if (disableExternalRateLimit) {
   process.env.RATE_LIMIT_TELEMETRY_URL = "";
   process.env.RATE_LIMIT_ANALYTICS = "0";
 }
+
+const prodLikeBudgetEnv: Record<string, string> = useDevServer
+  ? {}
+  : {
+      ENV_BUDGET_TIER: process.env.ENV_BUDGET_TIER || "MVP",
+      MAX_MONTHLY_EGRESS_GB: process.env.MAX_MONTHLY_EGRESS_GB || "100",
+      MAX_MONTHLY_STORAGE_GB: process.env.MAX_MONTHLY_STORAGE_GB || "50",
+      MAX_MONTHLY_JOB_MINUTES: process.env.MAX_MONTHLY_JOB_MINUTES || "1000",
+      MAX_MONTHLY_SERVER_ACTION_INVOCATIONS:
+        process.env.MAX_MONTHLY_SERVER_ACTION_INVOCATIONS || "1000000",
+      MAX_MONTHLY_COMPUTE_INVOCATIONS:
+        process.env.MAX_MONTHLY_COMPUTE_INVOCATIONS || "1200000",
+      MAX_MONTHLY_COMPUTE_RUNTIME_MINUTES:
+        process.env.MAX_MONTHLY_COMPUTE_RUNTIME_MINUTES || "2500",
+      FEATURE_EXPORTS_ENABLED: process.env.FEATURE_EXPORTS_ENABLED || "true",
+      FEATURE_UPLOADS_ENABLED: process.env.FEATURE_UPLOADS_ENABLED || "true",
+      FEATURE_PUBLIC_SIGNIN_ENABLED:
+        process.env.FEATURE_PUBLIC_SIGNIN_ENABLED || "true",
+      FEATURE_VISUAL_REGRESSION_ENABLED:
+        process.env.FEATURE_VISUAL_REGRESSION_ENABLED || "false",
+      BUDGET_TELEMETRY_REQUIRED_PROVIDERS:
+        process.env.BUDGET_TELEMETRY_REQUIRED_PROVIDERS ||
+        "render,neon,cloudflare_r2,upstash,resend",
+      BUDGET_TELEMETRY_PROVIDER_BILLING_FILE:
+        process.env.BUDGET_TELEMETRY_PROVIDER_BILLING_FILE ||
+        defaultProviderBillingManifestPath,
+    };
+
+const e2eRateLimitEnv: Record<string, string> = disableExternalRateLimit
+  ? useDevServer
+    ? {
+        UPSTASH_REDIS_REST_URL: "",
+        UPSTASH_REDIS_REST_TOKEN: "",
+      }
+    : {
+        UPSTASH_REDIS_REST_URL:
+          process.env.UPSTASH_REDIS_REST_URL || "https://redis.upstash.io",
+        UPSTASH_REDIS_REST_TOKEN:
+          process.env.UPSTASH_REDIS_REST_TOKEN || "e2e-prod-like-token",
+      }
+  : {
+      UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL ?? "",
+      UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN ?? "",
+    };
 
 /**
  * Playwright E2E Test Configuration
@@ -160,17 +213,13 @@ export default defineConfig({
           CRON_SECRET: e2eRequiredSecrets.cronSecret,
           RESEND_API_KEY: e2eRequiredSecrets.resendApiKey,
           RESEND_FROM: e2eRequiredSecrets.resendFrom,
+          ...prodLikeBudgetEnv,
           // Allow test-only runner endpoint during E2E
           ALLOW_TEST_RUNNER: "1",
           // Trust proxy headers (required for per-test x-forwarded-for handling)
           TRUST_PROXY: "1",
           // Disable external analytics/redis during local E2E unless explicitly enabled.
-          UPSTASH_REDIS_REST_URL: disableExternalRateLimit
-            ? ""
-            : (process.env.UPSTASH_REDIS_REST_URL ?? ""),
-          UPSTASH_REDIS_REST_TOKEN: disableExternalRateLimit
-            ? ""
-            : (process.env.UPSTASH_REDIS_REST_TOKEN ?? ""),
+          ...e2eRateLimitEnv,
           RATE_LIMIT_TELEMETRY_URL: disableExternalRateLimit
             ? ""
             : (process.env.RATE_LIMIT_TELEMETRY_URL ?? ""),

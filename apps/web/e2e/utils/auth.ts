@@ -43,26 +43,39 @@ export async function programmaticLogin(
   let res: any = null;
   let lastStatus: number | null = null;
   let lastText = "";
+  let lastError: string | null = null;
   for (let attempt = 1; attempt <= 6; attempt++) {
-    res = await context.request.get(
-      `${base}/api/test/create-session?email=${encodeURIComponent(email)}&json=1`,
-      { headers, timeout: 15000 },
-    );
-    lastStatus = res.status();
+    try {
+      res = await context.request.get(
+        `${base}/api/test/create-session?email=${encodeURIComponent(email)}&json=1`,
+        { headers, timeout: 15000 },
+      );
+      lastStatus = res.status();
+      lastError = null;
 
-    if (lastStatus === 200) break;
+      if (lastStatus === 200) break;
 
-    lastText = await res.text().catch(() => "");
-    const retryable = [404, 500, 502, 503, 504].includes(lastStatus);
-    if (!retryable || attempt === 6) {
-      console.log("E2E: create-session failed; response body:", lastText);
-      throw new Error(`create-session failed: ${lastStatus} ${lastText}`);
+      lastText = await res.text().catch(() => "");
+      const retryable = [404, 408, 500, 502, 503, 504].includes(lastStatus);
+      if (!retryable || attempt === 6) {
+        console.log("E2E: create-session failed; response body:", lastText);
+        throw new Error(`create-session failed: ${lastStatus} ${lastText}`);
+      }
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+      const retryable =
+        /timeout|socket|network|econnreset|503|504/i.test(lastError);
+      if (!retryable || attempt === 6) {
+        throw new Error(`create-session failed: ${lastError}`);
+      }
     }
     await new Promise((r) => setTimeout(r, 400 * attempt));
   }
 
   if (!res || lastStatus !== 200) {
-    throw new Error(`create-session failed: ${lastStatus ?? "unknown"} ${lastText}`);
+    throw new Error(
+      `create-session failed: ${lastStatus ?? "unknown"} ${lastText || lastError || ""}`,
+    );
   }
 
   const json = await res.json();

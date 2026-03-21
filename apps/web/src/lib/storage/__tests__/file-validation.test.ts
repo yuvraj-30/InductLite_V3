@@ -1,5 +1,10 @@
 import { describe, test, expect } from "vitest";
-import { validateFileMagicNumber } from "../validation";
+import {
+  extensionsFromMimeType,
+  extensionFromFileName,
+  sniffFileTypeFromBytes,
+  validateFileMagicNumber,
+} from "../validation";
 
 describe("File Magic Number Validation", () => {
   test("should validate a correct PDF file", async () => {
@@ -32,5 +37,22 @@ describe("File Magic Number Validation", () => {
     const buffer = Buffer.from("25504446", "hex");
     const isValid = await validateFileMagicNumber(buffer, ".PDF");
     expect(isValid).toBe(true);
+  });
+
+  test("should derive the file type from bytes on the server", () => {
+    const buffer = Buffer.from("89504e470d0a1a0a", "hex");
+    expect(sniffFileTypeFromBytes(buffer)).toEqual({
+      extension: "png",
+      mime: "image/png",
+    });
+  });
+
+  test("should return every supported extension for a MIME type", () => {
+    expect(extensionsFromMimeType("image/jpeg")).toEqual(["jpg", "jpeg"]);
+  });
+
+  test("should reject filenames without a supported extension", () => {
+    expect(extensionFromFileName("document")).toBeNull();
+    expect(extensionFromFileName("evidence.exe")).toBeNull();
   });
 });
