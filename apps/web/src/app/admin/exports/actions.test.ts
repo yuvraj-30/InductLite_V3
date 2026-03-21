@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   assertCompanyFeatureEnabled: vi.fn(),
   queueExportJobWithLimits: vi.fn(),
   getExportOffPeakDecision: vi.fn(),
+  isOffPeakNow: vi.fn(),
   createAuditLog: vi.fn(),
   revalidatePath: vi.fn(),
   generateRequestId: vi.fn(),
@@ -73,6 +74,16 @@ vi.mock("@/lib/feature-flags", () => ({
   isFeatureEnabled: mocks.isFeatureEnabled,
 }));
 
+vi.mock("@/lib/guardrails", async () => {
+  const actual = await vi.importActual<typeof import("@/lib/guardrails")>(
+    "@/lib/guardrails",
+  );
+  return {
+    ...actual,
+    isOffPeakNow: mocks.isOffPeakNow,
+  };
+});
+
 vi.mock("@/lib/plans", () => ({
   EntitlementDeniedError: mocks.EntitlementDeniedError,
   assertCompanyFeatureEnabled: mocks.assertCompanyFeatureEnabled,
@@ -110,6 +121,7 @@ describe("createExportAction guardrails", () => {
       observedJobs: 0,
       delayedPercent: 0,
     });
+    mocks.isOffPeakNow.mockReturnValue(false);
     mocks.createAuditLog.mockResolvedValue(undefined);
     mocks.generateRequestId.mockReturnValue("req-1");
     mocks.isFeatureEnabled.mockReturnValue(true);
