@@ -141,6 +141,8 @@ describe("validateEnv", () => {
     beforeEach(() => {
       (process.env as Record<string, string | undefined>).NODE_ENV =
         "production";
+      delete process.env.ALLOW_TEST_RUNNER;
+      delete process.env.CI;
       process.env.CRON_SECRET = "cron-secret-at-least-16";
       process.env.DATABASE_DIRECT_URL = "postgresql://test@localhost/test";
       process.env.MAGIC_LINK_SECRET = "magic-link-secret-at-least-32-chars";
