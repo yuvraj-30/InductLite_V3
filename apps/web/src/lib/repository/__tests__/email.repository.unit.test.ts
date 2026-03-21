@@ -2,12 +2,21 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const emailNotificationDelegate = vi.hoisted(() => ({
   create: vi.fn(),
+  updateMany: vi.fn(),
+}));
+
+const scopedQueries = vi.hoisted(() => ({
+  listPendingEmailNotificationsGlobal: vi.fn(),
 }));
 
 vi.mock("@/lib/db/scoped-db", () => ({
   scopedDb: vi.fn(() => ({
     emailNotification: emailNotificationDelegate,
   })),
+}));
+
+vi.mock("@/lib/db/scoped", () => ({
+  listPendingEmailNotificationsGlobal: scopedQueries.listPendingEmailNotificationsGlobal,
 }));
 
 vi.mock("@/lib/cost/budget-service", () => ({
@@ -20,7 +29,12 @@ vi.mock("@/lib/cost/budget-service", () => ({
 }));
 
 import { enforceBudgetPath } from "@/lib/cost/budget-service";
-import { queueEmailNotification } from "../email.repository";
+import {
+  listPendingEmailNotifications,
+  markEmailNotificationAttemptFailed,
+  markEmailNotificationSent,
+  queueEmailNotification,
+} from "../email.repository";
 
 describe("Email Repository Unit Tests", () => {
   beforeEach(() => {
@@ -46,6 +60,8 @@ describe("Email Repository Unit Tests", () => {
       created_at: new Date(),
       updated_at: new Date(),
     } as any);
+    vi.mocked(emailNotificationDelegate.updateMany).mockResolvedValue({ count: 1 } as any);
+    vi.mocked(scopedQueries.listPendingEmailNotificationsGlobal).mockResolvedValue([]);
   });
 
   it("queues an email notification when budget allows", async () => {
@@ -87,5 +103,66 @@ describe("Email Repository Unit Tests", () => {
     });
 
     expect(emailNotificationDelegate.create).not.toHaveBeenCalled();
+  });
+
+  it("lists pending email notifications through approved global DB infrastructure", async () => {
+    vi.mocked(scopedQueries.listPendingEmailNotificationsGlobal).mockResolvedValue([
+      {
+        id: "email-1",
+        company_id: "company-id",
+        to: "admin@example.com",
+        subject: "Subject",
+        body: "<p>Hello</p>",
+        attempts: 1,
+      },
+    ] as any);
+
+    const result = await listPendingEmailNotifications(25);
+
+    expect(result).toEqual([
+      expect.objectContaining({
+        id: "email-1",
+        company_id: "company-id",
+      }),
+    ]);
+    expect(scopedQueries.listPendingEmailNotificationsGlobal).toHaveBeenCalledWith(25);
+  });
+
+  it("marks a delivered email notification via scoped tenant access", async () => {
+    await markEmailNotificationSent("company-id", "email-1", 2);
+
+    expect(emailNotificationDelegate.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: "email-1",
+        company_id: "company-id",
+      },
+      data: expect.objectContaining({
+        status: "SENT",
+        attempts: 2,
+        error: null,
+        last_tried: null,
+      }),
+    });
+  });
+
+  it("marks a failed delivery attempt via scoped tenant access", async () => {
+    await markEmailNotificationAttemptFailed(
+      "company-id",
+      "email-1",
+      3,
+      "smtp timeout",
+    );
+
+    expect(emailNotificationDelegate.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: "email-1",
+        company_id: "company-id",
+      },
+      data: expect.objectContaining({
+        status: "FAILED",
+        attempts: 3,
+        error: "smtp timeout",
+      }),
+    });
   });
 });

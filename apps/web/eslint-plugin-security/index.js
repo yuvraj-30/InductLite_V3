@@ -254,6 +254,7 @@ module.exports = {
           "magicLinkToken",
           "exportJob",
           "auditLog",
+          "emailNotification",
           "outboundWebhookDelivery",
           "channelIntegrationConfig",
           "accessConnectorConfig",
@@ -274,7 +275,40 @@ module.exports = {
           return {};
         }
 
+        const aliasedClients = new Map();
+
+        function resolveClientName(identifierName) {
+          if (identifierName === "publicDb") {
+            return "publicDb";
+          }
+          if (transactionClientNames.has(identifierName)) {
+            return identifierName;
+          }
+          return aliasedClients.get(identifierName) ?? null;
+        }
+
         return {
+          VariableDeclarator(node) {
+            if (
+              !node.id ||
+              node.id.type !== "Identifier" ||
+              !node.init
+            ) {
+              return;
+            }
+
+            const init = unwrapTypeWrapper(node.init);
+            if (!init || init.type !== "Identifier") {
+              return;
+            }
+
+            const clientName = resolveClientName(init.name);
+            if (!clientName) {
+              return;
+            }
+
+            aliasedClients.set(node.id.name, clientName);
+          },
           MemberExpression(node) {
             if (
               node.object &&
@@ -283,12 +317,7 @@ module.exports = {
               node.property.type === "Identifier" &&
               tenantOwnedModels.has(node.property.name)
             ) {
-              let clientName = null;
-              if (node.object.name === "publicDb") {
-                clientName = "publicDb";
-              } else if (transactionClientNames.has(node.object.name)) {
-                clientName = node.object.name;
-              }
+              const clientName = resolveClientName(node.object.name);
 
               if (!clientName) {
                 return;
@@ -708,4 +737,19 @@ function getCalleeName(callee) {
     return `${objectPart}.${propertyPart}`;
   }
   return "";
+}
+
+function unwrapTypeWrapper(node) {
+  let current = node;
+
+  while (
+    current &&
+    (current.type === "TSAsExpression" ||
+      current.type === "TSSatisfiesExpression" ||
+      current.type === "TSNonNullExpression")
+  ) {
+    current = current.expression;
+  }
+
+  return current;
 }

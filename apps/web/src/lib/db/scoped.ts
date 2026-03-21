@@ -455,6 +455,40 @@ export async function findOldestQueuedExportJob(now: Date) {
   });
 }
 
+export async function listExportJobsQueuedSince(since: Date) {
+  return prisma.exportJob.findMany({
+    where: {
+      queued_at: { gte: since },
+    },
+    select: {
+      id: true,
+      company_id: true,
+      queued_at: true,
+      started_at: true,
+      status: true,
+    },
+  });
+}
+
+export async function listPendingEmailNotificationsGlobal(limit: number) {
+  return prisma.emailNotification.findMany({
+    where: {
+      status: "PENDING",
+      attempts: { lt: 3 },
+    },
+    orderBy: [{ created_at: "asc" }, { id: "asc" }],
+    take: limit,
+    select: {
+      id: true,
+      company_id: true,
+      to: true,
+      subject: true,
+      body: true,
+      attempts: true,
+    },
+  });
+}
+
 export async function requeueStaleRunningExportJobs(input: {
   staleBefore: Date;
   maxAttempts: number;

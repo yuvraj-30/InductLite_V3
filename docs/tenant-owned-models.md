@@ -78,5 +78,5 @@ Manual edits are not allowed.
 
 ## Enforcement Notes
 
-- Direct Prisma access to these models outside approved scoped DB modules must fail CI.
+- Direct Prisma access to these models outside approved scoped DB modules must fail CI, including aliased `publicDb` and raw transaction-client access.
 - Any model list change must include schema diff + updated tests.

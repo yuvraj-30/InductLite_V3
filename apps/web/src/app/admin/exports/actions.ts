@@ -8,6 +8,8 @@ import {
   queueExportJobWithLimits,
   ExportLimitReachedError,
   ExportGlobalBytesLimitReachedError,
+  ExportQueueAgeLimitReachedError,
+  getExportOffPeakDecision,
 } from "@/lib/repository/export.repository";
 import {
   type ApiResponse,
@@ -100,10 +102,17 @@ export async function createExportAction(
       }
     }
 
-    if (GUARDRAILS.EXPORT_OFFPEAK_ONLY && !isOffPeakNow()) {
-      return errorResponse(
-        "FORBIDDEN",
-        "Exports are only available during off-peak hours",
+    const offPeakDecision = await getExportOffPeakDecision();
+    if (offPeakDecision.active && !isOffPeakNow()) {
+      return guardrailDeniedResponse(
+        offPeakDecision.reason === "auto" ? "EXPT-005" : "EXPT-013",
+        offPeakDecision.reason === "auto"
+          ? `EXPORT_OFFPEAK_AUTO_ENABLE_THRESHOLD_PERCENT=${offPeakDecision.thresholdPercent}|EXPORT_OFFPEAK_AUTO_ENABLE_QUEUE_DELAY_SECONDS=${offPeakDecision.queueDelaySeconds}|EXPORT_OFFPEAK_AUTO_ENABLE_DAYS=${offPeakDecision.windowDays}`
+          : `EXPORT_OFFPEAK_ONLY=${GUARDRAILS.EXPORT_OFFPEAK_ONLY}`,
+        "environment",
+        offPeakDecision.reason === "auto"
+          ? "Exports are temporarily restricted to off-peak hours while queue pressure is high"
+          : "Exports are only available during off-peak hours",
       );
     }
 
@@ -147,6 +156,14 @@ export async function createExportAction(
         `MAX_EXPORTS_PER_COMPANY_PER_DAY=${GUARDRAILS.MAX_EXPORTS_PER_COMPANY_PER_DAY}|MAX_CONCURRENT_EXPORTS_PER_COMPANY=${GUARDRAILS.MAX_CONCURRENT_EXPORTS_PER_COMPANY}`,
         "tenant",
         "Export limits reached for your company. Please try later.",
+      );
+    }
+    if (error instanceof ExportQueueAgeLimitReachedError) {
+      return guardrailDeniedResponse(
+        "EXPT-014",
+        `MAX_EXPORT_QUEUE_AGE_MINUTES=${GUARDRAILS.MAX_EXPORT_QUEUE_AGE_MINUTES}`,
+        "environment",
+        `Export queue pressure is too high right now. Oldest queued export age is ${Math.ceil(error.oldestQueuedAgeMinutes)} minute(s). Please retry later.`,
       );
     }
     log.error({ error: String(error) }, "Failed to queue export job");

@@ -3,7 +3,12 @@ import { processEmailQueue } from "../worker";
 import { publicDb } from "../../db/public-db";
 import { sendEmail } from "../resend";
 import { enforceBudgetPath } from "@/lib/cost/budget-service";
-import { queueEmailNotification } from "@/lib/repository/email.repository";
+import {
+  listPendingEmailNotifications,
+  markEmailNotificationAttemptFailed,
+  markEmailNotificationSent,
+  queueEmailNotification,
+} from "@/lib/repository/email.repository";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 
 vi.mock("../resend", () => ({
@@ -12,6 +17,9 @@ vi.mock("../resend", () => ({
 
 vi.mock("@/lib/repository/email.repository", () => ({
   queueEmailNotification: vi.fn().mockResolvedValue({ id: "queued-1" }),
+  listPendingEmailNotifications: vi.fn().mockResolvedValue([]),
+  markEmailNotificationSent: vi.fn().mockResolvedValue(undefined),
+  markEmailNotificationAttemptFailed: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@/lib/cost/budget-service", () => ({
@@ -72,10 +80,9 @@ describe("processEmailQueue", () => {
     dbAny.contractor = {
       findMany: vi.fn().mockResolvedValue([]),
     };
-    dbAny.emailNotification = {
-      findMany: vi.fn().mockResolvedValue([]),
-      update: vi.fn().mockResolvedValue({}),
-    };
+    vi.mocked(listPendingEmailNotifications).mockResolvedValue([]);
+    vi.mocked(markEmailNotificationSent).mockResolvedValue(undefined);
+    vi.mocked(markEmailNotificationAttemptFailed).mockResolvedValue(undefined);
   });
 
   it("should detect red flags and queue emails to site managers", async () => {
@@ -144,34 +151,16 @@ describe("processEmailQueue", () => {
   it("should process pending notifications from EmailNotification table", async () => {
     const mockNotification = {
       id: "notif-1",
+      company_id: "comp-1",
       to: "user@example.com",
       subject: "Test Subject",
       body: "Test Body",
       attempts: 0,
     };
 
-    // The emailNotification property is added to publicDb late-bound/dynamically
-    // in apps/web/src/lib/email/worker.ts (L124-138). When mocking, we must
-    // ensure the property exists on the mocked publicDb.
-    const dbAny = publicDb as any;
-
-    // Ensure the EmailNotification mock exists
-    if (!dbAny.emailNotification) {
-      dbAny.emailNotification = {
-        findMany: vi.fn(),
-        update: vi.fn(),
-      };
-    }
-
-    // Directly stub the method (vi.spyOn may fail on late-bound props in some envs)
-    dbAny.emailNotification.findMany = vi
-      .fn()
-      .mockResolvedValueOnce([mockNotification])
-      .mockResolvedValue([]);
-    // Directly stub update and capture spy
-    const updateSpy = (dbAny.emailNotification.update = vi
-      .fn()
-      .mockResolvedValue({}));
+    vi.mocked(listPendingEmailNotifications).mockResolvedValueOnce([
+      mockNotification,
+    ] as any);
 
     await processEmailQueue();
 
@@ -181,35 +170,34 @@ describe("processEmailQueue", () => {
       html: "Test Body",
     });
 
-    expect(updateSpy).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: { id: "notif-1" },
-        data: expect.objectContaining({ status: "SENT" }),
-      }),
+    expect(markEmailNotificationSent).toHaveBeenCalledWith(
+      "comp-1",
+      "notif-1",
+      1,
     );
   });
 
   it("skips email queue processing when budget guard denies optional notifications", async () => {
-    const dbAny = publicDb as any;
     vi.mocked(enforceBudgetPath).mockResolvedValue({
       allowed: false,
       mode: "BUDGET_PROTECT",
       controlId: "COST-008",
       message: "This operation is disabled because the environment is in BUDGET_PROTECT mode",
     } as any);
-    dbAny.emailNotification.findMany = vi.fn().mockResolvedValue([
+    vi.mocked(listPendingEmailNotifications).mockResolvedValue([
       {
         id: "notif-1",
+        company_id: "comp-1",
         to: "user@example.com",
         subject: "Test Subject",
         body: "Test Body",
         attempts: 0,
       },
-    ]);
+    ] as any);
 
     await processEmailQueue();
 
-    expect(dbAny.emailNotification.findMany).not.toHaveBeenCalled();
+    expect(listPendingEmailNotifications).not.toHaveBeenCalled();
     expect(sendEmail).not.toHaveBeenCalled();
     expect(queueEmailNotification).not.toHaveBeenCalled();
   });

@@ -81,8 +81,18 @@ runRuleTest(
         errors: [{ messageId: "noPublicDbTenantAccess" }],
       },
       {
+        filename: "src/lib/email/worker.ts",
+        code: `const dbAny = publicDb as unknown as { emailNotification: unknown }; dbAny.emailNotification.findMany({ where: { status: "PENDING" } });`,
+        errors: [{ messageId: "noPublicDbTenantAccess" }],
+      },
+      {
         filename: "src/lib/repository/question.repository.ts",
         code: `publicDb.$transaction(async (tx) => tx.inductionQuestion.findFirst({ where: { id: "q_1" } }));`,
+        errors: [{ messageId: "noPublicDbTenantAccess" }],
+      },
+      {
+        filename: "src/lib/repository/question.repository.ts",
+        code: `const rawTx = tx as typeof tx; rawTx.emailNotification.update({ where: { id: "n_1" } });`,
         errors: [{ messageId: "noPublicDbTenantAccess" }],
       },
     ],

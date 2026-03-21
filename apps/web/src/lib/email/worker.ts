@@ -10,7 +10,12 @@ import { scopedDb } from "@/lib/db/scoped-db";
 import { createRequestLogger } from "@/lib/logger";
 import { generateRequestId } from "@/lib/auth/csrf";
 import { decryptJsonValue } from "@/lib/security/data-protection";
-import { queueEmailNotification } from "@/lib/repository/email.repository";
+import {
+  listPendingEmailNotifications,
+  markEmailNotificationAttemptFailed,
+  markEmailNotificationSent,
+  queueEmailNotification,
+} from "@/lib/repository/email.repository";
 import {
   assertCompanyFeatureEnabled,
   EntitlementDeniedError,
@@ -740,56 +745,30 @@ export async function processEmailQueue() {
     });
 
     // 4. Process Pending Notifications from EmailNotification table
-    // Type-safe workaround for late-bound schema models
-    const dbAny = publicDb as unknown as {
-      emailNotification: {
-        findMany: (args: unknown) => Promise<
-          Array<{
-            id: string;
-            to: string;
-            subject: string;
-            body: string;
-            attempts: number;
-          }>
-        >;
-        update: (args: unknown) => Promise<unknown>;
-      };
-    };
-    const notificationTable = dbAny.emailNotification;
+    const pendingNotifications = await listPendingEmailNotifications(50);
 
-    if (notificationTable) {
-      const pending = await notificationTable.findMany({
-        where: { status: "PENDING", attempts: { lt: 3 } },
-        take: 50,
-      });
+    for (const notification of pendingNotifications) {
+      const nextAttempts = notification.attempts + 1;
 
-      for (const notification of pending) {
-        try {
-          await sendEmail({
-            to: notification.to,
-            subject: notification.subject,
-            html: notification.body,
-          });
+      try {
+        await sendEmail({
+          to: notification.to,
+          subject: notification.subject,
+          html: notification.body,
+        });
 
-          await notificationTable.update({
-            where: { id: notification.id },
-            data: {
-              status: "SENT",
-              sent_at: new Date(),
-              attempts: notification.attempts + 1,
-            },
-          });
-        } catch (err) {
-          await notificationTable.update({
-            where: { id: notification.id },
-            data: {
-              attempts: notification.attempts + 1,
-              last_tried: new Date(),
-              error: String(err),
-              status: notification.attempts >= 2 ? "FAILED" : "PENDING",
-            },
-          });
-        }
+        await markEmailNotificationSent(
+          notification.company_id,
+          notification.id,
+          nextAttempts,
+        );
+      } catch (err) {
+        await markEmailNotificationAttemptFailed(
+          notification.company_id,
+          notification.id,
+          nextAttempts,
+          String(err),
+        );
       }
     }
 

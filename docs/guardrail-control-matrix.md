@@ -41,16 +41,16 @@ This file is the machine-checkable registry for MUST-level controls.
 | EXPT-002 | MAX_EXPORT_BYTES_GLOBAL_PER_DAY | 2147483648 | 2GB/2GB/2GB | export enqueue | guardrails-export-limits | Backend |
 | EXPT-003 | MAX_EXPORT_DOWNLOAD_BYTES_PER_COMPANY_PER_DAY | 536870912 | 512MB/512MB/512MB | export download route + egress quota check | guardrails-export-download-caps | Backend |
 | EXPT-004 | MAX_EXPORT_DOWNLOAD_BYTES_GLOBAL_PER_DAY | 5368709120 | 5GB/5GB/5GB | export download route + global egress quota check | guardrails-export-download-caps | Backend |
-| EXPT-005 | EXPORT_OFFPEAK_AUTO_ENABLE_THRESHOLD_PERCENT | 20 | 20/20/20 | export scheduler policy check | guardrails-export-offpeak-auto | Backend |
-| EXPT-006 | EXPORT_OFFPEAK_AUTO_ENABLE_QUEUE_DELAY_SECONDS | 60 | 60/60/60 | export scheduler policy check | guardrails-export-offpeak-auto | Backend |
-| EXPT-007 | EXPORT_OFFPEAK_AUTO_ENABLE_DAYS | 7 | 7/7/7 | export scheduler policy check | guardrails-export-offpeak-auto | Backend |
+| EXPT-005 | EXPORT_OFFPEAK_AUTO_ENABLE_THRESHOLD_PERCENT | 20 | 20/20/20 | export enqueue action + scheduler policy check | guardrails-export-offpeak-auto | Backend |
+| EXPT-006 | EXPORT_OFFPEAK_AUTO_ENABLE_QUEUE_DELAY_SECONDS | 60 | 60/60/60 | export enqueue action + scheduler policy check | guardrails-export-offpeak-auto | Backend |
+| EXPT-007 | EXPORT_OFFPEAK_AUTO_ENABLE_DAYS | 7 | 7/7/7 | export enqueue action + scheduler policy check | guardrails-export-offpeak-auto | Backend |
 | EXPT-008 | MAX_EXPORTS_PER_COMPANY_PER_DAY | 5 | 5/5/5 | export enqueue action | guardrails-export-limits | Backend |
 | EXPT-009 | MAX_CONCURRENT_EXPORTS_PER_COMPANY | 1 | 1/1/1 | export enqueue action | guardrails-export-limits | Backend |
 | EXPT-010 | MAX_EXPORT_BYTES | 104857600 | 100MB/100MB/100MB | export worker + archive builder | guardrails-export-limits | Backend |
 | EXPT-011 | MAX_EXPORT_RUNTIME_SECONDS | 120 | 120/120/120 | export runner + stale-job recovery | guardrails-export-runtime | Backend |
 | EXPT-012 | MAX_CONCURRENT_EXPORTS_GLOBAL | 1 | 1/1/1 | export enqueue action + runner | guardrails-export-limits | Backend |
 | EXPT-013 | EXPORT_OFFPEAK_ONLY | false | false/false/false | export enqueue action + runner | guardrails-export-offpeak-auto | Backend |
-| EXPT-014 | MAX_EXPORT_QUEUE_AGE_MINUTES | 60 | 60/60/60 | export queue age guard + release checklist | guardrails-export-queue-age | Backend |
+| EXPT-014 | MAX_EXPORT_QUEUE_AGE_MINUTES | 60 | 60/60/60 | export enqueue action + queue-age worker guard | guardrails-export-queue-age | Backend |
 | ABUSE-001 | RL_PUBLIC_SLUG_PER_IP_PER_MIN | 30 | 30/30/30 | public actions rate limiter | guardrails-public-rl | Security |
 | ABUSE-002 | RL_SIGNIN_PER_IP_PER_MIN | 30 | 30/30/30 | public sign-in action rate limiter | guardrails-public-rl | Security |
 | ABUSE-003 | RL_SIGNIN_PER_SITE_PER_MIN | 200 | 200/200/200 | public sign-in action rate limiter | guardrails-public-rl | Security |
