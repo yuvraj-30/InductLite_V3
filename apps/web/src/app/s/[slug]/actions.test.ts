@@ -184,6 +184,7 @@ import {
   setSignInEscalationNotificationCounts,
 } from "@/lib/repository/signin-escalation.repository";
 import { queueOutboundWebhookDeliveries } from "@/lib/repository/webhook-delivery.repository";
+import { sendSmsWithQuota } from "@/lib/sms/wrapper";
 import { createRequestLogger } from "@/lib/logger";
 import { assertCompanyFeatureEnabled } from "@/lib/plans";
 
@@ -937,6 +938,40 @@ describe("Public Actions Error Handling", () => {
           subject: expect.stringContaining("Arrival"),
         }),
       );
+    });
+
+    it("does not let slow sms receipts hold the public sign-in response open", async () => {
+      vi.useFakeTimers();
+      try {
+        (findSiteByPublicSlug as Mock).mockResolvedValue(mockSite);
+        (getActiveTemplateForSite as Mock).mockResolvedValue(mockTemplate);
+        (createPublicSignIn as Mock).mockResolvedValue({
+          signInRecordId: "signin-1",
+          signOutToken: "token-1",
+          signOutTokenExpiresAt: new Date("2026-02-23T10:00:00Z"),
+          visitorName: "John Doe",
+          siteName: "Test Site",
+          signInTime: new Date("2026-02-22T10:00:00Z"),
+        });
+        (sendSmsWithQuota as Mock).mockImplementation(
+          () =>
+            new Promise((resolve) => {
+              setTimeout(() => resolve({ status: "SENT" }), 10_000);
+            }),
+        );
+
+        const resultPromise = submitSignIn(validInput);
+
+        await vi.advanceTimersByTimeAsync(2_100);
+
+        const result = await resultPromise;
+        expect(result.success).toBe(true);
+        expect(sendSmsWithQuota).toHaveBeenCalledTimes(1);
+
+        await vi.advanceTimersByTimeAsync(10_000);
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it("queues host notification to selected host when hostRecipientId is provided", async () => {
