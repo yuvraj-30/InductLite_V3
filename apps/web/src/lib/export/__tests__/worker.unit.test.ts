@@ -13,6 +13,7 @@ import {
   generateSignInCsvForCompany,
   generateContractorCsvForCompany,
 } from "@/lib/export/worker";
+import { CONTRACTOR_CSV_HEADERS } from "@/lib/export/intent";
 
 describe("Export worker CSV generation", () => {
   beforeEach(() => vi.clearAllMocks());
@@ -83,7 +84,7 @@ describe("Export worker CSV generation", () => {
     expect(csv).toMatch(/Site A/);
   });
 
-  it("returns empty string when no contractors", async () => {
+  it("returns a header-only csv when no contractors match the export", async () => {
     vi.mocked(prisma.contractor.findMany).mockResolvedValue(
       [] as import("@prisma/client").Prisma.ContractorGetPayload<{
         include: { documents: true };
@@ -91,7 +92,7 @@ describe("Export worker CSV generation", () => {
     );
 
     const csv = await generateContractorCsvForCompany("c1");
-    expect(csv).toBe("");
+    expect(csv).toBe(CONTRACTOR_CSV_HEADERS.join(","));
   });
 
   it("generates contractor CSV with contact phone in E.164 and is_active flag", async () => {

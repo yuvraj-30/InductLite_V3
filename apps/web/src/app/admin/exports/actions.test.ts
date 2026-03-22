@@ -18,6 +18,8 @@ const mocks = vi.hoisted(() => ({
   assertCompanyFeatureEnabled: vi.fn(),
   queueExportJobWithLimits: vi.fn(),
   getExportOffPeakDecision: vi.fn(),
+  findSiteById: vi.fn(),
+  processNextExportJob: vi.fn(),
   isOffPeakNow: vi.fn(),
   createAuditLog: vi.fn(),
   revalidatePath: vi.fn(),
@@ -58,6 +60,10 @@ vi.mock("@/lib/repository/export.repository", async () => {
   };
 });
 
+vi.mock("@/lib/repository/site.repository", () => ({
+  findSiteById: mocks.findSiteById,
+}));
+
 vi.mock("@/lib/repository/audit.repository", () => ({
   createAuditLog: mocks.createAuditLog,
 }));
@@ -94,7 +100,11 @@ vi.mock("@/lib/cost/budget-service", () => ({
   startBudgetTrackedOperation: mocks.startBudgetTrackedOperation,
 }));
 
-import { createExportAction } from "./actions";
+vi.mock("@/lib/export/runner", () => ({
+  processNextExportJob: mocks.processNextExportJob,
+}));
+
+import { createExportAction, runQueuedExportNowAction } from "./actions";
 import {
   ExportGlobalBytesLimitReachedError,
   ExportQueueAgeLimitReachedError,
@@ -122,6 +132,8 @@ describe("createExportAction guardrails", () => {
       delayedPercent: 0,
     });
     mocks.isOffPeakNow.mockReturnValue(false);
+    mocks.findSiteById.mockResolvedValue({ id: "site-1", name: "Central Yard" });
+    mocks.processNextExportJob.mockResolvedValue({ id: "job-1", status: "SUCCEEDED" });
     mocks.createAuditLog.mockResolvedValue(undefined);
     mocks.generateRequestId.mockReturnValue("req-1");
     mocks.isFeatureEnabled.mockReturnValue(true);
@@ -242,5 +254,55 @@ describe("createExportAction guardrails", () => {
     }
 
     expect(mocks.queueExportJobWithLimits).not.toHaveBeenCalled();
+  });
+
+  it("rejects unknown site filters before queueing", async () => {
+    mocks.findSiteById.mockResolvedValue(null);
+
+    const result = await createExportAction({
+      exportType: "SIGN_IN_CSV",
+      siteId: "c123456789012345678901234",
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("VALIDATION_ERROR");
+      expect(result.error.fieldErrors?.siteId).toEqual([
+        "Selected site was not found.",
+      ]);
+    }
+
+    expect(mocks.queueExportJobWithLimits).not.toHaveBeenCalled();
+  });
+
+  it("runs the next queued export for the current company on demand", async () => {
+    const result = await runQueuedExportNowAction();
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toEqual({
+        processed: true,
+        status: "SUCCEEDED",
+        exportJobId: "job-1",
+      });
+    }
+    expect(mocks.processNextExportJob).toHaveBeenCalledWith({
+      companyId: "company-1",
+    });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith("/admin/exports");
+  });
+
+  it("returns a noop success when no queued export is eligible", async () => {
+    mocks.processNextExportJob.mockResolvedValue(null);
+
+    const result = await runQueuedExportNowAction();
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toEqual({
+        processed: false,
+        status: "NOOP",
+      });
+    }
   });
 });

@@ -463,7 +463,9 @@ export async function failQueuedExportJobsExceedingAgeLimit(
  * System-level: claim next queued export job (no tenant scope)
  * Uses optimistic claim (findFirst + updateMany) to avoid raw SQL.
  */
-export async function claimNextQueuedExportJob(): Promise<
+export async function claimNextQueuedExportJob(
+  companyId?: string,
+): Promise<
   (ExportJob & { lock_token?: string; started_at?: Date }) | null
 > {
   const now = new Date();
@@ -474,7 +476,9 @@ export async function claimNextQueuedExportJob(): Promise<
     return null;
   }
 
-  const job = await findOldestQueuedExportJob(now);
+  const job = companyId
+    ? await findNextQueuedExportJob(companyId)
+    : await findOldestQueuedExportJob(now);
 
   if (!job) return null;
 

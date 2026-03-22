@@ -1,7 +1,7 @@
 # Guardrail Control Matrix
 
 Version: `v4`
-Updated: `2026-03-19`
+Updated: `2026-03-22`
 
 This file is the machine-checkable registry for MUST-level controls.
 
@@ -41,9 +41,9 @@ This file is the machine-checkable registry for MUST-level controls.
 | EXPT-002 | MAX_EXPORT_BYTES_GLOBAL_PER_DAY | 2147483648 | 2GB/2GB/2GB | export enqueue | guardrails-export-limits | Backend |
 | EXPT-003 | MAX_EXPORT_DOWNLOAD_BYTES_PER_COMPANY_PER_DAY | 536870912 | 512MB/512MB/512MB | export download route + egress quota check | guardrails-export-download-caps | Backend |
 | EXPT-004 | MAX_EXPORT_DOWNLOAD_BYTES_GLOBAL_PER_DAY | 5368709120 | 5GB/5GB/5GB | export download route + global egress quota check | guardrails-export-download-caps | Backend |
-| EXPT-005 | EXPORT_OFFPEAK_AUTO_ENABLE_THRESHOLD_PERCENT | 20 | 20/20/20 | export enqueue action + scheduler policy check | guardrails-export-offpeak-auto | Backend |
-| EXPT-006 | EXPORT_OFFPEAK_AUTO_ENABLE_QUEUE_DELAY_SECONDS | 60 | 60/60/60 | export enqueue action + scheduler policy check | guardrails-export-offpeak-auto | Backend |
-| EXPT-007 | EXPORT_OFFPEAK_AUTO_ENABLE_DAYS | 7 | 7/7/7 | export enqueue action + scheduler policy check | guardrails-export-offpeak-auto | Backend |
+| EXPT-005 | EXPORT_OFFPEAK_AUTO_ENABLE_THRESHOLD_PERCENT | 20 | 20/20/20 | export enqueue action + runner policy check | guardrails-export-offpeak-auto | Backend |
+| EXPT-006 | EXPORT_OFFPEAK_AUTO_ENABLE_QUEUE_DELAY_SECONDS | 60 | 60/60/60 | export enqueue action + runner policy check | guardrails-export-offpeak-auto | Backend |
+| EXPT-007 | EXPORT_OFFPEAK_AUTO_ENABLE_DAYS | 7 | 7/7/7 | export enqueue action + runner policy check | guardrails-export-offpeak-auto | Backend |
 | EXPT-008 | MAX_EXPORTS_PER_COMPANY_PER_DAY | 5 | 5/5/5 | export enqueue action | guardrails-export-limits | Backend |
 | EXPT-009 | MAX_CONCURRENT_EXPORTS_PER_COMPANY | 1 | 1/1/1 | export enqueue action | guardrails-export-limits | Backend |
 | EXPT-010 | MAX_EXPORT_BYTES | 104857600 | 100MB/100MB/100MB | export worker + archive builder | guardrails-export-limits | Backend |

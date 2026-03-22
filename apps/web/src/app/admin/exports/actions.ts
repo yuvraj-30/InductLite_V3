@@ -11,6 +11,7 @@ import {
   ExportQueueAgeLimitReachedError,
   getExportOffPeakDecision,
 } from "@/lib/repository/export.repository";
+import { findSiteById } from "@/lib/repository/site.repository";
 import {
   type ApiResponse,
   successResponse,
@@ -30,6 +31,7 @@ import {
   enforceBudgetPath,
   startBudgetTrackedOperation,
 } from "@/lib/cost/budget-service";
+import { processNextExportJob } from "@/lib/export/runner";
 
 export async function createExportAction(
   input: z.infer<typeof createExportSchema>,
@@ -73,6 +75,16 @@ export async function createExportAction(
         budgetDecision.scope,
         budgetDecision.message,
       );
+    }
+
+    if (parsed.data.siteId) {
+      const site = await findSiteById(context.companyId, parsed.data.siteId);
+      if (!site) {
+        return validationErrorResponse(
+          { siteId: ["Selected site was not found."] },
+          "Invalid export parameters",
+        );
+      }
     }
 
     const requiresAdvancedExport =
@@ -168,6 +180,61 @@ export async function createExportAction(
     }
     log.error({ error: String(error) }, "Failed to queue export job");
     return errorResponse("INTERNAL_ERROR", "Failed to queue export job");
+  } finally {
+    finishBudgetTracking();
+  }
+}
+
+export async function runQueuedExportNowAction(): Promise<
+  ApiResponse<{ processed: boolean; status: string; exportJobId?: string }>
+> {
+  const finishBudgetTracking = startBudgetTrackedOperation("server_action");
+  const requestId = generateRequestId();
+  const log = createRequestLogger(requestId);
+
+  try {
+    try {
+      await assertOrigin();
+    } catch {
+      return errorResponse("FORBIDDEN", "Invalid request origin");
+    }
+
+    const guard = await checkAdmin();
+    if (!guard.success) return permissionDeniedResponse(guard.error);
+
+    if (!isFeatureEnabled("EXPORTS")) {
+      return errorResponse("FORBIDDEN", "Exports are currently disabled");
+    }
+
+    const context = await requireAuthenticatedContextReadOnly();
+    const result = await processNextExportJob({ companyId: context.companyId });
+
+    try {
+      revalidatePath("/admin/exports");
+    } catch (err) {
+      log.warn({ err: String(err) }, "Failed to revalidate /admin/exports");
+    }
+
+    if (!result) {
+      return successResponse(
+        { processed: false, status: "NOOP" },
+        "No queued exports were eligible to run right now.",
+      );
+    }
+
+    return successResponse(
+      {
+        processed: true,
+        status: result.status,
+        exportJobId: result.id,
+      },
+      result.status === "SUCCEEDED"
+        ? "Queued export processed successfully."
+        : "Export processor ran, but the queued job still needs attention.",
+    );
+  } catch (error) {
+    log.error({ error: String(error) }, "Failed to process queued export job");
+    return errorResponse("INTERNAL_ERROR", "Failed to process queued export job");
   } finally {
     finishBudgetTracking();
   }

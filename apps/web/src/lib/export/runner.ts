@@ -7,6 +7,12 @@ import {
   generateSitePackPdfForCompany,
   generateComplianceZipForCompany,
 } from "./worker";
+import {
+  buildExportFilename,
+  describeExportRequest,
+  parseExportRequestParameters,
+  validateGeneratedExportContent,
+} from "./intent";
 import { writeExportFile } from "@/lib/storage";
 import {
   claimNextQueuedExportJob,
@@ -19,6 +25,7 @@ import {
   requeueStaleExportJobs,
 } from "@/lib/repository/export.repository";
 import { findUserById } from "@/lib/repository/user.repository";
+import { findSiteById } from "@/lib/repository/site.repository";
 import { createSystemAuditLog } from "@/lib/repository/audit.repository";
 import {
   computeEvidenceHashRoot,
@@ -35,7 +42,9 @@ import { isFeatureEnabled } from "@/lib/feature-flags";
 import { hasPermission } from "@/lib/auth/guards";
 import { EntitlementDeniedError, assertCompanyFeatureEnabled } from "@/lib/plans";
 
-export async function processNextExportJob(): Promise<null | {
+export async function processNextExportJob(options?: {
+  companyId?: string;
+}): Promise<null | {
   id: string;
   status: string;
 }> {
@@ -69,7 +78,7 @@ export async function processNextExportJob(): Promise<null | {
     log.warn({ err: String(err) }, "Failed to expire aged queued export jobs");
   }
 
-  const job = await claimNextQueuedExportJob();
+  const job = await claimNextQueuedExportJob(options?.companyId);
   if (!job) return null;
 
   const attempts =
@@ -164,31 +173,34 @@ export async function processNextExportJob(): Promise<null | {
   try {
     const startTime = Date.now();
     let content: string | Buffer = "";
-    let filename = `${String(job.export_type).toLowerCase()}-${job.id}.csv`;
     let contentType = "text/csv";
-    const rawParameters =
-      job.parameters && typeof job.parameters === "object"
-        ? (job.parameters as {
-            siteId?: unknown;
-            dateFrom?: unknown;
-            dateTo?: unknown;
-          })
-        : {};
-    const siteId =
-      typeof rawParameters.siteId === "string" ? rawParameters.siteId : undefined;
-    const dateFrom =
-      typeof rawParameters.dateFrom === "string"
-        ? new Date(rawParameters.dateFrom)
-        : undefined;
-    const dateTo =
-      typeof rawParameters.dateTo === "string"
-        ? new Date(rawParameters.dateTo)
-        : undefined;
+    const request = parseExportRequestParameters(job.parameters);
+    const siteId = request.siteId;
+    const dateFrom = request.dateFrom;
+    const dateTo = request.dateTo;
     const exportFilters = {
       siteId,
       dateFrom: dateFrom && !Number.isNaN(dateFrom.getTime()) ? dateFrom : undefined,
       dateTo: dateTo && !Number.isNaN(dateTo.getTime()) ? dateTo : undefined,
     };
+    const site = siteId
+      ? await findSiteById(job.company_id, siteId)
+      : null;
+    if (siteId && !site) {
+      throw new Error("Export denied: requested site not found");
+    }
+
+    const requestSummary = describeExportRequest({
+      exportType: job.export_type,
+      parameters: job.parameters,
+      siteName: site?.name,
+    }).plainText;
+    let filename = buildExportFilename({
+      exportType: job.export_type,
+      parameters: job.parameters,
+      siteName: site?.name,
+      jobId: job.id,
+    });
 
     // Special-case CONTRACTOR_CSV (P1): handle via runtime check so we can add the ExportType enum in a later migration
     if (String(job.export_type) === "CONTRACTOR_CSV") {
@@ -206,7 +218,6 @@ export async function processNextExportJob(): Promise<null | {
           break;
         case "SITE_PACK_PDF":
           content = await generateSitePackPdfForCompany(job.company_id, exportFilters);
-          filename = `site-pack-${job.id}.pdf`;
           contentType = "application/pdf";
           break;
         case "COMPLIANCE_ZIP":
@@ -214,13 +225,20 @@ export async function processNextExportJob(): Promise<null | {
             job.company_id,
             exportFilters,
           );
-          filename = `compliance-pack-${job.id}.zip`;
           contentType = "application/zip";
           break;
         default:
           throw new Error(`Unsupported export type: ${job.export_type}`);
       }
     }
+
+    const validation = validateGeneratedExportContent({
+      exportType: job.export_type,
+      content,
+      companyId: job.company_id,
+      parameters: job.parameters,
+      siteName: site?.name,
+    });
 
     const { filePath, size } = await writeExportFile(
       job.company_id,
@@ -240,6 +258,22 @@ export async function processNextExportJob(): Promise<null | {
       file_name: filename,
       file_size: size,
       expires_at: getExportExpiryDate(),
+    });
+
+    await createSystemAuditLog({
+      company_id: job.company_id,
+      action: "export.complete",
+      entity_type: "exportJob",
+      entity_id: job.id,
+      user_id: job.requested_by ?? undefined,
+      details: {
+        request_summary: requestSummary,
+        result_summary: validation.resultSummary,
+        file_name: filename,
+        artifact_sha256: validation.contentHash,
+        row_count: validation.rowCount,
+        artifact_type: contentType,
+      },
     });
 
     if (isFeatureEnabled("EVIDENCE_TAMPER_V1")) {
@@ -285,6 +319,14 @@ export async function processNextExportJob(): Promise<null | {
       }
     }
 
+    log.info(
+      {
+        export_job_id: job.id,
+        request_summary: requestSummary,
+        result_summary: validation.resultSummary,
+      },
+      "Export job completed",
+    );
     return { id: job.id, status: "SUCCEEDED" };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

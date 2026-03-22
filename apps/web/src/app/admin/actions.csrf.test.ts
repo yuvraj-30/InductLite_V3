@@ -2,6 +2,10 @@ import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
+  unstable_cache:
+    <TArgs extends unknown[], TResult>(fn: (...args: TArgs) => TResult) =>
+    (...args: TArgs) =>
+      fn(...args),
 }));
 
 vi.mock("@/lib/auth", () => ({
@@ -27,9 +31,10 @@ vi.mock("@/lib/repository", () => ({
 }));
 
 vi.mock("@/lib/repository/export.repository", () => ({
-  createExportJob: vi.fn(),
+  queueExportJobWithLimits: vi.fn(),
   countExportJobsSince: vi.fn().mockResolvedValue(0),
   countRunningExportJobs: vi.fn().mockResolvedValue(0),
+  getExportOffPeakDecision: vi.fn().mockResolvedValue({ active: false }),
 }));
 
 vi.mock("@/lib/repository/audit.repository", () => ({
@@ -57,7 +62,7 @@ import { createSiteAction } from "./sites/actions";
 import { createExportAction } from "./exports/actions";
 import { assertOrigin, checkPermission, checkAdmin } from "@/lib/auth";
 import { createSite } from "@/lib/repository";
-import { createExportJob } from "@/lib/repository/export.repository";
+import { queueExportJobWithLimits } from "@/lib/repository/export.repository";
 
 describe("CSRF enforcement for mutating actions", () => {
   beforeEach(() => {
@@ -94,6 +99,6 @@ describe("CSRF enforcement for mutating actions", () => {
     }
 
     expect(checkAdmin).not.toHaveBeenCalled();
-    expect(createExportJob).not.toHaveBeenCalled();
+    expect(queueExportJobWithLimits).not.toHaveBeenCalled();
   });
 });
