@@ -275,6 +275,23 @@ describe("createExportAction guardrails", () => {
     expect(mocks.queueExportJobWithLimits).not.toHaveBeenCalled();
   });
 
+  it("rejects unsupported contractor filters before queueing", async () => {
+    const result = await createExportAction({
+      exportType: "SIGN_IN_CSV",
+      contractorIds: ["c123456789012345678901235"],
+    });
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.code).toBe("VALIDATION_ERROR");
+      expect(result.error.fieldErrors?.contractorIds).toEqual([
+        "Contractor filters are not supported for exports yet.",
+      ]);
+    }
+
+    expect(mocks.queueExportJobWithLimits).not.toHaveBeenCalled();
+  });
+
   it("runs the next queued export for the current company on demand", async () => {
     const result = await runQueuedExportNowAction();
 

@@ -178,6 +178,9 @@ export async function processNextExportJob(options?: {
     const siteId = request.siteId;
     const dateFrom = request.dateFrom;
     const dateTo = request.dateTo;
+    if (request.contractorIds.length > 0) {
+      throw new Error("Export denied: contractor filters are not supported");
+    }
     const exportFilters = {
       siteId,
       dateFrom: dateFrom && !Number.isNaN(dateFrom.getTime()) ? dateFrom : undefined,

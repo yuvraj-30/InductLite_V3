@@ -6,7 +6,18 @@
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { RepositoryError } from "../base";
-import type { InductionTemplate, InductionQuestion } from "@prisma/client";
+import {
+  Prisma,
+  type InductionTemplate,
+  type InductionQuestion,
+} from "@prisma/client";
+
+function createKnownRequestError(code: string, message: string) {
+  const error = new Error(message);
+  Object.assign(error, { code, clientVersion: "test" });
+  Object.setPrototypeOf(error, Prisma.PrismaClientKnownRequestError.prototype);
+  return error as Prisma.PrismaClientKnownRequestError;
+}
 
 // Helper to create mock template with all required fields
 function createMockTemplate(
@@ -224,6 +235,31 @@ describe("Question Repository Unit Tests", () => {
       expect(result.question_type).toBe("TEXT");
     });
 
+    it("should trim question text before storing", async () => {
+      const createMock = vi.fn().mockResolvedValue(
+        createMockQuestion({
+          id: "q1",
+          question_text: "Trimmed question",
+          question_type: "TEXT",
+        }),
+      );
+      questionDelegate.create.mockImplementation(createMock);
+
+      await createQuestion("company-id", "template-id", {
+        question_text: "  Trimmed question  ",
+        question_type: "TEXT",
+        is_required: true,
+      });
+
+      expect(createMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            question_text: "Trimmed question",
+          }),
+        }),
+      );
+    });
+
     it("should accept YES_NO question type", async () => {
       const mockQuestion = createMockQuestion({
         id: "q1",
@@ -287,6 +323,32 @@ describe("Question Repository Unit Tests", () => {
 
       expect(result.question_type).toBe("MULTIPLE_CHOICE");
       expect(result.options).toEqual(["Contractor", "Visitor", "Employee"]);
+    });
+
+    it("should retry question creation on serialization conflicts", async () => {
+      const serializationConflict = createKnownRequestError(
+        "P2034",
+        "Transaction failed due to serialization conflict",
+      );
+      const createdQuestion = createMockQuestion({
+        id: "q-retry",
+        question_text: "Retried question",
+      });
+      questionDelegate.findFirst.mockResolvedValue({ display_order: 1 });
+      questionDelegate.create.mockResolvedValue(createdQuestion);
+
+      vi.mocked(publicDb.$transaction).mockRejectedValueOnce(
+        serializationConflict,
+      );
+
+      const result = await createQuestion("company-id", "template-id", {
+        question_text: "Retried question",
+        question_type: "TEXT",
+        is_required: true,
+      });
+
+      expect(result.id).toBe("q-retry");
+      expect(publicDb.$transaction).toHaveBeenCalledTimes(2);
     });
   });
 

@@ -5,6 +5,11 @@ on:
     - cron: "*/10 * * * *"
     - cron: "15 2 * * *"
   workflow_dispatch:
+    inputs:
+      expect_export_processed:
+        description: "Fail if export scheduler does not process a queued export"
+        required: false
+        default: "false"
 
 jobs:
   ping:
@@ -64,9 +69,40 @@ jobs:
             cat /tmp/export-scheduler-body.txt || true
             exit 1
           fi
+          echo "--- export scheduler body ---"
+          cat /tmp/export-scheduler-body.txt || true
+
+          ok="$(jq -r '.ok // false' /tmp/export-scheduler-body.txt 2>/dev/null || echo false)"
+          processed="$(jq -r '.processed // false' /tmp/export-scheduler-body.txt 2>/dev/null || echo false)"
+          result_status="$(jq -r '.result.status // "unknown"' /tmp/export-scheduler-body.txt 2>/dev/null || echo unknown)"
+          duration_ms="$(jq -r '.duration_ms // 0' /tmp/export-scheduler-body.txt 2>/dev/null || echo 0)"
+
+          {
+            echo "### Export Scheduler"
+            echo "- ok: $ok"
+            echo "- processed: $processed"
+            echo "- result.status: $result_status"
+            echo "- duration_ms: $duration_ms"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ "$ok" != "true" ]]; then
+            echo "Export scheduler response reported ok=false"
+            exit 1
+          fi
+
+          if [[ "$result_status" == "FAILED" ]]; then
+            echo "Export scheduler processed a job but it failed"
+            exit 1
+          fi
+
+          if [[ "${EXPECT_EXPORT_PROCESSED}" == "true" && "$processed" != "true" ]]; then
+            echo "Expected export scheduler to process a queued export, but it returned processed=false"
+            exit 1
+          fi
         env:
           RENDER_APP_URL: ${{ secrets.RENDER_APP_URL }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          EXPECT_EXPORT_PROCESSED: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.expect_export_processed || 'false' }}
 
       - name: Run maintenance
         if: github.event.schedule == '15 2 * * *'

@@ -210,6 +210,14 @@ export const createExportSchema = z.object({
   dateTo: z.string().datetime({ offset: true }).optional(),
   contractorIds: z.array(z.string().cuid("Invalid contractor ID")).optional(),
 }).superRefine((value, ctx) => {
+  if (value.contractorIds && value.contractorIds.length > 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["contractorIds"],
+      message: "Contractor filters are not supported for exports yet.",
+    });
+  }
+
   if (!value.dateFrom || !value.dateTo) {
     return;
   }

@@ -109,6 +109,10 @@ Example values:
 Rotation: update `CRON_SECRET` in both Render env vars and GitHub Secrets at the same time.
 Avoid reusing `CRON_SECRET` across environments (dev/staging/prod).
 
+The keep-alive workflow now validates the semantic export-cron payload, not just HTTP `200`.
+- It records `ok`, `processed`, `result.status`, and `duration_ms` in the GitHub step summary.
+- Manual dispatch supports an `expect_export_processed=true` input when you want the workflow to fail unless the scheduler actually drains one queued export.
+
 Troubleshooting keep-alive failures:
 
 - The keep-alive workflow now retries `/health` up to 6 times when Render responds with `503` and `x-render-routing: hibernate-wake-error`.

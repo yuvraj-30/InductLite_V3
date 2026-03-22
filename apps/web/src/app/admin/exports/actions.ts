@@ -51,8 +51,19 @@ export async function createExportAction(
     // Validate payload
     const parsed = createExportSchema.safeParse(input);
     if (!parsed.success) {
+      const fieldErrors = parsed.error.issues.reduce<Record<string, string[]>>(
+        (acc, issue) => {
+          const key =
+            typeof issue.path[0] === "string" && issue.path[0].length > 0
+              ? issue.path[0]
+              : "export";
+          acc[key] = [...(acc[key] ?? []), issue.message];
+          return acc;
+        },
+        {},
+      );
       return validationErrorResponse(
-        { export: parsed.error.issues.map((e) => e.message) },
+        fieldErrors,
         "Invalid export parameters",
       );
     }

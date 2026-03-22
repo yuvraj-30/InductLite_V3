@@ -507,10 +507,18 @@ describe("Export Schema Validation", () => {
       siteId: "c123456789012345678901234",
       dateFrom: "2026-03-01T00:00:00.000Z",
       dateTo: "2026-03-13T00:00:00.000Z",
-      contractorIds: ["c123456789012345678901235"],
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it("rejects unsupported contractor filters in export requests", () => {
+    const result = createExportSchema.safeParse({
+      exportType: "SIGN_IN_CSV",
+      contractorIds: ["c123456789012345678901235"],
+    });
+
+    expect(result.success).toBe(false);
   });
 
   it("rejects invalid export payloads", () => {
