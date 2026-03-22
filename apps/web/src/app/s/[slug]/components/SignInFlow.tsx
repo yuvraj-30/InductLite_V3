@@ -21,6 +21,7 @@ import dynamic from "next/dynamic";
 import type SignatureCanvas from "react-signature-canvas";
 import type { SignatureCanvasProps } from "react-signature-canvas";
 import { submitSignIn, type SiteInfo, type TemplateInfo } from "../actions";
+import { SuccessScreen } from "./SuccessScreen";
 import { isValidPhoneE164, formatToE164 } from "@inductlite/shared";
 import { shouldSkipQuestions } from "@/lib/logic/evaluator";
 import {
@@ -40,20 +41,6 @@ const InductionQuestions = dynamic(
     loading: () => (
       <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4 text-sm text-secondary">
         Loading induction questions...
-      </div>
-    ),
-  },
-);
-
-const SuccessScreen = dynamic(
-  () =>
-    import("./SuccessScreen").then((mod) => ({
-      default: mod.SuccessScreen,
-    })),
-  {
-    loading: () => (
-      <div className="rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4 text-sm text-secondary">
-        Finalizing your sign-in...
       </div>
     ),
   },

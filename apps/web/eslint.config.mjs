@@ -21,6 +21,7 @@ const eslintConfig = [
       "**/dist/",
       "**/coverage/",
       "**/playwright-report/",
+      "**/test-results/",
       "**/eslint-plugin-security/",
       "scripts/",
       "**/*.config.js",
