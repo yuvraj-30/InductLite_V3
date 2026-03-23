@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Alert } from "@/components/ui/alert";
 import {
@@ -25,6 +25,23 @@ interface ComplianceSettingsFormProps {
   };
 }
 
+const LEGAL_HOLD_REASON_REQUIRED_MESSAGE =
+  "Legal hold reason is required when legal hold is enabled";
+
+export function getComplianceSettingsClientError(input: {
+  complianceLegalHold: boolean;
+  complianceLegalHoldReason: string;
+}): string | null {
+  if (
+    input.complianceLegalHold &&
+    input.complianceLegalHoldReason.trim().length === 0
+  ) {
+    return LEGAL_HOLD_REASON_REQUIRED_MESSAGE;
+  }
+
+  return null;
+}
+
 function SaveButton() {
   const { pending } = useFormStatus();
 
@@ -47,6 +64,9 @@ export default function ComplianceSettingsForm({
     updateComplianceSettingsAction,
     initialState,
   );
+  const [clientError, setClientError] = useState<string | null>(null);
+  const legalHoldCheckboxRef = useRef<HTMLInputElement | null>(null);
+  const legalHoldReasonRef = useRef<HTMLTextAreaElement | null>(null);
 
   const getFieldError = (field: string): string | undefined => {
     if (state && !state.success && state.fieldErrors) {
@@ -55,11 +75,37 @@ export default function ComplianceSettingsForm({
     return undefined;
   };
 
+  const legalHoldReasonError =
+    clientError ?? getFieldError("complianceLegalHoldReason");
+  const formError =
+    clientError ?? (state && !state.success ? state.error : null);
+
   return (
-    <form action={formAction} className="space-y-6">
-      {state && !state.success && (
-        <Alert variant="error">{state.error}</Alert>
-      )}
+    <form
+      action={formAction}
+      className="space-y-6"
+      onSubmit={(event) => {
+        const validationError = getComplianceSettingsClientError({
+          complianceLegalHold:
+            legalHoldCheckboxRef.current?.checked ??
+            initialSettings.compliance_legal_hold,
+          complianceLegalHoldReason:
+            legalHoldReasonRef.current?.value ??
+            initialSettings.compliance_legal_hold_reason ??
+            "",
+        });
+
+        if (!validationError) {
+          setClientError(null);
+          return;
+        }
+
+        event.preventDefault();
+        setClientError(validationError);
+        legalHoldReasonRef.current?.focus();
+      }}
+    >
+      {formError && <Alert variant="error">{formError}</Alert>}
       {state && state.success && (
         <Alert variant="success">{state.message}</Alert>
       )}
@@ -180,11 +226,13 @@ export default function ComplianceSettingsForm({
         <div className="mt-4 space-y-3">
           <label className="flex items-center gap-2 text-sm text-secondary">
             <input
+              ref={legalHoldCheckboxRef}
               name="complianceLegalHold"
               type="checkbox"
               value="true"
               defaultChecked={initialSettings.compliance_legal_hold}
               className="check-control"
+              onChange={() => setClientError(null)}
             />
             Compliance legal hold enabled
           </label>
@@ -192,6 +240,7 @@ export default function ComplianceSettingsForm({
           <label className="block text-sm text-secondary">
             Legal hold reason
             <textarea
+              ref={legalHoldReasonRef}
               name="complianceLegalHoldReason"
               rows={3}
               maxLength={500}
@@ -199,10 +248,18 @@ export default function ComplianceSettingsForm({
               autoComplete="off"
               className="input mt-1"
               placeholder="Required when legal hold is enabled"
+              aria-invalid={legalHoldReasonError ? "true" : undefined}
+              aria-describedby={
+                legalHoldReasonError ? "compliance-legal-hold-reason-error" : undefined
+              }
+              onInput={() => setClientError(null)}
             />
-            {getFieldError("complianceLegalHoldReason") && (
-              <p className="mt-1 text-xs text-red-600">
-                {getFieldError("complianceLegalHoldReason")}
+            {legalHoldReasonError && (
+              <p
+                id="compliance-legal-hold-reason-error"
+                className="mt-1 text-xs text-red-600"
+              >
+                {legalHoldReasonError}
               </p>
             )}
           </label>
