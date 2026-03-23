@@ -75,7 +75,7 @@ async function safeGotoHazards(page: any) {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (
-      /ERR_ABORTED|NS_BINDING_ABORTED|frame was detached|interrupted by another navigation|aborted/i.test(
+      /ERR_ABORTED|NS_BINDING_ABORTED|frame was detached|interrupted by another navigation|frame load interrupted|navigation interrupted|aborted/i.test(
         message,
       )
     ) {

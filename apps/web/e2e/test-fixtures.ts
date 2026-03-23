@@ -1522,7 +1522,7 @@ export const test = base.extend<MyFixtures, MyWorkerFixtures>({
     const origGoto = p.goto.bind(page as unknown as Page);
     const isTransientNavigationError = (value: unknown): boolean => {
       const message = value instanceof Error ? value.message : String(value);
-      return /Could not connect to server|ECONNRESET|ECONNREFUSED|ERR_CONNECTION_RESET|ERR_CONNECTION_REFUSED|ERR_ABORTED|NS_BINDING_ABORTED|aborted|interrupted by another navigation/i.test(
+      return /Could not connect to server|ECONNRESET|ECONNREFUSED|ERR_CONNECTION_RESET|ERR_CONNECTION_REFUSED|ERR_ABORTED|NS_BINDING_ABORTED|aborted|interrupted by another navigation|frame load interrupted|navigation interrupted/i.test(
         message,
       );
     };
