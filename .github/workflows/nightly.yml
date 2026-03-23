@@ -27,6 +27,19 @@ env:
   MAGIC_LINK_SECRET: ci-magic-link-secret
   RESEND_API_KEY: ci-resend-key
   RESEND_FROM: ci@example.com
+  ENV_BUDGET_TIER: MVP
+  MAX_MONTHLY_EGRESS_GB: "100"
+  MAX_MONTHLY_STORAGE_GB: "50"
+  MAX_MONTHLY_JOB_MINUTES: "1000"
+  MAX_MONTHLY_SERVER_ACTION_INVOCATIONS: "1000000"
+  MAX_MONTHLY_COMPUTE_INVOCATIONS: "1200000"
+  MAX_MONTHLY_COMPUTE_RUNTIME_MINUTES: "2500"
+  FEATURE_EXPORTS_ENABLED: "true"
+  FEATURE_UPLOADS_ENABLED: "true"
+  FEATURE_PUBLIC_SIGNIN_ENABLED: "true"
+  FEATURE_VISUAL_REGRESSION_ENABLED: "true"
+  BUDGET_TELEMETRY_STALE_AFTER_HOURS: "24"
+  BUDGET_TELEMETRY_REQUIRED_PROVIDERS: render,neon,cloudflare_r2,upstash,resend
 
 jobs:
   full:
@@ -74,6 +87,28 @@ jobs:
 
       - name: Install deps (workspace)
         run: npm ci
+
+      - name: Seed nightly budget telemetry
+        run: |
+          node <<'EOF'
+          const fs = require("node:fs");
+          const now = new Date();
+          const iso = now.toISOString();
+          const month = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+          const manifest = JSON.stringify({
+            capturedAt: iso,
+            month,
+            notes: "Nightly test-only provider billing manifest for release validation lanes.",
+            entries: ["render", "neon", "cloudflare_r2", "upstash", "resend"].map((provider, index) => ({
+              provider,
+              sourceType: "provider_api",
+              capturedAt: iso,
+              amountNzd: Number(((index + 1) / 100).toFixed(2)),
+              invoiceRef: `${provider}-${month}`,
+            })),
+          });
+          fs.appendFileSync(process.env.GITHUB_ENV, `BUDGET_TELEMETRY_PROVIDER_BILLING_JSON=${manifest}\n`);
+          EOF
 
       - name: Prisma generate
         run: npm run db:generate
@@ -197,6 +232,60 @@ jobs:
           E2E_USE_SHARED_SERVER: "1"
         run: npm run -w apps/web test:visual
 
+      - name: E2E stable (mobile chrome)
+        env:
+          BASE_URL: http://localhost:3000
+          TRUST_PROXY: "1"
+          ALLOW_TEST_RUNNER: "1"
+          TEST_RUNNER_SECRET_KEY: ci-nightly-test-runner-secret
+          E2E_USE_SHARED_SERVER: "1"
+        run: |
+          set -euo pipefail
+          cd apps/web
+          npm run test:e2e:stable:mobile-chrome 2>&1 | tee playwright-stable-mobile-chrome-output.txt
+          test_exit=${PIPESTATUS[0]}
+          if [ $test_exit -ne 0 ]; then
+            echo "Stable mobile chrome lane failed with exit code $test_exit"
+            exit $test_exit
+          fi
+
+      - name: E2E stable (mobile safari)
+        env:
+          BASE_URL: http://localhost:3000
+          TRUST_PROXY: "1"
+          ALLOW_TEST_RUNNER: "1"
+          TEST_RUNNER_SECRET_KEY: ci-nightly-test-runner-secret
+          E2E_USE_SHARED_SERVER: "1"
+        run: |
+          set -euo pipefail
+          cd apps/web
+          npm run test:e2e:stable:mobile-safari 2>&1 | tee playwright-stable-mobile-safari-output.txt
+          test_exit=${PIPESTATUS[0]}
+          if [ $test_exit -ne 0 ]; then
+            echo "Stable mobile safari lane failed with exit code $test_exit"
+            exit $test_exit
+          fi
+
+      - name: E2E perf-budget
+        env:
+          BASE_URL: http://localhost:3000
+          TRUST_PROXY: "1"
+          ALLOW_TEST_RUNNER: "1"
+          TEST_RUNNER_SECRET_KEY: ci-nightly-test-runner-secret
+          E2E_USE_SHARED_SERVER: "1"
+        run: |
+          set -euo pipefail
+          cd apps/web
+          npm run test:e2e:perf-budget 2>&1 | tee playwright-perf-output.txt
+          test_exit=${PIPESTATUS[0]}
+          if [ $test_exit -ne 0 ]; then
+            echo "Perf-budget lane failed with exit code $test_exit"
+            exit $test_exit
+          fi
+
+      - name: Generate UX perf report
+        run: npm run report:ux-perf-budget
+
       - name: Stop server
         if: always()
         run: |
@@ -212,5 +301,9 @@ jobs:
           path: |
             apps/web/playwright-report/
             apps/web/test-results/
+            apps/web/playwright-stable-mobile-chrome-output.txt
+            apps/web/playwright-stable-mobile-safari-output.txt
+            apps/web/playwright-perf-output.txt
+            docs/UI_UX_PERFORMANCE_WEEKLY_REPORT.md
           if-no-files-found: ignore
           retention-days: 14

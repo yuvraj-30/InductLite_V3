@@ -243,7 +243,7 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
       await fillInputResilient(nameInput, "Visual Test Visitor");
       await fillInputResilient(phoneInput, "+64211234567");
       const continueButton = page.getByRole("button", {
-        name: /continue to induction|sign in|continue/i,
+        name: /continue to induction|review site induction|sign in|continue/i,
       });
       await continueButton.first().click({ force: true }).catch(() => null);
       const detailsForm = page.locator("form").first();
@@ -280,7 +280,7 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
           "+64211234567",
         );
         await page
-          .getByRole("button", { name: /continue to induction|sign in|continue/i })
+          .getByRole("button", { name: /continue to induction|review site induction|sign in|continue/i })
           .first()
           .click({ force: true })
           .catch(() => null);
@@ -354,7 +354,7 @@ test.describe("Visual Regression - Public Sign-In (Playwright)", () => {
     }
 
     await kioskForm
-      .getByRole("button", { name: /continue to induction|continue/i })
+      .getByRole("button", { name: /continue to induction|review site induction|continue/i })
       .first()
       .click({ force: true })
       .catch(() => null);

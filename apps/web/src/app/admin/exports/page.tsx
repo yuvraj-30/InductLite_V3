@@ -146,7 +146,12 @@ export default async function AdminExportsPage() {
               </DataTableHeader>
               <DataTableBody>
               {jobs.items.map((job) => (
-                <DataTableRow key={job.id}>
+                <DataTableRow
+                  key={job.id}
+                  data-export-id={job.id}
+                  data-export-type={job.export_type}
+                  data-export-status={job.status}
+                >
                   <DataTableCell className="break-all">
                     <div className="space-y-1">
                       <div>{job.id}</div>
@@ -155,7 +160,10 @@ export default async function AdminExportsPage() {
                       </div>
                     </div>
                   </DataTableCell>
-                  <DataTableCell className="text-[color:var(--text-primary)]">
+                  <DataTableCell
+                    className="text-[color:var(--text-primary)]"
+                    data-export-type={job.export_type}
+                  >
                     {(() => {
                       const request = parseExportRequestParameters(job.parameters);
                       const summary = describeExportRequest({
@@ -169,6 +177,7 @@ export default async function AdminExportsPage() {
                       return (
                         <div className="space-y-1">
                           <div className="font-semibold">{summary.title}</div>
+                          <div className="sr-only">Export type: {job.export_type}</div>
                           {summary.filters.map((line) => (
                             <div key={`${job.id}-${line}`} className="text-xs text-secondary">
                               {line}
@@ -182,7 +191,7 @@ export default async function AdminExportsPage() {
                     {(() => {
                       const lifecycle = describeExportLifecycle(job, now);
                       return (
-                        <div className="space-y-1">
+                        <div className="space-y-1" data-export-status={job.status}>
                           <StatusBadge
                             tone={job.status === "SUCCEEDED" ? "success" : job.status === "RUNNING" ? "info" : job.status === "FAILED" ? "danger" : lifecycle.isDelayed ? "warning" : "neutral"}
                           >

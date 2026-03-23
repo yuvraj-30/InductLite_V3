@@ -1,37 +1,45 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useActionState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useFormStatus } from "react-dom";
 import { Alert } from "@/components/ui/alert";
-import { runQueuedExportNowAction } from "./actions";
+import {
+  runQueuedExportNowFormAction,
+  type ExportQueueRecoveryActionState,
+} from "./actions";
 
-type Feedback = { kind: "success" | "error"; text: string } | null;
+function RunQueueButton(props: { disabled: boolean }) {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      type="submit"
+      disabled={pending || props.disabled}
+      className="btn-secondary disabled:opacity-50"
+    >
+      {pending ? "Running..." : "Run Queue Now"}
+    </button>
+  );
+}
 
 export function ExportQueueRecoveryControls(props: {
   hasQueuedJobs: boolean;
   delayedJobCount: number;
   oldestQueuedAgeMinutes: number | null;
 }) {
-  const [isPending, startTransition] = useTransition();
-  const [feedback, setFeedback] = useState<Feedback>(null);
+  const router = useRouter();
+  const [state, formAction] =
+    useActionState<ExportQueueRecoveryActionState, FormData>(
+      runQueuedExportNowFormAction,
+      null,
+    );
 
-  const handleRunNow = () => {
-    setFeedback(null);
-    startTransition(async () => {
-      const result = await runQueuedExportNowAction();
-      if (!result.success) {
-        setFeedback({
-          kind: "error",
-          text: result.error.message || "Could not run the export processor.",
-        });
-        return;
-      }
-
-      setFeedback({
-        kind: "success",
-        text: result.message || "Export processor finished.",
-      });
-    });
-  };
+  useEffect(() => {
+    if (state?.success) {
+      router.refresh();
+    }
+  }, [router, state?.success, state?.success ? state.data.exportJobId ?? "noop" : null]);
 
   const oldestQueuedLabel =
     props.oldestQueuedAgeMinutes === null
@@ -55,22 +63,19 @@ export function ExportQueueRecoveryControls(props: {
           </p>
         </div>
 
-        <button
-          type="button"
-          disabled={isPending || !props.hasQueuedJobs}
-          onClick={handleRunNow}
-          className="btn-secondary disabled:opacity-50"
-        >
-          {isPending ? "Running..." : "Run Queue Now"}
-        </button>
+        <form action={formAction}>
+          <RunQueueButton disabled={!props.hasQueuedJobs} />
+        </form>
       </div>
 
-      {feedback ? (
+      {state ? (
         <Alert
-          variant={feedback.kind === "success" ? "success" : "error"}
+          variant={state.success ? "success" : "error"}
           className="mt-3"
         >
-          {feedback.text}
+          {state.success
+            ? state.message || "Export processor finished."
+            : state.error.message || "Could not run the export processor."}
         </Alert>
       ) : null}
     </div>

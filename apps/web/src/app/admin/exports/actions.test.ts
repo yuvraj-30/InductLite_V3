@@ -104,7 +104,12 @@ vi.mock("@/lib/export/runner", () => ({
   processNextExportJob: mocks.processNextExportJob,
 }));
 
-import { createExportAction, runQueuedExportNowAction } from "./actions";
+import {
+  createExportAction,
+  createExportFormAction,
+  runQueuedExportNowAction,
+  runQueuedExportNowFormAction,
+} from "./actions";
 import {
   ExportGlobalBytesLimitReachedError,
   ExportQueueAgeLimitReachedError,
@@ -292,6 +297,30 @@ describe("createExportAction guardrails", () => {
     expect(mocks.queueExportJobWithLimits).not.toHaveBeenCalled();
   });
 
+  it("queues exports from FormData payloads", async () => {
+    const formData = new FormData();
+    formData.set("exportType", "COMPLIANCE_ZIP");
+    formData.set("dateFrom", "2026-03-22T00:00:00.000Z");
+    formData.set("dateTo", "2026-03-22T23:59:59.000Z");
+
+    const result = await createExportFormAction(null, formData);
+
+    expect(result).not.toBeNull();
+    if (!result) {
+      throw new Error("Expected export form action result");
+    }
+    expect(result.success).toBe(true);
+    expect(mocks.queueExportJobWithLimits).toHaveBeenCalledWith("company-1", {
+      export_type: "COMPLIANCE_ZIP",
+      parameters: {
+        exportType: "COMPLIANCE_ZIP",
+        dateFrom: "2026-03-22T00:00:00.000Z",
+        dateTo: "2026-03-22T23:59:59.000Z",
+      },
+      requested_by: "user-1",
+    });
+  });
+
   it("runs the next queued export for the current company on demand", async () => {
     const result = await runQueuedExportNowAction();
 
@@ -321,5 +350,18 @@ describe("createExportAction guardrails", () => {
         status: "NOOP",
       });
     }
+  });
+
+  it("runs queued exports from form actions too", async () => {
+    const result = await runQueuedExportNowFormAction(null, new FormData());
+
+    expect(result).not.toBeNull();
+    if (!result) {
+      throw new Error("Expected queue recovery result");
+    }
+    expect(result.success).toBe(true);
+    expect(mocks.processNextExportJob).toHaveBeenCalledWith({
+      companyId: "company-1",
+    });
   });
 });

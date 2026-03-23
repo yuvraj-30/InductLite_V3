@@ -24,15 +24,6 @@ function loadEnvFile(filePath: string): Record<string, string> {
 }
 
 const rootEnvPath = path.resolve(__dirname, "..", "..", ".env");
-const defaultProviderBillingManifestPath = path.resolve(
-  __dirname,
-  "..",
-  "..",
-  "docs",
-  "artifacts",
-  "provider-billing",
-  "provider-billing-manifest.json",
-);
 const rootEnv = loadEnvFile(rootEnvPath);
 // Never inherit NODE_ENV from .env here; Playwright and Next should control it explicitly.
 const { NODE_ENV: _ignoredNodeEnv, ...rootEnvWithoutNodeEnv } = rootEnv;
@@ -92,6 +83,31 @@ if (disableExternalRateLimit) {
   process.env.RATE_LIMIT_ANALYTICS = "0";
 }
 
+function buildTestProviderBillingManifestJson(): string {
+  const now = new Date();
+  const iso = now.toISOString();
+  const month = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+  return JSON.stringify({
+    capturedAt: iso,
+    month,
+    notes:
+      "Playwright test-only provider billing manifest for deterministic prod-like budget enforcement.",
+    entries: [
+      "render",
+      "neon",
+      "cloudflare_r2",
+      "upstash",
+      "resend",
+    ].map((provider, index) => ({
+      provider,
+      sourceType: "provider_api",
+      capturedAt: iso,
+      amountNzd: Number(((index + 1) / 100).toFixed(2)),
+      invoiceRef: `${provider}-${month}`,
+    })),
+  });
+}
+
 const prodLikeBudgetEnv: Record<string, string> = useDevServer
   ? {}
   : {
@@ -111,26 +127,24 @@ const prodLikeBudgetEnv: Record<string, string> = useDevServer
         process.env.FEATURE_PUBLIC_SIGNIN_ENABLED || "true",
       FEATURE_VISUAL_REGRESSION_ENABLED:
         process.env.FEATURE_VISUAL_REGRESSION_ENABLED || "false",
+      BUDGET_TELEMETRY_STALE_AFTER_HOURS:
+        process.env.BUDGET_TELEMETRY_STALE_AFTER_HOURS || "24",
       BUDGET_TELEMETRY_REQUIRED_PROVIDERS:
         process.env.BUDGET_TELEMETRY_REQUIRED_PROVIDERS ||
         "render,neon,cloudflare_r2,upstash,resend",
-      BUDGET_TELEMETRY_PROVIDER_BILLING_FILE:
-        process.env.BUDGET_TELEMETRY_PROVIDER_BILLING_FILE ||
-        defaultProviderBillingManifestPath,
+      BUDGET_TELEMETRY_PROVIDER_BILLING_JSON:
+        process.env.BUDGET_TELEMETRY_PROVIDER_BILLING_JSON ||
+        buildTestProviderBillingManifestJson(),
     };
 
 const e2eRateLimitEnv: Record<string, string> = disableExternalRateLimit
-  ? useDevServer
-    ? {
-        UPSTASH_REDIS_REST_URL: "",
-        UPSTASH_REDIS_REST_TOKEN: "",
-      }
-    : {
-        UPSTASH_REDIS_REST_URL:
-          process.env.UPSTASH_REDIS_REST_URL || "https://redis.upstash.io",
-        UPSTASH_REDIS_REST_TOKEN:
-          process.env.UPSTASH_REDIS_REST_TOKEN || "e2e-prod-like-token",
-      }
+  ? {
+      // CI-like local Playwright runs should exercise the same no-external-redis
+      // path as branch smoke, otherwise production-mode standalone tests can
+      // fail closed on synthetic Redis config before product behavior is reached.
+      UPSTASH_REDIS_REST_URL: "",
+      UPSTASH_REDIS_REST_TOKEN: "",
+    }
   : {
       UPSTASH_REDIS_REST_URL: process.env.UPSTASH_REDIS_REST_URL ?? "",
       UPSTASH_REDIS_REST_TOKEN: process.env.UPSTASH_REDIS_REST_TOKEN ?? "",
@@ -188,20 +202,21 @@ export default defineConfig({
   webServer: process.env.CI
     ? undefined
     : {
-        command: useDevServer
-          ? "npm run dev -- --webpack"
-          : "npm run build && npm run start",
+        command: "node scripts/run-playwright-web-server.js",
         url: defaultBaseUrl,
         // Default to false so we don't accidentally reuse a stale local server
         // missing E2E env flags (ALLOW_TEST_RUNNER/TRUST_PROXY).
         reuseExistingServer: process.env.PW_REUSE_EXISTING_SERVER === "1",
-        timeout: Number(process.env.E2E_WEB_SERVER_TIMEOUT_MS || 300000),
+        timeout: Number(
+          process.env.E2E_WEB_SERVER_TIMEOUT_MS ||
+            (useDevServer ? 300000 : 600000),
+        ),
         // Provide test env vars so the app can unseal test session cookies
         env: {
           ...rootEnvWithoutNodeEnv,
           E2E_QUIET: process.env.E2E_QUIET || "1",
           E2E_SERVER_MODE: e2eServerMode,
-          NODE_ENV: useDevServer ? "development" : "production",
+          NODE_ENV: useDevServer ? "development" : "test",
           CI: useDevServer ? (process.env.CI ?? "false") : "true",
           NODE_OPTIONS: e2eNodeOptions,
           TEST_RUNNER_SECRET_KEY: testRunnerSecret,

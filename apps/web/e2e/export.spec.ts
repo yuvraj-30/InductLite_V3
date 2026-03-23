@@ -22,9 +22,20 @@ async function readExportRows(page: any): Promise<ExportRow[]> {
       .map((row) => {
         const cells = Array.from(row.querySelectorAll("td"));
         return {
-          id: cells[0]?.textContent?.trim() ?? "",
-          type: cells[1]?.textContent?.trim() ?? "",
-          status: cells[2]?.textContent?.trim() ?? "",
+          id:
+            row.getAttribute("data-export-id")?.trim() ||
+            cells[0]?.textContent?.trim() ||
+            "",
+          type:
+            cells[1]?.getAttribute("data-export-type")?.trim() ||
+            row.getAttribute("data-export-type")?.trim() ||
+            cells[1]?.textContent?.trim() ||
+            "",
+          status:
+            row.getAttribute("data-export-status")?.trim() ||
+            cells[2]?.getAttribute("data-export-status")?.trim() ||
+            cells[2]?.textContent?.trim() ||
+            "",
         };
       })
       .filter((row) => row.id.length > 0),
@@ -123,10 +134,44 @@ async function queueExportAndWaitForRow(
 ): Promise<ExportRow> {
   let lastError: unknown = null;
   for (let attempt = 1; attempt <= 3; attempt++) {
+    const actionRequestPromise = page
+      .waitForRequest(
+        (request: any) =>
+          request.method() === "POST" &&
+          (Boolean(request.headers()["next-action"]) ||
+            request.url().includes("/admin/exports")),
+        { timeout: 5000 },
+      )
+      .catch(() => null);
+    const actionResponsePromise = page
+      .waitForResponse(
+        (response: any) =>
+          response.request().method() === "POST" &&
+          (Boolean(response.request().headers()["next-action"]) ||
+            response.url().includes("/admin/exports")),
+        { timeout: 5000 },
+      )
+      .catch(() => null);
     const button = await triggerExportButton(page, input.buttonName);
     try {
       // Ensure transition has completed before we start reloading.
       await waitForQueueTransition(button).catch(() => null);
+
+      const actionRequest = await actionRequestPromise;
+      if (!actionRequest) {
+        throw new Error(`Export queue failed: no POST request for ${input.exportType}`);
+      }
+
+      const actionResponse = await actionResponsePromise;
+      if (!actionResponse) {
+        throw new Error(`Export queue failed: no POST response for ${input.exportType}`);
+      }
+
+      if (!actionResponse.ok()) {
+        throw new Error(
+          `Export queue failed: HTTP ${actionResponse.status()} for ${input.exportType}`,
+        );
+      }
 
       const panelError = await getQueuePanelError(page);
       if (panelError) {
@@ -188,7 +233,7 @@ test.describe("Admin Export UI & Processing", () => {
       await page.reload();
       const rows = await readExportRows(page);
       const thisJob = rows.find((row) => row.id === jobId);
-      if (thisJob?.status === "SUCCEEDED") {
+      if (thisJob && /SUCCEEDED/i.test(thisJob.status)) {
         succeeded = true;
         break;
       }

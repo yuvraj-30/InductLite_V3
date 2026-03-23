@@ -88,7 +88,7 @@ npm run lint && npm run typecheck
 npm run test                                   # Unit tests (Vitest)
 cd apps/web && npm run test:integration        # Real Postgres via Testcontainers
 cd apps/web && npm run test:e2e                # Playwright E2E
-cd apps/web && npm run test:e2e:smoke          # Quick smoke tests
+cd apps/web && npm run test:e2e:smoke          # Quick smoke tests (defaults to prod-style standalone locally)
 ```
 
 ## ESLint Security Rules (CI-enforced)

@@ -537,9 +537,11 @@ export const test = base.extend<MyFixtures, MyWorkerFixtures>({
             break;
           }
 
-          throw new Error(
-            `E2E shared server at ${baseUrl} has ALLOW_TEST_RUNNER disabled. Start tests via Playwright webServer (default), or run dev server with ALLOW_TEST_RUNNER=1 and TRUST_PROXY=1.`,
-          );
+          if (runtimeBody.allowTestRunner === false) {
+            throw new Error(
+              `E2E shared server at ${baseUrl} has ALLOW_TEST_RUNNER disabled. Start tests via Playwright webServer (default), or run dev server with ALLOW_TEST_RUNNER=1 and TRUST_PROXY=1.`,
+            );
+          }
         } catch (err) {
           if (
             err instanceof Error &&

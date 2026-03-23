@@ -265,6 +265,7 @@ export async function queueExportJobWithLimits(
 ): Promise<ExportJob> {
   requireCompanyId(companyId);
 
+  await failQueuedExportJobsExceedingAgeLimit();
   const since = utcDayStart();
   const oldestQueuedAgeMinutes = await getOldestQueuedExportAgeMinutes();
   if (

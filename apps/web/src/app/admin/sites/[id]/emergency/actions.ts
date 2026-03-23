@@ -128,16 +128,6 @@ export async function createEmergencyContactAction(
   }
 
   const context = await requireAuthenticatedContextReadOnly();
-  const entitlementError = await ensureRollCallEnabled({
-    companyId: context.companyId,
-    siteId,
-    requestId,
-    log,
-  });
-  if (entitlementError) {
-    return entitlementError;
-  }
-
   try {
     const created = await createSiteEmergencyContact(context.companyId, {
       site_id: siteId,
@@ -171,11 +161,6 @@ export async function deactivateEmergencyContactAction(
   contactId: string,
 ): Promise<EmergencyActionResult> {
   const requestId = generateRequestId();
-  const log = createRequestLogger(requestId, {
-    path: siteEmergencyPath(siteId),
-    method: "POST",
-  });
-
   try {
     await assertOrigin();
   } catch {
@@ -188,16 +173,6 @@ export async function deactivateEmergencyContactAction(
   }
 
   const context = await requireAuthenticatedContextReadOnly();
-  const entitlementError = await ensureRollCallEnabled({
-    companyId: context.companyId,
-    siteId,
-    requestId,
-    log,
-  });
-  if (entitlementError) {
-    return entitlementError;
-  }
-
   await deactivateSiteEmergencyContact(context.companyId, contactId);
   await createAuditLog(context.companyId, {
     action: "emergency.contact.deactivate",
@@ -222,7 +197,6 @@ export async function createEmergencyProcedureAction(
     path: siteEmergencyPath(siteId),
     method: "POST",
   });
-
   try {
     await assertOrigin();
   } catch {
@@ -244,16 +218,6 @@ export async function createEmergencyProcedureAction(
   }
 
   const context = await requireAuthenticatedContextReadOnly();
-  const entitlementError = await ensureRollCallEnabled({
-    companyId: context.companyId,
-    siteId,
-    requestId,
-    log,
-  });
-  if (entitlementError) {
-    return entitlementError;
-  }
-
   try {
     const created = await createSiteEmergencyProcedure(context.companyId, {
       site_id: siteId,
@@ -284,10 +248,6 @@ export async function deactivateEmergencyProcedureAction(
   procedureId: string,
 ): Promise<EmergencyActionResult> {
   const requestId = generateRequestId();
-  const log = createRequestLogger(requestId, {
-    path: siteEmergencyPath(siteId),
-    method: "POST",
-  });
 
   try {
     await assertOrigin();
@@ -301,16 +261,6 @@ export async function deactivateEmergencyProcedureAction(
   }
 
   const context = await requireAuthenticatedContextReadOnly();
-  const entitlementError = await ensureRollCallEnabled({
-    companyId: context.companyId,
-    siteId,
-    requestId,
-    log,
-  });
-  if (entitlementError) {
-    return entitlementError;
-  }
-
   await deactivateSiteEmergencyProcedure(context.companyId, procedureId);
   await createAuditLog(context.companyId, {
     action: "emergency.procedure.deactivate",
@@ -377,16 +327,6 @@ export async function createEmergencyDrillAction(
   }
 
   const context = await requireAuthenticatedContextReadOnly();
-  const entitlementError = await ensureRollCallEnabled({
-    companyId: context.companyId,
-    siteId,
-    requestId,
-    log,
-  });
-  if (entitlementError) {
-    return entitlementError;
-  }
-
   try {
     const created = await createEmergencyDrill(context.companyId, {
       site_id: siteId,

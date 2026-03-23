@@ -98,12 +98,12 @@ describe("Export guardrails integration", () => {
     }
   });
 
-  it("denies enqueue when the oldest queued export breaches the queue-age guardrail", async () => {
+  it("fails stale queued exports before admitting a fresh export", async () => {
     const staleQueuedAt = new Date(
       Date.now() - (GUARDRAILS.MAX_EXPORT_QUEUE_AGE_MINUTES + 5) * 60 * 1000,
     );
 
-    await prisma.exportJob.create({
+    const staleJob = await prisma.exportJob.create({
       data: {
         company_id: companyB.id,
         export_type: "SIGN_IN_CSV",
@@ -115,13 +115,22 @@ describe("Export guardrails integration", () => {
       },
     });
 
-    await expect(
-      exportRepo.queueExportJobWithLimits(companyA.id, {
-        export_type: "SIGN_IN_CSV",
-        parameters: {},
-        requested_by: userA.id,
-      }),
-    ).rejects.toBeInstanceOf(exportRepo.ExportQueueAgeLimitReachedError);
+    const queuedJob = await exportRepo.queueExportJobWithLimits(companyA.id, {
+      export_type: "SIGN_IN_CSV",
+      parameters: {},
+      requested_by: userA.id,
+    });
+
+    expect(queuedJob.company_id).toBe(companyA.id);
+    expect(queuedJob.status).toBe("QUEUED");
+
+    const refreshedStaleJob = await prisma.exportJob.findUniqueOrThrow({
+      where: { id: staleJob.id },
+    });
+    expect(refreshedStaleJob.status).toBe("FAILED");
+    expect(refreshedStaleJob.error_message).toContain(
+      "MAX_EXPORT_QUEUE_AGE_MINUTES",
+    );
   });
 
   it("auto-enables off-peak processing when delayed exports exceed the rolling threshold", async () => {

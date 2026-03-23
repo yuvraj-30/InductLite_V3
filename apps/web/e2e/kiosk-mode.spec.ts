@@ -64,6 +64,30 @@ async function fillInputWithRetry(input: {
   throw new Error(`Unable to set input ${selector}`);
 }
 
+async function waitForKioskStep(input: {
+  inductionHeading: import("@playwright/test").Locator;
+  detailsNameInput: import("@playwright/test").Locator;
+}): Promise<"induction" | "details" | "unknown"> {
+  const { inductionHeading, detailsNameInput } = input;
+
+  try {
+    await Promise.race([
+      inductionHeading.waitFor({ state: "visible", timeout: 2500 }).then(() => "induction"),
+      detailsNameInput.waitFor({ state: "visible", timeout: 2500 }).then(() => "details"),
+    ]);
+  } catch {
+    return "unknown";
+  }
+
+  if (await inductionHeading.isVisible().catch(() => false)) {
+    return "induction";
+  }
+  if (await detailsNameInput.isVisible().catch(() => false)) {
+    return "details";
+  }
+  return "unknown";
+}
+
 test.describe("Kiosk Mode", () => {
   let TEST_SITE_SLUG = "test-site";
 
@@ -168,16 +192,22 @@ test.describe("Kiosk Mode", () => {
     }
 
     const detailsContinue = page.getByRole("button", {
-      name: /continue to induction/i,
+      name: /continue to induction|review site induction/i,
     });
     const inductionHeading = page.getByRole("heading", {
       level: 2,
       name: /site induction/i,
     });
+    const detailsNameInput = page.locator('input[id="visitorName"]').first();
 
     for (let attempt = 1; attempt <= 3; attempt++) {
       await detailsContinue.click({ force: true, timeout: 4000 }).catch(() => null);
-      if (await inductionHeading.isVisible().catch(() => false)) {
+
+      const currentStep = await waitForKioskStep({
+        inductionHeading,
+        detailsNameInput,
+      });
+      if (currentStep === "induction") {
         break;
       }
 
@@ -188,6 +218,11 @@ test.describe("Kiosk Mode", () => {
           await locationButton.click({ force: true }).catch(() => null);
           await page.waitForTimeout(1500);
         }
+      }
+
+      if (currentStep !== "details") {
+        await page.waitForTimeout(350 * attempt);
+        continue;
       }
 
       const nameVal = await page
@@ -252,7 +287,9 @@ test.describe("Kiosk Mode", () => {
     }
 
     await page
-      .getByRole("button", { name: /continue to sign off/i })
+      .getByRole("button", {
+        name: /continue to sign off|proceed to final clearance/i,
+      })
       .click({ force: true, timeout: 4000 });
 
     const signOffHeading = page.getByRole("heading", {
@@ -290,7 +327,6 @@ test.describe("Kiosk Mode", () => {
     const successHeading = page.getByRole("heading", {
       name: /signed in successfully/i,
     });
-    const detailsNameInput = page.locator('input[id="visitorName"]').first();
 
     await signBtn.click({ force: true, timeout: 4000 }).catch(() => null);
     if (await signatureAlert.isVisible().catch(() => false)) {

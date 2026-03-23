@@ -196,6 +196,44 @@ export async function createExportAction(
   }
 }
 
+export type ExportQueueActionState = ApiResponse<{ exportJobId: string }> | null;
+export type ExportQueueRecoveryActionState = ApiResponse<{
+  processed: boolean;
+  status: string;
+  exportJobId?: string;
+}> | null;
+
+function readOptionalFormValue(formData: FormData, key: string): string | undefined {
+  const value = formData.get(key);
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function readStringArrayFormValue(formData: FormData, key: string): string[] | undefined {
+  const values = formData
+    .getAll(key)
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0);
+  return values.length > 0 ? values : undefined;
+}
+
+export async function createExportFormAction(
+  _previousState: ExportQueueActionState,
+  formData: FormData,
+): Promise<ExportQueueActionState> {
+  return createExportAction({
+    exportType: String(formData.get("exportType") ?? "SIGN_IN_CSV") as z.infer<
+      typeof createExportSchema
+    >["exportType"],
+    siteId: readOptionalFormValue(formData, "siteId"),
+    dateFrom: readOptionalFormValue(formData, "dateFrom"),
+    dateTo: readOptionalFormValue(formData, "dateTo"),
+    contractorIds: readStringArrayFormValue(formData, "contractorIds"),
+  });
+}
+
 export async function runQueuedExportNowAction(): Promise<
   ApiResponse<{ processed: boolean; status: string; exportJobId?: string }>
 > {
@@ -251,11 +289,14 @@ export async function runQueuedExportNowAction(): Promise<
   }
 }
 
+export async function runQueuedExportNowFormAction(
+  _previousState: ExportQueueRecoveryActionState,
+  _formData?: FormData,
+): Promise<ExportQueueRecoveryActionState> {
+  return runQueuedExportNowAction();
+}
+
 // Accept FormData from a Client form and forward to typed action
 export async function createExportActionFromForm(formData: FormData) {
-  const exportType = String(formData.get("exportType") ?? "SIGN_IN_CSV");
-  // Use schema parsing so we pass a correctly typed input without 'any'
-  const input = createExportSchema.parse({ exportType });
-  // Server actions used as form handlers should not return structured API responses to the client
-  await createExportAction(input);
+  await createExportFormAction(null, formData);
 }

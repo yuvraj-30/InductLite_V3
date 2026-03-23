@@ -78,12 +78,25 @@ const devTransport: pino.TransportSingleOptions = {
   },
 };
 
+export function shouldUsePrettyTransport(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  const automatedRun =
+    env.CI === "true" ||
+    env.NODE_ENV === "test" ||
+    env.ALLOW_TEST_RUNNER === "1" ||
+    env.E2E_QUIET === "1";
+
+  return env.NODE_ENV !== "production" && !automatedRun;
+}
+
 /**
  * Create the base logger instance
  */
 function createLogger(): pino.Logger {
-  // In development, use pretty printing
-  if (process.env.NODE_ENV !== "production") {
+  // Avoid pino-pretty in automated/test-runner environments. The pretty
+  // transport adds noisy stdio socket listeners during long Playwright runs.
+  if (shouldUsePrettyTransport()) {
     return pino({
       ...baseConfig,
       transport: devTransport,

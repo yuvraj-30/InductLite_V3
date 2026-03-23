@@ -9,6 +9,10 @@ async function createSite(page: any, name: string) {
   await page.getByLabel(/site name/i).fill(name);
   const createButton = page.getByRole("button", { name: "Create Site" });
   await createButton.scrollIntoViewIfNeeded().catch(() => undefined);
+  const createForm = page
+    .locator("form")
+    .filter({ has: createButton })
+    .first();
   const submitRequest = page
     .waitForResponse(
       (response: any) =>
@@ -17,11 +21,28 @@ async function createSite(page: any, name: string) {
       { timeout: 15000 },
     )
     .catch(() => null);
-  await Promise.all([
-    page.waitForURL(/\/admin\/sites(?:\?.*)?$/, { timeout: 30000 }),
-    createButton.click({ force: true }),
-  ]);
+
+  await createForm.evaluate((form: Element) => {
+    if (form instanceof HTMLFormElement) {
+      form.requestSubmit();
+    }
+  });
   await submitRequest;
+  await page.waitForURL(/\/admin\/sites(?:\?.*)?$/, { timeout: 30000 }).catch(() => undefined);
+
+  await expect
+    .poll(
+      async () => {
+        await page.goto("/admin/sites", { waitUntil: "domcontentloaded" });
+        return (
+          (await page
+            .locator('a[href^="/admin/sites/"]', { hasText: name })
+            .count()) > 0
+        );
+      },
+      { timeout: 45000 },
+    )
+    .toBe(true);
 }
 
 async function submitHazardsForm(page: any, form: any) {
