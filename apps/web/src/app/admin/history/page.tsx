@@ -370,7 +370,7 @@ async function HistoryContent({
                                 {record.visitor_name}
                               </div>
                               <div className="text-xs text-muted">
-                                {record.visitor_phone || "Unavailable"}
+                                {record.visitor_phone_display ?? "Unavailable"}
                               </div>
                             </div>
                           </div>

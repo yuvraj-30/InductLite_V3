@@ -5,12 +5,12 @@ export type AlertVariant = "error" | "success" | "info" | "warning";
 
 export const alertVariantClass: Record<AlertVariant, string> = {
   error:
-    "border-red-400/50 bg-red-100/70 text-red-950 dark:border-red-500/60 dark:bg-red-950/45 dark:text-red-100",
+    "border-red-400/38 bg-red-500/10 text-red-950 dark:border-red-500/45 dark:bg-red-950/28 dark:text-red-100",
   success:
-    "border-emerald-400/50 bg-emerald-100/70 text-emerald-950 dark:border-emerald-500/55 dark:bg-emerald-950/45 dark:text-emerald-100",
-  info: "border-cyan-400/55 bg-cyan-100/70 text-cyan-950 dark:border-cyan-500/60 dark:bg-cyan-950/45 dark:text-cyan-100",
+    "border-emerald-400/38 bg-emerald-500/10 text-emerald-950 dark:border-emerald-500/45 dark:bg-emerald-950/28 dark:text-emerald-100",
+  info: "border-cyan-400/42 bg-cyan-500/10 text-cyan-950 dark:border-cyan-500/48 dark:bg-cyan-950/28 dark:text-cyan-100",
   warning:
-    "border-amber-400/55 bg-amber-100/75 text-amber-950 dark:border-amber-500/55 dark:bg-amber-950/45 dark:text-amber-100",
+    "border-amber-400/42 bg-amber-500/10 text-amber-950 dark:border-amber-500/48 dark:bg-amber-950/28 dark:text-amber-100",
 };
 
 export const alertVariantLabel: Record<AlertVariant, string> = {

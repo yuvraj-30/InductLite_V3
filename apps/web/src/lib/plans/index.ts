@@ -31,8 +31,12 @@ export {
 } from "./tier-presentation";
 export type { PublicTier, TierBadgeTone, TierPresentation } from "./tier-presentation";
 
-export { buildCompanyInvoicePreview } from "./invoice-preview";
+export {
+  buildCompanyInvoicePreview,
+  buildCompanyInvoiceSummary,
+} from "./invoice-preview";
 export type {
+  CompanyInvoiceSummary,
   InvoiceLineItemType,
   InvoiceLineItem,
   SiteInvoicePreview,

@@ -516,25 +516,25 @@ export default async function AdminLayout({
   return (
     <div className="relative min-h-screen">
       <header className="relative z-20 border-b border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)]">
-        <div className="mx-auto max-w-[92rem] px-4 py-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-[92rem] px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex min-w-0 items-center gap-3 kinetic-hover">
+            <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 kinetic-hover">
               <Link
                 href="/admin"
                 className="shrink-0 kinetic-title text-2xl font-black tracking-tight"
               >
                 InductLite
               </Link>
-              <span className="text-sm text-muted">|</span>
-              <span className="truncate text-sm text-[color:var(--text-primary)]">
+              <span className="hidden text-sm text-muted sm:inline">|</span>
+              <span className="max-w-full text-xs text-[color:var(--text-primary)] sm:max-w-[26rem] sm:text-sm lg:max-w-[32rem]">
                 {user.companyName}
               </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <AdminCommandPalette commands={commandItems} />
 
-              <span className="max-w-[16rem] truncate rounded-full border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] px-3 py-1 text-sm text-[color:var(--text-primary)] shadow-soft">
+              <span className="hidden max-w-[16rem] truncate rounded-full border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] px-3 py-1 text-sm text-[color:var(--text-primary)] shadow-soft md:inline-flex md:items-center">
                 {user.name}{" "}
                 <span className="ml-1 rounded-full border border-indigo-600/50 bg-indigo-600 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white dark:border-indigo-400/45 dark:bg-indigo-500/25 dark:text-indigo-100">
                   {user.role}
@@ -542,11 +542,11 @@ export default async function AdminLayout({
               </span>
               <Link
                 href="/change-password"
-                className="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] px-3 py-2 text-sm font-medium text-[color:var(--text-primary)] hover:bg-[color:var(--bg-surface-strong)]"
+                className="hidden rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] px-3 py-2 text-sm font-medium text-[color:var(--text-primary)] hover:bg-[color:var(--bg-surface-strong)] md:inline-flex"
               >
                 Password
               </Link>
-              <form action="/api/auth/logout" method="post">
+              <form action="/api/auth/logout" method="post" className="hidden md:block">
                 <button
                   type="submit"
                   className="rounded-lg border border-[color:var(--accent-danger)] bg-[color:var(--bg-surface)] px-3 py-2 text-sm font-semibold text-[color:var(--accent-danger)] hover:bg-red-100/70 dark:hover:bg-red-500/20"
@@ -560,15 +560,20 @@ export default async function AdminLayout({
       </header>
 
       <div className="relative z-10 flex min-w-0 flex-col md:flex-row md:gap-4 md:px-4 md:py-4 lg:px-6">
-        <nav className="border-b border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] md:min-h-[calc(100vh-102px)] md:w-72 md:shrink-0 md:rounded-2xl md:border md:px-2 md:py-2 md:shadow-soft">
+        <nav className="md:min-h-[calc(100vh-102px)] md:w-72 md:shrink-0 md:rounded-2xl md:border md:border-[color:var(--border-soft)] md:bg-[color:var(--bg-surface-strong)] md:px-2 md:py-2 md:shadow-soft">
           <AdminNav
             sections={visibleNavSections}
             mobileShellEnabled={mobileShellEnabled}
             mobileQuickSwitchItems={mobileQuickSwitchItems}
+            accountContext={{
+              companyName: user.companyName,
+              userName: user.name,
+              userRole: user.role,
+            }}
           />
         </nav>
 
-        <main className="min-w-0 flex-1 p-4 sm:p-6 md:rounded-2xl md:border md:border-[color:var(--border-soft)] md:bg-[color:var(--bg-surface)] md:shadow-soft">
+        <main className="admin-shell-main">
           {children}
         </main>
       </div>

@@ -33,7 +33,7 @@ export function NavLink({
       : "kinetic-hover block rounded-xl px-4 py-2.5 text-sm font-medium transition-all";
 
   const activeStyles =
-    "border border-[color:var(--accent-cyber)] bg-[color:var(--bg-surface-strong)] text-[color:var(--text-primary)] shadow-soft";
+    "border border-[color:var(--border-strong)] bg-[color:var(--bg-surface-strong)] text-[color:var(--text-primary)] shadow-touch";
   const inactiveStyles =
     "border border-transparent text-secondary hover:border-[color:var(--border-soft)] hover:bg-[color:var(--bg-surface-strong)] hover:text-[color:var(--text-primary)]";
 

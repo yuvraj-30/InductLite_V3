@@ -13,6 +13,8 @@ import { checkAuthReadOnly } from "@/lib/auth";
 import { requireAuthenticatedContextReadOnly } from "@/lib/tenant";
 import { redirect } from "next/navigation";
 import { Alert } from "@/components/ui/alert";
+import { AdminDisclosureSection } from "@/components/ui/admin-disclosure-section";
+import { AdminSectionHeader } from "@/components/ui/admin-section-header";
 import {
   DataTable,
   DataTableBody,
@@ -22,8 +24,9 @@ import {
   DataTableHeader,
   DataTableRow,
   DataTableScroll,
+  DataTableShell,
 } from "@/components/ui/data-table";
-import { StatusBadge } from "@/components/ui/status-badge";
+import { StatusBadge, type StatusBadgeTone } from "@/components/ui/status-badge";
 import {
   getDashboardMetrics,
   getOnboardingProgress,
@@ -35,6 +38,69 @@ import { OnboardingChecklist } from "../components/OnboardingChecklist";
 export const metadata = {
   title: "Dashboard | InductLite",
 };
+
+type DashboardMetricCardDefinition = {
+  eyebrow: string;
+  value: number | string;
+  description: string;
+  meta?: string;
+  href?: string;
+  badgeLabel?: string;
+  badgeTone?: StatusBadgeTone;
+  valueSuffix?: string;
+};
+
+type DashboardActionDefinition = {
+  href: string;
+  label: string;
+  detail: string;
+  badgeLabel: string;
+  tone: StatusBadgeTone;
+};
+
+const METRIC_BADGE_CLASS =
+  "whitespace-nowrap px-2 py-0.5 text-[10px] leading-4 tracking-[0.05em] sm:text-[11px]";
+
+function DashboardMetricCard({
+  card,
+}: {
+  card: DashboardMetricCardDefinition;
+}) {
+  const content = (
+    <>
+      <div className="flex flex-wrap items-start justify-between gap-2 sm:gap-3">
+        <p className="admin-card-eyebrow">{card.eyebrow}</p>
+        {card.badgeLabel ? (
+          <StatusBadge
+            tone={card.badgeTone ?? "neutral"}
+            className={METRIC_BADGE_CLASS}
+          >
+            {card.badgeLabel}
+          </StatusBadge>
+        ) : null}
+      </div>
+
+      <div className="admin-card-value-row">
+        <p className="admin-card-value">{card.value}</p>
+        {card.valueSuffix ? (
+          <span className="admin-card-value-suffix">{card.valueSuffix}</span>
+        ) : null}
+      </div>
+      <p className="admin-card-support">{card.description}</p>
+      {card.meta ? <p className="admin-card-meta">{card.meta}</p> : null}
+    </>
+  );
+
+  if (card.href) {
+    return (
+      <Link href={card.href} className="admin-card-link h-full">
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className="admin-card h-full">{content}</div>;
+}
 
 export default async function AdminDashboardPage({
   searchParams,
@@ -212,138 +278,352 @@ export default async function AdminDashboardPage({
             100,
         )
       : 0;
-  const controlRoomActions = [
+  const liveRiskCount =
+    documentsExpiringSoon +
+    permitSummary.overdue +
+    rollCallSummary.missingPeople +
+    actionSummary.overdue +
+    resourceSummary.overdueCompliance;
+  const controlRoomActions: DashboardActionDefinition[] = [
     {
       href: "/admin/approvals",
       label: "Visitor approvals",
-      value: approvalSummary.pending,
       detail:
         approvalSummary.pending > 0
           ? `${approvalSummary.watchlistPending} watchlist and ${approvalSummary.randomCheckPending} random checks waiting`
           : "No visitors are waiting for manual clearance.",
-      tone:
-        approvalSummary.pending > 0
-          ? "text-amber-900 dark:text-amber-100"
-          : "text-emerald-900 dark:text-emerald-100",
+      badgeLabel: approvalSummary.pending > 0 ? `${approvalSummary.pending} waiting` : "Clear",
+      tone: approvalSummary.pending > 0 ? "warning" : "success",
     },
     {
       href: "/admin/actions",
-      label: "Action register",
-      value: actionSummary.open + actionSummary.blocked,
+      label: "Action register pressure",
       detail:
         actionSummary.open + actionSummary.blocked > 0
           ? `${actionSummary.open} open, ${actionSummary.overdue} overdue, ${actionSummary.blocked} blocked`
           : "No follow-up actions need attention right now.",
+      badgeLabel:
+        actionSummary.overdue > 0 || actionSummary.blocked > 0
+          ? `${actionSummary.overdue + actionSummary.blocked} critical`
+          : actionSummary.open > 0
+            ? `${actionSummary.open} open`
+            : "Clear",
       tone:
         actionSummary.overdue > 0 || actionSummary.blocked > 0
-          ? "text-red-950 dark:text-red-100"
-          : "text-secondary",
+          ? "danger"
+          : actionSummary.open > 0
+            ? "warning"
+            : "success",
     },
     {
       href: "/admin/inspections",
       label: "Inspection queue",
-      value: inspectionSummary.overdue + inspectionSummary.failedRuns30Days,
       detail:
         inspectionSummary.overdue + inspectionSummary.failedRuns30Days > 0
           ? `${inspectionSummary.overdue} overdue schedules, ${inspectionSummary.failedRuns30Days} failed runs in 30 days`
           : "Inspection schedules are current.",
+      badgeLabel:
+        inspectionSummary.overdue + inspectionSummary.failedRuns30Days > 0
+          ? `${inspectionSummary.overdue + inspectionSummary.failedRuns30Days} flagged`
+          : "Current",
       tone:
         inspectionSummary.overdue > 0 || inspectionSummary.failedRuns30Days > 0
-          ? "text-amber-900 dark:text-amber-100"
-          : "text-secondary",
+          ? "warning"
+          : "success",
     },
   ];
+  const primaryMetrics: DashboardMetricCardDefinition[] = [
+    {
+      href: "/admin/sites",
+      eyebrow: "Active sites",
+      value: activeSitesCount,
+      valueSuffix: `/ ${totalSitesCount}`,
+      description: "Operational sites currently open for sign-ins.",
+      meta:
+        totalSitesCount > activeSitesCount
+          ? `${totalSitesCount - activeSitesCount} site${totalSitesCount - activeSitesCount === 1 ? "" : "s"} paused or awaiting activation.`
+          : "Every configured site is live right now.",
+      badgeLabel:
+        totalSitesCount > activeSitesCount
+          ? `${totalSitesCount - activeSitesCount} paused`
+          : "All live",
+      badgeTone: totalSitesCount > activeSitesCount ? "warning" : "success",
+    },
+    {
+      href: "/admin/live-register",
+      eyebrow: "People on site",
+      value: currentlyOnSiteCount,
+      description: "Current occupancy visible to site management.",
+      meta: `Around ${liveOccupancyPercent}% of this week's sign-ins are still on site.`,
+      badgeLabel: currentlyOnSiteCount > 0 ? "Live register" : "Quiet period",
+      badgeTone: currentlyOnSiteCount > 0 ? "success" : "neutral",
+    },
+    {
+      href: "/admin/history",
+      eyebrow: "Sign-in velocity",
+      value: signInsToday,
+      description: "People signed in today across the workspace.",
+      meta: `${signInsSevenDays} sign-ins were recorded over the last 7 days.`,
+      badgeLabel: signInsToday > 0 ? "Today" : "No new entries",
+      badgeTone: signInsToday > 0 ? "info" : "neutral",
+    },
+  ];
+  const coreHealthCards: DashboardMetricCardDefinition[] = [
+    {
+      href: "/admin/sites",
+      eyebrow: "Site readiness",
+      value: activeSitesCount,
+      valueSuffix: `live`,
+      description: "How many sites are actively accepting public sign-ins.",
+      meta: `Total configured sites: ${totalSitesCount}.`,
+      badgeLabel:
+        activeSitesCount === totalSitesCount ? "Stable" : `${totalSitesCount - activeSitesCount} offline`,
+      badgeTone: activeSitesCount === totalSitesCount ? "success" : "warning",
+    },
+    {
+      href: "/admin/history",
+      eyebrow: "Sign-in throughput",
+      value: signInsToday,
+      description: "Today's arrival volume across the tenant.",
+      meta: `${signInsSevenDays} total sign-ins in the current 7-day window.`,
+      badgeLabel: "7 day pulse",
+      badgeTone: "info",
+    },
+    {
+      href: "/admin/competency",
+      eyebrow: "Documents expiring",
+      value: documentsExpiringSoon,
+      description: "Compliance evidence due within the next 30 days.",
+      meta: `1 day: ${documentExpiryWindows.dueIn1Day} | 7 days: ${documentExpiryWindows.dueIn7Days} | Overdue: ${documentExpiryWindows.overdue}`,
+      badgeLabel: documentsExpiringSoon > 0 ? "Needs review" : "Clear",
+      badgeTone: documentsExpiringSoon > 0 ? "warning" : "success",
+    },
+    {
+      href: "/admin/history",
+      eyebrow: "Location verification",
+      value: `${locationCaptureRate}%`,
+      description: "Capture rate over the last 30 days.",
+      meta: `Within radius: ${locationAuditSummary.withinRadius} | Outside: ${locationAuditSummary.outsideRadius} | Missing: ${locationAuditSummary.withoutCapture}`,
+      badgeLabel:
+        locationAuditSummary.withoutCapture > 0 || locationAuditSummary.outsideRadius > 0
+          ? "Investigate gaps"
+          : "Healthy capture",
+      badgeTone:
+        locationAuditSummary.withoutCapture > 0 || locationAuditSummary.outsideRadius > 0
+          ? "warning"
+          : "success",
+    },
+  ];
+  const operationalSignalCards: DashboardMetricCardDefinition[] = [
+    {
+      href: "/admin/actions",
+      eyebrow: "Action register",
+      value: actionSummary.open,
+      description: "Open follow-up items across incidents, hazards, permits, and inspections.",
+      meta: `Overdue: ${actionSummary.overdue} | Blocked: ${actionSummary.blocked}`,
+      badgeLabel:
+        actionSummary.overdue > 0 || actionSummary.blocked > 0
+          ? "Escalate"
+          : actionSummary.open > 0
+            ? "Monitor"
+            : "Clear",
+      badgeTone:
+        actionSummary.overdue > 0 || actionSummary.blocked > 0
+          ? "danger"
+          : actionSummary.open > 0
+            ? "warning"
+            : "success",
+    },
+    {
+      href: "/admin/inspections",
+      eyebrow: "Inspections",
+      value: inspectionSummary.activeSchedules,
+      description: "Recurring safety schedules currently in rotation.",
+      meta: `Overdue: ${inspectionSummary.overdue} | Failed runs (30d): ${inspectionSummary.failedRuns30Days}`,
+      badgeLabel:
+        inspectionSummary.overdue > 0 || inspectionSummary.failedRuns30Days > 0
+          ? "Attention needed"
+          : "Running clean",
+      badgeTone:
+        inspectionSummary.overdue > 0 || inspectionSummary.failedRuns30Days > 0
+          ? "warning"
+          : "success",
+    },
+    {
+      href: "/admin/competency",
+      eyebrow: "Competency matrix",
+      value: competencySummary.expiring,
+      description: "Workers with expiring competency evidence in the next 30 days.",
+      meta: `Blocked decisions (30d): ${competencySummary.blocked30Days} | Pending verification: ${competencySummary.pendingVerification}`,
+      badgeLabel:
+        competencySummary.blocked30Days > 0 || competencySummary.pendingVerification > 0
+          ? "Verification queue"
+          : "Tracking",
+      badgeTone:
+        competencySummary.blocked30Days > 0 || competencySummary.pendingVerification > 0
+          ? "warning"
+          : "info",
+    },
+    {
+      href: "/admin/resources",
+      eyebrow: "Resource readiness",
+      value: resourceSummary.overdueCompliance,
+      description: "Assets with overdue inspection or service dates.",
+      meta: `Blocked: ${resourceSummary.blocked} | Review required: ${resourceSummary.reviewRequired}`,
+      badgeLabel:
+        resourceSummary.overdueCompliance > 0 || resourceSummary.blocked > 0
+          ? "Service gap"
+          : "Ready",
+      badgeTone:
+        resourceSummary.overdueCompliance > 0 || resourceSummary.blocked > 0
+          ? "warning"
+          : "success",
+    },
+    {
+      href: "/admin/live-register",
+      eyebrow: "Roll-call command",
+      value: rollCallSummary.activeEvents,
+      description: `Active events across ${rollCallSummary.activeSites} site${rollCallSummary.activeSites === 1 ? "" : "s"}.`,
+      meta: `Tracked: ${rollCallSummary.trackedPeople} | Missing: ${rollCallSummary.missingPeople} | Closed (7d): ${rollCallSummary.closedEventsLast7Days}`,
+      badgeLabel:
+        rollCallSummary.missingPeople > 0
+          ? `${rollCallSummary.missingPeople} missing`
+          : rollCallSummary.activeEvents > 0
+            ? "Event live"
+            : "Standby",
+      badgeTone:
+        rollCallSummary.missingPeople > 0
+          ? "danger"
+          : rollCallSummary.activeEvents > 0
+            ? "warning"
+            : "neutral",
+    },
+    {
+      href: "/admin/sites",
+      eyebrow: "Drill readiness",
+      value: drillSummary.drillsLast30Days,
+      description: "Emergency drills completed in the last 30 days.",
+      meta: `Due in 7 days: ${drillSummary.dueIn7Days} | Overdue: ${drillSummary.overdueDrills}`,
+      badgeLabel: drillSummary.overdueDrills > 0 ? "Overdue drills" : "On schedule",
+      badgeTone: drillSummary.overdueDrills > 0 ? "warning" : "success",
+    },
+  ];
+  const quizSummaryCards: DashboardMetricCardDefinition[] = [
+    {
+      eyebrow: "Scored responses",
+      value: quizSummary.scoredResponses30Days,
+      description: "Quiz-scored inductions recorded over the last 30 days.",
+      badgeLabel: "30 day window",
+      badgeTone: "info",
+    },
+    {
+      eyebrow: "Pass rate",
+      value: `${quizSummary.passRatePercent}%`,
+      description: "Share of recent scored responses that passed on the current attempt profile.",
+      meta: `Passed: ${quizSummary.passedResponses30Days} | Failed: ${quizSummary.failedResponses30Days}`,
+      badgeLabel:
+        quizSummary.passRatePercent >= 90
+          ? "Strong"
+          : quizSummary.passRatePercent >= 75
+            ? "Watch"
+            : "Intervene",
+      badgeTone:
+        quizSummary.passRatePercent >= 90
+          ? "success"
+          : quizSummary.passRatePercent >= 75
+            ? "warning"
+            : "danger",
+    },
+    {
+      eyebrow: "Failed responses",
+      value: quizSummary.failedResponses30Days,
+      description: "Recent failed quiz attempts across active induction templates.",
+      meta: `Profiles with failures: ${quizSummary.profilesWithRecentFailures}`,
+      badgeLabel:
+        quizSummary.failedResponses30Days > 0 ? "Needs review" : "No recent fails",
+      badgeTone: quizSummary.failedResponses30Days > 0 ? "warning" : "success",
+    },
+    {
+      eyebrow: "Active cooldowns",
+      value: quizSummary.activeCooldowns,
+      description: "Participants currently held in a retry cooldown window.",
+      meta: `${quizSummary.profilesAttempted30Days} recent attempt profile${quizSummary.profilesAttempted30Days === 1 ? "" : "s"} tracked.`,
+      badgeLabel: quizSummary.activeCooldowns > 0 ? "Queue pressure" : "No backlog",
+      badgeTone: quizSummary.activeCooldowns > 0 ? "warning" : "neutral",
+    },
+  ];
+  const respondNowTone: StatusBadgeTone = controlRoomActions.some(
+    (action) => action.tone === "danger",
+  )
+    ? "danger"
+    : controlRoomActions.some((action) => action.tone === "warning")
+      ? "warning"
+      : "success";
 
   return (
     <div className="space-y-6 p-2 sm:p-3">
       <section className="surface-panel-strong overflow-hidden p-5 sm:p-6">
-        <div className="grid gap-5 lg:grid-cols-[minmax(0,1.2fr)_320px]">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-              Live site control room
-            </p>
-            <h1 className="mt-1 text-3xl font-bold sm:text-4xl">Dashboard</h1>
-            <p className="mt-2 max-w-3xl text-sm text-secondary sm:text-base">
-              Run the site from one screen: see who is active, what is blocked, and what
-              needs approval next.
-            </p>
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.18fr)_minmax(19rem,0.82fr)] xl:items-start">
+          <div className="space-y-5">
+            <AdminSectionHeader
+              eyebrow="Operator control room"
+              title="Dashboard"
+              description="See live occupancy, queue pressure, and compliance risk without burying the first screen under equal-weight cards."
+              action={
+                <StatusBadge tone={liveRiskCount > 0 ? "warning" : "success"}>
+                  {liveRiskCount > 0 ? `${liveRiskCount} risks in play` : "Stable now"}
+                </StatusBadge>
+              }
+            />
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl border border-emerald-400/35 bg-emerald-500/12 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-emerald-950 dark:text-emerald-100">
-                  On site now
-                </p>
-                <p className="mt-2 text-3xl font-black text-[color:var(--accent-success)]">
-                  {currentlyOnSiteCount}
-                </p>
-                <p className="mt-1 text-xs text-secondary">
-                  Active people visible to site management right now.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-amber-400/35 bg-amber-500/12 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-amber-900 dark:text-amber-100">
-                  Waiting for review
-                </p>
-                <p className="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100">
-                  {approvalSummary.pending + actionSummary.open + inspectionSummary.overdue}
-                </p>
-                <p className="mt-1 text-xs text-secondary">
-                  {approvalSummary.averagePendingMinutes > 0
-                    ? `Average visitor approval wait is ${approvalSummary.averagePendingMinutes} minutes.`
-                    : "No current queue pressure detected."}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-red-400/35 bg-red-500/12 p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-red-950 dark:text-red-100">
-                  Risk now
-                </p>
-                <p className="mt-2 text-3xl font-black text-red-950 dark:text-red-100">
-                  {documentsExpiringSoon +
-                    permitSummary.overdue +
-                    rollCallSummary.missingPeople +
-                    actionSummary.overdue +
-                    resourceSummary.overdueCompliance}
-                </p>
-                <p className="mt-1 text-xs text-secondary">
-                  Expiring docs, overdue actions, overdue permits, resource issues, and missing roll-call workers.
-                </p>
-              </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {primaryMetrics.map((card) => (
+                <DashboardMetricCard key={card.eyebrow} card={card} />
+              ))}
             </div>
           </div>
 
-          <div className="rounded-[1.25rem] border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-              Respond now
-            </p>
-            <ul className="mt-3 space-y-3">
+          <aside className="admin-card">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="admin-card-eyebrow">Act now</p>
+                <p className="mt-2 text-lg font-semibold text-[color:var(--text-primary)]">
+                  Respond to the queues that change site safety the fastest.
+                </p>
+                <p className="mt-2 text-sm text-secondary">
+                  Keep approvals, actions, and inspections close so operators can move from overview to intervention in one step.
+                </p>
+              </div>
+              <StatusBadge tone={respondNowTone}>Priority stack</StatusBadge>
+            </div>
+
+            <ul className="mt-4 space-y-2.5">
               {controlRoomActions.map((action) => (
                 <li key={action.href}>
                   <Link
                     href={action.href}
-                    className="block rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] px-3 py-3 hover:bg-[color:var(--bg-surface)]"
+                    className="block rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] px-3 py-3 transition-colors hover:bg-[color:var(--bg-surface)]"
                   >
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-start justify-between gap-3">
                       <p className="text-sm font-semibold text-[color:var(--text-primary)]">
                         {action.label}
                       </p>
-                      <span className={`text-lg font-black ${action.tone}`}>{action.value}</span>
+                      <StatusBadge tone={action.tone}>{action.badgeLabel}</StatusBadge>
                     </div>
-                    <p className="mt-1 text-xs text-secondary">{action.detail}</p>
+                    <p className="mt-2 text-sm text-secondary">{action.detail}</p>
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
+          </aside>
         </div>
       </section>
 
-      {metricsLoadFailed && (
+      {metricsLoadFailed ? (
         <Alert variant="warning">
           Dashboard data could not be loaded. Please refresh and try again.
         </Alert>
-      )}
+      ) : null}
 
       {(showWelcome || !onboardingProgress.onboardingComplete) && (
         <OnboardingChecklist
@@ -356,734 +636,309 @@ export default async function AdminDashboardPage({
         />
       )}
 
-      <section className="bento-grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
-        <Link href="/admin/sites" className="kinetic-hover bento-card xl:col-span-2">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-                Active Sites
-              </p>
-              <p className="mt-2 text-4xl font-black text-[color:var(--text-primary)]">
-                {activeSitesCount}
-                <span className="ml-2 text-base font-medium text-muted">
-                  / {totalSitesCount}
-                </span>
-              </p>
-              <p className="mt-2 text-sm text-secondary">
-                Live sites currently accepting sign-ins.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-indigo-400/30 bg-indigo-500/14 p-3">
-              <svg
-                className="h-6 w-6 text-indigo-800 dark:text-indigo-100"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                />
-              </svg>
-            </div>
-          </div>
-        </Link>
-
-        <div className="bento-card">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-                On Site Right Now
-              </p>
-              <p className="mt-2 text-4xl font-black text-[color:var(--accent-success)]">
-                {currentlyOnSiteCount}
-              </p>
-              <p className="mt-1 text-xs text-muted">
-                Around {liveOccupancyPercent}% of this week&apos;s sign-ins are on site now.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-emerald-400/35 bg-emerald-500/16 p-3">
-              <svg
-                className="h-6 w-6 text-emerald-800 dark:text-emerald-100"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="bento-card">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-                Sign-In Velocity
-              </p>
-              <p className="mt-2 text-4xl font-black text-[color:var(--text-primary)]">
-                {signInsToday}
-              </p>
-              <p className="mt-1 text-sm text-secondary">
-                {signInsSevenDays} sign-ins in the last 7 days.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-fuchsia-400/35 bg-fuchsia-500/14 p-3">
-              <svg
-                className="h-6 w-6 text-fuchsia-900 dark:text-fuchsia-100"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="bento-card">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-                Documents Expiring
-              </p>
-              <p
-                className={`mt-2 text-4xl font-black ${documentsExpiringSoon > 0 ? "text-amber-800 dark:text-amber-100" : "text-[color:var(--text-primary)]"}`}
-              >
-                {documentsExpiringSoon}
-              </p>
-              <p className="mt-1 text-sm text-secondary">Due within the next 30 days.</p>
-              <div className="mt-2 text-xs text-secondary">
-                <p>1 day: {documentExpiryWindows.dueIn1Day}</p>
-                <p>7 days: {documentExpiryWindows.dueIn7Days}</p>
-                <p>14 days: {documentExpiryWindows.dueIn14Days}</p>
-                <p>Overdue: {documentExpiryWindows.overdue}</p>
-              </div>
-            </div>
-            <div
-              className={`rounded-2xl border p-3 ${documentsExpiringSoon > 0 ? "border-amber-400/45 bg-amber-500/18" : "border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)]"}`}
+      <section className="space-y-3">
+        <AdminSectionHeader
+          eyebrow="Monitor"
+          title="Core health"
+          description="Track site readiness, arrival throughput, compliance expiry, and location coverage from calmer neutral surfaces."
+          action={
+            <Link
+              href="/admin/live-register"
+              className="inline-flex min-h-[38px] items-center rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[color:var(--text-primary)] hover:bg-[color:var(--bg-surface-strong)]"
             >
-              <div
-                className={`${documentsExpiringSoon > 0 ? "text-amber-900 dark:text-amber-100" : "text-secondary"}`}
-              >
-                <svg
-                  className="h-6 w-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
+              Open live register
+            </Link>
+          }
+        />
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {coreHealthCards.map((card) => (
+            <DashboardMetricCard key={card.eyebrow} card={card} />
+          ))}
         </div>
       </section>
 
-      <section className="bento-grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4">
-        <Link
-          href="/admin/actions"
-          className="kinetic-hover bento-card border-rose-300/40 bg-rose-500/10"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-                Action Register
-              </p>
-              <p className="mt-2 text-3xl font-black text-rose-900 dark:text-rose-100">
-                {actionSummary.open}
-              </p>
-              <p className="mt-1 text-sm text-secondary">
-                Open follow-up items across incidents, hazards, permits, and inspections.
-              </p>
-              <p className="mt-1 text-xs text-secondary">
-                Overdue: {actionSummary.overdue} | Blocked: {actionSummary.blocked}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-rose-400/40 bg-rose-500/16 p-3">
-              <svg
-                className="h-6 w-6 text-rose-900 dark:text-rose-100"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5h6m-7 4h8m-9 4h10m-7 4h4M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z"
-                />
-              </svg>
-            </div>
-          </div>
-        </Link>
+      <section className="space-y-3">
+        <AdminSectionHeader
+          eyebrow="Respond and resolve"
+          title="Operational signals"
+          description="The queues and readiness checks that matter most once the overview says something needs intervention."
+          action={
+            <Link
+              href="/admin/command-mode"
+              className="inline-flex min-h-[38px] items-center rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[color:var(--text-primary)] hover:bg-[color:var(--bg-surface-strong)]"
+            >
+              Open command mode
+            </Link>
+          }
+        />
 
-        <Link
-          href="/admin/inspections"
-          className="kinetic-hover bento-card border-cyan-300/40 bg-cyan-500/10"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-                Inspections
-              </p>
-              <p className="mt-2 text-3xl font-black text-cyan-900 dark:text-cyan-100">
-                {inspectionSummary.activeSchedules}
-              </p>
-              <p className="mt-1 text-sm text-secondary">
-                Active recurring inspection schedules linked to site safety forms.
-              </p>
-              <p className="mt-1 text-xs text-secondary">
-                Overdue: {inspectionSummary.overdue} | Failed runs (30d): {inspectionSummary.failedRuns30Days}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-cyan-400/40 bg-cyan-500/16 p-3">
-              <svg
-                className="h-6 w-6 text-cyan-900 dark:text-cyan-100"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 11l3 3L22 4M7 7H5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2v-2"
-                />
-              </svg>
-            </div>
-          </div>
-        </Link>
-
-        <Link
-          href="/admin/competency"
-          className="kinetic-hover bento-card border-indigo-300/40 bg-indigo-500/10"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-                Competency Matrix
-              </p>
-              <p className="mt-2 text-3xl font-black text-indigo-900 dark:text-indigo-100">
-                {competencySummary.expiring}
-              </p>
-              <p className="mt-1 text-sm text-secondary">
-                Workers with expiring certifications or competency evidence in the next 30 days.
-              </p>
-              <p className="mt-1 text-xs text-secondary">
-                Blocked decisions (30d): {competencySummary.blocked30Days} | Pending verification: {competencySummary.pendingVerification}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-indigo-400/40 bg-indigo-500/16 p-3">
-              <svg
-                className="h-6 w-6 text-indigo-900 dark:text-indigo-100"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 6v6l4 2m5-2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-          </div>
-        </Link>
-
-        <Link
-          href="/admin/resources"
-          className="kinetic-hover bento-card border-amber-300/40 bg-amber-500/10"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-                Resource readiness
-              </p>
-              <p className="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100">
-                {resourceSummary.overdueCompliance}
-              </p>
-              <p className="mt-1 text-sm text-secondary">
-                Equipment or bookable assets with overdue inspection or service dates.
-              </p>
-              <p className="mt-1 text-xs text-secondary">
-                Blocked: {resourceSummary.blocked} | Review required: {resourceSummary.reviewRequired}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-amber-400/40 bg-amber-500/16 p-3">
-              <svg
-                className="h-6 w-6 text-amber-900 dark:text-amber-100"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-            </div>
-          </div>
-        </Link>
-
-        <Link
-          href="/admin/live-register"
-          className="kinetic-hover bento-card border-amber-300/40 bg-amber-500/10"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-                Roll-Call Command
-              </p>
-              <p className="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100">
-                {rollCallSummary.activeEvents}
-              </p>
-              <p className="mt-1 text-sm text-secondary">
-                Active events across {rollCallSummary.activeSites} site
-                {rollCallSummary.activeSites === 1 ? "" : "s"}.
-              </p>
-              <p className="mt-1 text-xs text-secondary">
-                Tracked: {rollCallSummary.trackedPeople} | Missing:{" "}
-                {rollCallSummary.missingPeople} | Closed (7d):{" "}
-                {rollCallSummary.closedEventsLast7Days}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-amber-400/45 bg-amber-500/18 p-3">
-              <svg
-                className="h-6 w-6 text-amber-900 dark:text-amber-100"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-7.938 4h15.876c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L2.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-            </div>
-          </div>
-        </Link>
-
-        <Link
-          href="/admin/sites"
-          className="kinetic-hover bento-card border-cyan-300/40 bg-cyan-500/10"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-                Drill Readiness
-              </p>
-              <p className="mt-2 text-3xl font-black text-cyan-900 dark:text-cyan-100">
-                {drillSummary.drillsLast30Days}
-              </p>
-              <p className="mt-1 text-sm text-secondary">
-                Emergency drills recorded in the last 30 days.
-              </p>
-              <p className="mt-1 text-xs text-secondary">
-                Due in 7d: {drillSummary.dueIn7Days} | Overdue:{" "}
-                {drillSummary.overdueDrills}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-cyan-400/40 bg-cyan-500/16 p-3">
-              <svg
-                className="h-6 w-6 text-cyan-900 dark:text-cyan-100"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-          </div>
-        </Link>
-
-        <Link
-          href="/admin/history"
-          className="kinetic-hover bento-card border-indigo-300/40 bg-indigo-500/10"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-                Location Verification
-              </p>
-              <p className="mt-2 text-3xl font-black text-indigo-900 dark:text-indigo-100">
-                {locationCaptureRate}%
-              </p>
-              <p className="mt-1 text-sm text-secondary">
-                Capture rate in the last 30 days ({locationAuditSummary.captured}/
-                {locationAuditSummary.totalSignIns30Days}).
-              </p>
-              <p className="mt-1 text-xs text-secondary">
-                Within: {locationAuditSummary.withinRadius} | Outside:{" "}
-                {locationAuditSummary.outsideRadius} | Missing:{" "}
-                {locationAuditSummary.withoutCapture}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-indigo-400/40 bg-indigo-500/16 p-3">
-              <svg
-                className="h-6 w-6 text-indigo-900 dark:text-indigo-100"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"
-                />
-              </svg>
-            </div>
-          </div>
-        </Link>
-
-        <Link
-          href="/admin/templates"
-          className="kinetic-hover bento-card border-violet-300/40 bg-violet-500/10"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-                Quiz Compliance
-              </p>
-              <p className="mt-2 text-3xl font-black text-violet-900 dark:text-violet-100">
-                {quizSummary.passRatePercent}%
-              </p>
-              <p className="mt-1 text-sm text-secondary">
-                Pass rate for quiz-scored inductions in the last 30 days.
-              </p>
-              <p className="mt-1 text-xs text-secondary">
-                Passed: {quizSummary.passedResponses30Days} | Failed:{" "}
-                {quizSummary.failedResponses30Days}
-              </p>
-              <p className="mt-1 text-xs text-secondary">
-                Cooldowns: {quizSummary.activeCooldowns} | Risk profiles:{" "}
-                {quizSummary.profilesWithRecentFailures}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-violet-400/40 bg-violet-500/16 p-3">
-              <svg
-                className="h-6 w-6 text-violet-900 dark:text-violet-100"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 17v-2a4 4 0 014-4h4m0 0l-3-3m3 3l-3 3M5 3h12a2 2 0 012 2v5M7 21H5a2 2 0 01-2-2V9a2 2 0 012-2h2"
-                />
-              </svg>
-            </div>
-          </div>
-        </Link>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {operationalSignalCards.map((card) => (
+            <DashboardMetricCard key={card.eyebrow} card={card} />
+          ))}
+        </div>
       </section>
 
-      <section className="surface-panel overflow-hidden">
-        <div className="flex items-center justify-between border-b border-surface-soft px-5 py-4">
-          <div>
-            <h2
-              id="quiz-performance-signals-heading"
-              className="kinetic-title text-xl font-black text-[color:var(--text-primary)]"
-            >
-              Quiz Performance Signals (30 Days)
-            </h2>
-            <p className="mt-1 text-sm text-secondary">
-              Monitors pass/fail outcomes and cooldown pressure from current quiz
-              attempt profiles.
-            </p>
-          </div>
+      <AdminDisclosureSection
+        eyebrow="Compliance signals"
+        title="Quiz performance signals"
+        description="Open pass-rate pressure and cooldown trends only when the overview needs more context."
+        summaryMeta={
+          <StatusBadge tone={quizSummary.failedResponses30Days > 0 ? "warning" : "neutral"}>
+            {quizSummary.failedResponses30Days > 0
+              ? `${quizSummary.failedResponses30Days} recent fails`
+              : "Quiet now"}
+          </StatusBadge>
+        }
+        tone="subtle"
+        action={
           <Link
             href="/admin/templates"
-            className="inline-flex min-h-[38px] items-center rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] px-3 py-2 text-xs font-semibold text-[color:var(--text-primary)] hover:bg-[color:var(--bg-surface)]"
+            className="inline-flex min-h-[34px] items-center rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-[color:var(--text-primary)] hover:bg-[color:var(--bg-surface-strong)]"
           >
-            Manage Templates
+            Manage templates
           </Link>
+        }
+      >
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {quizSummaryCards.map((card) => (
+            <DashboardMetricCard key={card.eyebrow} card={card} />
+          ))}
         </div>
 
-        <div className="grid grid-cols-1 gap-4 p-5 lg:grid-cols-4">
-          <div className="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-              Scored Responses
-            </p>
-            <p className="mt-2 text-3xl font-black text-[color:var(--text-primary)]">
-              {quizSummary.scoredResponses30Days}
-            </p>
-          </div>
-          <div className="rounded-lg border border-emerald-400/35 bg-emerald-500/14 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-emerald-900 dark:text-emerald-100">
-              Passed
-            </p>
-            <p className="mt-2 text-3xl font-black text-emerald-900 dark:text-emerald-100">
-              {quizSummary.passedResponses30Days}
-            </p>
-          </div>
-          <div className="rounded-lg border border-rose-400/35 bg-rose-500/14 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-rose-900 dark:text-rose-100">
-              Failed
-            </p>
-            <p className="mt-2 text-3xl font-black text-rose-900 dark:text-rose-100">
-              {quizSummary.failedResponses30Days}
-            </p>
-          </div>
-          <div className="rounded-lg border border-amber-400/35 bg-amber-500/16 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-amber-900 dark:text-amber-100">
-              Active Cooldowns
-            </p>
-            <p className="mt-2 text-3xl font-black text-amber-900 dark:text-amber-100">
-              {quizSummary.activeCooldowns}
-            </p>
-            <p className="mt-1 text-xs text-secondary">
-              {quizSummary.profilesAttempted30Days} recent attempt profile
-              {quizSummary.profilesAttempted30Days === 1 ? "" : "s"} tracked.
-            </p>
-          </div>
-        </div>
-
-        <DataTableScroll
-          className="px-5 pb-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring-focus)]"
-          tabIndex={0}
-          role="region"
-          aria-labelledby="quiz-performance-signals-heading"
-        >
-          <DataTable>
-            <DataTableHeader className="bg-[color:var(--bg-surface)]">
-              <DataTableRow>
-                <DataTableHeadCell>
-                  Template
-                </DataTableHeadCell>
-                <DataTableHeadCell>
-                  Site
-                </DataTableHeadCell>
-                <DataTableHeadCell className="text-right">
-                  Attempt Profiles
-                </DataTableHeadCell>
-                <DataTableHeadCell className="text-right">
-                  Fail Profiles
-                </DataTableHeadCell>
-                <DataTableHeadCell className="text-right">
-                  Active Cooldowns
-                </DataTableHeadCell>
-              </DataTableRow>
-            </DataTableHeader>
-            <DataTableBody>
-              {quizSummary.topRiskTemplateSites.length === 0 ? (
-                <DataTableEmptyRow colSpan={5}>
-                  No recent quiz attempt pressure detected.
-                </DataTableEmptyRow>
-              ) : (
-                quizSummary.topRiskTemplateSites.map((row) => (
-                  <DataTableRow key={`${row.template_id}:${row.site_id}`}>
-                    <DataTableCell className="font-medium text-[color:var(--text-primary)]">
-                      {row.template_name}
-                    </DataTableCell>
-                    <DataTableCell>{row.site_name}</DataTableCell>
-                    <DataTableCell className="text-right text-[color:var(--text-primary)]">
-                      {row.recent_attempt_profiles}
-                    </DataTableCell>
-                    <DataTableCell className="text-right text-rose-900 dark:text-rose-100">
-                      {row.recent_fail_profiles}
-                    </DataTableCell>
-                    <DataTableCell className="text-right text-amber-900 dark:text-amber-100">
-                      {row.active_cooldowns}
-                    </DataTableCell>
-                  </DataTableRow>
-                ))
-              )}
-            </DataTableBody>
-          </DataTable>
-        </DataTableScroll>
-      </section>
+        <DataTableShell className="mt-4 rounded-none border-0 bg-transparent shadow-none">
+          <DataTableScroll
+            className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--ring-focus)]"
+            tabIndex={0}
+            role="region"
+            aria-labelledby="quiz-performance-signals-heading"
+          >
+            <DataTable className="data-table-compact data-table-dense">
+              <DataTableHeader className="bg-[color:var(--bg-surface)]">
+                <DataTableRow>
+                  <DataTableHeadCell id="quiz-performance-signals-heading">
+                    Template
+                  </DataTableHeadCell>
+                  <DataTableHeadCell>Site</DataTableHeadCell>
+                  <DataTableHeadCell className="text-right">
+                    Attempt Profiles
+                  </DataTableHeadCell>
+                  <DataTableHeadCell className="text-right">
+                    Fail Profiles
+                  </DataTableHeadCell>
+                  <DataTableHeadCell className="text-right">
+                    Active Cooldowns
+                  </DataTableHeadCell>
+                </DataTableRow>
+              </DataTableHeader>
+              <DataTableBody>
+                {quizSummary.topRiskTemplateSites.length === 0 ? (
+                  <DataTableEmptyRow colSpan={5}>
+                    No recent quiz attempt pressure detected.
+                  </DataTableEmptyRow>
+                ) : (
+                  quizSummary.topRiskTemplateSites.map((row) => (
+                    <DataTableRow key={`${row.template_id}:${row.site_id}`}>
+                      <DataTableCell className="font-medium text-[color:var(--text-primary)]">
+                        {row.template_name}
+                      </DataTableCell>
+                      <DataTableCell>{row.site_name}</DataTableCell>
+                      <DataTableCell className="text-right text-[color:var(--text-primary)]">
+                        {row.recent_attempt_profiles}
+                      </DataTableCell>
+                      <DataTableCell className="text-right text-[color:var(--text-primary)]">
+                        {row.recent_fail_profiles}
+                      </DataTableCell>
+                      <DataTableCell className="text-right text-[color:var(--text-primary)]">
+                        {row.active_cooldowns}
+                      </DataTableCell>
+                    </DataTableRow>
+                  ))
+                )}
+              </DataTableBody>
+            </DataTable>
+          </DataTableScroll>
+        </DataTableShell>
+      </AdminDisclosureSection>
 
       {(canManageContractors || canManageUsers) && (
-        <section>
-          <h2 className="kinetic-title mb-3 text-lg font-black text-[color:var(--text-primary)]">
-            Management
-          </h2>
-          <div className="bento-grid grid-cols-1 md:grid-cols-2">
-            {canManageContractors && (
-              <Link
-                href="/admin/contractors"
-                className="kinetic-hover bento-card"
-              >
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-                  Contractors
-                </p>
-                <p className="kinetic-title mt-1 text-xl font-bold text-[color:var(--text-primary)]">
+        <AdminDisclosureSection
+          eyebrow="Administration"
+          title="Management shortcuts"
+          description="Keep high-frequency configuration pages close without turning the dashboard into another settings index."
+          summaryMeta={
+            <StatusBadge tone="neutral">
+              {canManageContractors && canManageUsers ? "2 shortcuts" : "1 shortcut"}
+            </StatusBadge>
+          }
+          tone="subtle"
+        >
+          <div className="grid gap-4 md:grid-cols-2">
+            {canManageContractors ? (
+              <Link href="/admin/contractors" className="admin-card-link h-full">
+                <p className="admin-card-eyebrow">Contractors</p>
+                <p className="mt-2 text-xl font-semibold text-[color:var(--text-primary)]">
                   View and manage contractor records
                 </p>
-                <p className="mt-2 text-sm text-secondary">
-                  Keep details current and compliance-ready.
+                <p className="admin-card-support">
+                  Keep details current, compliant, and ready for site access.
                 </p>
               </Link>
-            )}
-            {canManageUsers && (
-              <Link
-                href="/admin/users"
-                className="kinetic-hover bento-card"
-              >
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-secondary">
-                  Users
-                </p>
-                <p className="kinetic-title mt-1 text-xl font-bold text-[color:var(--text-primary)]">
+            ) : null}
+            {canManageUsers ? (
+              <Link href="/admin/users" className="admin-card-link h-full">
+                <p className="admin-card-eyebrow">Users</p>
+                <p className="mt-2 text-xl font-semibold text-[color:var(--text-primary)]">
                   View roles and account status
                 </p>
-                <p className="mt-2 text-sm text-secondary">
-                  Manage access, roles, and account state.
+                <p className="admin-card-support">
+                  Manage access, permissions, and account state from one place.
                 </p>
               </Link>
-            )}
+            ) : null}
           </div>
-        </section>
+        </AdminDisclosureSection>
       )}
 
-      <section className="bento-grid grid-cols-1 lg:grid-cols-3">
-        <div className="surface-panel overflow-hidden">
-          <div className="border-b border-surface-soft px-5 py-4">
-            <h2 className="kinetic-title text-xl font-black text-[color:var(--text-primary)]">
-              Recent Sign-Ins
-            </h2>
-          </div>
-          <div className="p-5">
-            {recentSignIns.length === 0 ? (
-              <p className="text-sm text-secondary">No recent sign-ins.</p>
-            ) : (
-              <ul className="divide-y divide-[color:var(--border-soft)]">
-                {recentSignIns.map((record) => (
-                  <li key={record.id} className="py-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-[color:var(--text-primary)]">
-                          {record.visitor_name}
-                        </p>
-                        <p className="text-sm text-secondary">
-                          {record.site.name}
-                        </p>
+      <AdminDisclosureSection
+        eyebrow="Recent signals"
+        title="Activity and arrivals"
+        description="Open recent movement, audit actions, and host alerts only when the overview needs more detail."
+        summaryMeta={
+          <StatusBadge tone="neutral">
+            {recentSignIns.length + recentAuditLogs.length + hostArrivalNotifications.length} items
+          </StatusBadge>
+        }
+        tone="subtle"
+      >
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="surface-panel overflow-hidden">
+            <div className="border-b border-surface-soft px-5 py-4">
+              <p className="admin-card-eyebrow">Recent sign-ins</p>
+              <p className="mt-2 text-lg font-semibold text-[color:var(--text-primary)]">
+                Latest arrivals
+              </p>
+            </div>
+            <div className="p-5">
+              {recentSignIns.length === 0 ? (
+                <p className="text-sm text-secondary">No recent sign-ins.</p>
+              ) : (
+                <ul className="divide-y divide-[color:var(--border-soft)]">
+                  {recentSignIns.map((record) => (
+                    <li key={record.id} className="py-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-[color:var(--text-primary)]">
+                            {record.visitor_name}
+                          </p>
+                          <p className="truncate text-sm text-secondary">
+                            {record.site.name}
+                          </p>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p className="text-xs text-muted">
+                            {new Date(record.sign_in_ts).toLocaleString()}
+                          </p>
+                          {!record.sign_out_ts ? (
+                            <StatusBadge tone="success" className="mt-1">
+                              On site
+                            </StatusBadge>
+                          ) : null}
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs text-muted">
-                          {new Date(record.sign_in_ts).toLocaleString()}
-                        </p>
-                        {!record.sign_out_ts && (
-                          <StatusBadge tone="success" className="mt-1">
-                            On site
-                          </StatusBadge>
-                        )}
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="surface-panel overflow-hidden">
-          <div className="flex items-center justify-between border-b border-surface-soft px-5 py-4">
-            <h2 className="kinetic-title text-xl font-black text-[color:var(--text-primary)]">
-              Recent Activity
-            </h2>
-            <Link
-              href="/admin/audit-log"
-              className="rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-secondary hover:bg-[color:var(--bg-surface-strong)]"
-            >
-              View all
-            </Link>
-          </div>
-          <div className="p-5">
-            {recentAuditLogs.length === 0 ? (
-              <p className="text-sm text-secondary">No recent activity.</p>
-            ) : (
-              <ul className="divide-y divide-[color:var(--border-soft)]">
-                {recentAuditLogs.map((log) => (
-                  <li key={log.id} className="py-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-[color:var(--text-primary)]">
-                          {formatAuditAction(log.action)}
-                        </p>
-                        <p className="text-sm text-secondary">
-                          by {log.user?.name || "System"}
+          <div className="surface-panel overflow-hidden">
+            <div className="flex items-start justify-between gap-3 border-b border-surface-soft px-5 py-4">
+              <div>
+                <p className="admin-card-eyebrow">Recent activity</p>
+                <p className="mt-2 text-lg font-semibold text-[color:var(--text-primary)]">
+                  Audit trail snapshots
+                </p>
+              </div>
+              <Link
+                href="/admin/audit-log"
+                className="inline-flex min-h-[34px] items-center rounded-lg border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] px-2.5 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-secondary hover:bg-[color:var(--bg-surface-strong)]"
+              >
+                View all
+              </Link>
+            </div>
+            <div className="p-5">
+              {recentAuditLogs.length === 0 ? (
+                <p className="text-sm text-secondary">No recent activity.</p>
+              ) : (
+                <ul className="divide-y divide-[color:var(--border-soft)]">
+                  {recentAuditLogs.map((log) => (
+                    <li key={log.id} className="py-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-[color:var(--text-primary)]">
+                            {formatAuditAction(log.action)}
+                          </p>
+                          <p className="truncate text-sm text-secondary">
+                            by {log.user?.name || "System"}
+                          </p>
+                        </div>
+                        <p className="shrink-0 text-xs text-muted">
+                          {new Date(log.created_at).toLocaleString()}
                         </p>
                       </div>
-                      <p className="text-xs text-muted">
-                        {new Date(log.created_at).toLocaleString()}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="surface-panel overflow-hidden">
-          <div className="flex items-center justify-between border-b border-surface-soft px-5 py-4">
-            <h2 className="kinetic-title text-xl font-black text-[color:var(--text-primary)]">
-              Arrival Alerts
-            </h2>
-            <span className="rounded-lg border border-cyan-400/35 bg-cyan-500/16 px-2.5 py-1 text-xs font-semibold uppercase tracking-wide text-cyan-900 dark:text-cyan-100">
-              In-app
-            </span>
-          </div>
-          <div className="p-5">
-            {hostArrivalNotifications.length === 0 ? (
-              <p className="text-sm text-secondary">No host arrival alerts yet.</p>
-            ) : (
-              <ul className="divide-y divide-[color:var(--border-soft)]">
-                {hostArrivalNotifications.map((notification) => (
-                  <li key={notification.id} className="py-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-semibold text-[color:var(--text-primary)]">
-                          {notification.visitor_name}
-                        </p>
-                        <p className="text-sm text-secondary">{notification.site_name}</p>
-                        <p className="mt-1 text-xs text-muted">
-                          {notification.targeted
-                            ? "Targeted to you"
-                            : "Broadcast to site managers"}
+          <div className="surface-panel overflow-hidden">
+            <div className="flex items-start justify-between gap-3 border-b border-surface-soft px-5 py-4">
+              <div>
+                <p className="admin-card-eyebrow">Arrival alerts</p>
+                <p className="mt-2 text-lg font-semibold text-[color:var(--text-primary)]">
+                  Host notifications
+                </p>
+              </div>
+              <StatusBadge tone="info">In app</StatusBadge>
+            </div>
+            <div className="p-5">
+              {hostArrivalNotifications.length === 0 ? (
+                <p className="text-sm text-secondary">No host arrival alerts yet.</p>
+              ) : (
+                <ul className="divide-y divide-[color:var(--border-soft)]">
+                  {hostArrivalNotifications.map((notification) => (
+                    <li key={notification.id} className="py-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-[color:var(--text-primary)]">
+                            {notification.visitor_name}
+                          </p>
+                          <p className="truncate text-sm text-secondary">
+                            {notification.site_name}
+                          </p>
+                          <p className="mt-1 text-xs text-muted">
+                            {notification.targeted
+                              ? "Targeted to you"
+                              : "Broadcast to site managers"}
+                          </p>
+                        </div>
+                        <p className="shrink-0 text-xs text-muted">
+                          {new Date(notification.created_at).toLocaleString()}
                         </p>
                       </div>
-                      <p className="text-xs text-muted">
-                        {new Date(notification.created_at).toLocaleString()}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
-      </section>
+      </AdminDisclosureSection>
     </div>
   );
 }

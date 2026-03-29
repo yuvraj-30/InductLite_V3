@@ -2,6 +2,7 @@
 
 import { useActionState, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { AdminDisclosureSection } from "@/components/ui/admin-disclosure-section";
 import { Alert } from "@/components/ui/alert";
 import {
   updateComplianceSettingsAction,
@@ -79,6 +80,22 @@ export default function ComplianceSettingsForm({
     clientError ?? getFieldError("complianceLegalHoldReason");
   const formError =
     clientError ?? (state && !state.success ? state.error : null);
+  const retentionSectionOpen =
+    Boolean(getFieldError("retentionDays")) ||
+    Boolean(getFieldError("inductionRetentionDays")) ||
+    Boolean(getFieldError("auditRetentionDays")) ||
+    Boolean(getFieldError("incidentRetentionDays")) ||
+    Boolean(getFieldError("emergencyDrillRetentionDays"));
+  const legalHoldSectionOpen =
+    Boolean(clientError) ||
+    Boolean(getFieldError("complianceLegalHold")) ||
+    Boolean(getFieldError("complianceLegalHoldReason")) ||
+    initialSettings.compliance_legal_hold ||
+    Boolean(initialSettings.compliance_legal_hold_reason?.trim());
+  const residencySectionOpen =
+    Boolean(getFieldError("dataResidencyRegion")) ||
+    Boolean(getFieldError("dataResidencyScope")) ||
+    Boolean(getFieldError("dataResidencyNotes"));
 
   return (
     <form
@@ -110,12 +127,31 @@ export default function ComplianceSettingsForm({
         <Alert variant="success">{state.message}</Alert>
       )}
 
-      <section className="surface-panel p-4">
-        <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">Retention Windows</h2>
-        <p className="mt-1 text-sm text-secondary">
-          Set retention in days for each compliance record class.
-        </p>
+      <div className="flex flex-col gap-3 rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-semibold text-[color:var(--text-primary)]">
+            Compliance settings stay collapsed until they need attention.
+          </p>
+          <p className="mt-1 text-xs text-secondary">
+            Open only the section you need, then save without scrolling to the bottom.
+          </p>
+        </div>
+        <SaveButton />
+      </div>
 
+      <AdminDisclosureSection
+        eyebrow="Retention"
+        title="Retention windows"
+        description="Set purge windows for each record class without turning the whole page into a spreadsheet."
+        summaryMeta={
+          <span className="text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+            {initialSettings.retention_days}d sign-ins
+          </span>
+        }
+        titleAs="h3"
+        defaultOpen={retentionSectionOpen}
+        tone="subtle"
+      >
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
           <label className="text-sm text-secondary">
             Sign-in register retention (days)
@@ -215,14 +251,21 @@ export default function ComplianceSettingsForm({
             )}
           </label>
         </div>
-      </section>
+      </AdminDisclosureSection>
 
-      <section className="surface-panel p-4">
-        <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">Legal Hold</h2>
-        <p className="mt-1 text-sm text-secondary">
-          Enable legal hold to block automated purges for compliance records.
-        </p>
-
+      <AdminDisclosureSection
+        eyebrow="Legal hold"
+        title="Pause automated purge rules"
+        description="Keep hold state and reason visible without giving this section the same weight as the main retention controls."
+        summaryMeta={
+          <span className="text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+            {initialSettings.compliance_legal_hold ? "Enabled" : "Off"}
+          </span>
+        }
+        titleAs="h3"
+        defaultOpen={legalHoldSectionOpen}
+        tone="subtle"
+      >
         <div className="mt-4 space-y-3">
           <label className="flex items-center gap-2 text-sm text-secondary">
             <input
@@ -264,14 +307,21 @@ export default function ComplianceSettingsForm({
             )}
           </label>
         </div>
-      </section>
+      </AdminDisclosureSection>
 
-      <section className="surface-panel p-4">
-        <h2 className="text-lg font-semibold text-[color:var(--text-primary)]">Data Residency</h2>
-        <p className="mt-1 text-sm text-secondary">
-          Record tenant-level data residency choices for compliance evidence and buyer assurance.
-        </p>
-
+      <AdminDisclosureSection
+        eyebrow="Residency"
+        title="Data residency record"
+        description="Keep buyer-facing residency declarations and attestations available behind a calmer disclosure."
+        summaryMeta={
+          <span className="text-xs font-semibold uppercase tracking-[0.08em] text-secondary">
+            {initialSettings.data_residency_region ?? "Undeclared"}
+          </span>
+        }
+        titleAs="h3"
+        defaultOpen={residencySectionOpen}
+        tone="subtle"
+      >
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
           <label className="text-sm text-secondary">
             Residency region
@@ -340,11 +390,8 @@ export default function ComplianceSettingsForm({
             ? `(by ${initialSettings.data_residency_attested_by})`
             : ""}
         </p>
-      </section>
+      </AdminDisclosureSection>
 
-      <div className="flex items-center justify-end border-t pt-4">
-        <SaveButton />
-      </div>
     </form>
   );
 }

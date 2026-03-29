@@ -40,6 +40,26 @@ export interface CompanyInvoicePreview {
   siteInvoices: SiteInvoicePreview[];
 }
 
+export interface CompanyInvoiceSummary {
+  companyId: string;
+  currency: "NZD";
+  generatedAt: Date;
+  activeSiteCount: number;
+  baseTotalCents: number;
+  creditTotalCents: number;
+  finalTotalCents: number;
+  planCounts: {
+    STANDARD: number;
+    PLUS: number;
+    PRO: number;
+  };
+}
+
+type SiteEntitlementSnapshot = {
+  site: Awaited<ReturnType<typeof findAllSites>>[number];
+  entitlements: Awaited<ReturnType<typeof getEffectiveEntitlements>>;
+};
+
 const FEATURE_LABELS: Record<ProductFeatureKey, string> = {
   HOST_NOTIFICATIONS: "Host notifications",
   BADGE_PRINTING: "Badge printing",
@@ -76,18 +96,64 @@ const FEATURE_LABELS: Record<ProductFeatureKey, string> = {
   NATIVE_MOBILE_RUNTIME_V1: "Native mobile runtime",
 };
 
-export async function buildCompanyInvoicePreview(
+function createEmptyPlanCounts(): CompanyInvoiceSummary["planCounts"] {
+  return {
+    STANDARD: 0,
+    PLUS: 0,
+    PRO: 0,
+  };
+}
+
+async function resolveActiveSiteEntitlementSnapshots(
   companyId: string,
-): Promise<CompanyInvoicePreview> {
+): Promise<SiteEntitlementSnapshot[]> {
   const sites = await findAllSites(companyId);
   const activeSites = sites.filter((site) => site.is_active);
 
-  const siteInvoiceInputs = await Promise.all(
-    activeSites.map(async (site) => {
-      const entitlements = await getEffectiveEntitlements(companyId, site.id);
-      return { site, entitlements };
-    }),
+  return Promise.all(
+    activeSites.map(async (site) => ({
+      site,
+      entitlements: await getEffectiveEntitlements(companyId, site.id),
+    })),
   );
+}
+
+function buildPlanCounts(
+  siteInvoiceInputs: SiteEntitlementSnapshot[],
+): CompanyInvoiceSummary["planCounts"] {
+  const planCounts = createEmptyPlanCounts();
+
+  for (const { entitlements } of siteInvoiceInputs) {
+    planCounts[entitlements.plan] += 1;
+  }
+
+  return planCounts;
+}
+
+export async function buildCompanyInvoiceSummary(
+  companyId: string,
+): Promise<CompanyInvoiceSummary> {
+  const siteInvoiceInputs = await resolveActiveSiteEntitlementSnapshots(companyId);
+  const totals = calculateCompanyPriceCents(
+    siteInvoiceInputs.map(({ entitlements }) => entitlements),
+  );
+
+  return {
+    companyId,
+    currency: "NZD",
+    generatedAt: new Date(),
+    activeSiteCount: siteInvoiceInputs.length,
+    baseTotalCents: totals.baseTotalCents,
+    creditTotalCents: totals.creditTotalCents,
+    finalTotalCents: totals.finalTotalCents,
+    planCounts: buildPlanCounts(siteInvoiceInputs),
+  };
+}
+
+export async function buildCompanyInvoicePreview(
+  companyId: string,
+): Promise<CompanyInvoicePreview> {
+  const siteInvoiceInputs = await resolveActiveSiteEntitlementSnapshots(companyId);
 
   const siteInvoices: SiteInvoicePreview[] = [];
   const entitlementSnapshots = siteInvoiceInputs.map(
@@ -153,7 +219,7 @@ export async function buildCompanyInvoicePreview(
     companyId,
     currency: "NZD",
     generatedAt: new Date(),
-    activeSiteCount: activeSites.length,
+    activeSiteCount: siteInvoiceInputs.length,
     baseTotalCents: totals.baseTotalCents,
     creditTotalCents: totals.creditTotalCents,
     finalTotalCents: totals.finalTotalCents,

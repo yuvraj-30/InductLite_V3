@@ -1,5 +1,8 @@
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Alert } from "@/components/ui/alert";
+import { PublicSignalCard } from "@/components/ui/public-signal-card";
 import { getSessionUserReadOnly } from "@/lib/auth";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { LoginForm } from "./login-form";
@@ -12,7 +15,7 @@ const LoginIntentSelector = dynamic(
     })),
   {
     loading: () => (
-      <div className="surface-panel rounded-xl border border-[color:var(--border-soft)] p-4 text-sm text-secondary">
+      <div className="surface-panel rounded-2xl border border-[color:var(--border-soft)] p-4 text-sm text-secondary">
         Loading sign-in methods...
       </div>
     ),
@@ -92,13 +95,36 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const defaultIntent = getDefaultIntentMode({ companySlug, ssoStatus });
 
   return (
-    <div className="kinetic-hover">
-      <h2 className="kinetic-title mb-3 text-2xl font-black">
-        Sign in to your account
-      </h2>
-      <p className="mb-6 text-sm text-secondary">
-        Secure access for tenant-scoped admin operations.
-      </p>
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <span className="rounded-full border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-secondary">
+          Workspace sign-in
+        </span>
+        <div className="kinetic-hover">
+          <h2 className="kinetic-title text-3xl font-black">
+            Sign in without losing context.
+          </h2>
+          <p className="mt-3 max-w-xl text-sm text-secondary sm:text-base">
+            Return to live operations, inductions, and records from the same
+            product your teams use at the gate.
+          </p>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <PublicSignalCard
+            eyebrow="Site operations"
+            title="Move straight into live registers, sites, and approvals."
+          />
+          <PublicSignalCard
+            eyebrow="Protected access"
+            title="Tenant-scoped auth and MFA-aware login paths stay intact."
+          />
+          <PublicSignalCard
+            eyebrow="Clear next step"
+            title="Choose password or SSO based on how your workspace is set up."
+          />
+        </div>
+      </div>
 
       {splitIntentEnabled ? (
         <LoginIntentSelector
@@ -110,22 +136,22 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <>
           <LoginForm />
 
-          <div className="my-6 border-t border-border pt-6">
-            <h3 className="text-sm font-semibold text-primary">Single Sign-On</h3>
-            <p className="mt-1 text-xs text-secondary">
-              Use your company identity provider (OIDC/Entra).
-            </p>
+          <div className="my-6 space-y-4 rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] p-4">
+            <div>
+              <h3 className="text-sm font-semibold text-primary">Single sign-on</h3>
+              <p className="mt-1 text-xs text-secondary">
+                Use your company identity provider when your workspace is set up
+                for SSO.
+              </p>
+            </div>
 
             {ssoMessage && (
-              <div
-                className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
-                role="alert"
-              >
+              <Alert variant="error" title="SSO needs attention">
                 {ssoMessage}
-              </div>
+              </Alert>
             )}
 
-            <form action="/api/auth/sso/start" method="get" className="mt-4 space-y-3">
+            <form action="/api/auth/sso/start" method="get" className="space-y-3">
               <div>
                 <label htmlFor="company" className="label">
                   Workspace slug
@@ -148,20 +174,17 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </>
       )}
 
-      <div className="mt-6 space-y-2">
+      <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] px-4 py-4 text-sm text-secondary">
         <p className="text-center text-sm text-secondary">
           New to InductLite?{" "}
-          <a
-            href="/register"
-            className="font-semibold text-accent hover:underline"
-          >
+          <Link href="/register" className="font-semibold text-accent hover:underline">
             Create your workspace
-          </a>
+          </Link>
         </p>
-        <p className="text-center text-sm text-muted">
-          Forgot your password?{" "}
+        <p className="mt-2 text-center text-sm text-muted">
+          Need access help?{" "}
           <a
-            href="mailto:support@inductlite.co.nz"
+            href="mailto:support@inductlite.nz"
             className="font-semibold text-accent hover:underline"
           >
             Contact support

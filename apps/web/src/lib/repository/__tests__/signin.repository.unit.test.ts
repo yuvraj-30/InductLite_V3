@@ -91,6 +91,16 @@ describe("SignIn Repository (unit)", () => {
     );
   });
 
+  it("findSignInById should return a display-safe phone number for valid contacts", async () => {
+    vi.mocked(prisma.signInRecord.findFirst).mockResolvedValue(
+      createMockSignIn({ visitor_phone: "+64211234567" }),
+    );
+
+    const record = await findSignInById("company-123", "s1");
+
+    expect(record?.visitor_phone_display).toBe("021 123 4567");
+  });
+
   it("listCurrentlyOnSite should use scoped where and optional site filter", async () => {
     vi.mocked(prisma.signInRecord.findMany).mockResolvedValue([
       createMockSignIn(),
@@ -103,6 +113,16 @@ describe("SignIn Repository (unit)", () => {
         where: expect.objectContaining({ AND: expect.any(Array) }),
       }),
     );
+  });
+
+  it("listCurrentlyOnSite should never expose ciphertext as display contact", async () => {
+    vi.mocked(prisma.signInRecord.findMany).mockResolvedValue([
+      createMockSignIn({ visitor_phone: "enc:v1:not-decryptable" }),
+    ]);
+
+    const records = await listCurrentlyOnSite("company-123", "site-1");
+
+    expect(records[0]?.visitor_phone_display).toBeNull();
   });
 
   it("countCurrentlyOnSite should call count with company guard", async () => {

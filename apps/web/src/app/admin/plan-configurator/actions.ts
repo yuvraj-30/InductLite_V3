@@ -126,21 +126,35 @@ export async function createScheduledPlanChangeAction(formData: FormData): Promi
     method: "POST",
   });
 
-  try {
-    const effectiveAt = new Date(parsed.data.effectiveAt);
-    if (Number.isNaN(effectiveAt.getTime())) {
-      statusRedirect("error", "effectiveAt must be a valid date/time");
-    }
+  const effectiveAt = new Date(parsed.data.effectiveAt);
+  if (Number.isNaN(effectiveAt.getTime())) {
+    statusRedirect("error", "effectiveAt must be a valid date/time");
+  }
 
-    const companyFeatureOverrides = parseOptionalObjectJson(
+  let companyFeatureOverrides: Record<string, unknown> | undefined;
+  let companyFeatureCreditOverrides: Record<string, unknown> | undefined;
+  let siteOverrides: unknown[] | undefined;
+  let rollbackPayload: Record<string, unknown> | undefined;
+
+  try {
+    companyFeatureOverrides = parseOptionalObjectJson(
       parsed.data.companyFeatureOverridesJson ?? "",
     );
-    const companyFeatureCreditOverrides = parseOptionalObjectJson(
+    companyFeatureCreditOverrides = parseOptionalObjectJson(
       parsed.data.companyFeatureCreditOverridesJson ?? "",
     );
-    const siteOverrides = parseOptionalArrayJson(parsed.data.siteOverridesJson ?? "");
-    const rollbackPayload = parseOptionalObjectJson(parsed.data.rollbackPayloadJson ?? "");
+    siteOverrides = parseOptionalArrayJson(parsed.data.siteOverridesJson ?? "");
+    rollbackPayload = parseOptionalObjectJson(parsed.data.rollbackPayloadJson ?? "");
+  } catch (error) {
+    statusRedirect(
+      "error",
+      error instanceof Error ? error.message : "Plan change payload is invalid",
+    );
+  }
 
+  let scheduledId: string | null = null;
+
+  try {
     const changePayload: Record<string, unknown> = {
       targetPlan: parsed.data.targetPlan,
       ...(companyFeatureOverrides ? { companyFeatureOverrides } : {}),
@@ -192,12 +206,17 @@ export async function createScheduledPlanChangeAction(formData: FormData): Promi
       },
       request_id: requestId,
     });
-
-    statusRedirect("ok", "Plan change scheduled");
+    scheduledId = scheduled.id;
   } catch (error) {
     log.error({ error: String(error) }, "Failed to schedule plan change");
     statusRedirect("error", "Failed to schedule plan change request");
   }
+
+  if (!scheduledId) {
+    statusRedirect("error", "Failed to schedule plan change request");
+  }
+
+  statusRedirect("ok", "Plan change scheduled");
 }
 
 export async function cancelScheduledPlanChangeAction(formData: FormData): Promise<void> {
@@ -221,6 +240,8 @@ export async function cancelScheduledPlanChangeAction(formData: FormData): Promi
     method: "POST",
   });
 
+  let canceledId: string | null = null;
+
   try {
     const canceled = await cancelPlanChangeRequest(
       context.companyId,
@@ -238,12 +259,17 @@ export async function cancelScheduledPlanChangeAction(formData: FormData): Promi
       },
       request_id: requestId,
     });
-
-    statusRedirect("ok", "Plan change request canceled");
+    canceledId = canceled.id;
   } catch (error) {
     log.error({ error: String(error) }, "Failed to cancel plan change request");
     statusRedirect("error", "Failed to cancel plan change request");
   }
+
+  if (!canceledId) {
+    statusRedirect("error", "Failed to cancel plan change request");
+  }
+
+  statusRedirect("ok", "Plan change request canceled");
 }
 
 export async function applyDuePlanChangesNowAction(): Promise<void> {
@@ -259,6 +285,8 @@ export async function applyDuePlanChangesNowAction(): Promise<void> {
     path: "/admin/plan-configurator",
     method: "POST",
   });
+
+  let resultSummary: { applied: number; failed: number } | null = null;
 
   try {
     const result = await applyDuePlanChanges(context.companyId, {
@@ -277,10 +305,18 @@ export async function applyDuePlanChangesNowAction(): Promise<void> {
       },
       request_id: requestId,
     });
-
-    statusRedirect("ok", `Plan apply run complete (applied ${result.applied}, failed ${result.failed})`);
+    resultSummary = { applied: result.applied, failed: result.failed };
   } catch (error) {
     log.error({ error: String(error) }, "Failed to apply due plan changes");
     statusRedirect("error", "Failed to apply due plan changes");
   }
+
+  if (!resultSummary) {
+    statusRedirect("error", "Failed to apply due plan changes");
+  }
+
+  statusRedirect(
+    "ok",
+    `Plan apply run complete (applied ${resultSummary.applied}, failed ${resultSummary.failed})`,
+  );
 }

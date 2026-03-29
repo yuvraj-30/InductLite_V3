@@ -70,6 +70,8 @@ export async function createInspectionScheduleAction(
 
   const context = await requireAuthenticatedContextReadOnly();
 
+  let scheduleId: string | null = null;
+
   try {
     const schedule = await createInspectionSchedule(context.companyId, {
       site_id: parsed.data.siteId,
@@ -91,14 +93,19 @@ export async function createInspectionScheduleAction(
         frequency: schedule.frequency,
       },
     });
-
-    statusRedirect("ok", "Inspection schedule created");
+    scheduleId = schedule.id;
   } catch (error) {
     statusRedirect(
       "error",
       error instanceof Error ? error.message : "Failed to create inspection schedule",
     );
   }
+
+  if (!scheduleId) {
+    statusRedirect("error", "Failed to create inspection schedule");
+  }
+
+  statusRedirect("ok", "Inspection schedule created");
 }
 
 export async function recordInspectionRunAction(formData: FormData): Promise<void> {
@@ -129,6 +136,8 @@ export async function recordInspectionRunAction(formData: FormData): Promise<voi
   if (!guard.success) {
     statusRedirect("error", guard.error);
   }
+
+  let runId: string | null = null;
 
   try {
     const submission = await createSafetyFormSubmission(context.companyId, {
@@ -167,12 +176,17 @@ export async function recordInspectionRunAction(formData: FormData): Promise<voi
         follow_up_action_id: result.followUpActionId,
       },
     });
-
-    statusRedirect("ok", "Inspection run recorded");
+    runId = result.run.id;
   } catch (error) {
     statusRedirect(
       "error",
       error instanceof Error ? error.message : "Failed to record inspection run",
     );
   }
+
+  if (!runId) {
+    statusRedirect("error", "Failed to record inspection run");
+  }
+
+  statusRedirect("ok", "Inspection run recorded");
 }

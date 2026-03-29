@@ -71,6 +71,8 @@ export async function createCompetencyRequirementAction(
 
   const context = await requireAuthenticatedContextReadOnly();
 
+  let requirementId: string | null = null;
+
   try {
     const requirement = await createCompetencyRequirement(context.companyId, {
       site_id: parsed.data.siteId || null,
@@ -93,14 +95,19 @@ export async function createCompetencyRequirementAction(
         evidence_type: requirement.evidence_type,
       },
     });
-
-    statusRedirect("ok", "Competency requirement created");
+    requirementId = requirement.id;
   } catch (error) {
     statusRedirect(
       "error",
       error instanceof Error ? error.message : "Failed to create requirement",
     );
   }
+
+  if (!requirementId) {
+    statusRedirect("error", "Failed to create requirement");
+  }
+
+  statusRedirect("ok", "Competency requirement created");
 }
 
 export async function createWorkerCertificationAction(
@@ -145,6 +152,8 @@ export async function createWorkerCertificationAction(
 
   const context = await requireAuthenticatedContextReadOnly();
 
+  let certificationId: string | null = null;
+
   try {
     const certification = await createWorkerCertification(context.companyId, {
       site_id: parsed.data.siteId || null,
@@ -171,12 +180,17 @@ export async function createWorkerCertificationAction(
         status: certification.status,
       },
     });
-
-    statusRedirect("ok", "Worker certification recorded");
+    certificationId = certification.id;
   } catch (error) {
     statusRedirect(
       "error",
       error instanceof Error ? error.message : "Failed to save certification",
     );
   }
+
+  if (!certificationId) {
+    statusRedirect("error", "Failed to save certification");
+  }
+
+  statusRedirect("ok", "Worker certification recorded");
 }

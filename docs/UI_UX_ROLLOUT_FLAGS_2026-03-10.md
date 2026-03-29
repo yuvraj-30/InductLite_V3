@@ -35,7 +35,7 @@ If a rollout causes regression, disable the corresponding flag and redeploy.
 
 1. `UIX_S1_VISUAL=false`: revert to pre-rollout visual behavior.
 2. `UIX_S2_FLOW=false`: disable new flow UX behavior.
-3. `UIX_S3_MOBILE=false`: disable mobile admin redesign behavior.
+3. `UIX_S3_MOBILE=false`: disable the default-on mobile admin redesign behavior.
 4. `UIX_S4_AI=false`: disable AI-native inline UX overlays.
 5. `UIX_S5_A11Y=false`: disable final a11y/perf rollout toggles.
 
@@ -51,11 +51,11 @@ If a rollout causes regression, disable the corresponding flag and redeploy.
    - Flag-on: visible sidebar labels are reduced to <= 22 through progressive disclosure.
    - Flag-off: legacy full sidebar remains available.
    - Deep routes remain accessible through command palette (`Cmd/Ctrl+K`) in both modes.
-4. `UIX_S3_MOBILE` gates mobile-first admin navigation shell behavior:
-   - Flag-on: mobile nav shows current route context plus quick-switch tasks for top workflows.
-   - Flag-on: nav search and section controls follow mobile-first focus order (context, quick-switch, search, then section links).
-   - Flag-on: `/admin/sites` and `/admin/live-register` render mobile-first card workflows with tap-safe actions and compact status density.
-   - Flag-off: existing nav shell behavior remains unchanged.
+4. `UIX_S3_MOBILE` gates the live-default mobile-first admin navigation shell behavior:
+   - Default/flag-on: mobile nav shows current route context plus quick-switch tasks for top workflows.
+   - Default/flag-on: nav search and section controls follow mobile-first focus order (context, quick-switch, search, then section links).
+   - Default/flag-on: `/admin/sites` and `/admin/live-register` render mobile-first card workflows with tap-safe actions and compact status density.
+   - Flag-off: fall back to the legacy nav-first mobile shell during rollback.
 5. `UIX_S4_AI` currently gates in-context copilot guidance on operations pages:
    - Flag-on: advisory Safety Copilot panels render on `/admin/hazards`, `/admin/incidents`, and `/admin/permits`.
    - Flag-on: suggestions are draft-only and require explicit user action in existing workflows.
