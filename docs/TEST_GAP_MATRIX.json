@@ -1,9 +1,9 @@
 {
-  "generatedAt": "2026-03-12T23:33:21.645Z",
+  "generatedAt": "2026-03-24T07:54:05.894Z",
   "summary": {
-    "totalSourceFiles": 390,
-    "coveredByDirectTests": 383,
-    "gaps": 7
+    "totalSourceFiles": 412,
+    "coveredByDirectTests": 390,
+    "gaps": 22
   },
   "rows": [
     {
@@ -257,6 +257,24 @@
       "status": "Covered"
     },
     {
+      "sourceFile": "apps/web/src/app/admin/actions/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/actions/page.tsx",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/actions/page.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
       "sourceFile": "apps/web/src/app/admin/admin-command-palette.tsx",
       "hasDirectTest": true,
       "directTests": [
@@ -357,10 +375,36 @@
       "status": "Covered"
     },
     {
+      "sourceFile": "apps/web/src/app/admin/communications/emergency-broadcast-composer.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
       "sourceFile": "apps/web/src/app/admin/communications/page.tsx",
       "hasDirectTest": true,
       "directTests": [
         "apps/web/src/app/admin/communications/page.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/competency/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/competency/page.tsx",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/competency/page.test.ts"
       ],
       "priority": "P1",
       "risk": "Application logic",
@@ -555,6 +599,14 @@
       "status": "Covered"
     },
     {
+      "sourceFile": "apps/web/src/app/admin/exports/ExportQueueRecoveryControls.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
       "sourceFile": "apps/web/src/app/admin/exports/actions.ts",
       "hasDirectTest": true,
       "directTests": [
@@ -649,6 +701,24 @@
       "hasDirectTest": true,
       "directTests": [
         "apps/web/src/app/admin/incidents/page.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/inspections/actions.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Mutating server action",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/inspections/page.tsx",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/app/admin/inspections/page.test.ts"
       ],
       "priority": "P1",
       "risk": "Application logic",
@@ -1845,6 +1915,14 @@
       "status": "Covered"
     },
     {
+      "sourceFile": "apps/web/src/app/api/test/_runtime-prisma.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Public/API contract",
+      "status": "Gap"
+    },
+    {
       "sourceFile": "apps/web/src/app/api/test/clear-rate-limit/route.ts",
       "hasDirectTest": true,
       "directTests": [
@@ -2098,7 +2176,7 @@
       "sourceFile": "apps/web/src/app/page.tsx",
       "hasDirectTest": true,
       "directTests": [
-        "apps/web/src/app/page.test.ts"
+        "apps/web/src/app/page.test.tsx"
       ],
       "priority": "P1",
       "risk": "Application logic",
@@ -2309,6 +2387,38 @@
       "status": "Gap"
     },
     {
+      "sourceFile": "apps/web/src/components/ui/copy-button.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/components/ui/data-table.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/components/ui/field.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "apps/web/src/components/ui/modal.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
       "sourceFile": "apps/web/src/components/ui/page-state.tsx",
       "hasDirectTest": true,
       "directTests": [
@@ -2327,6 +2437,14 @@
       "priority": "P2",
       "risk": "Application logic",
       "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/components/ui/status-badge.tsx",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
     },
     {
       "sourceFile": "apps/web/src/components/ui/theme-preference.ts",
@@ -2609,6 +2727,16 @@
       "status": "Covered"
     },
     {
+      "sourceFile": "apps/web/src/lib/cost/budget-service.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/cost/__tests__/budget-service.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
       "sourceFile": "apps/web/src/lib/cost/compute-counters.ts",
       "hasDirectTest": true,
       "directTests": [
@@ -2767,6 +2895,16 @@
       "status": "Covered"
     },
     {
+      "sourceFile": "apps/web/src/lib/export/intent.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/export/intent.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
       "sourceFile": "apps/web/src/lib/export/runner.ts",
       "hasDirectTest": true,
       "directTests": [
@@ -2831,6 +2969,16 @@
       "hasDirectTest": true,
       "directTests": [
         "apps/web/src/lib/health.test.ts"
+      ],
+      "priority": "P1",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/http/auth-header.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "apps/web/src/lib/http/auth-header.test.ts"
       ],
       "priority": "P1",
       "risk": "Application logic",
@@ -3227,6 +3375,14 @@
       "status": "Covered"
     },
     {
+      "sourceFile": "apps/web/src/lib/repository/action.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
       "sourceFile": "apps/web/src/lib/repository/audit-analytics.repository.ts",
       "hasDirectTest": true,
       "directTests": [
@@ -3287,6 +3443,14 @@
       "status": "Covered"
     },
     {
+      "sourceFile": "apps/web/src/lib/repository/competency.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
+    },
+    {
       "sourceFile": "apps/web/src/lib/repository/contractor.repository.ts",
       "hasDirectTest": true,
       "directTests": [
@@ -3330,7 +3494,8 @@
       "sourceFile": "apps/web/src/lib/repository/email.repository.ts",
       "hasDirectTest": true,
       "directTests": [
-        "apps/web/src/lib/repository/__tests__/email.repository.test.ts"
+        "apps/web/src/lib/repository/__tests__/email.repository.test.ts",
+        "apps/web/src/lib/repository/__tests__/email.repository.unit.test.ts"
       ],
       "priority": "P0",
       "risk": "Tenant-scoped data access",
@@ -3425,6 +3590,14 @@
       "priority": "P0",
       "risk": "Tenant-scoped data access",
       "status": "Covered"
+    },
+    {
+      "sourceFile": "apps/web/src/lib/repository/inspection.repository.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P0",
+      "risk": "Tenant-scoped data access",
+      "status": "Gap"
     },
     {
       "sourceFile": "apps/web/src/lib/repository/magic-link.repository.ts",
@@ -3853,6 +4026,24 @@
       "status": "Covered"
     },
     {
+      "sourceFile": "packages/shared/src/contracts/index.ts",
+      "hasDirectTest": false,
+      "directTests": [],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Gap"
+    },
+    {
+      "sourceFile": "packages/shared/src/contracts/mobile.ts",
+      "hasDirectTest": true,
+      "directTests": [
+        "packages/shared/src/contracts/mobile.test.ts"
+      ],
+      "priority": "P2",
+      "risk": "Application logic",
+      "status": "Covered"
+    },
+    {
       "sourceFile": "packages/shared/src/index.ts",
       "hasDirectTest": true,
       "directTests": [
@@ -3920,6 +4111,7 @@
     "apps/web/src/app/admin/access-ops/actions.test.ts",
     "apps/web/src/app/admin/access-ops/page.test.ts",
     "apps/web/src/app/admin/actions.csrf.test.ts",
+    "apps/web/src/app/admin/actions/page.test.ts",
     "apps/web/src/app/admin/admin-command-palette.test.ts",
     "apps/web/src/app/admin/admin-nav.mobile.test.ts",
     "apps/web/src/app/admin/admin-nav.test.ts",
@@ -3932,6 +4124,7 @@
     "apps/web/src/app/admin/command-mode/roll-call.test.ts",
     "apps/web/src/app/admin/communications/actions.test.ts",
     "apps/web/src/app/admin/communications/page.test.ts",
+    "apps/web/src/app/admin/competency/page.test.ts",
     "apps/web/src/app/admin/components/OnboardingChecklist.test.ts",
     "apps/web/src/app/admin/components/inline-copilot-panel.test.ts",
     "apps/web/src/app/admin/contractors/[id]/edit-contractor-form.test.ts",
@@ -3960,6 +4153,7 @@
     "apps/web/src/app/admin/history/pagination.test.ts",
     "apps/web/src/app/admin/incidents/actions.test.ts",
     "apps/web/src/app/admin/incidents/page.test.ts",
+    "apps/web/src/app/admin/inspections/page.test.ts",
     "apps/web/src/app/admin/integrations/channels/actions.test.ts",
     "apps/web/src/app/admin/integrations/channels/page.test.ts",
     "apps/web/src/app/admin/integrations/procore/actions.test.ts",
@@ -4103,10 +4297,11 @@
     "apps/web/src/app/error.test.ts",
     "apps/web/src/app/favicon.ico/route.test.ts",
     "apps/web/src/app/global-error.test.ts",
+    "apps/web/src/app/globals.a11y.test.ts",
     "apps/web/src/app/health/route.test.ts",
     "apps/web/src/app/layout.test.ts",
     "apps/web/src/app/not-found.test.ts",
-    "apps/web/src/app/page.test.ts",
+    "apps/web/src/app/page.test.tsx",
     "apps/web/src/app/pricing/page.test.ts",
     "apps/web/src/app/privacy/page.test.ts",
     "apps/web/src/app/robots.txt/route.test.ts",
@@ -4165,6 +4360,7 @@
     "apps/web/src/lib/auth/session.resilience.test.ts",
     "apps/web/src/lib/auth/session.test.ts",
     "apps/web/src/lib/client-error-reporting.test.ts",
+    "apps/web/src/lib/cost/__tests__/budget-service.test.ts",
     "apps/web/src/lib/cost/__tests__/compute-counters.test.ts",
     "apps/web/src/lib/cron.test.ts",
     "apps/web/src/lib/db/__tests__/scoped-db.unit.test.ts",
@@ -4181,12 +4377,14 @@
     "apps/web/src/lib/export/__tests__/formatters.unit.test.ts",
     "apps/web/src/lib/export/__tests__/worker.guardrails.unit.test.ts",
     "apps/web/src/lib/export/__tests__/worker.unit.test.ts",
+    "apps/web/src/lib/export/intent.test.ts",
     "apps/web/src/lib/export/runner.test.ts",
     "apps/web/src/lib/export/scheduler.test.ts",
     "apps/web/src/lib/feature-flags.test.ts",
     "apps/web/src/lib/guardrails.test.ts",
     "apps/web/src/lib/hardware/__tests__/adapter.unit.test.ts",
     "apps/web/src/lib/health.test.ts",
+    "apps/web/src/lib/http/auth-header.test.ts",
     "apps/web/src/lib/identity-ocr/index.test.ts",
     "apps/web/src/lib/identity-ocr/providers/__tests__/index.unit.test.ts",
     "apps/web/src/lib/identity-ocr/providers/__tests__/textract.unit.test.ts",
@@ -4243,6 +4441,7 @@
     "apps/web/src/lib/repository/__tests__/delivery.repository.unit.test.ts",
     "apps/web/src/lib/repository/__tests__/demo-booking.repository.test.ts",
     "apps/web/src/lib/repository/__tests__/email.repository.test.ts",
+    "apps/web/src/lib/repository/__tests__/email.repository.unit.test.ts",
     "apps/web/src/lib/repository/__tests__/emergency.repository.test.ts",
     "apps/web/src/lib/repository/__tests__/evidence.repository.test.ts",
     "apps/web/src/lib/repository/__tests__/export.repository.test.ts",
@@ -4298,6 +4497,7 @@
     "apps/web/src/lib/webhook/__tests__/config.unit.test.ts",
     "apps/web/src/lib/webhook/__tests__/worker.unit.test.ts",
     "apps/web/src/proxy.test.ts",
+    "packages/shared/src/contracts/mobile.test.ts",
     "packages/shared/src/index.test.ts",
     "packages/shared/src/schemas.test.ts",
     "packages/shared/src/types.test.ts",

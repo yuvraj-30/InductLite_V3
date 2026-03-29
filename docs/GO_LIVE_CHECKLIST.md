@@ -68,3 +68,4 @@ Status legend: [ ] todo [x] done [!] blocked
 - Production budget telemetry must refresh at least hourly from provider billing manifests; stale telemetry >6h must disable non-critical paths via `BUDGET_PROTECT`.
 - Before launch, Platform + Finance must refresh `docs/artifacts/provider-billing/provider-billing-manifest.json` with the current live provider-origin capture, run `npm run provider-billing-check -- --file docs/artifacts/provider-billing/provider-billing-manifest.json --required render,neon,cloudflare_r2,upstash,resend`, and attach the validated manifest plus command output to the release record.
 - Provider billing manifest schema and execution steps live in [PROVIDER_BILLING_TELEMETRY_RUNBOOK.md](./PROVIDER_BILLING_TELEMETRY_RUNBOOK.md).
+- Final external sign-off packet steps live in [EXTERNAL_GO_SIGNOFF_CHECKLIST_2026-03-20.md](./EXTERNAL_GO_SIGNOFF_CHECKLIST_2026-03-20.md).

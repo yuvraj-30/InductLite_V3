@@ -142,6 +142,21 @@ function buildMarkdown(summary) {
   return `${lines.join("\n")}\n`;
 }
 
+function buildMissingMarkdown({ generatedAt, inputPath }) {
+  return `# UI/UX Performance Weekly Report
+
+- Generated: ${generatedAt}
+- Status: **MISS**
+- Checked routes: 0
+- Input report: missing at \`${inputPath}\`
+
+## Notes
+- No JSON performance report was available when this command ran.
+- Run \`npm run -w apps/web test:e2e:perf-budget\` to regenerate \`apps/web/test-results/uiux-performance-budget-report.json\`.
+- \`--allow-miss\` keeps report generation reproducible when the perf lane does not emit an input artifact.
+`;
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const root = process.cwd();
@@ -149,7 +164,28 @@ function main() {
   const outPath = path.resolve(root, args.out);
 
   if (!fs.existsSync(inputPath)) {
-    throw new Error(`Input report not found: ${inputPath}`);
+    if (args.failOnBudgetMiss) {
+      throw new Error(`Input report not found: ${inputPath}`);
+    }
+
+    const generatedAt = new Date().toISOString();
+    const markdown = buildMissingMarkdown({ generatedAt, inputPath });
+    fs.mkdirSync(path.dirname(outPath), { recursive: true });
+    fs.writeFileSync(outPath, markdown, "utf8");
+    console.log(
+      JSON.stringify(
+        {
+          ok: false,
+          missingInput: true,
+          input: inputPath,
+          output: outPath,
+          failedCount: null,
+        },
+        null,
+        2,
+      ),
+    );
+    return;
   }
 
   const raw = fs.readFileSync(inputPath, "utf8");
