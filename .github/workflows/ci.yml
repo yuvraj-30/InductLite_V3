@@ -471,6 +471,7 @@ jobs:
       FEATURE_PUBLIC_SIGNIN_ENABLED: "true"
       BUDGET_TELEMETRY_STALE_AFTER_HOURS: "24"
       BUDGET_TELEMETRY_REQUIRED_PROVIDERS: render,neon,cloudflare_r2,upstash,resend
+      EXPORT_OFFPEAK_AUTO_ENABLE_THRESHOLD_PERCENT: "101"
 
     steps:
       - name: Checkout
