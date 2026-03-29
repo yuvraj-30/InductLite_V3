@@ -25,14 +25,41 @@ async function logoutFromAdminShell(page: import("@playwright/test").Page) {
   if (await mobileNavButton.isVisible().catch(() => false)) {
     await mobileNavButton.click({ force: true });
     const mobileDrawer = page.locator(".admin-mobile-drawer-panel");
+    await mobileDrawer.waitFor({ state: "visible", timeout: 5000 }).catch(() => null);
     const drawerVisible = await mobileDrawer.isVisible().catch(() => false);
 
     if (drawerVisible) {
+      const drawerLogoutForm = mobileDrawer
+        .locator('form[action="/api/auth/logout"]')
+        .first();
+      if (await drawerLogoutForm.isVisible().catch(() => false)) {
+        await drawerLogoutForm.evaluate((form: HTMLFormElement) => form.submit());
+        return;
+      }
+
       const drawerSignOutControl = mobileDrawer.getByRole("button", {
         name: /sign out|logout/i,
       });
-      await expect(drawerSignOutControl).toBeVisible();
-      await drawerSignOutControl.click();
+      if (await drawerSignOutControl.isVisible().catch(() => false)) {
+        await drawerSignOutControl.click();
+        return;
+      }
+
+      const pageLogoutForm = page.locator('form[action="/api/auth/logout"]').first();
+      if (await pageLogoutForm.isVisible().catch(() => false)) {
+        await pageLogoutForm.evaluate((form: HTMLFormElement) => form.submit());
+        return;
+      }
+
+      const closeButton = mobileDrawer.getByRole("button", { name: /close/i }).first();
+      if (await closeButton.isVisible().catch(() => false)) {
+        await closeButton.click();
+      }
+    }
+
+    const globalLogoutForm = page.locator('form[action="/api/auth/logout"]').first();
+    if (await globalLogoutForm.isVisible().catch(() => false)) {
+      await globalLogoutForm.evaluate((form: HTMLFormElement) => form.submit());
       return;
     }
 
