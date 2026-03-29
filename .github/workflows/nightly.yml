@@ -38,7 +38,6 @@ env:
   FEATURE_UPLOADS_ENABLED: "true"
   FEATURE_PUBLIC_SIGNIN_ENABLED: "true"
   FEATURE_VISUAL_REGRESSION_ENABLED: "true"
-  EXPORT_OFFPEAK_AUTO_ENABLE_THRESHOLD_PERCENT: "101"
   BUDGET_TELEMETRY_STALE_AFTER_HOURS: "24"
   BUDGET_TELEMETRY_REQUIRED_PROVIDERS: render,neon,cloudflare_r2,upstash,resend
 
@@ -150,6 +149,7 @@ jobs:
         env:
           TRUST_PROXY: "1"
           ALLOW_TEST_RUNNER: "1"
+          EXPORT_OFFPEAK_AUTO_ENABLE_THRESHOLD_PERCENT: "101"
         run: |
           set -euo pipefail
           cd apps/web
