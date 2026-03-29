@@ -47,6 +47,13 @@ async function gotoExportsPage(page: any): Promise<void> {
     await page.goto("/admin/exports");
     const heading = page.getByRole("heading", { name: /^Exports$/i }).first();
     if (await heading.isVisible().catch(() => false)) return;
+    try {
+      await expect(heading).toBeVisible({ timeout: 5000 });
+      return;
+    } catch {
+      // Slower WebKit and PR CI runs can settle after navigation completes.
+      // Give the route a short pause before retrying a fresh load.
+    }
     await page.waitForTimeout(500);
   }
   throw new Error("Failed to load /admin/exports");
