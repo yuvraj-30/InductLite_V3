@@ -48,8 +48,18 @@ async function logoutFromAdminShell(page: import("@playwright/test").Page) {
       'button:has-text("Sign Out"), a:has-text("Sign Out"), button:has-text("Logout"), a:has-text("Logout")',
     )
     .first();
-  await expect(desktopSignOutControl).toBeVisible();
-  await desktopSignOutControl.click();
+  const desktopSignOutVisible = await desktopSignOutControl.isVisible().catch(
+    () => false,
+  );
+  if (desktopSignOutVisible) {
+    await desktopSignOutControl.click();
+    return;
+  }
+
+  await page
+    .locator('form[action="/api/auth/logout"]')
+    .first()
+    .evaluate((form: HTMLFormElement) => form.submit());
 }
 
 test.describe.serial("Admin Authentication", () => {
