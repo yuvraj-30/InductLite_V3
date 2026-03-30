@@ -1,5 +1,5 @@
 import { ensureTestRouteAccess } from "../_guard";
-import { serializeRuntimeError, withRuntimePrisma } from "../_runtime-prisma";
+import { withRuntimePrisma } from "../_runtime-prisma";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ export async function GET(req: Request) {
 
   const env = getEnv();
   let dbReady = false;
-  let dbError: Record<string, unknown> | null = null;
+  let dbError: { name: string; code: string | null } | null = null;
 
   if (env.DATABASE_URL) {
     try {
@@ -30,7 +30,17 @@ export async function GET(req: Request) {
       });
       dbReady = true;
     } catch (error) {
-      dbError = serializeRuntimeError(error);
+      const runtimeError = error as { name?: unknown; code?: unknown } | null;
+      dbError = {
+        name:
+          typeof runtimeError?.name === "string" && runtimeError.name.length > 0
+            ? runtimeError.name
+            : "RuntimeDatabaseError",
+        code:
+          typeof runtimeError?.code === "string" && runtimeError.code.length > 0
+            ? runtimeError.code
+            : null,
+      };
     }
   }
 
