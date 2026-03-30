@@ -108,6 +108,8 @@ export async function createActionEntryAction(formData: FormData): Promise<void>
     statusRedirect("error", "Due date is invalid");
   }
 
+  let createdId: string | null = null;
+
   try {
     const created = await createActionEntry(context.companyId, {
       site_id: parsed.data.siteId || null,
@@ -134,12 +136,17 @@ export async function createActionEntryAction(formData: FormData): Promise<void>
       },
       request_id: requestId,
     });
-
-    statusRedirect("ok", "Action created");
+    createdId = created.id;
   } catch (error) {
     log.error({ error: String(error) }, "Failed to create action");
     statusRedirect("error", "Failed to create action");
   }
+
+  if (!createdId) {
+    statusRedirect("error", "Failed to create action");
+  }
+
+  statusRedirect("ok", "Action created");
 }
 
 export async function updateActionStatusAction(formData: FormData): Promise<void> {
@@ -170,6 +177,8 @@ export async function updateActionStatusAction(formData: FormData): Promise<void
     method: "POST",
   });
 
+  let updatedId: string | null = null;
+
   try {
     const updated =
       parsed.data.status === "CLOSED"
@@ -189,12 +198,17 @@ export async function updateActionStatusAction(formData: FormData): Promise<void
       },
       request_id: requestId,
     });
-
-    statusRedirect("ok", "Action updated");
+    updatedId = updated.id;
   } catch (error) {
     log.error({ error: String(error) }, "Failed to update action status");
     statusRedirect("error", "Failed to update action");
   }
+
+  if (!updatedId) {
+    statusRedirect("error", "Failed to update action");
+  }
+
+  statusRedirect("ok", "Action updated");
 }
 
 export async function addActionCommentAction(formData: FormData): Promise<void> {
@@ -225,6 +239,8 @@ export async function addActionCommentAction(formData: FormData): Promise<void> 
     method: "POST",
   });
 
+  let commentId: string | null = null;
+
   try {
     const comment = await addActionComment(context.companyId, {
       action_id: parsed.data.actionId,
@@ -242,10 +258,15 @@ export async function addActionCommentAction(formData: FormData): Promise<void> 
       },
       request_id: requestId,
     });
-
-    statusRedirect("ok", "Comment added");
+    commentId = comment.id;
   } catch (error) {
     log.error({ error: String(error) }, "Failed to add action comment");
     statusRedirect("error", "Failed to add comment");
   }
+
+  if (!commentId) {
+    statusRedirect("error", "Failed to add comment");
+  }
+
+  statusRedirect("ok", "Comment added");
 }

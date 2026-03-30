@@ -9,6 +9,7 @@ import {
   createTestSignInRecord,
   createTestTemplate,
 } from "./setup";
+import { SIGN_IN_CSV_HEADERS } from "../../src/lib/export/intent";
 
 type ExportWorker = typeof import("../../src/lib/export/worker");
 
@@ -51,9 +52,9 @@ describe("Export Worker - CSV generation", () => {
     expect(csv).toMatch(/\+64211234567/);
   });
 
-  it("returns empty string when no records", async () => {
+  it("returns a header-only csv when no records", async () => {
     const csv = await worker.generateSignInCsvForCompany(company.id);
-    expect(csv).toBe("");
+    expect(csv).toBe(SIGN_IN_CSV_HEADERS.join(","));
   });
 
   it("produces induction CSV with decrypted visitor details", async () => {

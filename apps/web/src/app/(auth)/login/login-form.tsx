@@ -9,6 +9,7 @@
 
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
+import { Alert } from "@/components/ui/alert";
 import { loginAction, type ActionResult } from "../actions";
 
 function SubmitButton() {
@@ -27,14 +28,21 @@ export function LoginForm() {
   );
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form action={formAction} className="space-y-5">
+      <div className="rounded-2xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface)] px-4 py-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.1em] text-secondary">
+          Password access
+        </p>
+        <p className="mt-2 text-sm text-secondary">
+          Use your workspace admin email and password to return to live sites,
+          compliance actions, and settings.
+        </p>
+      </div>
+
       {state && !state.success && (
-        <div
-          className="rounded-xl border border-red-400/45 bg-red-100/70 px-4 py-3 text-sm text-red-950 dark:bg-red-950/45 dark:text-red-100"
-          role="alert"
-        >
+        <Alert variant="error" title="Unable to sign in">
           {state.error}
-        </div>
+        </Alert>
       )}
 
       <div>
@@ -84,7 +92,13 @@ export function LoginForm() {
         </div>
       )}
 
-      <SubmitButton />
+      <div className="space-y-3">
+        <SubmitButton />
+        <p className="text-xs text-muted">
+          Password sign-in is best when you are managing sites directly from a
+          secure device.
+        </p>
+      </div>
     </form>
   );
 }

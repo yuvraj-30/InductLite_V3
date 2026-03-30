@@ -1,50 +1,120 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useFormStatus } from "react-dom";
 import { Alert } from "@/components/ui/alert";
-import { createExportAction } from "./actions";
-
-type Feedback = { kind: "success" | "error"; text: string } | null;
+import {
+  createExportFormAction,
+  type ExportQueueActionState,
+} from "./actions";
 
 function isoHoursAgo(hours: number): string {
   return new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
 }
 
+function SubmitButton(props: {
+  label: string;
+  pendingLabel: string;
+  className: string;
+  disabled?: boolean;
+}) {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      type="submit"
+      disabled={pending || props.disabled}
+      className={props.className}
+    >
+      {pending ? props.pendingLabel : props.label}
+    </button>
+  );
+}
+
+function QuickExportForm(props: {
+  action: (payload: FormData) => void;
+  exportType:
+    | "SIGN_IN_CSV"
+    | "INDUCTION_CSV"
+    | "SITE_PACK_PDF"
+    | "COMPLIANCE_ZIP";
+  label: string;
+  pendingLabel: string;
+  className: string;
+  dateFrom?: string;
+  dateTo?: string;
+}) {
+  return (
+    <form action={props.action}>
+      <input type="hidden" name="exportType" value={props.exportType} />
+      {props.dateFrom ? (
+        <input type="hidden" name="dateFrom" value={props.dateFrom} />
+      ) : null}
+      {props.dateTo ? <input type="hidden" name="dateTo" value={props.dateTo} /> : null}
+      <SubmitButton
+        label={props.label}
+        pendingLabel={props.pendingLabel}
+        className={props.className}
+      />
+    </form>
+  );
+}
+
 export function ExportQueuePanel() {
-  const [isPending, startTransition] = useTransition();
-  const [feedback, setFeedback] = useState<Feedback>(null);
+  const router = useRouter();
+  const [state, formAction] = useActionState<ExportQueueActionState, FormData>(
+    createExportFormAction,
+    null,
+  );
   const [customDateFrom, setCustomDateFrom] = useState("");
   const [customDateTo, setCustomDateTo] = useState("");
+  const customDateFromIso = useMemo(() => {
+    if (!customDateFrom) return "";
+    const parsed = new Date(customDateFrom);
+    return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString();
+  }, [customDateFrom]);
+  const customDateToIso = useMemo(() => {
+    if (!customDateTo) return "";
+    const parsed = new Date(customDateTo);
+    return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString();
+  }, [customDateTo]);
+  const customRangeError =
+    customDateFrom &&
+    customDateTo &&
+    customDateFromIso &&
+    customDateToIso &&
+    customDateFromIso > customDateToIso
+      ? "Date range is invalid. 'From' must be earlier than 'To'."
+      : null;
 
-  const queueExport = (input: {
-    exportType:
-      | "SIGN_IN_CSV"
-      | "INDUCTION_CSV"
-      | "SITE_PACK_PDF"
-      | "COMPLIANCE_ZIP";
-    dateFrom?: string;
-    dateTo?: string;
-  }) => {
-    setFeedback(null);
-    startTransition(async () => {
-      const result = await createExportAction(input);
-      if (!result.success) {
-        setFeedback({
-          kind: "error",
-          text: result.error.message || "Could not queue export",
-        });
-        return;
-      }
-      setFeedback({
-        kind: "success",
-        text: "Export queued. It will appear in the list below shortly.",
-      });
-    });
-  };
+  useEffect(() => {
+    if (state?.success) {
+      router.refresh();
+    }
+  }, [router, state?.success, state?.success ? state.data.exportJobId : null]);
+
+  const feedback =
+    customRangeError
+      ? { kind: "error" as const, text: customRangeError }
+      : state
+        ? state.success
+          ? {
+              kind: "success" as const,
+              text:
+                state.message || "Export queued. It will appear in the list below shortly.",
+            }
+          : {
+              kind: "error" as const,
+              text: state.error.message || "Could not queue export",
+            }
+        : null;
 
   return (
     <div className="surface-panel mb-6 p-4">
-      <h2 className="text-sm font-semibold text-[color:var(--text-primary)]">Quick Export Actions</h2>
+      <h2 className="text-sm font-semibold text-[color:var(--text-primary)]">
+        Quick Export Actions
+      </h2>
       <p className="mt-1 text-sm text-secondary">
         Use one click for common auditor requests, including full compliance packs.
       </p>
@@ -59,71 +129,62 @@ export function ExportQueuePanel() {
       ) : null}
 
       <div className="mt-4 flex flex-wrap gap-2">
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={() => queueExport({ exportType: "SIGN_IN_CSV" })}
-          className="btn-primary"
-        >
-          {isPending ? "Queueing..." : "Queue Sign-In CSV"}
-        </button>
+        <QuickExportForm
+          action={formAction}
+          exportType="SIGN_IN_CSV"
+          label="Queue Sign-In CSV"
+          pendingLabel="Queueing..."
+          className="btn-primary disabled:opacity-50"
+        />
 
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={() => queueExport({ exportType: "INDUCTION_CSV" })}
+        <QuickExportForm
+          action={formAction}
+          exportType="INDUCTION_CSV"
+          label="Queue Induction CSV"
+          pendingLabel="Queueing..."
           className="btn-secondary disabled:opacity-50"
-        >
-          Queue Induction CSV
-        </button>
+        />
 
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={() =>
-            queueExport({
-              exportType: "SITE_PACK_PDF",
-              dateFrom: isoHoursAgo(24),
-              dateTo: new Date().toISOString(),
-            })
-          }
+        <QuickExportForm
+          action={formAction}
+          exportType="SITE_PACK_PDF"
+          dateFrom={isoHoursAgo(24)}
+          dateTo={new Date().toISOString()}
+          label="One-Click Audit Pack PDF (24h)"
+          pendingLabel="Queueing..."
           className="btn-secondary disabled:opacity-50"
-        >
-          One-Click Audit Pack PDF (24h)
-        </button>
+        />
 
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={() =>
-            queueExport({
-              exportType: "COMPLIANCE_ZIP",
-              dateFrom: isoHoursAgo(24),
-              dateTo: new Date().toISOString(),
-            })
-          }
+        <QuickExportForm
+          action={formAction}
+          exportType="COMPLIANCE_ZIP"
+          dateFrom={isoHoursAgo(24)}
+          dateTo={new Date().toISOString()}
+          label="Compliance Pack ZIP (24h)"
+          pendingLabel="Queueing..."
           className="btn-secondary disabled:opacity-50"
-        >
-          Compliance Pack ZIP (24h)
-        </button>
+        />
 
-        <button
-          type="button"
-          disabled={isPending}
-          onClick={() =>
-            queueExport({
-              exportType: "COMPLIANCE_ZIP",
-              dateFrom: isoHoursAgo(24 * 7),
-              dateTo: new Date().toISOString(),
-            })
-          }
+        <QuickExportForm
+          action={formAction}
+          exportType="COMPLIANCE_ZIP"
+          dateFrom={isoHoursAgo(24 * 7)}
+          dateTo={new Date().toISOString()}
+          label="Compliance Pack ZIP (7d)"
+          pendingLabel="Queueing..."
           className="btn-secondary disabled:opacity-50"
-        >
-          Compliance Pack ZIP (7d)
-        </button>
+        />
       </div>
 
-      <div className="field-section mt-4">
+      <form
+        action={formAction}
+        className="field-section mt-4"
+        onSubmit={(event) => {
+          if (customRangeError) {
+            event.preventDefault();
+          }
+        }}
+      >
         <p className="text-xs font-semibold uppercase tracking-wide text-muted">
           Custom Date Range
         </p>
@@ -146,34 +207,23 @@ export function ExportQueuePanel() {
               className="input mt-1"
             />
           </label>
-          <button
-            type="button"
-            disabled={isPending || !customDateFrom || !customDateTo}
-            onClick={() => {
-              const fromIso = new Date(customDateFrom).toISOString();
-              const toIso = new Date(customDateTo).toISOString();
-              if (fromIso > toIso) {
-                setFeedback({
-                  kind: "error",
-                  text: "Date range is invalid. 'From' must be earlier than 'To'.",
-                });
-                return;
-              }
-
-              queueExport({
-                exportType: "COMPLIANCE_ZIP",
-                dateFrom: fromIso,
-                dateTo: toIso,
-              });
-            }}
+          <input type="hidden" name="exportType" value="COMPLIANCE_ZIP" />
+          <input type="hidden" name="dateFrom" value={customDateFromIso} />
+          <input type="hidden" name="dateTo" value={customDateToIso} />
+          <SubmitButton
+            label="Queue Compliance Pack (Range)"
+            pendingLabel="Queueing..."
             className="btn-secondary disabled:opacity-50"
-          >
-            Queue Compliance Pack (Range)
-          </button>
+            disabled={
+              !customDateFrom ||
+              !customDateTo ||
+              !customDateFromIso ||
+              !customDateToIso ||
+              Boolean(customRangeError)
+            }
+          />
         </div>
-      </div>
+      </form>
     </div>
   );
 }
-
-

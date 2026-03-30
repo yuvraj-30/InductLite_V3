@@ -537,9 +537,11 @@ export const test = base.extend<MyFixtures, MyWorkerFixtures>({
             break;
           }
 
-          throw new Error(
-            `E2E shared server at ${baseUrl} has ALLOW_TEST_RUNNER disabled. Start tests via Playwright webServer (default), or run dev server with ALLOW_TEST_RUNNER=1 and TRUST_PROXY=1.`,
-          );
+          if (runtimeBody.allowTestRunner === false) {
+            throw new Error(
+              `E2E shared server at ${baseUrl} has ALLOW_TEST_RUNNER disabled. Start tests via Playwright webServer (default), or run dev server with ALLOW_TEST_RUNNER=1 and TRUST_PROXY=1.`,
+            );
+          }
         } catch (err) {
           if (
             err instanceof Error &&
@@ -1520,7 +1522,7 @@ export const test = base.extend<MyFixtures, MyWorkerFixtures>({
     const origGoto = p.goto.bind(page as unknown as Page);
     const isTransientNavigationError = (value: unknown): boolean => {
       const message = value instanceof Error ? value.message : String(value);
-      return /Could not connect to server|ECONNRESET|ECONNREFUSED|ERR_CONNECTION_RESET|ERR_CONNECTION_REFUSED|ERR_ABORTED|NS_BINDING_ABORTED|aborted|interrupted by another navigation/i.test(
+      return /Could not connect to server|ECONNRESET|ECONNREFUSED|ERR_CONNECTION_RESET|ERR_CONNECTION_REFUSED|ERR_ABORTED|NS_BINDING_ABORTED|aborted|interrupted by another navigation|frame load interrupted|navigation interrupted/i.test(
         message,
       );
     };

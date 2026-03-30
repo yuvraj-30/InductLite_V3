@@ -66,6 +66,9 @@ tmp/
 .tmp*
 .tmp*/
 apps/web/eslint-plugin-security/test/run-one.js
+.codex-admin-sites-dev-job.txt
+.env.restore-drill.backup
+apps/web/.env.restore-drill.backup
 
 # Generated PWA artifacts (next-pwa build output)
 apps/web/public/sw.js

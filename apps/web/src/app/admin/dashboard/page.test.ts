@@ -16,4 +16,13 @@ describe("smoke: apps/web/src/app/admin/dashboard/page.tsx", () => {
     expect(source).toContain('role="region"');
     expect(source).toContain('aria-labelledby="quiz-performance-signals-heading"');
   });
+
+  it("uses disclosure sections to keep lower-half dashboard detail curated", () => {
+    const source = fs.readFileSync(path.join(__dirname, "page.tsx"), "utf8");
+
+    expect(source).toContain("AdminDisclosureSection");
+    expect(source).toContain("Quiz performance signals");
+    expect(source).toContain("Management shortcuts");
+    expect(source).toContain("Activity and arrivals");
+  });
 });

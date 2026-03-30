@@ -8,11 +8,18 @@
 /* eslint-disable no-restricted-imports */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { RepositoryError } from "../base";
-import type { InductionTemplate } from "@prisma/client";
+import { Prisma, type InductionTemplate } from "@prisma/client";
 import type {
   TemplateWithQuestions,
   QuestionData,
 } from "../template.repository";
+
+function createKnownRequestError(code: string, message: string) {
+  const error = new Error(message);
+  Object.assign(error, { code, clientVersion: "test" });
+  Object.setPrototypeOf(error, Prisma.PrismaClientKnownRequestError.prototype);
+  return error as Prisma.PrismaClientKnownRequestError;
+}
 // Helper to create mock template with all required fields
 function createMockTemplate(
   overrides: Partial<InductionTemplate> = {},
@@ -454,7 +461,11 @@ describe("Template Repository Unit Tests", () => {
           const tx = {
             inductionTemplate: {
               create: vi.fn().mockResolvedValue(newTemplate),
-              findFirst: vi.fn().mockResolvedValue(newTemplate),
+              findFirst: vi
+                .fn()
+                .mockResolvedValueOnce(source)
+                .mockResolvedValueOnce({ version: 1 })
+                .mockResolvedValue(newTemplate),
               findFirstOrThrow: vi.fn().mockResolvedValue(newTemplate),
             },
             inductionQuestion: { createMany: vi.fn().mockResolvedValue({}) },
@@ -469,6 +480,53 @@ describe("Template Repository Unit Tests", () => {
 
       expect(result.version).toBe(2);
       expect(result.questions.length).toBeGreaterThan(0);
+    });
+
+    it("should retry version creation on concurrent version conflicts", async () => {
+      const source = createMockTemplateWithQuestions({
+        name: "Source",
+        site_id: null,
+        questions: [],
+      });
+      const newTemplate = {
+        ...source,
+        id: "new-template",
+        version: 3,
+        questions: [],
+      };
+
+      const duplicateVersionError = createKnownRequestError(
+        "P2002",
+        "Unique constraint failed on the fields: (`company_id`,`name`,`version`)",
+      );
+
+      vi.mocked(prisma.$transaction)
+        .mockRejectedValueOnce(duplicateVersionError)
+        .mockImplementationOnce(
+          async (
+            cb: (tx: import("@prisma/client").Prisma.TransactionClient) => any,
+          ) => {
+            const tx = {
+              inductionTemplate: {
+                create: vi.fn().mockResolvedValue(newTemplate),
+                findFirst: vi
+                  .fn()
+                  .mockResolvedValueOnce(source)
+                  .mockResolvedValueOnce({ version: 2 })
+                  .mockResolvedValue(newTemplate),
+              },
+              inductionQuestion: { createMany: vi.fn().mockResolvedValue({}) },
+            } as unknown as import("@prisma/client").Prisma.TransactionClient;
+            return cb(tx);
+          },
+        );
+
+      const result = await (
+        await import("../template.repository")
+      ).createNewVersion("company-id", "template-1");
+
+      expect(result.version).toBe(3);
+      expect(prisma.$transaction).toHaveBeenCalledTimes(2);
     });
 
     it("should archive and unarchive correctly", async () => {

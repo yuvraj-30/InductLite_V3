@@ -6,7 +6,6 @@ import {
   useState,
   type ComponentType,
 } from "react";
-import { submitBadgePrintAudit } from "../actions";
 import { CopyButton } from "@/components/ui/copy-button";
 
 interface SignInResult {
@@ -102,6 +101,7 @@ export function SuccessScreen({ slug, result }: SuccessScreenProps) {
 
     setIsRecordingBadgePrint(true);
     try {
+      const { submitBadgePrintAudit } = await import("../actions");
       await submitBadgePrintAudit({
         slug,
         signInRecordId: result.signInRecordId,

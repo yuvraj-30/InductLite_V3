@@ -12,14 +12,14 @@ export type StatusBadgeTone =
 const toneClassName: Record<StatusBadgeTone, string> = {
   neutral:
     "border-[color:var(--border-soft)] bg-[color:var(--glass-bg-strong)] text-secondary",
-  info: "border-cyan-400/35 bg-cyan-500/15 text-cyan-950 dark:text-cyan-100",
+  info: "border-cyan-400/30 bg-cyan-500/10 text-cyan-950 dark:text-cyan-100",
   success:
-    "border-emerald-400/35 bg-emerald-500/15 text-emerald-900 dark:text-emerald-100",
+    "border-emerald-400/30 bg-emerald-500/10 text-emerald-900 dark:text-emerald-100",
   warning:
-    "border-amber-400/35 bg-amber-500/15 text-amber-900 dark:text-amber-100",
-  danger: "border-red-400/40 bg-red-500/15 text-red-950 dark:text-red-100",
+    "border-amber-400/30 bg-amber-500/10 text-amber-900 dark:text-amber-100",
+  danger: "border-red-400/32 bg-red-500/10 text-red-950 dark:text-red-100",
   accent:
-    "border-indigo-400/35 bg-indigo-500/15 text-indigo-950 dark:text-indigo-100",
+    "border-indigo-400/30 bg-indigo-500/10 text-indigo-950 dark:text-indigo-100",
 };
 
 export function statusBadgeToneClass(tone: StatusBadgeTone): string {

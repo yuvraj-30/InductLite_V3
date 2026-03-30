@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Manrope, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ThemeRuntime } from "@/components/ui/theme-runtime";
-import { ThemeSwitcher } from "@/components/ui/theme-switcher";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 
 const manrope = Manrope({
@@ -52,7 +51,6 @@ export default function RootLayout({
         className={`min-h-screen font-body text-[color:var(--text-primary)] antialiased ${a11yHardeningEnabled ? "uix-s5-a11y" : ""}`}
       >
         <ThemeRuntime />
-        <ThemeSwitcher />
         {children}
       </body>
     </html>

@@ -24,8 +24,8 @@ PR CI now enforces the fast branch gate in [`.github/workflows/ci.yml`](../.gith
 
 3. Gate G3: Broader release evidence
 - `npm run test:gap-matrix` and `npm run test:e2e:gap-matrix -- --dynamic-links --js-flows --base-url http://localhost:3000` remain required for local/manual release confidence.
-- PR CI keeps `E2E smoke (chromium)` as the branch e2e gate, and the `release-confidence` job adds `npm run -w apps/web test:visual` when Linux baselines exist, `npm run -w apps/web test:e2e:perf-budget`, and `npm run report:ux-perf-budget` so required branch-protection contexts reflect real executable evidence without reintroducing the unstable broad suite on every push.
-- Scheduled GitHub validation in [`.github/workflows/nightly.yml`](../.github/workflows/nightly.yml) still runs the standalone localhost build for the broader nightly sweep, including cross-browser/full-suite coverage that remains deeper than the branch lane.
+- PR CI keeps `E2E smoke (chromium)` as the branch e2e gate, and the `release-confidence` job adds `npm run -w apps/web test:e2e:stable:chromium`, `npm run -w apps/web test:e2e:stable:webkit`, `npm run -w apps/web test:e2e:stable:mobile-chrome`, `npm run -w apps/web test:e2e:stable:mobile-safari`, `npm run -w apps/web test:visual` when Linux baselines exist, `npm run -w apps/web test:e2e:perf-budget`, and `npm run report:ux-perf-budget` so required branch-protection contexts reflect real browser/device coverage instead of advisory-only recommendations.
+- Scheduled GitHub validation in [`.github/workflows/nightly.yml`](../.github/workflows/nightly.yml) still runs the standalone localhost build for the broader nightly sweep, including desktop full-suite coverage plus the mobile Safari/mobile Chrome stable lanes and perf-budget evidence that remain deeper than the branch lane.
 
 ## CI Enforcement Contract
 
@@ -38,7 +38,7 @@ PR CI now enforces the fast branch gate in [`.github/workflows/ci.yml`](../.gith
 - If any command in `e2e` fails, CI fails and merge is blocked.
 
 3. Evidence artifacts
-- CI uploads Playwright reports/logs for the smoke lane and release-confidence lanes as build artifacts.
+- CI uploads Playwright reports/logs for the smoke lane, release-confidence browser/device lanes, and perf/visual evidence as build artifacts.
 
 ## Local Reproduction (Exact Sequence)
 
@@ -49,10 +49,12 @@ npm run parity-gate
 npm run -w apps/web test:e2e:smoke
 ```
 
+`npm run -w apps/web test:e2e:smoke` now defaults to the same production-style standalone server lifecycle used by CI and nightly validation. Only force `E2E_SERVER_MODE=dev` when investigating local dev-only behavior.
+
 ## Notes
 
 1. This gate is quality-only and does not alter tenant data access patterns, CSRF controls, or budget guardrails.
-2. PR CI emits the protected-branch compatibility contexts from smoke plus visual/perf evidence, while the broader full-suite release-confidence runs remain available in nightly/local validation for deeper investigation.
+2. PR CI emits the protected-branch compatibility contexts from smoke plus browser/device/visual/perf evidence, while the broader full-suite nightly runs remain available for deeper investigation without making every push pay the full cross-browser cost.
 3. Any future addition to parity/tier commitments must update:
 - [`COMPETITOR_PARITY_CONTROL_MATRIX.md`](./COMPETITOR_PARITY_CONTROL_MATRIX.md)
 - [`APP_DEVELOPMENT_TREND_IMPLEMENTATION_PLAN_2026-03-11.md`](./APP_DEVELOPMENT_TREND_IMPLEMENTATION_PLAN_2026-03-11.md)

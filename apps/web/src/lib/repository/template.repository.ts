@@ -182,6 +182,8 @@ type QuestionType =
   | "YES_NO"
   | "ACKNOWLEDGMENT";
 
+const MAX_TEMPLATE_VERSION_RETRIES = 3;
+
 const QUICK_START_TEMPLATE_NAME = "Quick Start Site Induction";
 const QUICK_START_TEMPLATE_DESCRIPTION =
   "Default induction template created automatically to get your first sign-in live.";
@@ -971,82 +973,105 @@ export async function createNewVersion(
 ): Promise<TemplateWithQuestions> {
   requireCompanyId(companyId);
 
-  return await publicDb.$transaction(async (tx) => {
-    const db = scopedDb(companyId, tx);
-    const source = await db.inductionTemplate.findFirst({
-      where: { id: sourceTemplateId, company_id: companyId },
-      include: { questions: { orderBy: { display_order: "asc" } } },
-    });
+  for (let attempt = 1; attempt <= MAX_TEMPLATE_VERSION_RETRIES; attempt++) {
+    try {
+      return await publicDb.$transaction(
+        async (tx) => {
+          const db = scopedDb(companyId, tx);
+          const source = await db.inductionTemplate.findFirst({
+            where: { id: sourceTemplateId, company_id: companyId },
+            include: { questions: { orderBy: { display_order: "asc" } } },
+          });
 
-    if (!source) {
-      throw new RepositoryError("Template not found", "NOT_FOUND");
+          if (!source) {
+            throw new RepositoryError("Template not found", "NOT_FOUND");
+          }
+
+          // Generate the next version inside a serializable transaction so
+          // concurrent publishers do not reuse the same template version.
+          const latestVersion = await db.inductionTemplate.findFirst({
+            where: {
+              company_id: companyId,
+              name: source.name,
+              site_id: source.site_id,
+            },
+            orderBy: { version: "desc" },
+            select: { version: true },
+          });
+          const newVersion = (latestVersion?.version ?? 0) + 1;
+
+          const newTemplate = await db.inductionTemplate.create({
+            data: {
+              company_id: companyId,
+              site_id: source.site_id,
+              name: source.name,
+              description: source.description,
+              version: newVersion,
+              is_default: source.is_default,
+              is_published: false,
+              is_archived: false,
+              quiz_scoring_enabled: source.quiz_scoring_enabled,
+              quiz_pass_threshold: source.quiz_pass_threshold,
+              quiz_max_attempts: source.quiz_max_attempts,
+              quiz_cooldown_minutes: source.quiz_cooldown_minutes,
+              quiz_required_for_entry: source.quiz_required_for_entry,
+              induction_media: source.induction_media,
+              induction_languages: source.induction_languages,
+            },
+          });
+
+          if (source.questions.length > 0) {
+            const questions = source.questions as QuestionData[];
+            await db.inductionQuestion.createMany({
+              data: questions.map((q) => ({
+                template_id: newTemplate.id,
+                question_text: q.question_text,
+                question_type: q.question_type,
+                options: q.options === null ? Prisma.JsonNull : q.options,
+                is_required: q.is_required,
+                display_order: q.display_order,
+                correct_answer:
+                  q.correct_answer === null ? Prisma.JsonNull : q.correct_answer,
+              })),
+            });
+          }
+
+          const created = await db.inductionTemplate.findFirst({
+            where: { id: newTemplate.id, company_id: companyId },
+            include: {
+              site: { select: { id: true, name: true } },
+              questions: { orderBy: { display_order: "asc" } },
+            },
+          });
+
+          if (!created) {
+            throw new RepositoryError("Template not found", "NOT_FOUND");
+          }
+
+          return created as TemplateWithQuestions;
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+      );
+    } catch (error) {
+      const isRetryableVersionConflict =
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        (error.code === "P2002" || error.code === "P2034");
+
+      if (
+        isRetryableVersionConflict &&
+        attempt < MAX_TEMPLATE_VERSION_RETRIES
+      ) {
+        continue;
+      }
+
+      handlePrismaError(error, "InductionTemplate");
     }
+  }
 
-    // Generate version inside the transaction to prevent concurrent duplicates.
-    const latestVersion = await db.inductionTemplate.findFirst({
-      where: {
-        company_id: companyId,
-        name: source.name,
-        site_id: source.site_id,
-      },
-      orderBy: { version: "desc" },
-      select: { version: true },
-    });
-    const newVersion = (latestVersion?.version ?? 0) + 1;
-
-    // Create new template version
-    const newTemplate = await db.inductionTemplate.create({
-      data: {
-        company_id: companyId,
-        site_id: source.site_id,
-        name: source.name,
-        description: source.description,
-        version: newVersion,
-        is_default: source.is_default,
-        is_published: false,
-        is_archived: false,
-        quiz_scoring_enabled: source.quiz_scoring_enabled,
-        quiz_pass_threshold: source.quiz_pass_threshold,
-        quiz_max_attempts: source.quiz_max_attempts,
-        quiz_cooldown_minutes: source.quiz_cooldown_minutes,
-        quiz_required_for_entry: source.quiz_required_for_entry,
-        induction_media: source.induction_media,
-        induction_languages: source.induction_languages,
-      },
-    });
-
-    // Copy questions to new template
-    if (source.questions.length > 0) {
-      const questions = source.questions as QuestionData[];
-      await db.inductionQuestion.createMany({
-        data: questions.map((q) => ({
-          template_id: newTemplate.id,
-          question_text: q.question_text,
-          question_type: q.question_type,
-          options: q.options === null ? Prisma.JsonNull : q.options,
-          is_required: q.is_required,
-          display_order: q.display_order,
-          correct_answer:
-            q.correct_answer === null ? Prisma.JsonNull : q.correct_answer,
-        })),
-      });
-    }
-
-    // Return with questions
-    const created = await db.inductionTemplate.findFirst({
-      where: { id: newTemplate.id, company_id: companyId },
-      include: {
-        site: { select: { id: true, name: true } },
-        questions: { orderBy: { display_order: "asc" } },
-      },
-    });
-
-    if (!created) {
-      throw new RepositoryError("Template not found", "NOT_FOUND");
-    }
-
-    return created as TemplateWithQuestions;
-  });
+  throw new RepositoryError(
+    "Failed to create template version",
+    "DATABASE_ERROR",
+  );
 }
 
 /**

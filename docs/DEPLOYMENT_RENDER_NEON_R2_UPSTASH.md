@@ -74,6 +74,9 @@ Legacy `BUDGET_TELEMETRY_SNAPSHOT_JSON` / `BUDGET_TELEMETRY_SNAPSHOT_FILE` input
 - GitHub Actions cron triggers export + maintenance via API routes.
   - Maintenance route now runs retention tasks plus queued-email processing (including pre-registration reminder batches and contractor document expiry reminders) and outbound webhook queue processing (retry/backoff/dead-letter handling).
 - There is no separate Render worker service in the current production topology; scheduled work is driven through cron API routes and GitHub Actions.
+- Admins can manually recover a stuck tenant export from `/admin/exports` with `Run Queue Now`.
+  - This only processes the next eligible queued export for the signed-in company.
+  - Use it as an operator recovery tool when a customer is waiting; it does not replace the scheduled cron path.
 - Apply schema migrations before first traffic after deploy:
   - One-off command: `cd apps/web && npm run db:migrate`
 - For production migration/rollback operations (including Render free tier without shell), use:
@@ -105,6 +108,10 @@ Example values:
 
 Rotation: update `CRON_SECRET` in both Render env vars and GitHub Secrets at the same time.
 Avoid reusing `CRON_SECRET` across environments (dev/staging/prod).
+
+The keep-alive workflow now validates the semantic export-cron payload, not just HTTP `200`.
+- It records `ok`, `processed`, `result.status`, and `duration_ms` in the GitHub step summary.
+- Manual dispatch supports an `expect_export_processed=true` input when you want the workflow to fail unless the scheduler actually drains one queued export.
 
 Troubleshooting keep-alive failures:
 

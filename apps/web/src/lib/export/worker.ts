@@ -7,6 +7,13 @@ import {
   decryptNullableString,
   decryptString,
 } from "@/lib/security/data-protection";
+import {
+  CONTRACTOR_CSV_HEADERS,
+  INDUCTION_CSV_HEADERS,
+  SIGN_IN_CSV_HEADERS,
+  SIGNED_ACKNOWLEDGEMENTS_CSV_HEADERS,
+  describeExportRequest,
+} from "./intent";
 
 type ExportFilters = {
   siteId?: string;
@@ -27,12 +34,20 @@ function escapeCsv(cell: string): string {
   return cell;
 }
 
-function toCsv(rows: Array<Record<string, string>>): string {
-  if (rows.length === 0) return "";
-
+function toCsv(
+  rows: Array<Record<string, string>>,
+  expectedHeaders?: readonly string[],
+): string {
   const firstRow = rows[0];
-  if (!firstRow) return "";
-  const headers = Object.keys(firstRow);
+  const headers = firstRow
+    ? Object.keys(firstRow)
+    : expectedHeaders
+      ? [...expectedHeaders]
+      : [];
+
+  if (headers.length === 0) {
+    return "";
+  }
 
   const lines = [headers.join(",")];
   for (const row of rows) {
@@ -93,7 +108,7 @@ export async function generateSignInCsvForCompany(
   const rows: Array<Record<string, string>> = records.map(
     formatSignInRecordForCsv,
   );
-  const csv = toCsv(rows);
+  const csv = toCsv(rows, SIGN_IN_CSV_HEADERS);
   assertCsvWithinGuardrail(csv);
   return csv;
 }
@@ -148,7 +163,7 @@ export async function generateInductionCsvForCompany(
     };
   });
 
-  const csv = toCsv(rows);
+  const csv = toCsv(rows, INDUCTION_CSV_HEADERS);
   assertCsvWithinGuardrail(csv);
   return csv;
 }
@@ -200,7 +215,7 @@ export async function generateSignedAcknowledgementsCsvForCompany(
     };
   });
 
-  const csv = toCsv(rows);
+  const csv = toCsv(rows, SIGNED_ACKNOWLEDGEMENTS_CSV_HEADERS);
   assertCsvWithinGuardrail(csv);
   return csv;
 }
@@ -223,7 +238,7 @@ export async function generateContractorCsvForCompany(
   const rows: Array<Record<string, string>> = contractors.map(
     formatContractorForCsv,
   );
-  const csv = toCsv(rows);
+  const csv = toCsv(rows, CONTRACTOR_CSV_HEADERS);
   assertCsvWithinGuardrail(csv);
   return csv;
 }
@@ -275,17 +290,31 @@ export async function generateSitePackPdfForCompany(
   filters?: ExportFilters,
 ): Promise<string> {
   const db = scopedDb(companyId);
+  const filteredSite =
+    filters?.siteId
+      ? await db.site.findFirst({
+          where: { id: filters.siteId, company_id: companyId },
+          select: { name: true },
+        })
+      : null;
   const records = await db.signInRecord.findMany({
     where: buildSignInWhere(companyId, filters),
     include: { site: { select: { name: true } } },
     orderBy: { sign_in_ts: "desc" },
     take: 200,
   });
+  const requestSummary = describeExportRequest({
+    exportType: "SITE_PACK_PDF",
+    parameters: filters ?? {},
+    siteName: filteredSite?.name,
+  });
 
   const lines: string[] = [
     "InductLite Site Audit Pack",
     `Generated: ${new Date().toLocaleString("en-NZ")}`,
     `Company ID: ${companyId}`,
+    `Site: ${requestSummary.siteLabel}`,
+    `Date range: ${requestSummary.rangeLabel}`,
     `Records: ${records.length}`,
     "------------------------------------------",
   ];

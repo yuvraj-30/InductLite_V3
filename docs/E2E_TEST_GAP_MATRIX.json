@@ -1,18 +1,18 @@
 {
   "summary": {
-    "generatedAt": "2026-03-12T23:33:21.903Z",
-    "totalAppRoutes": 119,
+    "generatedAt": "2026-03-24T07:54:14.336Z",
+    "totalAppRoutes": 122,
     "totalPlaywrightSpecs": 20,
-    "totalReferencedPaths": 120,
-    "staticReferencedPaths": 120,
+    "totalReferencedPaths": 125,
+    "staticReferencedPaths": 125,
     "dynamicReferencedPaths": 0,
-    "dynamicLinksMode": true,
-    "jsFlowsMode": true,
-    "coveredRoutes": 117,
+    "dynamicLinksMode": false,
+    "jsFlowsMode": false,
+    "coveredRoutes": 120,
     "gaps": 2,
-    "uiRoutes": 73,
+    "uiRoutes": 76,
     "apiRoutes": 46,
-    "coveredUiRoutes": 72,
+    "coveredUiRoutes": 75,
     "coveredApiRoutes": 45
   },
   "rows": [
@@ -68,6 +68,22 @@
       "dynamicEvidencePaths": []
     },
     {
+      "sourceFile": "apps/web/src/app/admin/actions/page.tsx",
+      "routePath": "/admin/actions",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/actions"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
       "sourceFile": "apps/web/src/app/admin/approvals/page.tsx",
       "routePath": "/admin/approvals",
       "routeType": "page",
@@ -111,7 +127,6 @@
         "/admin/audit-log"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/link-integrity.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -165,6 +180,22 @@
       "dynamicEvidencePaths": []
     },
     {
+      "sourceFile": "apps/web/src/app/admin/competency/page.tsx",
+      "routePath": "/admin/competency",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/competency"
+      ],
+      "evidenceSpecs": [
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
       "sourceFile": "apps/web/src/app/admin/contractors/page.tsx",
       "routePath": "/admin/contractors",
       "routeType": "page",
@@ -176,7 +207,6 @@
         "/admin/contractors"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/admin-management.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -189,8 +219,11 @@
       "priority": "P0",
       "risk": "Admin workflow / operational UX",
       "status": "Covered",
-      "evidencePaths": [],
+      "evidencePaths": [
+        "/admin/contractors/new"
+      ],
       "evidenceSpecs": [
+        "apps/web/e2e/admin-auth.spec.ts",
         "apps/web/e2e/admin-management.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -203,8 +236,11 @@
       "priority": "P0",
       "risk": "Admin workflow / operational UX",
       "status": "Covered",
-      "evidencePaths": [],
+      "evidencePaths": [
+        "/admin/contractors/new"
+      ],
       "evidenceSpecs": [
+        "apps/web/e2e/admin-auth.spec.ts",
         "apps/web/e2e/admin-management.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -222,6 +258,7 @@
       ],
       "evidenceSpecs": [
         "apps/web/e2e/a11y.spec.ts",
+        "apps/web/e2e/admin-auth.spec.ts",
         "apps/web/e2e/link-integrity.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -286,7 +323,6 @@
         "/admin/exports"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/export.spec.ts",
         "apps/web/e2e/link-integrity.spec.ts"
       ],
@@ -304,7 +340,6 @@
         "/admin/hazards"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/admin-hazards.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -321,7 +356,6 @@
         "/admin/history"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/link-integrity.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -338,7 +372,22 @@
         "/admin/incidents"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
+        "apps/web/e2e/gap-matrix-coverage.spec.ts"
+      ],
+      "dynamicEvidencePaths": []
+    },
+    {
+      "sourceFile": "apps/web/src/app/admin/inspections/page.tsx",
+      "routePath": "/admin/inspections",
+      "routeType": "page",
+      "surface": "ui",
+      "priority": "P0",
+      "risk": "Admin workflow / operational UX",
+      "status": "Covered",
+      "evidencePaths": [
+        "/admin/inspections"
+      ],
+      "evidenceSpecs": [
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -355,6 +404,7 @@
         "/admin/integrations/channels"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/admin-auth.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -371,6 +421,7 @@
         "/admin/integrations/procore"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/admin-auth.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -387,10 +438,8 @@
         "/admin/live-register"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/admin-auth.spec.ts",
         "apps/web/e2e/link-integrity.spec.ts",
-        "apps/web/e2e/performance-budget.spec.ts",
         "apps/web/e2e/visual-regression.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -423,6 +472,7 @@
         "/admin/mobile/native"
       ],
       "evidenceSpecs": [
+        "apps/web/e2e/admin-auth.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -471,7 +521,6 @@
         "/admin/plan-configurator"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -488,7 +537,6 @@
         "/admin/policy-simulator"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -505,7 +553,6 @@
         "/admin/pre-registrations"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -554,7 +601,6 @@
         "/admin/risk-passport"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -603,7 +649,6 @@
         "/admin/settings"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/admin-settings.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -620,11 +665,9 @@
         "/admin/sites"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/admin-emergency-contacts.spec.ts",
         "apps/web/e2e/admin-hazards.spec.ts",
         "apps/web/e2e/link-integrity.spec.ts",
-        "apps/web/e2e/performance-budget.spec.ts",
         "apps/web/e2e/visual-regression.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -642,7 +685,6 @@
         "/admin/sites/new"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/admin-emergency-contacts.spec.ts",
         "apps/web/e2e/admin-hazards.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
@@ -725,7 +767,6 @@
         "/admin/sites/new"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/admin-emergency-contacts.spec.ts",
         "apps/web/e2e/admin-hazards.spec.ts"
       ],
@@ -743,7 +784,6 @@
         "/admin/templates"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/link-integrity.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -762,7 +802,7 @@
         "/admin/templates/new"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
+        "apps/web/e2e/admin-auth.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -795,7 +835,7 @@
         "/admin/templates/new"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
+        "apps/web/e2e/admin-auth.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -828,7 +868,6 @@
         "/admin/users"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/admin-management.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -846,7 +885,6 @@
         "/admin/users/new"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -863,7 +901,6 @@
         "/admin/users/new"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/gap-matrix-coverage.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -1744,10 +1781,8 @@
         "/login"
       ],
       "evidenceSpecs": [
-        "apps/web/e2e/a11y.spec.ts",
         "apps/web/e2e/admin-auth.spec.ts",
         "apps/web/e2e/link-integrity.spec.ts",
-        "apps/web/e2e/performance-budget.spec.ts",
         "apps/web/e2e/visual-regression.spec.ts"
       ],
       "dynamicEvidencePaths": []
@@ -1841,6 +1876,7 @@
       "risk": "Public sign-in entrypoint",
       "status": "Covered",
       "evidencePaths": [
+        "/s/:slug",
         "/s/dynamic",
         "/s/dynamic(",
         "/s/nonexistent-site-12345",
@@ -1975,13 +2011,16 @@
     "/",
     "/admin",
     "/admin/access-ops",
+    "/admin/actions",
     "/admin/approvals",
     "/admin/audit-analytics",
     "/admin/audit-log",
     "/admin/benchmarks",
     "/admin/command-mode",
     "/admin/communications",
+    "/admin/competency",
     "/admin/contractors",
+    "/admin/contractors/new",
     "/admin/dashboard",
     "/admin/deliveries",
     "/admin/escalations",
@@ -1990,6 +2029,7 @@
     "/admin/hazards",
     "/admin/history",
     "/admin/incidents",
+    "/admin/inspections",
     "/admin/integrations/channels",
     "/admin/integrations/procore",
     "/admin/live-register",
@@ -2081,6 +2121,7 @@
     "/privacy",
     "/register",
     "/robots.txt",
+    "/s/:slug",
     "/s/dynamic",
     "/s/dynamic(",
     "/s/dynamic/kiosk",
@@ -2116,18 +2157,12 @@
     "apps/web/e2e/visual-regression.vrt.spec.ts"
   ],
   "dynamic": {
-    "enabled": true,
-    "baseUrl": "http://localhost:3000",
-    "maxPages": 250,
-    "maxDepth": 4,
+    "enabled": false,
+    "baseUrl": null,
+    "maxPages": 0,
+    "maxDepth": 0,
     "seededPublicSlug": null,
     "adminSessionEstablished": false,
-    "jsFlowsEnabled": true,
-    "anchorDiscoveredPaths": 0,
-    "jsFlowDiscoveredPaths": 0,
-    "jsFlowStats": null,
-    "errors": [
-      "dynamic crawl disabled: cannot reach app/test runtime at http://localhost:3000 (Error: runtime probe failed (404): Not Found)"
-    ]
+    "errors": []
   }
 }

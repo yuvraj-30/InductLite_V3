@@ -42,44 +42,28 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
   const site = await findSiteById(context.companyId, siteId);
   if (!site) notFound();
 
+  let rollCallEnabled = true;
   try {
     await assertCompanyFeatureEnabled(context.companyId, "ROLLCALL_V2", siteId);
   } catch (error) {
     if (error instanceof EntitlementDeniedError) {
-      return (
-        <div className="space-y-6 p-3 sm:p-4">
-          <div className="surface-panel-strong flex flex-col gap-3 p-5 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h1 className="kinetic-title text-2xl font-black text-[color:var(--text-primary)]">Emergency Setup</h1>
-              <p className="mt-1 text-secondary">
-                {site.name}: manage roll-call features for this site.
-              </p>
-            </div>
-            <Link href={`/admin/sites/${siteId}`} className="btn-secondary w-full sm:w-auto">
-              Back to Site
-            </Link>
-          </div>
-
-          <div className="max-w-3xl">
-            <PageWarningState
-              title="Feature not enabled for this site plan."
-              description="Emergency roll-call is disabled by entitlements (CONTROL_ID: PLAN-ENTITLEMENT-001)."
-            />
-          </div>
-        </div>
-      );
+      rollCallEnabled = false;
+    } else {
+      throw error;
     }
-
-    throw error;
   }
 
-  const [contacts, procedures, drills, activeRollCall, rollCallEvents] = await Promise.all([
+  const [contacts, procedures, drills] = await Promise.all([
     listSiteEmergencyContacts(context.companyId, siteId),
     listSiteEmergencyProcedures(context.companyId, siteId),
     listEmergencyDrills(context.companyId, siteId),
-    findActiveRollCallEvent(context.companyId, siteId),
-    listRollCallEvents(context.companyId, siteId),
   ]);
+  const [activeRollCall, rollCallEvents] = rollCallEnabled
+    ? await Promise.all([
+        findActiveRollCallEvent(context.companyId, siteId),
+        listRollCallEvents(context.companyId, siteId),
+      ])
+    : [null, []];
   const activeAttendances = activeRollCall
     ? await listRollCallAttendances(context.companyId, activeRollCall.id)
     : [];
@@ -250,7 +234,14 @@ export default async function SiteEmergencyPage({ params }: SiteEmergencyPagePro
           Start a live roll call snapshot, mark attendance, then close and export evidence.
         </p>
 
-        {!activeRollCall ? (
+        {!rollCallEnabled ? (
+          <div className="mt-4 max-w-3xl">
+            <PageWarningState
+              title="Emergency roll-call not enabled for this site plan."
+              description="Emergency contacts, procedures, and drill logging remain available, but live roll-call actions and evidence exports require the ROLLCALL_V2 entitlement (CONTROL_ID: PLAN-ENTITLEMENT-001)."
+            />
+          </div>
+        ) : !activeRollCall ? (
           <div className="mt-4 rounded-xl border border-[color:var(--border-soft)] bg-[color:var(--bg-surface-strong)] p-4">
             <p className="text-sm text-secondary">
               No active roll call for this site.

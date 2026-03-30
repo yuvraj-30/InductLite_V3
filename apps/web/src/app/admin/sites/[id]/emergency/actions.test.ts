@@ -80,6 +80,8 @@ vi.mock("@/lib/plans", () => ({
 }));
 
 import {
+  createEmergencyContactAction,
+  createEmergencyDrillAction,
   startRollCallEventAction,
   updateRollCallAttendanceAction,
   closeRollCallEventAction,
@@ -131,6 +133,59 @@ describe("emergency roll-call actions", () => {
       expect.objectContaining({
         action: "emergency.rollcall.start",
         entity_type: "EvacuationEvent",
+      }),
+    );
+  });
+
+  it("allows baseline emergency contacts even when roll-call entitlement is disabled", async () => {
+    mocks.assertCompanyFeatureEnabled.mockRejectedValue(
+      new mocks.EntitlementDeniedError("ROLLCALL_V2"),
+    );
+    mocks.createSiteEmergencyContact.mockResolvedValue({
+      id: "c123456789012345678901236",
+      priority: 1,
+    });
+
+    const formData = new FormData();
+    formData.set("name", "Safety Lead");
+    formData.set("phone", "021 444 9999");
+    formData.set("priority", "1");
+
+    const result = await createEmergencyContactAction("site-1", null, formData);
+
+    expect(result.success).toBe(true);
+    expect(mocks.createSiteEmergencyContact).toHaveBeenCalledWith(
+      "company-1",
+      expect.objectContaining({
+        site_id: "site-1",
+        name: "Safety Lead",
+      }),
+    );
+  });
+
+  it("allows baseline emergency drill logging even when roll-call entitlement is disabled", async () => {
+    mocks.assertCompanyFeatureEnabled.mockRejectedValue(
+      new mocks.EntitlementDeniedError("ROLLCALL_V2"),
+    );
+    mocks.createEmergencyDrill.mockResolvedValue({
+      id: "c123456789012345678901237",
+      drill_type: "EVACUATION",
+      legal_hold: false,
+    });
+
+    const formData = new FormData();
+    formData.set("drillType", "EVACUATION");
+    formData.set("scenario", "Evacuation drill");
+
+    const result = await createEmergencyDrillAction("site-1", null, formData);
+
+    expect(result.success).toBe(true);
+    expect(mocks.createEmergencyDrill).toHaveBeenCalledWith(
+      "company-1",
+      expect.objectContaining({
+        site_id: "site-1",
+        drill_type: "EVACUATION",
+        scenario: "Evacuation drill",
       }),
     );
   });

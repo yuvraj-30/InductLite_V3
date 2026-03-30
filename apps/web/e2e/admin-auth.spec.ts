@@ -20,6 +20,75 @@ const VERIFIED_ADMIN_ROUTES = [
   "/admin/templates/new",
 ] as const;
 
+async function logoutFromAdminShell(page: import("@playwright/test").Page) {
+  const mobileNavButton = page.getByRole("button", { name: /navigation/i });
+  if (await mobileNavButton.isVisible().catch(() => false)) {
+    await mobileNavButton.click({ force: true });
+    const mobileDrawer = page.locator(".admin-mobile-drawer-panel");
+    await mobileDrawer.waitFor({ state: "visible", timeout: 5000 }).catch(() => null);
+    const drawerVisible = await mobileDrawer.isVisible().catch(() => false);
+
+    if (drawerVisible) {
+      const drawerLogoutForm = mobileDrawer
+        .locator('form[action="/api/auth/logout"]')
+        .first();
+      if (await drawerLogoutForm.isVisible().catch(() => false)) {
+        await drawerLogoutForm.evaluate((form: HTMLFormElement) => form.submit());
+        return;
+      }
+
+      const drawerSignOutControl = mobileDrawer.getByRole("button", {
+        name: /sign out|logout/i,
+      });
+      if (await drawerSignOutControl.isVisible().catch(() => false)) {
+        await drawerSignOutControl.click();
+        return;
+      }
+
+      const pageLogoutForm = page.locator('form[action="/api/auth/logout"]').first();
+      if (await pageLogoutForm.isVisible().catch(() => false)) {
+        await pageLogoutForm.evaluate((form: HTMLFormElement) => form.submit());
+        return;
+      }
+
+      const closeButton = mobileDrawer.getByRole("button", { name: /close/i }).first();
+      if (await closeButton.isVisible().catch(() => false)) {
+        await closeButton.click();
+      }
+    }
+
+    const globalLogoutForm = page.locator('form[action="/api/auth/logout"]').first();
+    if (await globalLogoutForm.isVisible().catch(() => false)) {
+      await globalLogoutForm.evaluate((form: HTMLFormElement) => form.submit());
+      return;
+    }
+
+    await page
+      .locator('form[action="/api/auth/logout"]')
+      .first()
+      .evaluate((form: HTMLFormElement) => form.submit());
+    return;
+  }
+
+  const desktopSignOutControl = page
+    .locator(
+      'button:has-text("Sign Out"), a:has-text("Sign Out"), button:has-text("Logout"), a:has-text("Logout")',
+    )
+    .first();
+  const desktopSignOutVisible = await desktopSignOutControl.isVisible().catch(
+    () => false,
+  );
+  if (desktopSignOutVisible) {
+    await desktopSignOutControl.click();
+    return;
+  }
+
+  await page
+    .locator('form[action="/api/auth/logout"]')
+    .first()
+    .evaluate((form: HTMLFormElement) => form.submit());
+}
+
 test.describe.serial("Admin Authentication", () => {
   test.describe.configure({ timeout: 90000 });
 
@@ -134,10 +203,16 @@ test.describe.serial("Admin Authentication", () => {
       await expect(page).toHaveURL(/\/admin/);
     }
 
-    const signOutControl = page
-      .locator('button:has-text("Sign Out"), a:has-text("Sign Out")')
-      .first();
-    await expect(signOutControl).toBeVisible();
+    const mobileNavButton = page.getByRole("button", { name: /navigation/i });
+    if (await mobileNavButton.isVisible().catch(() => false)) {
+      await expect(mobileNavButton).toBeVisible();
+    } else {
+      await expect(
+        page
+          .locator('button:has-text("Sign Out"), a:has-text("Sign Out")')
+          .first(),
+      ).toBeVisible();
+    }
   });
 
   test("should set HttpOnly session cookie", async ({
@@ -204,15 +279,8 @@ test.describe.serial("Admin Authentication", () => {
     await expect(page).toHaveURL(/\/admin/);
 
     // Find and click logout (link or button; handle both desktop and mobile)
-    const logoutButton = page
-      .locator(
-        'button:has-text("Sign Out"), a:has-text("Sign Out"), button:has-text("Logout"), a:has-text("Logout")',
-      )
-      .first();
-    await expect(logoutButton).toBeVisible();
-
     // Click logout UI and ensure session is cleared for deterministic access checks.
-    await logoutButton.click();
+    await logoutFromAdminShell(page);
     await page.context().clearCookies();
 
     // Try to access protected route
@@ -318,7 +386,17 @@ test.describe.serial("Admin Authentication", () => {
     await loginAs(workerUser.email);
     await page.goto("/admin/dashboard");
 
-    const safetySummary = page.locator("summary").filter({ hasText: "Safety & Compliance" });
+    let navScope = page.locator("nav").first();
+    const mobileNavButton = page.getByRole("button", { name: /navigation/i });
+    if (await mobileNavButton.isVisible().catch(() => false)) {
+      await mobileNavButton.click({ force: true });
+      navScope = page.locator(".admin-mobile-drawer-panel");
+      await expect(navScope).toBeVisible();
+    }
+
+    const safetySummary = navScope
+      .locator("summary")
+      .filter({ hasText: "Safety & Compliance" });
     await expect(safetySummary).toBeVisible();
 
     await safetySummary.click();

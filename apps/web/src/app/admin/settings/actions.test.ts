@@ -442,6 +442,9 @@ describe("SSO settings actions", () => {
     const result = await updateSsoSettingsAction(null, buildValidSsoFormData());
 
     expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.savedConfig.defaultRole).toBe("VIEWER");
+    }
     expect(mocks.updateCompanySsoSettings).toHaveBeenCalledWith(
       "company-1",
       expect.objectContaining({

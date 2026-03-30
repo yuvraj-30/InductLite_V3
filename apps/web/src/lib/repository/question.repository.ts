@@ -22,6 +22,8 @@ type QuestionScopedDb = ReturnType<typeof scopedDb> & {
   };
 };
 
+const MAX_QUESTION_CREATE_RETRIES = 3;
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -93,8 +95,8 @@ export interface ReorderQuestionsInput {
 async function verifyTemplateEditable(
   companyId: string,
   templateId: string,
+  db: ReturnType<typeof scopedDb> = scopedDb(companyId),
 ): Promise<void> {
-  const db = scopedDb(companyId);
   const template = await db.inductionTemplate.findFirst({
     where: { id: templateId, company_id: companyId },
     select: { is_archived: true, is_published: true },
@@ -196,7 +198,16 @@ export async function createQuestion(
 ): Promise<Question> {
   requireCompanyId(companyId);
 
-  await verifyTemplateEditable(companyId, templateId);
+  const questionText = input.question_text?.trim();
+  if (!questionText) {
+    throw new RepositoryError("Question text is required", "VALIDATION");
+  }
+  if (questionText.length > 1000) {
+    throw new RepositoryError(
+      "Question text must be 1000 characters or less",
+      "VALIDATION",
+    );
+  }
 
   // Validate options for question types that need them
   if (
@@ -210,38 +221,59 @@ export async function createQuestion(
     );
   }
 
-  try {
-    const question = await publicDb.$transaction(async (tx) => {
-      const db = scopedDb(companyId, tx);
-      let displayOrder = input.display_order;
-      if (displayOrder === undefined) {
-        const maxOrder = await db.inductionQuestion.findFirst({
-          where: { template_id: templateId },
-          orderBy: { display_order: "desc" },
-          select: { display_order: true },
-        });
-        displayOrder = (maxOrder?.display_order ?? 0) + 1;
+  for (let attempt = 1; attempt <= MAX_QUESTION_CREATE_RETRIES; attempt++) {
+    try {
+      const question = await publicDb.$transaction(
+        async (tx) => {
+          const db = scopedDb(companyId, tx);
+          await verifyTemplateEditable(companyId, templateId, db);
+
+          let displayOrder = input.display_order;
+          if (displayOrder === undefined) {
+            const maxOrder = await db.inductionQuestion.findFirst({
+              where: { template_id: templateId },
+              orderBy: { display_order: "desc" },
+              select: { display_order: true },
+            });
+            displayOrder = (maxOrder?.display_order ?? 0) + 1;
+          }
+
+          return db.inductionQuestion.create({
+            data: {
+              template_id: templateId,
+              question_text: questionText,
+              question_type: input.question_type,
+              options: input.options ?? Prisma.JsonNull,
+              is_required: input.is_required ?? true,
+              display_order: displayOrder,
+              correct_answer:
+                (input.correct_answer as Prisma.InputJsonValue) ??
+                Prisma.JsonNull,
+              logic: (input.logic as Prisma.InputJsonValue) ?? Prisma.JsonNull,
+            } as unknown as Prisma.InductionQuestionCreateInput,
+          });
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+      );
+
+      return question as Question;
+    } catch (error) {
+      const isRetryableCreateConflict =
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2034";
+
+      if (
+        isRetryableCreateConflict &&
+        attempt < MAX_QUESTION_CREATE_RETRIES
+      ) {
+        continue;
       }
 
-      return db.inductionQuestion.create({
-        data: {
-          template_id: templateId,
-          question_text: input.question_text,
-          question_type: input.question_type,
-          options: input.options ?? Prisma.JsonNull,
-          is_required: input.is_required ?? true,
-          display_order: displayOrder,
-          correct_answer:
-            (input.correct_answer as Prisma.InputJsonValue) ?? Prisma.JsonNull,
-          logic: (input.logic as Prisma.InputJsonValue) ?? Prisma.JsonNull,
-        } as unknown as Prisma.InductionQuestionCreateInput,
-      });
-    });
-
-    return question as Question;
-  } catch (error) {
-    handlePrismaError(error, "InductionQuestion");
+      handlePrismaError(error, "InductionQuestion");
+    }
   }
+
+  throw new RepositoryError("Failed to create question", "DATABASE_ERROR");
 }
 
 /**

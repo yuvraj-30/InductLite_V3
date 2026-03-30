@@ -57,4 +57,23 @@ describe("rate-limit guardrail defaults", () => {
     });
     expect(readyRes.limit).toBe(120);
   });
+
+  it("keeps admin mutation limits deterministic for the test runner", async () => {
+    process.env.ALLOW_TEST_RUNNER = "1";
+    vi.resetModules();
+
+    const { checkAdminMutationRateLimit } = await import("@/lib/rate-limit");
+
+    const first = await checkAdminMutationRateLimit("company-test", "user-test", {
+      clientKey: "ua:test",
+    });
+    const second = await checkAdminMutationRateLimit("company-test", "user-test", {
+      clientKey: "ua:test",
+    });
+
+    expect(first.success).toBe(true);
+    expect(second.success).toBe(true);
+    expect(first.limit).toBe(1000);
+    expect(second.remaining).toBe(1000);
+  });
 });

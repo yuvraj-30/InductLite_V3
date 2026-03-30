@@ -20,7 +20,10 @@ vi.mock("../entitlements", async () => {
   };
 });
 
-import { buildCompanyInvoicePreview } from "../invoice-preview";
+import {
+  buildCompanyInvoicePreview,
+  buildCompanyInvoiceSummary,
+} from "../invoice-preview";
 
 const PRODUCT_FEATURE_KEYS = [
   "HOST_NOTIFICATIONS",
@@ -159,5 +162,43 @@ describe("buildCompanyInvoicePreview", () => {
         }),
       ]),
     );
+  });
+
+  it("builds a lighter billing summary without per-site line items", async () => {
+    mocks.findAllSites.mockResolvedValue([
+      {
+        id: "site-1",
+        name: "Site One",
+        is_active: true,
+      },
+      {
+        id: "site-2",
+        name: "Site Two",
+        is_active: true,
+      },
+      {
+        id: "site-3",
+        name: "Inactive Site",
+        is_active: false,
+      },
+    ]);
+
+    mocks.getEffectiveEntitlements
+      .mockResolvedValueOnce(createEntitlements("STANDARD"))
+      .mockResolvedValueOnce(createEntitlements("PLUS"));
+
+    const summary = await buildCompanyInvoiceSummary("company-1");
+
+    expect(summary).toMatchObject({
+      activeSiteCount: 2,
+      baseTotalCents: 20800,
+      creditTotalCents: 0,
+      finalTotalCents: 20800,
+      planCounts: {
+        STANDARD: 1,
+        PLUS: 1,
+        PRO: 0,
+      },
+    });
   });
 });

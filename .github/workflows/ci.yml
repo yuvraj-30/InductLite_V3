@@ -459,6 +459,19 @@ jobs:
       RESEND_API_KEY: ci-resend-key
       RESEND_FROM: ci@example.com
       FEATURE_VISUAL_REGRESSION_ENABLED: "true"
+      ENV_BUDGET_TIER: MVP
+      MAX_MONTHLY_EGRESS_GB: "100"
+      MAX_MONTHLY_STORAGE_GB: "50"
+      MAX_MONTHLY_JOB_MINUTES: "1000"
+      MAX_MONTHLY_SERVER_ACTION_INVOCATIONS: "1000000"
+      MAX_MONTHLY_COMPUTE_INVOCATIONS: "1200000"
+      MAX_MONTHLY_COMPUTE_RUNTIME_MINUTES: "2500"
+      FEATURE_EXPORTS_ENABLED: "true"
+      FEATURE_UPLOADS_ENABLED: "true"
+      FEATURE_PUBLIC_SIGNIN_ENABLED: "true"
+      BUDGET_TELEMETRY_STALE_AFTER_HOURS: "24"
+      BUDGET_TELEMETRY_REQUIRED_PROVIDERS: render,neon,cloudflare_r2,upstash,resend
+      EXPORT_OFFPEAK_AUTO_ENABLE_THRESHOLD_PERCENT: "101"
 
     steps:
       - name: Checkout
@@ -482,6 +495,28 @@ jobs:
 
       - name: Install deps (workspace)
         run: npm ci
+
+      - name: Seed CI budget telemetry
+        run: |
+          node <<'EOF'
+          const fs = require("node:fs");
+          const now = new Date();
+          const iso = now.toISOString();
+          const month = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+          const manifest = JSON.stringify({
+            capturedAt: iso,
+            month,
+            notes: "CI test-only provider billing manifest for release-confidence lanes.",
+            entries: ["render", "neon", "cloudflare_r2", "upstash", "resend"].map((provider, index) => ({
+              provider,
+              sourceType: "provider_api",
+              capturedAt: iso,
+              amountNzd: Number(((index + 1) / 100).toFixed(2)),
+              invoiceRef: `${provider}-${month}`,
+            })),
+          });
+          fs.appendFileSync(process.env.GITHUB_ENV, `BUDGET_TELEMETRY_PROVIDER_BILLING_JSON=${manifest}\n`);
+          EOF
 
       - name: Prisma generate
         run: npm run db:generate
@@ -594,6 +629,74 @@ jobs:
           TRUST_PROXY: "1"
           FEATURE_VISUAL_REGRESSION_ENABLED: "true"
 
+      - name: Run stable regression lane (chromium)
+        run: |
+          set -euo pipefail
+          cd apps/web
+          npm run test:e2e:stable:chromium 2>&1 | tee playwright-stable-chromium-output.txt
+          test_exit=${PIPESTATUS[0]}
+          if [ $test_exit -ne 0 ]; then
+            echo "Stable chromium lane failed with exit code $test_exit"
+            exit $test_exit
+          fi
+        env:
+          E2E_USE_SHARED_SERVER: "1"
+          ALLOW_TEST_RUNNER: "1"
+          BASE_URL: http://localhost:3000
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          TRUST_PROXY: "1"
+
+      - name: Run stable regression lane (webkit)
+        run: |
+          set -euo pipefail
+          cd apps/web
+          npm run test:e2e:stable:webkit 2>&1 | tee playwright-stable-webkit-output.txt
+          test_exit=${PIPESTATUS[0]}
+          if [ $test_exit -ne 0 ]; then
+            echo "Stable webkit lane failed with exit code $test_exit"
+            exit $test_exit
+          fi
+        env:
+          E2E_USE_SHARED_SERVER: "1"
+          ALLOW_TEST_RUNNER: "1"
+          BASE_URL: http://localhost:3000
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          TRUST_PROXY: "1"
+
+      - name: Run stable regression lane (mobile chrome)
+        run: |
+          set -euo pipefail
+          cd apps/web
+          npm run test:e2e:stable:mobile-chrome 2>&1 | tee playwright-stable-mobile-chrome-output.txt
+          test_exit=${PIPESTATUS[0]}
+          if [ $test_exit -ne 0 ]; then
+            echo "Stable mobile chrome lane failed with exit code $test_exit"
+            exit $test_exit
+          fi
+        env:
+          E2E_USE_SHARED_SERVER: "1"
+          ALLOW_TEST_RUNNER: "1"
+          BASE_URL: http://localhost:3000
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          TRUST_PROXY: "1"
+
+      - name: Run stable regression lane (mobile safari)
+        run: |
+          set -euo pipefail
+          cd apps/web
+          npm run test:e2e:stable:mobile-safari 2>&1 | tee playwright-stable-mobile-safari-output.txt
+          test_exit=${PIPESTATUS[0]}
+          if [ $test_exit -ne 0 ]; then
+            echo "Stable mobile safari lane failed with exit code $test_exit"
+            exit $test_exit
+          fi
+        env:
+          E2E_USE_SHARED_SERVER: "1"
+          ALLOW_TEST_RUNNER: "1"
+          BASE_URL: http://localhost:3000
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          TRUST_PROXY: "1"
+
       - name: Run perf-budget lane
         run: |
           set -euo pipefail
@@ -624,7 +727,7 @@ jobs:
       - name: Print release-confidence diagnostics
         if: failure()
         run: |
-          for log_file in apps/web/playwright-visual-output.txt apps/web/playwright-perf-output.txt; do
+          for log_file in apps/web/playwright-visual-output.txt apps/web/playwright-stable-chromium-output.txt apps/web/playwright-stable-webkit-output.txt apps/web/playwright-stable-mobile-chrome-output.txt apps/web/playwright-stable-mobile-safari-output.txt apps/web/playwright-perf-output.txt; do
             echo "=== ${log_file} (start) ==="
             if [ -f "$log_file" ]; then
               sed -n '1,400p' "$log_file" || true
@@ -648,6 +751,10 @@ jobs:
             apps/web/playwright-report/**
             apps/web/test-results/**
             apps/web/playwright-visual-output.txt
+            apps/web/playwright-stable-chromium-output.txt
+            apps/web/playwright-stable-webkit-output.txt
+            apps/web/playwright-stable-mobile-chrome-output.txt
+            apps/web/playwright-stable-mobile-safari-output.txt
             apps/web/playwright-perf-output.txt
             docs/UI_UX_PERFORMANCE_WEEKLY_REPORT.md
           if-no-files-found: ignore

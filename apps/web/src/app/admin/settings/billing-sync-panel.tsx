@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Alert } from "@/components/ui/alert";
 import { syncBillingPreviewAction } from "./actions";
 
 interface BillingSyncPanelProps {
@@ -49,17 +50,14 @@ export default function BillingSyncPanel({ endpointHost }: BillingSyncPanelProps
         </span>
       </div>
 
-      {result && (
-        <div
-          className={`mt-3 rounded-md border p-3 text-sm ${
-            result.success
-              ? "border-green-200 bg-green-50 text-green-700"
-              : "border-red-200 bg-red-50 text-red-700"
-          }`}
+      {result ? (
+        <Alert
+          variant={result.success ? "success" : "error"}
+          className="mt-3"
         >
           {result.message}
-        </div>
-      )}
+        </Alert>
+      ) : null}
 
       <div className="mt-4 flex items-center justify-end">
         <button

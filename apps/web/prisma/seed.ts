@@ -2,6 +2,7 @@ import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import {
   PrismaClient,
+  Prisma,
   UserRole,
   QuestionType,
   VisitorType,
@@ -10,6 +11,12 @@ import {
 } from "@prisma/client";
 import * as argon2 from "argon2";
 import { subDays, subHours, addMonths, subMonths } from "date-fns";
+import { formatToE164 } from "@inductlite/shared";
+import {
+  encryptJsonValue,
+  encryptNullableString,
+  encryptString,
+} from "../src/lib/security/data-protection";
 
 /* eslint-disable no-console */
 const prisma = new PrismaClient({
@@ -110,6 +117,7 @@ const PLAN_FIXTURE_COMPANIES: PlanFixtureCompany[] = [
       SMS_WORKFLOWS: true,
       HARDWARE_ACCESS: true,
       GEOFENCE_ENFORCEMENT: true,
+      MOBILE_OFFLINE_ASSIST_V1: true,
       LMS_CONNECTOR: true,
       ANALYTICS_ADVANCED: true,
       ID_OCR_VERIFICATION_V1: true,
@@ -137,6 +145,228 @@ const PLAN_FIXTURE_COMPANIES: PlanFixtureCompany[] = [
     ],
   },
 ];
+
+function normalizeSeedPhone(phone: string): string {
+  return formatToE164(phone, "NZ") ?? phone;
+}
+
+async function seedPlanFixtureApprovalAndEscalationData(input: {
+  companyId: string;
+  companySlug: string;
+  siteId: string;
+  siteName: string;
+  templateId: string;
+  adminUserId: string;
+}) {
+  const seedPrefix = "[seed-cert]";
+  const pendingApprovalReason = `${seedPrefix} Watchlist match requires manual approval.`;
+  const resolvedApprovalReason = `${seedPrefix} Random check was reviewed and denied.`;
+  const pendingEscalationKey = `${input.companySlug}:seed-cert:escalation:pending`;
+  const resolvedEscalationKey = `${input.companySlug}:seed-cert:escalation:resolved`;
+
+  await prisma.identityVerificationRecord.deleteMany({
+    where: {
+      company_id: input.companyId,
+      notes: { contains: seedPrefix },
+    },
+  });
+  await prisma.visitorApprovalRequest.deleteMany({
+    where: {
+      company_id: input.companyId,
+      OR: [
+        { reason: { startsWith: seedPrefix } },
+        { visitor_name: { startsWith: "Seed Certification" } },
+      ],
+    },
+  });
+  await prisma.pendingSignInEscalation.deleteMany({
+    where: {
+      company_id: input.companyId,
+      OR: [
+        { idempotency_key: { in: [pendingEscalationKey, resolvedEscalationKey] } },
+        { visitor_name: { startsWith: "Seed Certification" } },
+      ],
+    },
+  });
+  await prisma.visitorWatchlistEntry.deleteMany({
+    where: {
+      company_id: input.companyId,
+      full_name: { startsWith: "Seed Certification" },
+    },
+  });
+  await prisma.visitorApprovalPolicy.deleteMany({
+    where: {
+      company_id: input.companyId,
+      name: { startsWith: "[Seed]" },
+    },
+  });
+
+  const watchlistEntry = await prisma.visitorWatchlistEntry.create({
+    data: {
+      company_id: input.companyId,
+      full_name: "Seed Certification Watchlist Visitor",
+      phone: normalizeSeedPhone("+64 21 700 1001"),
+      email: "seed.watchlist@inductlite.test",
+      employer_name: "Seed Review Contractors",
+      normalized_name: "seed certification watchlist visitor",
+      normalized_phone: normalizeSeedPhone("+64 21 700 1001"),
+      normalized_email: "seed.watchlist@inductlite.test",
+      reason: `${seedPrefix} Known edge-case visitor requiring manual approval.`,
+      is_active: true,
+      expires_at: addMonths(new Date(), 3),
+    },
+  });
+
+  const policy = await prisma.visitorApprovalPolicy.create({
+    data: {
+      company_id: input.companyId,
+      site_id: input.siteId,
+      template_id: input.templateId,
+      name: "[Seed] Certification Approval Policy",
+      rules: {
+        requireApprovalFor: ["VISITOR", "CONTRACTOR"],
+        afterHours: false,
+        certificationSeed: true,
+      } as Prisma.InputJsonValue,
+      random_check_percentage: 15,
+      require_watchlist_screening: true,
+      is_active: true,
+    },
+  });
+
+  const pendingApprovalRequest = await prisma.visitorApprovalRequest.create({
+    data: {
+      company_id: input.companyId,
+      site_id: input.siteId,
+      visitor_name: "Seed Certification Pending Approval",
+      visitor_phone: normalizeSeedPhone("+64 21 700 1002"),
+      visitor_email: "seed.pending-approval@inductlite.test",
+      employer_name: "Seed Review Contractors",
+      visitor_type: VisitorType.CONTRACTOR,
+      reason: pendingApprovalReason,
+      policy_id: policy.id,
+      status: "PENDING",
+      requested_at: subHours(new Date(), 2),
+      random_check_triggered: false,
+      watchlist_match: true,
+      watchlist_entry_id: watchlistEntry.id,
+    },
+  });
+
+  await prisma.visitorApprovalRequest.create({
+    data: {
+      company_id: input.companyId,
+      site_id: input.siteId,
+      visitor_name: "Seed Certification Resolved Approval",
+      visitor_phone: normalizeSeedPhone("+64 21 700 1003"),
+      visitor_email: "seed.resolved-approval@inductlite.test",
+      employer_name: "Seed Review Contractors",
+      visitor_type: VisitorType.VISITOR,
+      reason: resolvedApprovalReason,
+      policy_id: policy.id,
+      status: "DENIED",
+      requested_at: subDays(new Date(), 1),
+      reviewed_at: subHours(new Date(), 20),
+      reviewed_by: input.adminUserId,
+      decision_notes: `${seedPrefix} Resolved during local certification setup.`,
+      random_check_triggered: true,
+      watchlist_match: false,
+    },
+  });
+
+  await prisma.identityVerificationRecord.createMany({
+    data: [
+      {
+        company_id: input.companyId,
+        site_id: input.siteId,
+        visitor_approval_request_id: pendingApprovalRequest.id,
+        method: "WATCHLIST_REVIEW",
+        reviewer_user_id: input.adminUserId,
+        evidence_pointer: `seed://${input.companySlug}/watchlist-review`,
+        result: "NEEDS_REVIEW",
+        notes: `${seedPrefix} Pending approval still needs manual identity review.`,
+      },
+      {
+        company_id: input.companyId,
+        site_id: input.siteId,
+        method: "MANUAL_ID",
+        reviewer_user_id: input.adminUserId,
+        evidence_pointer: `seed://${input.companySlug}/manual-id-pass`,
+        result: "PASS",
+        notes: `${seedPrefix} Completed identity verification reference record.`,
+      },
+    ],
+  });
+
+  await prisma.pendingSignInEscalation.create({
+    data: {
+      company_id: input.companyId,
+      site_id: input.siteId,
+      idempotency_key: pendingEscalationKey,
+      status: "PENDING",
+      visitor_name: "Seed Certification Pending Escalation",
+      visitor_phone: encryptString(normalizeSeedPhone("+64 21 700 1004")),
+      visitor_email: encryptNullableString("seed.pending-escalation@inductlite.test"),
+      employer_name: "Seed Review Contractors",
+      visitor_type: VisitorType.CONTRACTOR,
+      role_on_site: "Welder",
+      hasAcceptedTerms: true,
+      termsAcceptedAt: subHours(new Date(), 1),
+      consent_statement: "Seed certification escalation consent acknowledged.",
+      template_id: input.templateId,
+      template_version: 1,
+      answers: encryptJsonValue([
+        { questionId: "seed-red-flag-1", answer: true },
+        { questionId: "seed-red-flag-2", answer: "Missing working at heights proof" },
+      ]) as Prisma.InputJsonValue,
+      signature_data: encryptNullableString("seed-signature-pending"),
+      red_flag_question_ids: ["seed-red-flag-1", "seed-red-flag-2"] as Prisma.InputJsonValue,
+      red_flag_questions: [
+        "Declared a disqualifying risk answer",
+        "Missing proof of required competency",
+      ] as Prisma.InputJsonValue,
+      notification_targets: 2,
+      notifications_queued: 2,
+      submitted_at: subHours(new Date(), 1),
+    },
+  });
+
+  await prisma.pendingSignInEscalation.create({
+    data: {
+      company_id: input.companyId,
+      site_id: input.siteId,
+      idempotency_key: resolvedEscalationKey,
+      status: "DENIED",
+      visitor_name: "Seed Certification Resolved Escalation",
+      visitor_phone: encryptString(normalizeSeedPhone("+64 21 700 1005")),
+      visitor_email: encryptNullableString("seed.resolved-escalation@inductlite.test"),
+      employer_name: "Seed Review Contractors",
+      visitor_type: VisitorType.VISITOR,
+      role_on_site: "Inspector",
+      hasAcceptedTerms: true,
+      termsAcceptedAt: subDays(new Date(), 1),
+      consent_statement: "Seed certification escalation consent acknowledged.",
+      template_id: input.templateId,
+      template_version: 1,
+      answers: encryptJsonValue([
+        { questionId: "seed-red-flag-3", answer: true },
+      ]) as Prisma.InputJsonValue,
+      signature_data: encryptNullableString("seed-signature-resolved"),
+      red_flag_question_ids: ["seed-red-flag-3"] as Prisma.InputJsonValue,
+      red_flag_questions: ["Outstanding safety documentation concern"] as Prisma.InputJsonValue,
+      notification_targets: 1,
+      notifications_queued: 1,
+      submitted_at: subDays(new Date(), 1),
+      reviewed_at: subHours(new Date(), 20),
+      reviewed_by: input.adminUserId,
+      review_notes: `${seedPrefix} Denied during seed setup for certification coverage.`,
+    },
+  });
+
+  console.log(
+    `   ✓ Seeded approval/escalation certification data for ${input.siteName}`,
+  );
+}
 
 async function seedPlanFixtureTenants(passwordHash: string) {
   console.log("Creating plan fixture tenants...");
@@ -168,7 +398,7 @@ async function seedPlanFixtureTenants(passwordHash: string) {
       },
     });
 
-    await prisma.user.upsert({
+    const adminUser = await prisma.user.upsert({
       where: { email: fixture.adminEmail },
       update: {
         company_id: company.id,
@@ -187,6 +417,7 @@ async function seedPlanFixtureTenants(passwordHash: string) {
     });
 
     const siteSlugs: string[] = [];
+    let primarySiteId: string | null = null;
     for (const siteFixture of fixture.sites) {
       const site = await prisma.site.upsert({
         where: {
@@ -214,6 +445,9 @@ async function seedPlanFixtureTenants(passwordHash: string) {
             : {}),
         },
       });
+      if (!primarySiteId) {
+        primarySiteId = site.id;
+      }
 
       await prisma.sitePublicLink.upsert({
         where: { slug: siteFixture.slug },
@@ -266,6 +500,17 @@ async function seedPlanFixtureTenants(passwordHash: string) {
         display_order: 1,
       },
     });
+
+    if ((fixture.plan === CompanyPlan.PRO || fixture.companyFeatureOverrides) && primarySiteId) {
+      await seedPlanFixtureApprovalAndEscalationData({
+        companyId: company.id,
+        companySlug: fixture.slug,
+        siteId: primarySiteId,
+        siteName: fixture.sites[0]?.name ?? "Seed site",
+        templateId: template.id,
+        adminUserId: adminUser.id,
+      });
+    }
 
     summary.push({
       companyName: fixture.name,

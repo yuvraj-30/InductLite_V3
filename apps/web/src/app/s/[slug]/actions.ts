@@ -141,6 +141,8 @@ type PublicSignInResponse = SignInResult & {
 };
 
 const HARDWARE_ACCESS_DECISION_TIMEOUT_MS = 2_000;
+const NON_CRITICAL_SIGN_IN_SIDE_EFFECT_TIMEOUT_MS = 2_000;
+const CHANNEL_DELIVERY_TIMEOUT_MS = 2_000;
 
 const badgePrintAuditSchema = z.object({
   slug: z.string().min(1, "Site slug is required"),
@@ -920,6 +922,49 @@ function resolveAppUrlBase(): string | null {
   return value.replace(/\/$/, "");
 }
 
+async function awaitWithSoftTimeout<T>(
+  task: Promise<T>,
+  timeoutMs: number,
+  onTimeout: () => void,
+): Promise<T | null> {
+  let timeoutHandle: ReturnType<typeof setTimeout> | null = null;
+
+  try {
+    const outcome = await Promise.race([
+      task.then(
+        (value) => ({ kind: "result" as const, value }),
+        (error) => ({ kind: "error" as const, error }),
+      ),
+      new Promise<{ kind: "timeout" }>((resolve) => {
+        timeoutHandle = setTimeout(() => resolve({ kind: "timeout" }), timeoutMs);
+        if (
+          timeoutHandle &&
+          typeof timeoutHandle === "object" &&
+          "unref" in timeoutHandle &&
+          typeof timeoutHandle.unref === "function"
+        ) {
+          timeoutHandle.unref();
+        }
+      }),
+    ]);
+
+    if (outcome.kind === "result") {
+      return outcome.value;
+    }
+
+    if (outcome.kind === "error") {
+      throw outcome.error;
+    }
+
+    onTimeout();
+    return null;
+  } finally {
+    if (timeoutHandle) {
+      clearTimeout(timeoutHandle);
+    }
+  }
+}
+
 async function sendChannelEventsForSite(input: {
   companyId: string;
   siteId: string;
@@ -989,6 +1034,10 @@ async function sendChannelEventsForSite(input: {
           method: "POST",
           headers,
           body: JSON.stringify(payload),
+          signal:
+            typeof AbortSignal.timeout === "function"
+              ? AbortSignal.timeout(CHANNEL_DELIVERY_TIMEOUT_MS)
+              : undefined,
         });
         const responseBody = await response.text();
         await markChannelDeliveryStatus(input.companyId, {
@@ -1349,6 +1398,116 @@ async function sendVisitorSmsReceipt(input: {
     );
     return "FAILED";
   }
+}
+
+async function runPublicSignInCompletionSideEffects(input: {
+  companyId: string;
+  siteId: string;
+  siteName: string;
+  site: unknown;
+  result: SignInResult;
+  requestId: string;
+  log: ReturnType<typeof createRequestLogger>;
+  visitorName: string;
+  visitorPhoneE164: string;
+  visitorEmail?: string;
+  visitorType: string;
+  employerName?: string;
+  roleOnSite?: string;
+}) {
+  const arrivalChannelPayload = {
+    event_type: "visitor.arrival",
+    site_id: input.siteId,
+    site_name: input.siteName,
+    sign_in_record_id: input.result.signInRecordId,
+    sign_in_time: input.result.signInTime.toISOString(),
+    visitor_name: input.visitorName,
+    visitor_phone: input.visitorPhoneE164,
+    visitor_email: input.visitorEmail || null,
+    visitor_type: input.visitorType,
+    employer_name: input.employerName || null,
+    role_on_site: input.roleOnSite || null,
+  };
+
+  await Promise.allSettled([
+    awaitWithSoftTimeout(
+      sendVisitorSmsReceipt({
+        companyId: input.companyId,
+        siteId: input.siteId,
+        siteName: input.siteName,
+        visitorName: input.visitorName,
+        visitorPhoneE164: input.visitorPhoneE164,
+        signOutToken: input.result.signOutToken,
+        requestId: input.requestId,
+        log: input.log,
+      }),
+      NON_CRITICAL_SIGN_IN_SIDE_EFFECT_TIMEOUT_MS,
+      () => {
+        input.log.warn(
+          {
+            requestId: input.requestId,
+            companyId: input.companyId,
+            siteId: input.siteId,
+            timeoutMs: NON_CRITICAL_SIGN_IN_SIDE_EFFECT_TIMEOUT_MS,
+          },
+          "SMS receipt exceeded sign-in latency budget; continuing response",
+        );
+      },
+    ),
+    awaitWithSoftTimeout(
+      (async () => {
+        try {
+          await sendChannelEventsForSite({
+            companyId: input.companyId,
+            siteId: input.siteId,
+            eventType: "visitor.arrival",
+            requestId: input.requestId,
+            log: input.log,
+            payload: arrivalChannelPayload,
+          });
+        } catch (channelError) {
+          input.log.error(
+            {
+              requestId: input.requestId,
+              siteId: input.siteId,
+              signInRecordId: input.result.signInRecordId,
+              errorType:
+                channelError instanceof Error ? channelError.name : "unknown",
+            },
+            "Failed to dispatch channel arrival notifications",
+          );
+        }
+      })(),
+      NON_CRITICAL_SIGN_IN_SIDE_EFFECT_TIMEOUT_MS,
+      () => {
+        input.log.warn(
+          {
+            requestId: input.requestId,
+            companyId: input.companyId,
+            siteId: input.siteId,
+            timeoutMs: NON_CRITICAL_SIGN_IN_SIDE_EFFECT_TIMEOUT_MS,
+          },
+          "Channel arrival notifications exceeded sign-in latency budget; continuing response",
+        );
+      },
+    ),
+    triggerOutboundWebhooks({
+      companyId: input.companyId,
+      siteId: input.siteId,
+      site: input.site,
+      result: input.result,
+      requestId: input.requestId,
+      log: input.log,
+    }),
+    triggerLmsCompletionSync({
+      companyId: input.companyId,
+      siteId: input.siteId,
+      site: input.site,
+      result: input.result,
+      requestId: input.requestId,
+      log: input.log,
+    }),
+  ]);
 }
 
 async function markInviteUsedIfNeeded(input: {
@@ -2927,67 +3086,20 @@ export async function submitSignIn(
           },
         });
 
-        await sendVisitorSmsReceipt({
+        await runPublicSignInCompletionSideEffects({
           companyId: site.company.id,
           siteId: site.id,
           siteName: site.name,
+          site,
+          requestId,
+          log,
+          result: approvedResult,
           visitorName: parsed.data.visitorName,
           visitorPhoneE164: formattedPhone,
-          signOutToken: approvedResult.signOutToken,
-          requestId,
-          log,
-        });
-
-        try {
-          await sendChannelEventsForSite({
-            companyId: site.company.id,
-            siteId: site.id,
-            eventType: "visitor.arrival",
-            requestId,
-            log,
-            payload: {
-              event_type: "visitor.arrival",
-              site_id: site.id,
-              site_name: site.name,
-              sign_in_record_id: approvedResult.signInRecordId,
-              sign_in_time: approvedResult.signInTime.toISOString(),
-              visitor_name: parsed.data.visitorName,
-              visitor_phone: formattedPhone,
-              visitor_email: parsed.data.visitorEmail || null,
-              visitor_type: parsed.data.visitorType,
-              employer_name: parsed.data.employerName || null,
-              role_on_site: parsed.data.roleOnSite || null,
-            },
-          });
-        } catch (channelError) {
-          log.error(
-            {
-              requestId,
-              siteId: site.id,
-              signInRecordId: approvedResult.signInRecordId,
-              errorType:
-                channelError instanceof Error ? channelError.name : "unknown",
-            },
-            "Failed to dispatch channel arrival notifications",
-          );
-        }
-
-        await triggerOutboundWebhooks({
-          companyId: site.company.id,
-          siteId: site.id,
-          site,
-          result: approvedResult,
-          requestId,
-          log,
-        });
-
-        await triggerLmsCompletionSync({
-          companyId: site.company.id,
-          siteId: site.id,
-          site,
-          result: approvedResult,
-          requestId,
-          log,
+          visitorEmail: parsed.data.visitorEmail,
+          visitorType: parsed.data.visitorType,
+          employerName: parsed.data.employerName,
+          roleOnSite: parsed.data.roleOnSite,
         });
 
         return successResponse(approvedResponse, "Signed in successfully");
@@ -3404,50 +3516,6 @@ export async function submitSignIn(
       },
     });
 
-    await sendVisitorSmsReceipt({
-      companyId: site.company.id,
-      siteId: site.id,
-      siteName: site.name,
-      visitorName: parsed.data.visitorName,
-      visitorPhoneE164: formattedPhone,
-      signOutToken: result.signOutToken,
-      requestId,
-      log,
-    });
-
-    try {
-      await sendChannelEventsForSite({
-        companyId: site.company.id,
-        siteId: site.id,
-        eventType: "visitor.arrival",
-        requestId,
-        log,
-        payload: {
-          event_type: "visitor.arrival",
-          site_id: site.id,
-          site_name: site.name,
-          sign_in_record_id: result.signInRecordId,
-          sign_in_time: result.signInTime.toISOString(),
-          visitor_name: parsed.data.visitorName,
-          visitor_phone: formattedPhone,
-          visitor_email: parsed.data.visitorEmail || null,
-          visitor_type: parsed.data.visitorType,
-          employer_name: parsed.data.employerName || null,
-          role_on_site: parsed.data.roleOnSite || null,
-        },
-      });
-    } catch (channelError) {
-      log.error(
-        {
-          requestId,
-          siteId: site.id,
-          signInRecordId: result.signInRecordId,
-          errorType: channelError instanceof Error ? channelError.name : "unknown",
-        },
-        "Failed to dispatch channel arrival notifications",
-      );
-    }
-
     log.info(
       {
         signInRecordId: result.signInRecordId,
@@ -3457,22 +3525,20 @@ export async function submitSignIn(
       "Visitor signed in",
     );
 
-    await triggerOutboundWebhooks({
+    await runPublicSignInCompletionSideEffects({
       companyId: site.company.id,
       siteId: site.id,
+      siteName: site.name,
       site,
-      result,
       requestId,
       log,
-    });
-
-    await triggerLmsCompletionSync({
-      companyId: site.company.id,
-      siteId: site.id,
-      site,
       result,
-      requestId,
-      log,
+      visitorName: parsed.data.visitorName,
+      visitorPhoneE164: formattedPhone,
+      visitorEmail: parsed.data.visitorEmail,
+      visitorType: parsed.data.visitorType,
+      employerName: parsed.data.employerName,
+      roleOnSite: parsed.data.roleOnSite,
     });
 
     return successResponse(responseResult, "Signed in successfully");

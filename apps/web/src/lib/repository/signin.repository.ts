@@ -30,6 +30,7 @@ import {
   decryptString,
   encryptNullableString,
   encryptString,
+  isEncryptedValue,
 } from "@/lib/security/data-protection";
 
 // Infer types from Prisma schema
@@ -76,6 +77,7 @@ export interface SignInRecordWithDetails {
   site_id: string;
   visitor_name: string;
   visitor_phone: string;
+  visitor_phone_display: string | null;
   visitor_email: string | null;
   employer_name: string | null;
   visitor_type: VisitorType;
@@ -127,6 +129,29 @@ function decryptSignInRecords<T extends SignInRecordSensitive>(records: T[]): T[
   return records.map((record) => decryptSignInRecord(record));
 }
 
+function maskPhoneToLast4(phone: string): string | null {
+  const digits = phone.replace(/[^\d]/g, "");
+  if (digits.length < 4) {
+    return null;
+  }
+  return digits.slice(-4);
+}
+
+function buildSafeVisitorPhoneDisplay(visitorPhone: string): string | null {
+  const trimmed = visitorPhone.trim();
+  if (!trimmed || isEncryptedValue(trimmed)) {
+    return null;
+  }
+
+  const parsedPhone = parsePhoneNumberFromString(trimmed, "NZ");
+  if (parsedPhone?.isValid()) {
+    return parsedPhone.formatNational();
+  }
+
+  const last4 = maskPhoneToLast4(trimmed);
+  return last4 ? `Phone ending ${last4}` : null;
+}
+
 async function hydrateSiteDetails(
   companyId: string,
   records: SignInRecordDetailsRow[],
@@ -147,13 +172,20 @@ async function hydrateSiteDetails(
   });
   const siteNames = new Map(sites.map((site) => [site.id, site.name]));
 
-  return decryptSignInRecords(records).map((record) => ({
-    ...record,
-    site: {
-      id: record.site_id,
-      name: siteNames.get(record.site_id) ?? "Unknown site",
-    },
-  }));
+  return decryptSignInRecords(records).map((record) => {
+    const visitor_phone_display = buildSafeVisitorPhoneDisplay(
+      record.visitor_phone,
+    );
+
+    return {
+      ...record,
+      visitor_phone_display,
+      site: {
+        id: record.site_id,
+        name: siteNames.get(record.site_id) ?? "Unknown site",
+      },
+    };
+  });
 }
 
 /**

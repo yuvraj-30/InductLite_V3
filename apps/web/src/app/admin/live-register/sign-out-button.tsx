@@ -38,7 +38,7 @@ export function SignOutButton({
 
   if (showConfirm) {
     return (
-      <div className="space-y-2 rounded-lg border border-red-400/35 bg-red-500/10 p-2">
+      <div className="space-y-2 rounded-lg border border-red-400/25 bg-red-500/8 p-2">
         <p className="text-sm text-secondary">
           Sign out {visitorName}?
         </p>
@@ -66,7 +66,7 @@ export function SignOutButton({
   return (
     <button
       onClick={() => setShowConfirm(true)}
-      className={`inline-flex min-h-[40px] items-center rounded-lg border border-red-400/45 bg-red-500/12 px-3 py-1.5 text-sm font-semibold text-red-900 transition-colors hover:bg-red-500/20 dark:text-red-100 ${className}`.trim()}
+      className={`inline-flex min-h-[40px] items-center rounded-md border border-[color:var(--border-soft)] bg-transparent px-3 py-1.5 text-sm font-semibold text-secondary transition-colors hover:border-red-300/45 hover:bg-red-500/8 hover:text-red-900 dark:hover:text-red-100 ${className}`.trim()}
     >
       Sign Out
     </button>

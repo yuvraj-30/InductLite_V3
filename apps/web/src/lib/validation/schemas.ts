@@ -209,6 +209,32 @@ export const createExportSchema = z.object({
   dateFrom: z.string().datetime({ offset: true }).optional(),
   dateTo: z.string().datetime({ offset: true }).optional(),
   contractorIds: z.array(z.string().cuid("Invalid contractor ID")).optional(),
+}).superRefine((value, ctx) => {
+  if (value.contractorIds && value.contractorIds.length > 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["contractorIds"],
+      message: "Contractor filters are not supported for exports yet.",
+    });
+  }
+
+  if (!value.dateFrom || !value.dateTo) {
+    return;
+  }
+
+  const from = new Date(value.dateFrom);
+  const to = new Date(value.dateTo);
+  if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
+    return;
+  }
+
+  if (from > to) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["dateFrom"],
+      message: "'From' must be earlier than or equal to 'To'.",
+    });
+  }
 });
 
 export type CreateExportInput = z.infer<typeof createExportSchema>;

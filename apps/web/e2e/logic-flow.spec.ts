@@ -58,6 +58,30 @@ async function fillFieldWithRetry(input: {
   throw new Error(`Unable to persist value for ${label.toString()}`);
 }
 
+async function waitForSignInStep(input: {
+  inductionHeading: import("@playwright/test").Locator;
+  detailsNameInput: import("@playwright/test").Locator;
+}): Promise<"induction" | "details" | "unknown"> {
+  const { inductionHeading, detailsNameInput } = input;
+
+  try {
+    await Promise.race([
+      inductionHeading.waitFor({ state: "visible", timeout: 2500 }).then(() => "induction"),
+      detailsNameInput.waitFor({ state: "visible", timeout: 2500 }).then(() => "details"),
+    ]);
+  } catch {
+    return "unknown";
+  }
+
+  if (await inductionHeading.isVisible().catch(() => false)) {
+    return "induction";
+  }
+  if (await detailsNameInput.isVisible().catch(() => false)) {
+    return "details";
+  }
+  return "unknown";
+}
+
 test.describe("Induction Skip Logic", () => {
   let testSiteSlug = "test-site";
   let skipLogicSourceQuestionId: string | null = null;
@@ -120,22 +144,24 @@ test.describe("Induction Skip Logic", () => {
     const inductionHeading = page
       .locator("h2", { hasText: /^site induction$/i })
       .first();
+    const detailsNameInput = page.locator("#visitorName").first();
     const continueButton = page
-      .getByRole("button", { name: /continue to induction|continue/i })
+      .getByRole("button", { name: /continue to induction|review site induction|continue/i })
       .first();
     let reachedInduction = false;
     for (let attempt = 1; attempt <= 4; attempt++) {
       await continueButton.click({ force: true }).catch(() => null);
-      if (await inductionHeading.isVisible({ timeout: 6000 }).catch(() => false)) {
+
+      const currentStep = await waitForSignInStep({
+        inductionHeading,
+        detailsNameInput,
+      });
+      if (currentStep === "induction") {
         reachedInduction = true;
         break;
       }
-      const detailsVisible = await page
-        .locator("#visitorName")
-        .first()
-        .isVisible()
-        .catch(() => false);
-      if (detailsVisible) {
+
+      if (currentStep === "details") {
         await fillFieldWithRetry({
           page,
           label: /full name|name/i,
@@ -147,6 +173,7 @@ test.describe("Induction Skip Logic", () => {
           value: "+64211234567",
         });
       }
+
       await page.waitForTimeout(300 * attempt);
     }
     expect(reachedInduction).toBe(true);

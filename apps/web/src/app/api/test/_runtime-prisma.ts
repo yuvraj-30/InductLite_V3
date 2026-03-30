@@ -54,7 +54,6 @@ export function serializeRuntimeError(error: unknown): Record<string, unknown> {
         runtimeError.cause instanceof Error
           ? runtimeError.cause.message
           : runtimeError.cause ?? null,
-      stack: runtimeError.stack ?? null,
     };
   }
 
@@ -64,6 +63,5 @@ export function serializeRuntimeError(error: unknown): Record<string, unknown> {
     code: null,
     meta: null,
     cause: null,
-    stack: null,
   };
 }

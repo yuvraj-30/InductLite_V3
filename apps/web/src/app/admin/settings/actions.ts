@@ -17,6 +17,7 @@ import { generateRequestId } from "@/lib/auth/csrf";
 import {
   buildCompanyInvoicePreview,
   syncCompanyInvoicePreviewToAccounting,
+  type SiteInvoicePreview,
 } from "@/lib/plans";
 import {
   generateDirectorySyncApiKey,
@@ -206,8 +207,22 @@ export type BillingSyncActionResult =
     }
   | { success: false; error: string };
 
+export type BillingPreviewDetailActionResult =
+  | {
+      success: true;
+      generatedAt: string;
+      siteInvoices: SiteInvoicePreview[];
+    }
+  | { success: false; error: string };
+
 export type SsoSettingsActionResult =
-  | { success: true; message: string }
+  | {
+      success: true;
+      message: string;
+      savedConfig: {
+        defaultRole: "ADMIN" | "SITE_MANAGER" | "VIEWER";
+      };
+    }
   | { success: false; error: string; fieldErrors?: Record<string, string[]> };
 
 export type RotateDirectorySyncKeyActionResult =
@@ -471,6 +486,34 @@ export async function syncBillingPreviewAction(): Promise<BillingSyncActionResul
   }
 }
 
+export async function loadBillingPreviewDetailAction(): Promise<BillingPreviewDetailActionResult> {
+  const guard = await checkPermission("settings:manage");
+  if (!guard.success) {
+    return { success: false, error: guard.error };
+  }
+
+  try {
+    const context = await requireAuthenticatedContextReadOnly();
+    const preview = await buildCompanyInvoicePreview(context.companyId);
+
+    return {
+      success: true,
+      generatedAt: preview.generatedAt.toISOString(),
+      siteInvoices: preview.siteInvoices,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+
+    return {
+      success: false,
+      error:
+        message.trim().length > 0
+          ? message
+          : "Unable to load billing detail right now.",
+    };
+  }
+}
+
 export async function updateSsoSettingsAction(
   _prevState: SsoSettingsActionResult | null,
   formData: FormData,
@@ -613,7 +656,13 @@ export async function updateSsoSettingsAction(
     });
 
     revalidatePath("/admin/settings");
-    return { success: true, message: "SSO settings updated" };
+    return {
+      success: true,
+      message: "SSO settings updated",
+      savedConfig: {
+        defaultRole: normalizedConfig.defaultRole,
+      },
+    };
   } catch (error) {
     log.error({ error: String(error) }, "Failed to update SSO settings");
     return { success: false, error: "Failed to update SSO settings" };

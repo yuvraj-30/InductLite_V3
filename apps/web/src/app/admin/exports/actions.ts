@@ -11,6 +11,7 @@ import {
   ExportQueueAgeLimitReachedError,
   getExportOffPeakDecision,
 } from "@/lib/repository/export.repository";
+import { findSiteById } from "@/lib/repository/site.repository";
 import {
   type ApiResponse,
   successResponse,
@@ -30,6 +31,7 @@ import {
   enforceBudgetPath,
   startBudgetTrackedOperation,
 } from "@/lib/cost/budget-service";
+import { processNextExportJob } from "@/lib/export/runner";
 
 export async function createExportAction(
   input: z.infer<typeof createExportSchema>,
@@ -49,8 +51,19 @@ export async function createExportAction(
     // Validate payload
     const parsed = createExportSchema.safeParse(input);
     if (!parsed.success) {
+      const fieldErrors = parsed.error.issues.reduce<Record<string, string[]>>(
+        (acc, issue) => {
+          const key =
+            typeof issue.path[0] === "string" && issue.path[0].length > 0
+              ? issue.path[0]
+              : "export";
+          acc[key] = [...(acc[key] ?? []), issue.message];
+          return acc;
+        },
+        {},
+      );
       return validationErrorResponse(
-        { export: parsed.error.issues.map((e) => e.message) },
+        fieldErrors,
         "Invalid export parameters",
       );
     }
@@ -73,6 +86,16 @@ export async function createExportAction(
         budgetDecision.scope,
         budgetDecision.message,
       );
+    }
+
+    if (parsed.data.siteId) {
+      const site = await findSiteById(context.companyId, parsed.data.siteId);
+      if (!site) {
+        return validationErrorResponse(
+          { siteId: ["Selected site was not found."] },
+          "Invalid export parameters",
+        );
+      }
     }
 
     const requiresAdvancedExport =
@@ -173,11 +196,107 @@ export async function createExportAction(
   }
 }
 
+export type ExportQueueActionState = ApiResponse<{ exportJobId: string }> | null;
+export type ExportQueueRecoveryActionState = ApiResponse<{
+  processed: boolean;
+  status: string;
+  exportJobId?: string;
+}> | null;
+
+function readOptionalFormValue(formData: FormData, key: string): string | undefined {
+  const value = formData.get(key);
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function readStringArrayFormValue(formData: FormData, key: string): string[] | undefined {
+  const values = formData
+    .getAll(key)
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0);
+  return values.length > 0 ? values : undefined;
+}
+
+export async function createExportFormAction(
+  _previousState: ExportQueueActionState,
+  formData: FormData,
+): Promise<ExportQueueActionState> {
+  return createExportAction({
+    exportType: String(formData.get("exportType") ?? "SIGN_IN_CSV") as z.infer<
+      typeof createExportSchema
+    >["exportType"],
+    siteId: readOptionalFormValue(formData, "siteId"),
+    dateFrom: readOptionalFormValue(formData, "dateFrom"),
+    dateTo: readOptionalFormValue(formData, "dateTo"),
+    contractorIds: readStringArrayFormValue(formData, "contractorIds"),
+  });
+}
+
+export async function runQueuedExportNowAction(): Promise<
+  ApiResponse<{ processed: boolean; status: string; exportJobId?: string }>
+> {
+  const finishBudgetTracking = startBudgetTrackedOperation("server_action");
+  const requestId = generateRequestId();
+  const log = createRequestLogger(requestId);
+
+  try {
+    try {
+      await assertOrigin();
+    } catch {
+      return errorResponse("FORBIDDEN", "Invalid request origin");
+    }
+
+    const guard = await checkAdmin();
+    if (!guard.success) return permissionDeniedResponse(guard.error);
+
+    if (!isFeatureEnabled("EXPORTS")) {
+      return errorResponse("FORBIDDEN", "Exports are currently disabled");
+    }
+
+    const context = await requireAuthenticatedContextReadOnly();
+    const result = await processNextExportJob({ companyId: context.companyId });
+
+    try {
+      revalidatePath("/admin/exports");
+    } catch (err) {
+      log.warn({ err: String(err) }, "Failed to revalidate /admin/exports");
+    }
+
+    if (!result) {
+      return successResponse(
+        { processed: false, status: "NOOP" },
+        "No queued exports were eligible to run right now.",
+      );
+    }
+
+    return successResponse(
+      {
+        processed: true,
+        status: result.status,
+        exportJobId: result.id,
+      },
+      result.status === "SUCCEEDED"
+        ? "Queued export processed successfully."
+        : "Export processor ran, but the queued job still needs attention.",
+    );
+  } catch (error) {
+    log.error({ error: String(error) }, "Failed to process queued export job");
+    return errorResponse("INTERNAL_ERROR", "Failed to process queued export job");
+  } finally {
+    finishBudgetTracking();
+  }
+}
+
+export async function runQueuedExportNowFormAction(
+  _previousState: ExportQueueRecoveryActionState,
+  _formData?: FormData,
+): Promise<ExportQueueRecoveryActionState> {
+  return runQueuedExportNowAction();
+}
+
 // Accept FormData from a Client form and forward to typed action
 export async function createExportActionFromForm(formData: FormData) {
-  const exportType = String(formData.get("exportType") ?? "SIGN_IN_CSV");
-  // Use schema parsing so we pass a correctly typed input without 'any'
-  const input = createExportSchema.parse({ exportType });
-  // Server actions used as form handlers should not return structured API responses to the client
-  await createExportAction(input);
+  await createExportFormAction(null, formData);
 }
