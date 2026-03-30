@@ -77,6 +77,7 @@ export interface LiveRegisterOverview {
   headcount: number;
   longStayCount: number;
   locationExceptionCount: number;
+  locationMissingCount: number;
   monitoredLocationCount: number;
   busiestSiteName: string | null;
   busiestSiteHeadcount: number;
@@ -333,6 +334,10 @@ export function buildLiveRegisterOverview(
     (total, group) => total + group.locationExceptionCount,
     0,
   );
+  const locationMissingCount = siteGroups.reduce(
+    (total, group) => total + group.locationMissingCount,
+    0,
+  );
   const monitoredLocationCount = siteGroups.reduce(
     (total, group) =>
       total + group.headcount - group.locationMissingCount,
@@ -352,6 +357,7 @@ export function buildLiveRegisterOverview(
     headcount,
     longStayCount,
     locationExceptionCount,
+    locationMissingCount,
     monitoredLocationCount,
     busiestSiteName: busiestSite?.siteName ?? null,
     busiestSiteHeadcount: busiestSite?.headcount ?? 0,
@@ -690,7 +696,7 @@ function LiveRegisterSitePanel({
                           </div>
                           <p className="text-xs text-secondary">
                             {locationStatus.tone === "neutral"
-                              ? "Location verified"
+                              ? locationStatus.label
                               : getLocationDetailLabel(record)}
                           </p>
                         </div>
@@ -897,8 +903,12 @@ async function LiveRegisterContent({
             />
             <LiveRegisterSummaryCard
               eyebrow="Needs attention"
-              value={String(overview.longStayCount + overview.locationExceptionCount)}
-              description={`${overview.longStayCount} long stay${overview.longStayCount === 1 ? "" : "s"} and ${overview.locationExceptionCount} location exception${overview.locationExceptionCount === 1 ? "" : "s"}.`}
+              value={String(
+                overview.longStayCount +
+                  overview.locationExceptionCount +
+                  overview.locationMissingCount,
+              )}
+              description={`${overview.longStayCount} long stay${overview.longStayCount === 1 ? "" : "s"}, ${overview.locationExceptionCount} location exception${overview.locationExceptionCount === 1 ? "" : "s"}, and ${overview.locationMissingCount} missing location capture${overview.locationMissingCount === 1 ? "" : "s"}.`}
               badgeLabel={sitesNeedingAttention > 0 ? "Respond now" : "Stable"}
               badgeTone={sitesNeedingAttention > 0 ? "warning" : "neutral"}
             />

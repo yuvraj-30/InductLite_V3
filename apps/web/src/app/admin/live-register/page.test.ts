@@ -128,6 +128,7 @@ describe("live-register page helpers", () => {
       headcount: 5,
       longStayCount: 1,
       locationExceptionCount: 1,
+      locationMissingCount: 1,
       monitoredLocationCount: 4,
       busiestSiteName: "Alpha Yard",
       busiestSiteHeadcount: 3,
@@ -201,5 +202,15 @@ describe("live-register page helpers", () => {
     expect(source).toContain("data-table-dense");
     expect(source).toContain("data-table-quiet");
     expect(source).toContain("Triage active exceptions before deep site detail");
+  });
+
+  it("keeps missing-location messaging visible in the summary and detail copy", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+    const source = fs.readFileSync(path.join(__dirname, "page.tsx"), "utf8");
+
+    expect(source).toContain("? locationStatus.label");
+    expect(source).toContain("overview.locationMissingCount");
+    expect(source).toContain("missing location capture");
   });
 });
