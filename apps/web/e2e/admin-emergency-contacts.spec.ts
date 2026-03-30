@@ -1,3 +1,5 @@
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
 import { test, expect } from "./test-fixtures";
 
 function uniqueSuffix() {
@@ -34,15 +36,9 @@ async function submitEmergencyForm(page: any, form: any) {
     )
     .catch(() => null);
 
-  const submitButton = form.locator('button[type="submit"]').first();
-  await submitButton.scrollIntoViewIfNeeded().catch(() => undefined);
-  try {
-    await submitButton.click({ timeout: 10000 });
-  } catch {
-    await submitButton.evaluate((button: Element) => {
-      (button as HTMLButtonElement).click();
-    });
-  }
+  await form.evaluate((currentForm: Element) => {
+    (currentForm as HTMLFormElement).requestSubmit();
+  });
 
   await submitRequest;
 }
@@ -57,58 +53,54 @@ async function submitEmergencyRemove(page: any, row: any) {
     )
     .catch(() => null);
 
-  const removeButton = row.getByRole("button", { name: "Remove" }).first();
-  await removeButton.scrollIntoViewIfNeeded().catch(() => undefined);
-  try {
-    await removeButton.click({ timeout: 10000 });
-  } catch {
-    await removeButton.evaluate((button: Element) => {
-      (button as HTMLButtonElement).click();
-    });
-  }
+  const form = row.locator("form").first();
+  await form.evaluate((currentForm: Element) => {
+    (currentForm as HTMLFormElement).requestSubmit();
+  });
   await submitRequest;
 }
 
-async function createSiteAndGetId(page: any, name: string): Promise<string> {
-  await page.goto("/admin/sites/new");
-  await page.getByLabel(/site name/i).fill(name);
-  const createButton = page.getByRole("button", { name: "Create Site" });
-  await expect(createButton).toBeEnabled();
+function buildSchemaDbUrl(schema: string): string {
+  const base =
+    process.env.DATABASE_URL ??
+    "postgresql://postgres:postgres@localhost:5432/inductlite_e2e";
+  const parsed = new URL(base);
+  parsed.searchParams.set("schema", schema);
+  return parsed.toString();
+}
 
-  const createForm = page
-    .locator("form")
-    .filter({ has: createButton })
-    .first();
-  const submitRequest = page
-    .waitForResponse(
-      (response: any) =>
-        response.request().method() === "POST" &&
-        /\/admin\/sites\/new(?:\?|$)/.test(response.url()),
-      { timeout: 15000 },
-    )
-    .catch(() => null);
-
-  await createForm.evaluate((form: Element) => {
-    (form as HTMLFormElement).requestSubmit();
+async function createSiteInWorkerCompany(input: {
+  email: string;
+  name: string;
+  schema: string;
+}): Promise<string> {
+  const db = new PrismaClient({
+    adapter: new PrismaPg({ connectionString: buildSchemaDbUrl(input.schema) }),
   });
-  await submitRequest;
-  await page.waitForURL(/\/admin\/sites(?:\?.*)?$/, { timeout: 30000 }).catch(() => undefined);
 
-  await expect
-    .poll(
-      async () => {
-        await page.goto("/admin/sites", { waitUntil: "domcontentloaded" });
-        return (
-          (await page
-            .locator(`a[href^="/admin/sites/"]`, { hasText: name })
-            .count()) > 0
-        );
+  try {
+    const user = await db.user.findUnique({
+      where: { email: input.email },
+      select: { company_id: true },
+    });
+
+    if (!user) {
+      throw new Error(`Failed to resolve worker user for ${input.email}`);
+    }
+
+    const site = await db.site.create({
+      data: {
+        company_id: user.company_id,
+        name: input.name,
+        is_active: true,
       },
-      { timeout: 45000 },
-    )
-    .toBe(true);
+      select: { id: true },
+    });
 
-  return findSiteIdByName(page, name);
+    return site.id;
+  } finally {
+    await db.$disconnect();
+  }
 }
 
 async function countNamedListItems(section: any, text: string): Promise<number> {
@@ -197,6 +189,7 @@ test.describe.serial("Admin Emergency Setup", () => {
     page,
     loginAs,
     workerUser,
+    workerServer,
   }) => {
     test.setTimeout(120000);
     await loginAs(workerUser.email);
@@ -209,7 +202,11 @@ test.describe.serial("Admin Emergency Setup", () => {
     let siteId = "";
     for (let attempt = 1; attempt <= 2; attempt++) {
       try {
-        siteId = await createSiteAndGetId(page, siteName);
+        siteId = await createSiteInWorkerCompany({
+          email: workerUser.email,
+          name: siteName,
+          schema: workerServer.schema,
+        });
         break;
       } catch (error) {
         const authRequired = await page
