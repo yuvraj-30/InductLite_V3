@@ -68,7 +68,7 @@
     "undici": "7.24.1",
     "basic-ftp": "5.2.0",
     "fast-xml-parser": "5.5.8",
-    "lodash": "4.17.23",
+    "lodash": "4.18.1",
     "flatted": "3.4.2",
     "serialize-javascript": "7.0.3",
     "@prisma/config": "7.6.0",
